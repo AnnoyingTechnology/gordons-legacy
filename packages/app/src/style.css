@@ -1,0 +1,93 @@
+:root {
+  --fg: #1b1d1f;
+  --muted: #5b6168;
+  --bg: #fafafa;
+  --rule: #d4d7db;
+  --warn-fg: #6b4a00;
+  --warn-bg: #fff4d6;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--fg);
+  background: var(--bg);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: #e3e5e8;
+    --muted: #9aa1a9;
+    --bg: #16181b;
+    --rule: #33373c;
+    --warn-fg: #f0d58a;
+    --warn-bg: #3a3017;
+  }
+}
+
+body {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+h1 {
+  font-size: 1.4rem;
+  margin: 0;
+}
+
+h2 {
+  font-size: 1rem;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 0.25rem;
+}
+
+.subtitle {
+  color: var(--muted);
+  margin: 0.25rem 0 1.5rem;
+}
+
+.warning {
+  color: var(--warn-fg);
+  background: var(--warn-bg);
+  padding: 0.6rem 0.8rem;
+  border-left: 3px solid currentColor;
+}
+
+dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.3rem 1.5rem;
+}
+
+dt {
+  color: var(--muted);
+}
+
+dd {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+dialog {
+  max-width: 36rem;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  padding: 1.25rem 1.5rem;
+}
+
+dialog::backdrop {
+  background: rgb(0 0 0 / 0.5);
+}
+
+dialog form {
+  text-align: right;
+}
+
+button {
+  font: inherit;
+  padding: 0.3rem 1rem;
+}

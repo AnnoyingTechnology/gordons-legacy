@@ -1,0 +1,11 @@
+{
+  "name": "@gordons-legacy/cli",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Batch simulation and reference comparison.",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

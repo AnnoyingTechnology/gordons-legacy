@@ -1,0 +1,11 @@
+{
+  "name": "@gordons-legacy/formats",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Versioned JSON schema for loads and components, and GRT file importers.",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

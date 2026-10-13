@@ -1,0 +1,11 @@
+{
+  "name": "@gordons-legacy/engine",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Interior-ballistics engines. Pure TypeScript, no DOM.",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}
