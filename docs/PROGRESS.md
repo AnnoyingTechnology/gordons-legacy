@@ -4,10 +4,10 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 
 ## Current state
 
-- **Milestone:** M1 in progress: JSON load format v1 and GRT importers done; JSON reading and validation
-  next.
+- **Milestone:** M1 in progress: load format v1, GRT importers and the JSON reader (`parseLoad`) done.
 - **Code:** `packages/formats` imports `.grtload`, `.caliber`, `.projectile` and `.propellant` files into
-  the load format (SI units), with 160 tests on the CC0 corpus and five of the maintainer's loads. All
+  the load format (SI units), and saves and reads JSON loads with field-by-field validation; 178 tests on
+  the CC0 corpus and five of the maintainer's loads. All
   198 GRT files available import without errors. The app is a status page with the dedication dialog.
   Other packages are empty.
 - **Docs:** [formats/json-v1.md](formats/json-v1.md) (load format), [formats/grtload.md](formats/grtload.md)
@@ -15,13 +15,12 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 
 ## Next steps
 
-1. M1: read and validate saved JSON loads (`parseLoad`), with clear errors, and a version-upgrade hook.
-2. M1: a `.grtload` viewer on the Pages site (drop a file, see the imported load and the issues), so
+1. M1: a `.grtload` viewer on the Pages site (drop a file, see the imported load and the issues), so
    progress is visible.
-3. M2: confirm how to capture GRT's results (report templates, see Open questions), capture reference
+2. M2: confirm how to capture GRT's results (report templates, see Open questions), capture reference
    outputs for the fixtures, then derive GRT's model (manual, then binary analysis with Ghidra, to be
    unpacked into `~/.local`; not installed system-wide).
-4. Decide how the CLI runs TypeScript (Debian's Node can't; see development.md).
+3. Decide how the CLI runs TypeScript (Debian's Node can't; see development.md).
 
 ## Decisions
 
@@ -76,3 +75,4 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 | 2026-10-13 | CI and GitHub Pages deployment; app status page with dedication dialog; README dedication. |
 | 2026-10-13 | Git history restarted (no AI attribution). Code-quality rules added to `AGENTS.md`. M1 step 2 (JSON schema v1) in progress. |
 | 2026-10-13 | M1: load format v1 types; GRT importers for loads and component files; fixtures (CC0 corpus and five maintainer loads); format docs extended (eta unit defect, component files, notes, Latin-1). |
+| 2026-10-13 | M1: JSON reader and writer for loads, validated by declarative shapes that the compiler keeps in sync with the types. Codex model policy logged in `AGENTS.md`. |

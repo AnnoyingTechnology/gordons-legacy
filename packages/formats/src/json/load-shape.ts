@@ -1,0 +1,203 @@
+import type { Barrel, GasLeak } from '../load/barrel.ts';
+import type { CaliberDefinition, Cartridge } from '../load/cartridge.ts';
+import type { ComponentInfo } from '../load/component-info.ts';
+import type { Charge, ImportOrigin, Ladder, Load, Note, Picture } from '../load/load.ts';
+import { LOAD_FORMAT, LOAD_SCHEMA_VERSION } from '../load/load.ts';
+import type { MeasuredCharge, MeasurementSeries, Shot } from '../load/measurement.ts';
+import type { Projectile, ProjectileBase } from '../load/projectile.ts';
+import type { GrtBurnModel, Propellant } from '../load/propellant.ts';
+import type { FieldSpec, ShapeOf } from './shape.ts';
+
+/*
+ * The shape of each part of a load document, mirroring the types in ../load/. `satisfies ShapeOf<T>`
+ * makes the compiler reject a shape that misses or adds a field.
+ *
+ * Quantities that can't physically be zero or negative (masses, lengths, densities) are `positive`.
+ */
+
+const optionalString = { optional: 'string' } as const;
+const unmapped = { optional: 'stringRecord' } as const;
+
+const componentInfo = {
+  description: 'string',
+  origin: 'string',
+  createdBy: 'string',
+  createdOn: 'string',
+  modifiedBy: 'string',
+  modifiedOn: 'string',
+} satisfies ShapeOf<ComponentInfo>;
+
+const caliberDefinition = {
+  name: 'string',
+  alternativeNames: 'string',
+  standard: 'string',
+  countryOfOrigin: 'string',
+  caseType: 'string',
+  standardDate: 'string',
+  revisionDate: 'string',
+  specificationUrl: 'string',
+  maxPressure: 'nonNegative',
+  sebertFactor: 'nonNegative',
+  info: { object: componentInfo },
+  unmapped,
+} satisfies ShapeOf<CaliberDefinition>;
+
+const cartridge = {
+  name: 'string',
+  grooveDiameter: 'positive',
+  effectiveBoreArea: 'positive',
+  maxPressure: 'positive',
+  pressureMeasurementMethod: 'string',
+  caseLength: 'positive',
+  caseCapacity: 'positive',
+  overallLength: 'positive',
+  sebertFactor: 'nonNegative',
+  shotshell: 'boolean',
+  definition: { optional: { object: caliberDefinition } },
+} satisfies ShapeOf<Cartridge>;
+
+const gasLeak = {
+  type: 'integer',
+  name: 'string',
+  description: 'string',
+  position: 'nonNegative',
+  width: 'nonNegative',
+  height: 'nonNegative',
+} satisfies ShapeOf<GasLeak>;
+
+const barrel = {
+  name: 'string',
+  length: 'positive',
+  twistLength: { optional: 'positive' },
+  gunMass: { optional: 'positive' },
+  jumpToLands: { optional: 'nonNegative' },
+  gasLeaks: { arrayOf: { object: gasLeak } },
+} satisfies ShapeOf<Barrel>;
+
+const flatBase = { shape: { literal: 'flat' } } satisfies ShapeOf<Extract<ProjectileBase, { shape: 'flat' }>>;
+
+function shapedBase(shape: 'hollow' | 'boattail') {
+  return {
+    shape: { literal: shape },
+    length: 'nonNegative',
+    diameterA: 'nonNegative',
+    diameterB: 'nonNegative',
+  } satisfies ShapeOf<Extract<ProjectileBase, { shape: 'hollow' | 'boattail' }>>;
+}
+
+const projectile = {
+  name: 'string',
+  maker: 'string',
+  product: 'string',
+  lot: 'string',
+  nominalCaliber: optionalString,
+  diameter: 'positive',
+  mass: 'positive',
+  length: 'positive',
+  base: {
+    variants: {
+      field: 'shape',
+      shapes: { flat: flatBase, hollow: shapedBase('hollow'), boattail: shapedBase('boattail') },
+    },
+  },
+  shotStartPressure: 'nonNegative',
+  boreResistanceAdjustment: { optional: 'number' },
+  ballisticCoefficientG1: { optional: 'positive' },
+  ballisticCoefficientG7: { optional: 'positive' },
+  ubcsCode: 'string',
+  material: optionalString,
+  maxSeatingDepth: { optional: 'positive' },
+  info: { optional: { object: componentInfo } },
+  unmapped,
+} satisfies ShapeOf<Projectile>;
+
+const grtBurnModel = {
+  kind: { literal: 'grt' },
+  vivacity: 'positive',
+  a0: 'number',
+  a1: 'number',
+  z1: 'number',
+  z2: 'number',
+  coldTemperatureCoefficient: 'number',
+  hotTemperatureCoefficient: 'number',
+} satisfies ShapeOf<GrtBurnModel>;
+
+const propellant = {
+  maker: 'string',
+  product: 'string',
+  lot: 'string',
+  heatOfExplosion: 'positive',
+  heatCapacityRatio: 'positive',
+  covolume: 'nonNegative',
+  grainDensity: 'positive',
+  bulkDensity: 'positive',
+  burnModel: { variants: { field: 'kind', shapes: { grt: grtBurnModel } } },
+  info: { optional: { object: componentInfo } },
+  unmapped,
+} satisfies ShapeOf<Propellant>;
+
+const charge = { mass: 'positive', temperature: 'positive' } satisfies ShapeOf<Charge>;
+
+const ladder = { steps: 'integer', massIncrement: 'positive' } satisfies ShapeOf<Ladder>;
+
+const shot = {
+  velocity: 'positive',
+  pressure: { optional: 'positive' },
+  label: 'string',
+  note: 'string',
+} satisfies ShapeOf<Shot>;
+
+const measuredCharge = {
+  label: 'string',
+  note: 'string',
+  chargeMass: 'positive',
+  showInReport: 'boolean',
+  shots: { arrayOf: { object: shot } },
+} satisfies ShapeOf<MeasuredCharge>;
+
+const measurementSeries = {
+  title: 'string',
+  showInReport: 'boolean',
+  charges: { arrayOf: { object: measuredCharge } },
+} satisfies ShapeOf<MeasurementSeries>;
+
+const note = {
+  title: 'string',
+  text: 'string',
+  showInReport: 'boolean',
+  isReportTemplate: 'boolean',
+} satisfies ShapeOf<Note>;
+
+const picture = {
+  name: 'string',
+  mediaType: 'string',
+  width: 'integer',
+  height: 'integer',
+  data: 'string',
+} satisfies ShapeOf<Picture>;
+
+const importOrigin = {
+  format: 'string',
+  writerVersion: optionalString,
+  fileName: optionalString,
+} satisfies ShapeOf<ImportOrigin>;
+
+const load = {
+  format: { literal: LOAD_FORMAT },
+  schemaVersion: { literal: LOAD_SCHEMA_VERSION },
+  title: 'string',
+  cartridge: { object: cartridge },
+  barrel: { object: barrel },
+  projectile: { object: projectile },
+  propellant: { object: propellant },
+  charge: { object: charge },
+  ladder: { optional: { object: ladder } },
+  measurements: { arrayOf: { object: measurementSeries } },
+  notes: { arrayOf: { object: note } },
+  pictures: { arrayOf: { object: picture } },
+  importedFrom: { optional: { object: importOrigin } },
+  unmapped,
+} satisfies ShapeOf<Load>;
+
+/** The specification of a whole load document. */
+export const LOAD_SPEC: FieldSpec = { object: load };

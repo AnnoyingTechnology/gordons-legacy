@@ -79,3 +79,8 @@ When the maintainer is unavailable, an agent may ask Codex (`codex`, model `gpt-
 effort `xhigh`) for a reality check. Use it where rigour matters most: physics, model equations, unit
 conversions, safety wording and data intake. Codex is a strict reviewer; on non-critical code, weigh its
 remarks against this file's code-quality rules instead of applying them all.
+
+For the most critical and sensitive checks only (for example, the final review of the engine's pressure
+predictions before they are shown to users, or a safety-critical data decision), Codex with model
+`gpt-6-astra` at reasoning effort `medium` is available. Never call it lightly; record in `PROGRESS.md`
+when and why it was used.

@@ -10,6 +10,7 @@ Everything is exported from [`src/index.ts`](src/index.ts).
 | Export | Purpose |
 |---|---|
 | `Load` and its parts (`Cartridge`, `Barrel`, `Projectile`, `Propellant`, `Charge`…) | The load format, version 1. Every quantity is in SI base units; each field documents its unit. |
+| `serializeLoad(load)`, `parseLoad(text)` | Save a load as JSON; read one back, checking every field. |
 | `importGrtLoad(text)` | Imports a `.grtload` file. |
 | `importGrtCaliber`, `importGrtProjectiles`, `importGrtPropellant` | Import GRT component files. A `.projectile` file may hold several projectiles. |
 | `ImportResult`, `ImportIssue` | What importers return: the value, or a failure, with the issues found. |
@@ -41,6 +42,10 @@ src/
   import-issues.ts     ImportResult, ImportIssue, IssueLog
   optional-property.ts helper for optional properties in object literals
   load/                the load format: one file per part, types only
+  json/                saving and reading JSON loads
+    shape.ts             declarative field specifications and their checker
+    load-shape.ts        the specification of each part of a load
+    load-json.ts         serializeLoad, parseLoad
   grt/                 GRT import
     xml.ts               minimal XML parser for GRT's XML subset
     percent-decoding.ts  GRT's URL-encoded strings (UTF-8 or Latin-1)
