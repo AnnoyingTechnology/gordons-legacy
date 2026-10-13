@@ -16,8 +16,9 @@ CI runs `typecheck`, `test` and `build` on every push, and deploys the app to Gi
 
 - **Debian's Node.js can't run TypeScript.** Official Node 24 builds strip types natively, but Debian
   packages Node without that support (`node -p process.features.typescript` prints `false`), so
-  `node file.ts` fails with `ERR_UNKNOWN_FILE_EXTENSION`. Run scripts through Vitest, or with Deno
-  (`deno run --allow-read --allow-env file.ts`), or install an official Node build.
+  `node file.ts` fails with `ERR_UNKNOWN_FILE_EXTENSION`. Install an official build without root:
+  download `node-v24.x-linux-x64.tar.xz` and `SHASUMS256.txt` from nodejs.org, check the hash, unpack
+  into `~/.local/opt`, and run that `bin/node` (the maintainer tools take it from `NODE`).
 - **Erasable TypeScript only.** `erasableSyntaxOnly` is on so that sources can run with type stripping:
   no `enum`, no `namespace`, no constructor parameter properties (`constructor(private x)`). Use union
   types and explicit fields.

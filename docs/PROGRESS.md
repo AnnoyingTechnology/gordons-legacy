@@ -4,7 +4,8 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 
 ## Current state
 
-- **Milestone:** M1 done (2026-10-13). M2 started: reference capture.
+- **Milestone:** M1 done (2026-10-13). M2 in progress: GRT reference results captured for the 12 fixture
+  loads; engine not started.
 - **Code:** `packages/formats` imports `.grtload`, `.caliber`, `.projectile` and `.propellant` files into
   the load format (SI units), and saves and reads JSON loads with field-by-field validation; 182 tests on
   the CC0 corpus and five of the maintainer's loads. Imports are checked against the same specification as
@@ -17,10 +18,11 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 
 ## Next steps
 
-1. M2: confirm how to capture GRT's results (report templates, see Open questions), capture reference
-   outputs for the fixtures, then derive GRT's model (manual, then binary analysis with Ghidra, to be
-   unpacked into `~/.local`; not installed system-wide).
-2. Decide how the CLI runs TypeScript (Debian's Node can't; see development.md).
+1. M2: experiments on GRT through IPC: ladder semantics (index 7 of 8 looked like the main charge), then
+   one-parameter sweeps to identify the model's behaviour.
+2. M2: derive GRT's equations: manual first, then Ghidra (installed in
+   `~/.local/opt/ghidra_12.1.4_PUBLIC`).
+3. M2: engine package and comparison harness against `packages/engine/test/reference/grt/`.
 
 ## Decisions
 
@@ -49,13 +51,11 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 | 2026-10-13 | UI icons: original SVG, drawn by a Sonnet subagent from each icon's function; never copy GRT's icons. | Julien |
 | 2026-10-13 | UI in the five languages most spoken where handloading is common; the list is to be confirmed (see Open questions). | Julien |
 | 2026-10-13 | Offer a lightweight package for users who want to own the software; format to be decided (see Open questions). | Julien |
+| 2026-10-13 | Reference results come from GRT's plugin IPC, reached through a capture plugin in a private copy of GRT run headless under Wine and Xvfb (`tools/grt-capture`, `docs/grt-ipc.md`). | Agent, for review |
+| 2026-10-13 | Maintainer tools that need TypeScript run on an official Node 24 build installed in `~/.local/opt` (checksum-verified), rather than adding a TypeScript runner dependency; Debian's Node lacks type stripping. | Agent, for review |
 
 ## Open questions
 
-- How GRT exposes simulation results for automated capture. Most promising: report templates (a note with
-  `reporttemplate="true"`) can print `Result.MaxPressure`, `Result.MuzzleVelocity`, `Result.BurnRatio` and
-  more (manual p. 77); otherwise its plugin interface (see
-  [GRT-Reloading-Toolkit](https://github.com/FREESHOTER/GRT-Reloading-Toolkit)).
 - Unit and reference pressure of GRT's `Ba` (needed for M2).
 - The five UI languages. Proposed: English, German, French, Spanish, Italian (Russian the main
   alternative).
@@ -78,3 +78,4 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 | 2026-10-13 | M1: JSON reader and writer for loads, validated by declarative shapes that the compiler keeps in sync with the types. Codex model policy logged in `AGENTS.md`. |
 | 2026-10-13 | M1: `.grtload` import preview on the Pages site; app split into small modules. |
 | 2026-10-13 | Codex (`gpt-6.1-sol`, xhigh) reviewed the importer's units: no conversion-factor error. It found the ladder direction inverted in the format docs (GRT steps down from the main charge, manual p. 36) and that impossible values (Infinity, below 0 K) imported; both fixed, with regression tests. Measured-pressure unit stays unverified. |
+| 2026-10-13 | M2: GRT plugin IPC found and documented; `tools/grt-capture` captures GRT's results and full curves headlessly (12 loads in 22 s); references stored in `packages/engine/test/reference/grt/`. GRT's curve is uniform in projectile travel (2000 steps). |

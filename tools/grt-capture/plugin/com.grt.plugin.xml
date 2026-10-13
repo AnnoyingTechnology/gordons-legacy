@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<GordonsReloadingTool>
+  <!--
+  Gordon's Legacy capture plugin. GRT starts capture.bat at startup with "ipcport N"; the batch file
+  starts bridge.ts on the Linux side, which holds GRT's IPC connection open and relays it to a fixed
+  local port for the capture tool. setup.sh writes capture.bat with this machine's paths.
+  -->
+  <plugin
+    name           = "Gordon's Legacy capture"
+    id             = "com.grt.plugin.glcapture"
+    version        = "1.0.0"
+    provider       = "Gordon's Legacy"
+    description    = "Relays GRT's plugin IPC so that Gordon's Legacy can capture reference results."
+    launch-windows = "capture.bat"
+    launch-linux   = "capture.bat"
+    launch-type    = "permanent"
+    launch-args    = ""
+    start-timeout  = "10.0"
+    enabled        = "true"
+  >
+    <registerevent>
+    </registerevent>
+  </plugin>
+</GordonsReloadingTool>
