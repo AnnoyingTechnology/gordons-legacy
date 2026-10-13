@@ -62,6 +62,8 @@ export const en = {
   'results.against': 'Against',
   'results.travel': 'projectile travel',
   'results.time': 'time',
+  'results.travelAxis': 'Projectile travel',
+  'results.timeAxis': 'Time since ignition',
   'results.hover': 'Hover a chart to read its values.',
   'results.pressure': 'Pressure',
   'results.velocity': 'Velocity',

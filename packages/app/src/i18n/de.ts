@@ -60,6 +60,8 @@ export const de: Messages = {
   'results.against': 'Über',
   'results.travel': 'Geschossweg',
   'results.time': 'Zeit',
+  'results.travelAxis': 'Geschossweg',
+  'results.timeAxis': 'Zeit seit der Zündung',
   'results.hover': 'Zeigen Sie auf ein Diagramm, um die Werte abzulesen.',
   'results.pressure': 'Gasdruck',
   'results.velocity': 'Geschwindigkeit',

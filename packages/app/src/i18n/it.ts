@@ -60,6 +60,8 @@ export const it: Messages = {
   'results.against': 'In funzione di',
   'results.travel': 'corsa della palla',
   'results.time': 'tempo',
+  'results.travelAxis': 'Corsa della palla',
+  'results.timeAxis': 'Tempo dall’accensione',
   'results.hover': 'Passare sopra un grafico per leggerne i valori.',
   'results.pressure': 'Pressione',
   'results.velocity': 'Velocità',

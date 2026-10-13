@@ -60,6 +60,8 @@ export const fr: Messages = {
   'results.against': 'En fonction de',
   'results.travel': 'la course du projectile',
   'results.time': 'du temps',
+  'results.travelAxis': 'Course du projectile',
+  'results.timeAxis': 'Temps depuis l’allumage',
   'results.hover': 'Survolez un graphique pour en lire les valeurs.',
   'results.pressure': 'Pression',
   'results.velocity': 'Vitesse',

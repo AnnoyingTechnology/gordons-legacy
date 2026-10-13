@@ -8,32 +8,14 @@
     <link rel="stylesheet" href="./src/style.css" />
   </head>
   <body>
-    <header>
-      <h1>Gordon's Legacy</h1>
-      <p class="subtitle">Open interior-ballistics simulator, carrying on Gordon's Reloading Tool.</p>
-    </header>
-    <main>
+    <gl-app></gl-app>
+    <footer class="status-footer">
       <p class="warning">
         Under development. Nothing here is usable for load development. This software simulates; it does
         not produce load data. Always check charges against published data from the powder or bullet maker.
       </p>
-      <section>
-        <h2>Status</h2>
-        <dl id="status"></dl>
-      </section>
-      <section>
-        <h2>Load preview</h2>
-        <p>
-          Open a <code>.grtload</code> file to see what Gordon's Legacy reads from it and how the GRT Traditional
-          engine simulates it. The file stays in your browser.
-        </p>
-        <label class="file-drop" id="load-drop">
-          <input type="file" accept=".grtload" id="load-file" />
-          <span>Choose a <code>.grtload</code> file, or drop it here.</span>
-        </label>
-        <div id="load-result"></div>
-      </section>
-    </main>
+      <dl id="status"></dl>
+    </footer>
     <dialog id="welcome" aria-labelledby="welcome-title">
       <h2 id="welcome-title">Gordon's Legacy</h2>
       <p>

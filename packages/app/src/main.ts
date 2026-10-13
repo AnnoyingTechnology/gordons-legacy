@@ -1,4 +1,4 @@
-import { setupLoadViewer } from './load-viewer/load-viewer.ts';
+import './components/app-shell.ts';
 import { renderStatus } from './status.ts';
 import { showWelcomeOnFirstVisit } from './welcome.ts';
 
@@ -10,4 +10,3 @@ function byId<T extends HTMLElement>(id: string): T {
 
 showWelcomeOnFirstVisit(byId('welcome'));
 renderStatus(byId('status'));
-setupLoadViewer(byId('load-file'), byId('load-drop'), byId('load-result'));

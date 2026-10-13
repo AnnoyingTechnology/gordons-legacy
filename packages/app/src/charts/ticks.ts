@@ -1,6 +1,6 @@
 /**
- * "Nice" axis ticks: round values (1, 2 or 5 times a power of ten) covering [min, max] with about
- * `count` intervals.
+ * "Nice" axis ticks: round values (1, 2 or 5 times a power of ten) with about `count` intervals. The
+ * first tick is at or below `min` and the last at or above `max`, so the ticks always cover the range.
  */
 export function niceTicks(min: number, max: number, count = 5): number[] {
   if (!(max > min)) return [min];
@@ -8,7 +8,8 @@ export function niceTicks(min: number, max: number, count = 5): number[] {
   const magnitude = 10 ** Math.floor(Math.log10(rawStep));
   const step = [1, 2, 5, 10].map((factor) => factor * magnitude).find((candidate) => candidate >= rawStep)!;
   const ticks: number[] = [];
-  for (let value = Math.floor(min / step) * step; value <= max + step / 2; value += step) {
+  const last = Math.ceil(max / step) * step;
+  for (let value = Math.floor(min / step) * step; value <= last + step / 1e6; value += step) {
     ticks.push(Math.abs(value) < step / 1e6 ? 0 : value);
   }
   return ticks;

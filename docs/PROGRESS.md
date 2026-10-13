@@ -12,9 +12,11 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
   the load format (SI units), and saves and reads JSON loads with field-by-field validation; 182 tests on
   the CC0 corpus and five of the maintainer's loads. Imports are checked against the same specification as
   saved loads. All
-  198 GRT files available import without errors. The app is a status page with the dedication dialog
-  and a load preview (open a `.grtload`, see the values, issues and the simulated shot, download the JSON).
-  Other packages are empty.
+  198 GRT files available import without errors. `packages/engine` runs GRT Traditional;
+  `packages/cli` simulates a load file. The app (Lit) is a load editor: open several `.grtload` or JSON
+  loads in tabs (also by drag and drop), edit the inputs in property tables grouped as in GRT, see the
+  simulated shot follow every keystroke, save as JSON; metric or imperial units; five languages;
+  open documents persist in `localStorage`.
 - **Docs:** [formats/json-v1.md](formats/json-v1.md) (load format), [formats/grtload.md](formats/grtload.md)
   (GRT files), [development.md](development.md) (commands, pitfalls), `packages/formats/README.md`.
 
@@ -23,7 +25,10 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 1. M2: remaining parts of GRT's model, from the binary into `docs/model/grt-traditional.md`: gas leaks (`fn_pLoss`, the revolver fixture),
    jump to the lands, z2 recomputation, results (OBT, 10 %-Pmax times, recoil). Then capture
    references for all the maintainer's loads (locally) and widen the parity tests.
-2. M3: the app preview now simulates; next, the load editor (edit values, re-simulate live), in GRT's layout.
+2. Read the Codex engine safety review (`/tmp/codex-engine-review.md` if still there; otherwise rerun it)
+   and fix what it finds: input validation, non-finite results, loops that may not end.
+3. M3: offline PWA, original SVG icons (Sonnet), per-quantity unit choices, ladder curves in the charts,
+   About dialog.
 
 Reverse-engineering workspace (local, never committed; procedure in `docs/model/grt-structure.md`):
 
@@ -107,3 +112,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | M3 start: the app's load preview simulates the load with GRT Traditional and shows key figures, pressure and velocity charts (shared axis, travel or time, linked crosshair, CIP limit, burnout) and a curve table; plain SVG, palette validated in light and dark. |
 | 2026-10-14 | M2: ladder semantics read from `Compute`: n charges, the main one included, stepping down by repeated subtraction. `ladderChargeMasses` in formats; the app preview lists the ladder's simulated results. |
 | 2026-10-14 | M3: display units (per kind, metric/imperial presets) and i18n (5 catalogs, type-checked completeness) for the app; Lit added. |
+| 2026-10-14 | M3: load editor in the app: tabs of open loads, property tables per group (cartridge, barrel, projectile, propellant, charge and ladder), live simulation, Open/Save (File System Access API or download), units and language in the toolbar. Chart y-axis always reaches above the highest value; labels have a background halo. |

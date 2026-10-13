@@ -60,6 +60,8 @@ export const es: Messages = {
   'results.against': 'Según',
   'results.travel': 'el recorrido del proyectil',
   'results.time': 'el tiempo',
+  'results.travelAxis': 'Recorrido del proyectil',
+  'results.timeAxis': 'Tiempo desde el encendido',
   'results.hover': 'Pase el puntero sobre un gráfico para leer sus valores.',
   'results.pressure': 'Presión',
   'results.velocity': 'Velocidad',

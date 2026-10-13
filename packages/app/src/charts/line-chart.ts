@@ -43,7 +43,8 @@ export class LineChart {
     this.xMin = x[0] ?? 0;
     this.xMax = x[x.length - 1] ?? 1;
     let yMax = Math.max(...Array.from(y), options.limit?.value ?? 0);
-    const yTicks = niceTicks(0, yMax * 1.05);
+    // Headroom above the highest value, so that labels above points stay inside the plot.
+    const yTicks = niceTicks(0, yMax * 1.15);
     yMax = yTicks[yTicks.length - 1]!;
     const plotWidth = WIDTH - MARGIN.left - MARGIN.right;
     const plotHeight = HEIGHT - MARGIN.top - MARGIN.bottom;
@@ -128,7 +129,7 @@ export class LineChart {
     for (const event of this.options.events ?? []) {
       const x = this.xScale(event.x);
       this.element.append(svg('line', { x1: x, x2: x, y1: MARGIN.top, y2: HEIGHT - MARGIN.bottom, class: 'event' }));
-      this.element.append(svg('text', { x: x + 4, y: MARGIN.top + 10, class: 'event-label' }, event.label));
+      this.element.append(svg('text', { x: x + 4, y: HEIGHT - MARGIN.bottom - 6, class: 'event-label' }, event.label));
     }
   }
 
@@ -137,12 +138,19 @@ export class LineChart {
       const cx = this.xScale(this.options.x[marker.index]!);
       const cy = this.yScale(this.options.y[marker.index]!);
       this.element.append(svg('circle', { cx, cy, r: 4, class: 'marker', fill: this.options.color }));
-      // Near the right edge, the label goes to the left of its point so it isn't cut off.
+      // Near the right edge, the label goes to the left of its point so it isn't cut off; near the top,
+      // below it.
       const nearRightEdge = cx > WIDTH - MARGIN.right - 80;
+      const nearTop = cy < MARGIN.top + 14;
       this.element.append(
         svg(
           'text',
-          { x: nearRightEdge ? cx - 8 : cx + 8, y: cy - 8, class: 'marker-label', 'text-anchor': nearRightEdge ? 'end' : 'start' },
+          {
+            x: nearRightEdge ? cx - 8 : cx + 8,
+            y: nearTop ? cy + 16 : cy - 8,
+            class: 'marker-label',
+            'text-anchor': nearRightEdge ? 'end' : 'start',
+          },
           marker.label,
         ),
       );
