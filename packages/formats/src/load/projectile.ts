@@ -25,8 +25,9 @@ export interface Projectile {
   base: ProjectileBase;
   /**
    * Initial pressure: the gas pressure at which the projectile starts to move, standing for bullet pull,
-   * engraving and primer effects. Pa. GRT `gpressure` (and `ps` in the caliber section, which GRT keeps
-   * equal to it). GRT's manual suggests 25 MPa (250 bar) for jacketed rifle bullets.
+   * engraving and primer effects. Pa. In loads, GRT's simulation reads the caliber section's `ps`; the
+   * projectile's `gpressure` is a copy. In `.projectile` files, `gpressure`. GRT's manual suggests 25 MPa
+   * (250 bar) for jacketed rifle bullets.
    */
   shotStartPressure: number;
   /**

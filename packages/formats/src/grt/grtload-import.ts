@@ -1,6 +1,7 @@
 import { IssueLog, type ImportResult } from '../import-issues.ts';
 import type { Barrel, GasLeak } from '../load/barrel.ts';
 import type { Cartridge } from '../load/cartridge.ts';
+import type { Projectile } from '../load/projectile.ts';
 import { LOAD_SPEC } from '../json/load-shape.ts';
 import { checkValue } from '../json/shape.ts';
 import { LOAD_FORMAT, LOAD_SCHEMA_VERSION, seatingDepth, type Ladder, type Load } from '../load/load.ts';
@@ -72,7 +73,7 @@ export function importGrtLoad(source: string, options: GrtLoadImportOptions = {}
 
   const cartridge = readCartridge(caliberFields, input, log);
   const projectile = readLoadProjectile(projectileFields);
-  checkShotStartPressures(caliberFields, projectile.shotStartPressure, log);
+  applyShotStartPressure(caliberFields, projectile, log);
   const propellant = readPropellant(propellantFields, CHARGE_VALUES);
   const charge = {
     mass: propellantFields.quantity('mc', 'mass', 'g'),
@@ -147,18 +148,21 @@ function readCartridge(fields: GrtFields, input: XmlElement, log: IssueLog): Car
 
 /**
  * GRT stores the initial pressure twice, as the caliber's `ps` and the projectile's `gpressure`, and
- * keeps them equal. The load format stores it once, on the projectile.
+ * keeps them equal. Its simulation uses `ps`: sweeping `gpressure` alone changes nothing (see
+ * docs/model/grt-observations.md). The load format stores it once, on the projectile.
  */
-function checkShotStartPressures(caliberFields: GrtFields, projectilePressure: number, log: IssueLog): void {
+function applyShotStartPressure(caliberFields: GrtFields, projectile: Projectile, log: IssueLog): void {
   const caliberPressure = caliberFields.optionalQuantity('ps', 'pressure', 'bar');
-  if (caliberPressure !== undefined && Math.abs(caliberPressure - projectilePressure) > PRESSURE_TOLERANCE) {
+  if (caliberPressure === undefined) return;
+  if (Math.abs(caliberPressure - projectile.shotStartPressure) > PRESSURE_TOLERANCE) {
     log.warning(
       'inconsistent-values',
       `The caliber's initial pressure (${caliberPressure / 1e5} bar) differs from the projectile's ` +
-        `(${projectilePressure / 1e5} bar); the projectile's was used.`,
+        `(${projectile.shotStartPressure / 1e5} bar); the caliber's was used, as GRT's simulation does.`,
       'caliber/ps',
     );
   }
+  projectile.shotStartPressure = caliberPressure;
 }
 
 /**

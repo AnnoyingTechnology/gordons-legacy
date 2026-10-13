@@ -47,7 +47,7 @@ Units as observed. Meanings marked (inferred) come from GRT's manual or context,
 | caliber | `Dz` | mm | Groove (or bore) diameter (inferred) |
 | caliber | `Aeff` | mm² | Effective bore cross-section |
 | caliber | `pMaxZul` | bar | Maximum permitted pressure (CIP) |
-| caliber | `ps` | bar | Initial pressure; always equal to the projectile's `gpressure` |
+| caliber | `ps` | bar | Initial pressure, used by the simulation; always equal to the projectile's `gpressure`, which the simulation ignores |
 | caliber | `sebert` | | Sebert factor: share of charge mass added to the projectile's effective mass |
 | caliber | `method` | | Pressure-measurement method; always `Piezo CIP` so far |
 | caliber | `shotshell` | | Shotshell flag (inferred) |
