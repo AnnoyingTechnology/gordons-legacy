@@ -49,6 +49,46 @@ minus the solid powder volume. ξ_E is its value at the muzzle.
 Time is not integrated by the step function: each new point stores 1/v, and the result object
 integrates dt = dx / v over pairs of steps with a Simpson-type rule (open: the exact rule).
 
+Emulating GRT's own step functions in this loop reproduces the .327 Federal reference completely: the
+2000 points within the reference's printed precision (5·10⁻¹⁰), burnout at the same step, and the muzzle
+velocity to all 17 digits.
+
+## The step (read; confirmed by emulation)
+
+GRT combines a closed-form interior-ballistics solution, used for the burnt fraction and the pressure,
+with a step-by-step integration of the projectile's motion. At each ξ:
+
+1. θ = 1 − (1 + ξ)^(−(k − 1)/2), with k the ratio of specific heats.
+2. B = the effective vivacity: the running mean, since ignition, of the smoothed Ba₀·φ(z) (see
+   Vivacity), times F(B̄) = 1 + B̄ · `CORE_FAKTOR_FBA` · p_s (not for shotshells).
+3. Closed-form velocity v_θ = θ · 2 · Q_ex · m_c · B / (A_eff · p₀), with Q_ex in J/kg.
+4. Burnt fraction z = v_θ · m_eff · B / (A_eff · p₀), with m_eff = m_p + s · m_c (s the Sebert factor).
+   This is the classical result of a burn rate proportional to pressure: dz/dv = B · m / (A · p₀).
+5. Pressure p_m = 10 · p_abs · θ(1 − θ) / (1 + ξ) [bar], with
+   p_abs = 2(k − 1) · m_eff · (B · m_c · Q_ex)² / (p₀² · A_eff² · V_free) and Q_ex here in kJ/kg.
+6. p = p_m + p_s · (1 − z) − p_loss: the initial pressure p_s fades as the powder burns; p_loss is the
+   pressure lost through gas leaks (0 without leaks).
+7. The reported pressure is smoothed: p̃ ← 0.27 · p + 0.73 · p̃ (the first value is taken as is).
+8. The projectile is accelerated by the smoothed pressure:
+   a = (p̃ · 10⁵ · A_eff − E_friction − E_air − E_rot,step) / m_eff, and v² = v_prev² + 2 a Δx. The loss
+   terms are cumulative energies subtracted from a force, as GRT does.
+9. The point also records the effective gas volume V_free + A_eff · x − covolume(z), the propellant
+   energy z · Q_ex · m_c, and the energies. The covolume never enters the pressure: this is why the
+   powder's `eta` has no effect on GRT's results.
+
+## Chamber geometry (read; confirmed by emulation)
+
+V_b = 0.9975 · (V_case − V_intrusion), where V_case is the case capacity and the intrusion is the
+projectile's cylinder (its own diameter) over the seating depth, corrected by the base:
+
+- flat base: no correction;
+- hollow base: plus the cavity, a cone frustum (π h / 3)(r_A² + r_A r_B + r_B²);
+- boat-tail: plus π r² h minus the frustum, the volume the tail leaves free (open: tails longer than the
+  seating depth).
+
+V_free = V_b − m_c / ρ_grain, and the travel to the muzzle is x_eff = barrel length − (case length −
+seating depth).
+
 ## Recovered so far
 
 ### Powder temperature (read; consistent with sweeps)
@@ -105,8 +145,8 @@ the results, so this function is not on the pressure path, or is overridden. Ope
 
 ## Open
 
-- The step equations inside `compute_BurnAphi` and `compute_BurnBphi`.
-- The equation of state and energy balance (`fn_pm`, `fn_Psi`, `fn_Sigma`, `fn_theta*`).
+- The end of burning (`compute_BurnAphi_End`) and the phase B step (`compute_BurnBphi`).
+- `fn_Psi`, `fn_Sigma`, `fn_thetaB`, `fn_thetaPm`, `fn_pAbs`'s use outside the step.
 - Losses: `fn_pLoss` (gas leaks), `fn_mFriction`, `fn_EfrictionInternal`, `fn_Etwist`, `fn_mAir`,
   `fn_gDrag`.
 - Shot start and jump: `fn_mPs`, `fn_jumpTime`, `fn_VbAdjust_gjump`.
