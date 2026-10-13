@@ -66,12 +66,15 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-13 | Offer a lightweight package for users who want to own the software; format to be decided (see Open questions). | Julien |
 | 2026-10-13 | Reference results come from GRT's plugin IPC, reached through a capture plugin in a private copy of GRT run headless under Wine and Xvfb (`tools/grt-capture`, `docs/grt-ipc.md`). | Agent, for review |
 | 2026-10-13 | Maintainer tools that need TypeScript run on an official Node 24 build installed in `~/.local/opt` (checksum-verified), rather than adding a TypeScript runner dependency; Debian's Node lacks type stripping. | Agent, for review |
+| 2026-10-14 | UI components with Lit 3.3.3 (pinned; standard web components, small, readable templates, keeps input focus on re-render); no decorators (plain `static properties`). | Agent, for review |
+| 2026-10-14 | Display units chosen per kind of quantity, with metric and imperial presets (GRT allowed a unit per field); case capacity shown as water mass (1 cm³ = 1 g H₂O), grains of water in imperial. | Agent, for review |
+| 2026-10-14 | UI languages built in for English, French, German, Spanish and Italian (the proposal); translations need review by native reloaders before release. | Agent, for review |
 
 ## Open questions
 
 - Unit and reference pressure of GRT's `Ba` (needed for M2).
-- The five UI languages. Proposed: English, German, French, Spanish, Italian (Russian the main
-  alternative).
+- The five UI languages. Proposed and built in: English, German, French, Spanish, Italian (Russian the
+  main alternative). Translations of `packages/app/src/i18n/*.ts` need review by native reloaders.
 - Format and encryption of `GordonsReloadingTool.db` (M4).
 - Licence of the maintainer's loads in `packages/formats/test/fixtures/maintainer/` (CC0 like the corpus?).
   The selected 9 mm load is the hottest one (`glock17_eng5_n340_115grain_xtp_PLUS-P`); no 9 mm file is
@@ -103,3 +106,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | M2: CLI (`packages/cli`, `simulate [--json] <file>`). |
 | 2026-10-14 | M3 start: the app's load preview simulates the load with GRT Traditional and shows key figures, pressure and velocity charts (shared axis, travel or time, linked crosshair, CIP limit, burnout) and a curve table; plain SVG, palette validated in light and dark. |
 | 2026-10-14 | M2: ladder semantics read from `Compute`: n charges, the main one included, stepping down by repeated subtraction. `ladderChargeMasses` in formats; the app preview lists the ladder's simulated results. |
+| 2026-10-14 | M3: display units (per kind, metric/imperial presets) and i18n (5 catalogs, type-checked completeness) for the app; Lit added. |
