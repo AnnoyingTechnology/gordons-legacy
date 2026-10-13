@@ -5,7 +5,11 @@
   "description": "Batch simulation and reference comparison.",
   "license": "GPL-3.0-only",
   "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
+  "bin": {
+    "gordons-legacy": "./src/main.ts"
+  },
+  "dependencies": {
+    "@gordons-legacy/engine": "0.0.0",
+    "@gordons-legacy/formats": "0.0.0"
   }
 }
