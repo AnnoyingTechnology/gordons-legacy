@@ -4,8 +4,9 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 
 ## Current state
 
-- **Milestone:** M1 done (2026-10-13). M2 in progress: GRT reference results captured for the 12 fixture
-  loads; engine not started.
+- **Milestone:** M2 in progress: the GRT Traditional engine reproduces GRT to machine precision (peak
+  pressure and muzzle velocity within 10⁻¹⁴) on 11 of the 12 fixture loads; gas leaks, jump, time
+  integration and z2 recomputation remain.
 - **Code:** `packages/formats` imports `.grtload`, `.caliber`, `.projectile` and `.propellant` files into
   the load format (SI units), and saves and reads JSON loads with field-by-field validation; 182 tests on
   the CC0 corpus and five of the maintainer's loads. Imports are checked against the same specification as
@@ -18,14 +19,23 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 
 ## Next steps
 
-1. M2: derive GRT's equations from the binary into `docs/model/grt-structure.md` (procedure there).
-   Local reverse-engineering workspace: `~/.cache/gordons-legacy/re/` (annotated decompilation, never
-   committed), Ghidra projects in `~/ghidra_projects/` (`GordonsLegacyGRT` fully analysed),
-   `~/.cache/gordons-legacy/decompile.sh <out.c> <addresses>`. Next: the integration loop
-   (`computeMain` dispatches through the vtable), φ(z) on the propellant class, configuration constants
-   (`SetConfigDefaults`). Ladder semantics are in `InnerBallistikLadderSteps`.
-2. M2: one-parameter sweeps (`tools/grt-capture/run.sh sweep`) to check each equation found.
-3. M2: engine package and comparison harness against `packages/engine/test/reference/grt/`.
+1. M2: remaining parts of GRT's model, from the binary into `docs/model/grt-traditional.md`: time
+   integration (`InnerBallistikResult.AddPoint`), gas leaks (`fn_pLoss`, the revolver fixture),
+   jump to the lands, z2 recomputation, results (OBT, 10 %-Pmax times, recoil), ladders. Then capture
+   references for all the maintainer's loads (locally) and widen the parity tests.
+2. M2: CLI to simulate a load file. M3: diagram in the app.
+
+Reverse-engineering workspace (local, never committed; procedure in `docs/model/grt-structure.md`):
+
+- `~/.cache/gordons-legacy/grt-dump/`: GRT's program image dumped from memory (base 0x02770000).
+- `~/ghidra_projects/GordonsLegacyGRT`: Ghidra project of that image, with recovered names and
+  signatures (`~/.cache/gordons-legacy/re/signatures.tsv`, applied by `~/ghidra_scripts/ApplySignatures.java`).
+- `~/.cache/gordons-legacy/decompile.sh <out.c> <addresses>`, then `re/annotate.py` to name fields.
+- `~/.cache/gordons-legacy/snapshot/`: memory snapshot of a running GRT with the .327 Federal fixture;
+  `re/emu2.py` and `re/steps.py` run GRT's functions on it (`re/venv`, Unicorn); `re/full_run.py`
+  reproduces the whole simulation.
+- Method and class maps: `re/*-methods.json`, `re/clusters.json`, made by `re/methods4.py` and
+  `re/props2.py` (the scripts still read and write `/tmp`; copy the maps there before using them).
 
 ## Decisions
 
@@ -86,3 +96,4 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 | 2026-10-13 | M2: input sweep of the .327 fixture (`docs/model/grt-observations.md`): GRT ignores the covolume input, `pcd`, `glen` and the projectile's `gpressure` (it uses the caliber's `ps`; importer fixed accordingly); fixed 2000-step travel grid confirmed. GRT is a Xojo (REALbasic) app whose code is a 62 MB overlay; dumped from memory under Wine for Ghidra (`~/.cache/gordons-legacy/grt-dump`). |
 | 2026-10-13 | M2: GRT's overlay dumped and analysed in Ghidra (JDK 21 Temurin and Ghidra in `~/.local/opt`). Xojo metadata gives every class, property offset and method address of the solver; first equations recorded in `docs/model/grt-structure.md` (temperature correction, fill ratio, vivacity smoothing). |
 | 2026-10-13 | M2: GRT's step function emulated (Unicorn) on a memory snapshot of a running GRT reproduces the reference curve digit for digit; loop structure, travel step ξE/2000, form function φ(z), smoothing weights and configuration constants recovered (`docs/model/grt-structure.md`). Local tools in `~/.cache/gordons-legacy/re/` (`emu.py`, `emu2.py`, `steps.py`, `annotate.py`, `disasm.py`). |
+| 2026-10-13 | M2: `packages/engine` GRT Traditional engine written from `docs/model/grt-traditional.md`; parity tests against GRT's captured results pass on 11 of 12 fixtures to machine precision (the revolver needs gas leaks). Key recovery: GRT derives the degressive scale zb by iteration for continuity at z1. |

@@ -115,10 +115,12 @@ clear.
 With the powder's `a0`, `a1`, `z1` and `zb`:
 
 - z ≤ z1, progressive: φ(z) = (1 + a0 · z)^0.3571, or 1 when a0 = 0.
-- z > z1, degressive: φ(z) = zb · (|a0| · (1 − z))^c, or zb · (1 − z)^c when a0 = 0, or 1 when a0 = 0
-  and z1 = 1; with c = a1 when 0.1 ≤ a1 ≤ 0.9, otherwise c = 0.3051.
+- z > z1, degressive: φ(z) = max(φ_d(z2), φ_d(z)) with φ_d(z) = zb · (|a0| · (1 − z))^c, or
+  zb · (1 − z)^c when a0 = 0, or 1 when a0 = 0 and z1 = 1; with c = a1 when 0.1 ≤ a1 ≤ 0.9, otherwise
+  c = 0.3051.
 
-Open: how `zb` relates to the file's `z2` (`Compute_z2`, `AutoCompute_zb`).
+`zb` is not the file's z2: GRT searches it (`AutoCompute_zb`) so that φ is continuous at z1; the file's
+z2 is where φ stops decreasing. See grt-traditional.md, Form function setup.
 
 ### Vivacity along the burn (read)
 
