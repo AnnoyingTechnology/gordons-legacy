@@ -39,12 +39,18 @@ export interface Charge {
   temperature: number;
 }
 
-/** Charges simulated in steps above the main charge. GRT `laddercnt` and `laddermc`. */
+/**
+ * A load-development ladder: charges simulated together, stepping **down** from the main charge, which is
+ * the ladder's maximum (GRT manual, p. 36). GRT `laddercnt` and `laddermc`.
+ */
 export interface Ladder {
-  /** Number of charges, from 2 to 10. */
+  /**
+   * Number of steps, from 2 to 10. Whether GRT counts the main charge among them is to be confirmed
+   * against GRT's output (milestone M2).
+   */
   steps: number;
-  /** Mass added at each step, kg. */
-  massIncrement: number;
+  /** Mass subtracted from the charge at each step, kg. */
+  massStep: number;
 }
 
 /** A free-text note. GRT `note`. */

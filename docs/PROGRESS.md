@@ -4,10 +4,11 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 
 ## Current state
 
-- **Milestone:** M1 done (2026-10-13), pending the Codex review of unit conversions. M2 next.
+- **Milestone:** M1 done (2026-10-13). M2 started: reference capture.
 - **Code:** `packages/formats` imports `.grtload`, `.caliber`, `.projectile` and `.propellant` files into
-  the load format (SI units), and saves and reads JSON loads with field-by-field validation; 178 tests on
-  the CC0 corpus and five of the maintainer's loads. All
+  the load format (SI units), and saves and reads JSON loads with field-by-field validation; 182 tests on
+  the CC0 corpus and five of the maintainer's loads. Imports are checked against the same specification as
+  saved loads. All
   198 GRT files available import without errors. The app is a status page with the dedication dialog
   and a `.grtload` import preview (open a file, see the values, issues, and download the JSON).
   Other packages are empty.
@@ -76,3 +77,4 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 | 2026-10-13 | M1: load format v1 types; GRT importers for loads and component files; fixtures (CC0 corpus and five maintainer loads); format docs extended (eta unit defect, component files, notes, Latin-1). |
 | 2026-10-13 | M1: JSON reader and writer for loads, validated by declarative shapes that the compiler keeps in sync with the types. Codex model policy logged in `AGENTS.md`. |
 | 2026-10-13 | M1: `.grtload` import preview on the Pages site; app split into small modules. |
+| 2026-10-13 | Codex (`gpt-6.1-sol`, xhigh) reviewed the importer's units: no conversion-factor error. It found the ladder direction inverted in the format docs (GRT steps down from the main charge, manual p. 36) and that impossible values (Infinity, below 0 K) imported; both fixed, with regression tests. Measured-pressure unit stays unverified. |

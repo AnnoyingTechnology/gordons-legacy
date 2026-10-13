@@ -138,7 +138,7 @@ const propellant = {
 
 const charge = { mass: 'positive', temperature: 'positive' } satisfies ShapeOf<Charge>;
 
-const ladder = { steps: 'integer', massIncrement: 'positive' } satisfies ShapeOf<Ladder>;
+const ladder = { steps: 'integer', massStep: 'positive' } satisfies ShapeOf<Ladder>;
 
 const shot = {
   velocity: 'positive',
@@ -201,3 +201,8 @@ const load = {
 
 /** The specification of a whole load document. */
 export const LOAD_SPEC: FieldSpec = { object: load };
+
+/** The specifications of the components imported on their own. */
+export const CALIBER_DEFINITION_SPEC: FieldSpec = { object: caliberDefinition };
+export const PROJECTILE_SPEC: FieldSpec = { object: projectile };
+export const PROPELLANT_SPEC: FieldSpec = { object: propellant };

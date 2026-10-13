@@ -79,7 +79,7 @@ Units as observed. Meanings marked (inferred) come from GRT's manual or context,
 | propellant | `a0`, `a1`, `z1`, `z2` | | Form-function parameters (three-phase burn model) |
 | propellant | `pt` | °C | Powder temperature at firing; the model's reference is 21 °C |
 | propellant | `tcc`, `tch` | | Change of `Ba` per °C below and above 21 °C; 0 = GRT's internal default (manual p. 14) |
-| propellant | `laddercnt`, `laddermc` | –, g | Ladder: number of steps (below 2: disabled) and charge step |
+| propellant | `laddercnt`, `laddermc` | –, g | Ladder: number of steps (below 2: disabled) and the mass each step **subtracts**; `mc` is the ladder's maximum (manual p. 36) |
 | propellant | `imageUuid`, `imageDetailUuid` | | Pictures in GRT's database |
 | config | `CurveFocusIdx` | | Selected ladder curve (display state) |
 | gun | `leakagegroup/leakage` | mm | `var`s `type` (always 0), `name`, `descr`, `position`, `width`, `height`; a revolver's cylinder gap is a `width` at a `position` |

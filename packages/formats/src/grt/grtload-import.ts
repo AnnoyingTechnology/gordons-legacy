@@ -1,6 +1,8 @@
 import { IssueLog, type ImportResult } from '../import-issues.ts';
 import type { Barrel, GasLeak } from '../load/barrel.ts';
 import type { Cartridge } from '../load/cartridge.ts';
+import { LOAD_SPEC } from '../json/load-shape.ts';
+import { checkValue } from '../json/shape.ts';
 import { LOAD_FORMAT, LOAD_SCHEMA_VERSION, seatingDepth, type Ladder, type Load } from '../load/load.ts';
 import { optionalProperty } from '../optional-property.ts';
 import { readAppendix } from './appendix-mapping.ts';
@@ -117,6 +119,9 @@ export function importGrtLoad(source: string, options: GrtLoadImportOptions = {}
   };
   if (Object.keys(unmapped).length > 0) load.unmapped = unmapped;
 
+  // The same checks as a saved load, so that an import can't produce a load that couldn't be reopened,
+  // such as one with an infinite value or a temperature below absolute zero.
+  checkValue(load, LOAD_SPEC, '', log);
   return log.result(load);
 }
 
@@ -176,9 +181,9 @@ function checkSeatingDepth(load: Load, projectileFields: GrtFields, log: IssueLo
 /** GRT disables the ladder when it has fewer than two steps. */
 function readLadder(fields: GrtFields): Ladder | undefined {
   const steps = fields.optionalNumber('laddercnt');
-  const massIncrement = fields.optionalQuantity('laddermc', 'mass', 'g');
-  if (steps === undefined || steps < 2 || massIncrement === undefined) return undefined;
-  return { steps, massIncrement };
+  const massStep = fields.optionalQuantity('laddermc', 'mass', 'g');
+  if (steps === undefined || steps < 2 || massStep === undefined) return undefined;
+  return { steps, massStep };
 }
 
 function readBarrel(fields: GrtFields, gunElement: XmlElement | undefined, log: IssueLog): Barrel {

@@ -88,7 +88,7 @@ describe('a .327 Federal Magnum load from the community corpus', () => {
   test('separates the charge and the ladder from the powder', () => {
     expect(load.charge.mass).toBeCloseTo(0.388793459998524e-3, 15);
     expect(load.charge.temperature).toBeCloseTo(294.2611, 4); // 70 °F
-    expect(load.ladder).toEqual({ steps: 8, massIncrement: expect.closeTo(0.1 * 64.79891e-6, 12) });
+    expect(load.ladder).toEqual({ steps: 8, massStep: expect.closeTo(0.1 * 64.79891e-6, 12) });
   });
 
   test('converts the barrel and omits values GRT leaves at 0', () => {
@@ -182,6 +182,21 @@ describe('invalid input', () => {
     const result = importGrtLoad(source);
     expect(result.ok).toBe(false);
     expect(result.issues).toContainEqual(expect.objectContaining({ code: 'unexpected-unit', path: 'gun/xe' }));
+  });
+
+  test.each([
+    ['a temperature below absolute zero', 'pt', '-273.16', 'invalid-value', 'charge.temperature'],
+    ['a number too large to represent', 'mc', '1e309', 'invalid-number', 'propellant/mc'],
+    ['a value that overflows when converted to SI', 'Qex', '1e308', 'invalid-value', 'propellant.heatOfExplosion'],
+    ['a negative mass', 'mp', '-5.5', 'invalid-value', 'projectile.mass'],
+  ])('%s is an error', (_, name, value, code, path) => {
+    const source = readFixture('cc0/loads/327_Federal_Magnum_by_dpeppe01_2022.12.12.grtload').replace(
+      new RegExp(`(name="${name}" value=")[^"]*`),
+      `$1${value}`,
+    );
+    const result = importGrtLoad(source);
+    expect(result.ok).toBe(false);
+    expect(result.issues).toContainEqual(expect.objectContaining({ severity: 'error', code, path }));
   });
 
   test('a value GRT may add in the future is kept, not lost', () => {
