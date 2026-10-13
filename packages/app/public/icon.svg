@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Gordon's Legacy: a chamber-pressure curve under a limit line. Original artwork, GPL-3.0. -->
+  <rect width="64" height="64" rx="12" fill="#16181b"/>
+  <path d="M10 16H54" stroke="#d03b3b" stroke-width="3" stroke-linecap="round"/>
+  <path d="M10 52C14 30 18 22 23 22C30 22 34 38 54 44" fill="none" stroke="#3987e5" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M10 52H54" stroke="#9aa0a6" stroke-width="2" stroke-linecap="round"/>
+</svg>

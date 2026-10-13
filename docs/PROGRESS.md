@@ -16,7 +16,7 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
   `packages/cli` simulates a load file. The app (Lit) is a load editor: open several `.grtload` or JSON
   loads in tabs (also by drag and drop), edit the inputs in property tables grouped as in GRT, see the
   simulated shot follow every keystroke, save as JSON; metric or imperial units; five languages;
-  open documents persist in `localStorage`.
+  open documents persist in `localStorage`; installable and usable offline (service worker).
 - **Docs:** [formats/json-v1.md](formats/json-v1.md) (load format), [formats/grtload.md](formats/grtload.md)
   (GRT files), [development.md](development.md) (commands, pitfalls), `packages/formats/README.md`.
 
@@ -27,7 +27,7 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
    references for all the maintainer's loads (locally) and widen the parity tests.
 2. Read the Codex engine safety review (`/tmp/codex-engine-review.md` if still there; otherwise rerun it)
    and fix what it finds: input validation, non-finite results, loops that may not end.
-3. M3: offline PWA, original SVG icons (Sonnet), per-quantity unit choices, ladder curves in the charts,
+3. M3: original SVG icons (Sonnet), per-quantity unit choices, ladder curves in the charts,
    About dialog.
 
 Reverse-engineering workspace (local, never committed; procedure in `docs/model/grt-structure.md`):
@@ -73,6 +73,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-13 | Maintainer tools that need TypeScript run on an official Node 24 build installed in `~/.local/opt` (checksum-verified), rather than adding a TypeScript runner dependency; Debian's Node lacks type stripping. | Agent, for review |
 | 2026-10-14 | UI components with Lit 3.3.3 (pinned; standard web components, small, readable templates, keeps input focus on re-render); no decorators (plain `static properties`). | Agent, for review |
 | 2026-10-14 | Display units chosen per kind of quantity, with metric and imperial presets (GRT allowed a unit per field); case capacity shown as water mass (1 cm³ = 1 g H₂O), grains of water in imperial. | Agent, for review |
+| 2026-10-14 | Offline support with a small hand-written service worker and a 40-line Vite plugin that lists the build's files, rather than `vite-plugin-pwa` (Workbox, many dependencies). App icon drawn as original SVG. | Agent, for review |
 | 2026-10-14 | UI languages built in for English, French, German, Spanish and Italian (the proposal); translations need review by native reloaders before release. | Agent, for review |
 
 ## Open questions
@@ -113,3 +114,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | M2: ladder semantics read from `Compute`: n charges, the main one included, stepping down by repeated subtraction. `ladderChargeMasses` in formats; the app preview lists the ladder's simulated results. |
 | 2026-10-14 | M3: display units (per kind, metric/imperial presets) and i18n (5 catalogs, type-checked completeness) for the app; Lit added. |
 | 2026-10-14 | M3: load editor in the app: tabs of open loads, property tables per group (cartridge, barrel, projectile, propellant, charge and ladder), live simulation, Open/Save (File System Access API or download), units and language in the toolbar. Chart y-axis always reaches above the highest value; labels have a background halo. |
+| 2026-10-14 | M3: the app works offline (service worker caching the build, network first for pages) and is installable (manifest, SVG icon); checked in headless Chromium by reloading offline. App README. |

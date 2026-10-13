@@ -1,0 +1,11 @@
+{
+  "name": "Gordon's Legacy",
+  "short_name": "Gordon's Legacy",
+  "description": "Interior ballistics simulator for handloaders, carrying on Gordon's Reloading Tool.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#2a78d6",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

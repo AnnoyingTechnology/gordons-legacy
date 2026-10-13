@@ -84,3 +84,7 @@ For the most critical and sensitive checks only (for example, the final review o
 predictions before they are shown to users, or a safety-critical data decision), Codex with model
 `gpt-6-astra` at reasoning effort `medium` is available. Never call it lightly; record in `PROGRESS.md`
 when and why it was used.
+
+Run it non-interactively with `codex exec -m <model> -c model_reasoning_effort=<effort> -s read-only
+--ephemeral -o <answer.md> "<prompt>" < /dev/null`. Without `< /dev/null`, a background run waits on
+standard input forever.

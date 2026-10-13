@@ -1,4 +1,5 @@
 import './components/app-shell.ts';
+import { enableOffline } from './offline.ts';
 import { renderStatus } from './status.ts';
 import { showWelcomeOnFirstVisit } from './welcome.ts';
 
@@ -10,3 +11,4 @@ function byId<T extends HTMLElement>(id: string): T {
 
 showWelcomeOnFirstVisit(byId('welcome'));
 renderStatus(byId('status'));
+enableOffline();
