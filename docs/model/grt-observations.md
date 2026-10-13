@@ -14,13 +14,19 @@ document once found.
   same discretization.
 - The burnt fraction at `PointIdxZ1` and `PointIdxZ2` equals the powder's `z1` and `z2`.
 
+## Discretization error
+
+The fixed grid makes the step grow with the barrel: on the 300 BLK fixture (261.6 mm), Pmax goes from
+3444.79 bar to 3443.28 bar at 300 mm and 3435.23 bar at 500 mm (−0.28 %), though the peak is reached
+long before. Matching GRT on long barrels needs the same grid, not only the same equations.
+
 ## Inputs that don't affect the simulation
 
 Varying these alone leaves every result identical (.327 Federal fixture):
 
 | Input | Range tried | Interpretation |
 |---|---|---|
-| `eta` (covolume) | 0.8–1.2 | Ignored, or replaced by an internal value. Every file carries 1. |
+| `eta` (covolume) | 0.8–1.2 | Ignored, or replaced by an internal value (also on the 300 BLK fixture). Every file carries 1. |
 | `pcd` (bulk density) | 700–900 kg/m³ | Used only for the fill ratio. |
 | `gpressure` (projectile) | 100–200 bar | The simulation reads the caliber's `ps` instead. |
 | `glen` (projectile length) | 10.5–12.5 mm | GRT keeps the seating depth and moves the overall length. |

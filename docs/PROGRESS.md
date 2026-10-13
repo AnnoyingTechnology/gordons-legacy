@@ -18,9 +18,12 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 
 ## Next steps
 
-1. M2: derive GRT's equations: manual first, then Ghidra (installed in
-   `~/.local/opt/ghidra_12.1.4_PUBLIC`; project `~/.cache/gordons-legacy/ghidra/GRT`). Ladder semantics
-   can't be read through the IPC (it always reports the main charge); find them in the binary.
+1. M2: derive GRT's equations from the binary into `docs/model/grt-structure.md` (procedure there).
+   Local reverse-engineering workspace: `~/.cache/gordons-legacy/re/` (annotated decompilation, never
+   committed), Ghidra projects in `~/ghidra_projects/` (`GordonsLegacyGRT` fully analysed),
+   `~/.cache/gordons-legacy/decompile.sh <out.c> <addresses>`. Next: the integration loop
+   (`computeMain` dispatches through the vtable), φ(z) on the propellant class, configuration constants
+   (`SetConfigDefaults`). Ladder semantics are in `InnerBallistikLadderSteps`.
 2. M2: one-parameter sweeps (`tools/grt-capture/run.sh sweep`) to check each equation found.
 3. M2: engine package and comparison harness against `packages/engine/test/reference/grt/`.
 
@@ -81,3 +84,4 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 | 2026-10-13 | M2: GRT plugin IPC found and documented; `tools/grt-capture` captures GRT's results and full curves headlessly (12 loads in 22 s); references stored in `packages/engine/test/reference/grt/`. GRT's curve is uniform in projectile travel (2000 steps). |
 | 2026-10-13 | M2: `sweep` command for one-at-a-time studies. Finding: the IPC always reports the main charge, whatever the ladder settings. Ghidra analysis of GRT's binary started. |
 | 2026-10-13 | M2: input sweep of the .327 fixture (`docs/model/grt-observations.md`): GRT ignores the covolume input, `pcd`, `glen` and the projectile's `gpressure` (it uses the caliber's `ps`; importer fixed accordingly); fixed 2000-step travel grid confirmed. GRT is a Xojo (REALbasic) app whose code is a 62 MB overlay; dumped from memory under Wine for Ghidra (`~/.cache/gordons-legacy/grt-dump`). |
+| 2026-10-13 | M2: GRT's overlay dumped and analysed in Ghidra (JDK 21 Temurin and Ghidra in `~/.local/opt`). Xojo metadata gives every class, property offset and method address of the solver; first equations recorded in `docs/model/grt-structure.md` (temperature correction, fill ratio, vivacity smoothing). |
