@@ -21,6 +21,18 @@
         <h2>Status</h2>
         <dl id="status"></dl>
       </section>
+      <section>
+        <h2>GRT load import (preview)</h2>
+        <p>
+          Open a <code>.grtload</code> file to see what Gordon's Legacy reads from it. The file stays in your
+          browser. There is no simulation yet.
+        </p>
+        <label class="file-drop" id="load-drop">
+          <input type="file" accept=".grtload" id="load-file" />
+          <span>Choose a <code>.grtload</code> file, or drop it here.</span>
+        </label>
+        <div id="load-result"></div>
+      </section>
     </main>
     <dialog id="welcome" aria-labelledby="welcome-title">
       <h2 id="welcome-title">Gordon's Legacy</h2>

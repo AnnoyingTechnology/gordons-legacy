@@ -5,6 +5,9 @@
   --rule: #d4d7db;
   --warn-fg: #6b4a00;
   --warn-bg: #fff4d6;
+  --error-fg: #a1121b;
+  --accent: #2f5d8a;
+  --panel: #ffffff;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   font-size: 15px;
   line-height: 1.45;
@@ -21,11 +24,14 @@
     --rule: #33373c;
     --warn-fg: #f0d58a;
     --warn-bg: #3a3017;
+    --error-fg: #ff8a8f;
+    --accent: #8fb8e0;
+    --panel: #1d2024;
   }
 }
 
 body {
-  max-width: 52rem;
+  max-width: 64rem;
   margin: 0 auto;
   padding: 1.5rem;
 }
@@ -90,4 +96,86 @@ dialog form {
 button {
   font: inherit;
   padding: 0.3rem 1rem;
+}
+
+code {
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.9em;
+}
+
+.file-drop {
+  display: block;
+  border: 1px dashed var(--rule);
+  padding: 1rem;
+  cursor: pointer;
+}
+
+.file-drop.dragging {
+  border-color: var(--accent);
+  background: var(--panel);
+}
+
+.file-drop input {
+  display: block;
+  margin-bottom: 0.4rem;
+}
+
+.import-result h3 {
+  font-size: 1rem;
+  margin: 1.2rem 0 0.6rem;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+  gap: 0 2rem;
+}
+
+.summary h4 {
+  font-size: 0.9rem;
+  margin: 0.8rem 0 0.3rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.summary dl {
+  margin: 0;
+  gap: 0.15rem 1rem;
+}
+
+.issues {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0.8rem;
+}
+
+.issues li {
+  margin: 0.15rem 0;
+}
+
+.issues .severity {
+  display: inline-block;
+  min-width: 3.5rem;
+  font-weight: 600;
+}
+
+.issues .error .severity,
+.error {
+  color: var(--error-fg);
+}
+
+.issues .warning .severity {
+  color: var(--warn-fg);
+}
+
+.issues .info .severity {
+  color: var(--muted);
+}
+
+.button {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.35rem 0.9rem;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  text-decoration: none;
 }

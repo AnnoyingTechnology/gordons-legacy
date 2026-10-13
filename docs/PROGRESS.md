@@ -4,23 +4,22 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 
 ## Current state
 
-- **Milestone:** M1 in progress: load format v1, GRT importers and the JSON reader (`parseLoad`) done.
+- **Milestone:** M1 done (2026-10-13), pending the Codex review of unit conversions. M2 next.
 - **Code:** `packages/formats` imports `.grtload`, `.caliber`, `.projectile` and `.propellant` files into
   the load format (SI units), and saves and reads JSON loads with field-by-field validation; 178 tests on
   the CC0 corpus and five of the maintainer's loads. All
-  198 GRT files available import without errors. The app is a status page with the dedication dialog.
+  198 GRT files available import without errors. The app is a status page with the dedication dialog
+  and a `.grtload` import preview (open a file, see the values, issues, and download the JSON).
   Other packages are empty.
 - **Docs:** [formats/json-v1.md](formats/json-v1.md) (load format), [formats/grtload.md](formats/grtload.md)
   (GRT files), [development.md](development.md) (commands, pitfalls), `packages/formats/README.md`.
 
 ## Next steps
 
-1. M1: a `.grtload` viewer on the Pages site (drop a file, see the imported load and the issues), so
-   progress is visible.
-2. M2: confirm how to capture GRT's results (report templates, see Open questions), capture reference
+1. M2: confirm how to capture GRT's results (report templates, see Open questions), capture reference
    outputs for the fixtures, then derive GRT's model (manual, then binary analysis with Ghidra, to be
    unpacked into `~/.local`; not installed system-wide).
-3. Decide how the CLI runs TypeScript (Debian's Node can't; see development.md).
+2. Decide how the CLI runs TypeScript (Debian's Node can't; see development.md).
 
 ## Decisions
 
@@ -76,3 +75,4 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 | 2026-10-13 | Git history restarted (no AI attribution). Code-quality rules added to `AGENTS.md`. M1 step 2 (JSON schema v1) in progress. |
 | 2026-10-13 | M1: load format v1 types; GRT importers for loads and component files; fixtures (CC0 corpus and five maintainer loads); format docs extended (eta unit defect, component files, notes, Latin-1). |
 | 2026-10-13 | M1: JSON reader and writer for loads, validated by declarative shapes that the compiler keeps in sync with the types. Codex model policy logged in `AGENTS.md`. |
+| 2026-10-13 | M1: `.grtload` import preview on the Pages site; app split into small modules. |
