@@ -2,6 +2,7 @@ import { exponentialMean, FormFunction, vivacityAtTemperature, VivacitySmoother 
 import { CONFIG } from './config.ts';
 import { chamberVolume } from './geometry.ts';
 import type { GrtInputs } from './inputs.ts';
+import { GasLeaks } from './leaks.ts';
 import { TimeIntegrator } from './time.ts';
 
 /** One technical atmosphere, Pa: the reference pressure of GRT's burn law. */
@@ -15,15 +16,16 @@ const PI_SQUARED = 9.869604401089358;
 /** Steps over the barrel: Δξ = ξ_E / 2000, but never below 0.001. */
 const STEP_FRACTION = 0.005 / 10;
 const MINIMUM_STEP = 0.001;
+/** Weight of the new acceleration after burnout while gas leaks. */
+const LEAKING_ACCELERATION_SMOOTHING = 0.05;
 
-/** A curve point in GRT's units: travel in m, pressure in bar. */
+/** A curve point in GRT's units: travel in m, pressure in bar, time in ms. */
 export interface GrtPoint {
   travel: number;
   pressure: number;
   velocity: number;
   burntFraction: number;
   projectileEnergy: number;
-  /** Time since ignition, ms. */
   time: number;
 }
 
@@ -39,83 +41,112 @@ export interface GrtSolution {
   supported: boolean;
 }
 
-/** Quantities fixed for the whole shot (grt-traditional.md, Setup). */
-interface ShotConstants {
-  ba0: number;
-  freeVolume: number;
-  travelToMuzzle: number;
-  expansionAtMuzzle: number;
-  effectiveMass: number;
-  frictionMass: number;
-  twistRatio: number;
-}
+/**
+ * The shot's state that changes during the simulation besides the projectile: the charge mass, which
+ * gas leaks reduce, and everything GRT derives from it on the fly (grt-traditional.md, Setup).
+ */
+class Charge {
+  mass: number;
+  private readonly inputs: GrtInputs;
+  private readonly chamber: number;
+  readonly frictionMass: number;
 
-function shotConstants(inputs: GrtInputs): ShotConstants {
-  const chamber = chamberVolume(inputs.caseCapacity, inputs.projectileDiameter, inputs.seatingDepth, inputs.base);
-  const freeVolume = chamber - inputs.chargeMass / inputs.grainDensity;
-  const travelToMuzzle = Math.max(0, inputs.barrelLength - (inputs.caseLength - inputs.seatingDepth));
-  const frictionMass = inputs.boreArea * inputs.boreResistance * BORE_RESISTANCE_MASS_FACTOR;
-  return {
-    ba0: vivacityAtTemperature(inputs),
-    freeVolume,
-    travelToMuzzle,
-    expansionAtMuzzle: travelToMuzzle * (inputs.boreArea / freeVolume),
-    // GRT also adds air and primer masses, both disabled by its configuration.
-    effectiveMass: frictionMass + inputs.sebertFactor * inputs.chargeMass + inputs.projectileMass,
-    frictionMass,
-    twistRatio: inputs.twistLength > 0 ? inputs.grooveDiameter / inputs.twistLength : 0,
-  };
+  constructor(inputs: GrtInputs) {
+    this.inputs = inputs;
+    this.mass = inputs.chargeMass;
+    this.chamber = chamberVolume(inputs.caseCapacity, inputs.projectileDiameter, inputs.seatingDepth, inputs.base);
+    this.frictionMass = inputs.boreArea * inputs.boreResistance * BORE_RESISTANCE_MASS_FACTOR;
+  }
+
+  /** V₀: the chamber volume minus the unburnt powder's solid volume, m³. */
+  get freeVolume(): number {
+    return this.chamber - this.mass / this.inputs.grainDensity;
+  }
+
+  /** m: projectile plus the Sebert share of the charge plus the friction mass, kg. GRT also adds air
+   * and primer masses, both disabled by its configuration. */
+  get effectiveMass(): number {
+    return this.frictionMass + this.inputs.sebertFactor * this.mass + this.inputs.projectileMass;
+  }
 }
 
 /**
- * The motion of the projectile and the loss energies, shared by both phases
- * (grt-traditional.md, Phase A steps 9 to 11).
+ * The projectile's motion and the loss energies (grt-traditional.md, Phase A steps 9 to 11). The
+ * cumulative friction and air energies are subtracted from the driving force, as GRT does.
  */
 class Motion {
   velocity = 0;
   travel = 0;
+  acceleration = 0;
   private friction = 0;
   private air = 0;
   private readonly inputs: GrtInputs;
-  private readonly constants: ShotConstants;
+  private readonly charge: Charge;
+  private readonly travelToMuzzle: number;
+  private readonly frictionSurface: number;
+  private readonly twistRatio: number;
 
-  constructor(inputs: GrtInputs, constants: ShotConstants) {
+  constructor(inputs: GrtInputs, charge: Charge, travelToMuzzle: number) {
     this.inputs = inputs;
-    this.constants = constants;
+    this.charge = charge;
+    this.travelToMuzzle = travelToMuzzle;
+    this.frictionSurface = inputs.grooveDiameter * inputs.projectileLength * 0.6 * Math.PI;
+    this.twistRatio = inputs.twistLength > 0 ? inputs.grooveDiameter / inputs.twistLength : 0;
   }
 
   /**
-   * Advances the projectile to `travel` under the smoothed pressure (bar), with `idealVelocity` the
-   * closed-form velocity used by the loss terms and `relativeStep` the step Δ.
+   * Energies lost during the step, J, with `idealVelocity` the closed-form velocity and `leakFraction`
+   * δ, the open fraction of the bore: internal friction and air drag only act while gas leaks.
    */
-  advance(travel: number, smoothedPressure: number, idealVelocity: number, relativeStep: number): void {
-    const { effectiveMass, frictionMass, twistRatio } = this.constants;
+  stepLosses(relativeStep: number, idealVelocity: number, leakFraction: number): { friction: number; air: number; rotation: number } {
+    const { boreArea, heatCapacityRatio, projectileMass } = this.inputs;
     const idealSquared = idealVelocity ** 2;
-    // Engraving friction; internal friction and air drag only act with gas leaks (GRT multiplies them
-    // by the leak factor), which this engine doesn't model yet.
-    const engravingFriction = relativeStep * idealSquared * frictionMass * 0.5;
+    const air = leakFraction * (relativeStep * boreArea * 1 * idealSquared * heatCapacityRatio);
+    const internal =
+      leakFraction * (relativeStep * this.travelToMuzzle * this.frictionSurface * CONFIG.internalFriction * 1000000);
+    const engraving = relativeStep * idealSquared * this.charge.frictionMass * 0.5;
     const rotation = CONFIG.rotationEnergy
-      ? relativeStep * ((twistRatio * idealSquared * this.inputs.projectileMass * PI_SQUARED) / 4)
+      ? relativeStep * ((this.twistRatio * idealSquared * projectileMass * PI_SQUARED) / 4)
       : 0;
-    this.friction = engravingFriction + this.friction;
+    return { friction: engraving + internal, air, rotation };
+  }
+
+  addLosses(losses: { friction: number; air: number }): void {
+    this.air = losses.air + this.air;
+    this.friction = losses.friction + this.friction;
+  }
+
+  /**
+   * Advances the projectile to `travel` under the smoothed pressure (bar); after burnout with gas
+   * leaking, GRT smooths the acceleration.
+   */
+  advance(travel: number, smoothedPressure: number, rotation: number, smoothAcceleration: boolean): void {
     const force = this.inputs.boreArea * smoothedPressure * PASCALS_PER_BAR - this.friction - this.air - rotation;
-    const acceleration = force / effectiveMass;
+    let acceleration = force / this.charge.effectiveMass;
+    if (smoothAcceleration) {
+      acceleration =
+        this.acceleration * (1 - LEAKING_ACCELERATION_SMOOTHING) + acceleration * LEAKING_ACCELERATION_SMOOTHING;
+    }
     this.velocity = Math.sqrt((travel - this.travel) * acceleration * 2 + this.velocity ** 2);
     this.travel = travel;
+    this.acceleration = acceleration;
   }
 }
 
 /** Runs GRT's solver (grt-traditional.md, Integration). */
 export function solve(inputs: GrtInputs): GrtSolution {
-  const constants = shotConstants(inputs);
-  const { ba0, freeVolume, travelToMuzzle, expansionAtMuzzle, effectiveMass } = constants;
-  const { boreArea, chargeMass, heatOfExplosion, heatCapacityRatio: k, initialPressure } = inputs;
+  const { boreArea, heatOfExplosion, heatCapacityRatio: k, initialPressure } = inputs;
+  const charge = new Charge(inputs);
+  const travelToMuzzle = Math.max(0, inputs.barrelLength - (inputs.caseLength - inputs.seatingDepth));
+  const expansionAtMuzzle = travelToMuzzle * (boreArea / charge.freeVolume);
   const step = Math.max(MINIMUM_STEP, expansionAtMuzzle * STEP_FRACTION);
+  const ba0 = vivacityAtTemperature(inputs);
   const formFunction = new FormFunction(inputs);
   const vivacity = new VivacitySmoother(ba0, inputs);
-  const motion = new Motion(inputs, constants);
-  const points: GrtPoint[] = [];
+  const leaks = new GasLeaks(inputs);
+  const motion = new Motion(inputs, charge, travelToMuzzle);
   const time = new TimeIntegrator();
+  const points: GrtPoint[] = [];
   const record = (burntFraction: number, pressure: number) => {
     time.add(motion.travel, points.at(-1)?.velocity ?? 0);
     points.push({
@@ -137,19 +168,25 @@ export function solve(inputs: GrtInputs): GrtSolution {
   // Phase A: while the powder burns.
   while (!(expansionAtMuzzle < expansion || burntFraction > 1)) {
     const relativeStep = (expansion - previousExpansion) / expansionAtMuzzle;
+    const timeStep = time.lastIncrement / 1000;
     const clamped = Math.min(expansion, expansionAtMuzzle);
     const travel = (travelToMuzzle / expansionAtMuzzle) * clamped;
     theta = 1 - 1 / (clamped + 1) ** ((k - 1) / 2);
     const b = vivacity.next(formFunction.at(burntFraction) * ba0);
+    const chargeMass = charge.mass;
+    const mass = charge.effectiveMass;
     const idealVelocity = theta * ((heatOfExplosion * chargeMass * b * 2 * 1000) / (boreArea * TECHNICAL_ATMOSPHERE));
-    burntFraction = idealVelocity * ((effectiveMass * b) / (boreArea * TECHNICAL_ATMOSPHERE));
+    burntFraction = idealVelocity * ((mass * b) / (boreArea * TECHNICAL_ATMOSPHERE));
     const absolutePressure =
-      ((b * chargeMass * heatOfExplosion) ** 2 * effectiveMass * (k - 1) * 2) /
-      (boreArea ** 2 * TECHNICAL_ATMOSPHERE ** 2 * freeVolume);
+      ((b * chargeMass * heatOfExplosion) ** 2 * mass * (k - 1) * 2) /
+      (boreArea ** 2 * TECHNICAL_ATMOSPHERE ** 2 * charge.freeVolume);
     const meanPressure = ((theta - theta ** 2) / (clamped + 1)) * absolutePressure * 10;
     const pressure = (1 - burntFraction) * initialPressure + meanPressure;
-    smoothedPressure = exponentialMean(smoothedPressure, pressure, CONFIG.pressureSmoothingBurning);
-    motion.advance(travel, smoothedPressure, idealVelocity, relativeStep);
+    const loss = leaks.pressureLoss(relativeStep, timeStep, pressure, travel, burntFraction, charge);
+    smoothedPressure = exponentialMean(smoothedPressure, pressure - loss, CONFIG.pressureSmoothingBurning);
+    const losses = motion.stepLosses(relativeStep, idealVelocity, leaks.openFraction);
+    motion.addLosses(losses);
+    motion.advance(travel, smoothedPressure, losses.rotation, false);
     record(burntFraction, smoothedPressure);
     previousExpansion = clamped;
     expansion += step;
@@ -157,20 +194,26 @@ export function solve(inputs: GrtInputs): GrtSolution {
   const burnoutIndex = points.length;
   const finalBurntFraction = Math.min(1, burntFraction);
 
-  // Phase B: adiabatic expansion after burnout.
+  // Phase B: adiabatic expansion after burnout. GRT keeps the last burnt fraction (possibly a little
+  // above 1) for the gas lost through leaks.
   const thetaAtBurnout = theta;
-  const chemicalEnergy = heatOfExplosion * chargeMass * 1000;
   while (!(expansionAtMuzzle < expansion)) {
     const relativeStep = (expansion - previousExpansion) / expansionAtMuzzle;
+    const timeStep = time.lastIncrement / 1000;
     const clamped = Math.min(expansion, expansionAtMuzzle);
     const travel = (travelToMuzzle / expansionAtMuzzle) * clamped;
     const sigma = 1 - 1 / ((clamped + 1) ** (k - 1) * (1 - thetaAtBurnout));
-    const idealVelocity = Math.sqrt(((sigma * heatOfExplosion * chargeMass * 2) / effectiveMass) * 1000);
-    const kineticEnergy = idealVelocity ** 2 * effectiveMass * 0.5;
-    const gasVolume = (boreArea * travel + freeVolume) / (k - 1);
+    const idealVelocity = Math.sqrt(((sigma * heatOfExplosion * charge.mass * 2) / charge.effectiveMass) * 1000);
+    const chemicalEnergy = heatOfExplosion * charge.mass * 1000;
+    const kineticEnergy = idealVelocity ** 2 * charge.effectiveMass * 0.5;
+    // GRT computes the step's losses with the leak fraction of the previous step here.
+    const losses = motion.stepLosses(relativeStep, idealVelocity, leaks.openFraction);
+    const gasVolume = (boreArea * travel + charge.freeVolume) / (k - 1);
     const pressure = (chemicalEnergy - kineticEnergy) / (gasVolume * PASCALS_PER_BAR);
-    smoothedPressure = exponentialMean(smoothedPressure, pressure, CONFIG.pressureSmoothingAfterBurnout);
-    motion.advance(travel, smoothedPressure, idealVelocity, relativeStep);
+    const loss = leaks.pressureLoss(relativeStep, timeStep, pressure, travel, burntFraction, charge);
+    smoothedPressure = exponentialMean(smoothedPressure, pressure - loss, CONFIG.pressureSmoothingAfterBurnout);
+    motion.addLosses(losses);
+    motion.advance(travel, smoothedPressure, losses.rotation, leaks.openFraction > 0);
     record(1, smoothedPressure);
     previousExpansion = clamped;
     expansion += step;
@@ -184,6 +227,6 @@ export function solve(inputs: GrtInputs): GrtSolution {
     burnoutIndex,
     finalBurntFraction,
     seatedBasePosition: inputs.caseLength - inputs.seatingDepth,
-    supported: formFunction.hasUsableZ2,
+    supported: formFunction.hasUsableZ2 && inputs.gasLeaks.every((leak) => leak.type <= 2),
   };
 }

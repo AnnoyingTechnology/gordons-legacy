@@ -5,8 +5,9 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 ## Current state
 
 - **Milestone:** M2 in progress: the GRT Traditional engine reproduces GRT to machine precision (peak
-  pressure and muzzle velocity within 10⁻¹⁴) on 11 of the 12 fixture loads; gas leaks, jump, time
-  integration and z2 recomputation remain.
+  pressure, muzzle velocity, barrel time within 10⁻¹⁴) on all 12 fixtures and all 67 maintainer loads,
+  gas leaks included. Remaining: jump to the lands, z2 recomputation, slot leaks, derived results
+  (OBT, 10 %-Pmax times, recoil, efficiency), ladders.
 - **Code:** `packages/formats` imports `.grtload`, `.caliber`, `.projectile` and `.propellant` files into
   the load format (SI units), and saves and reads JSON loads with field-by-field validation; 182 tests on
   the CC0 corpus and five of the maintainer's loads. Imports are checked against the same specification as
@@ -98,3 +99,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-13 | M2: `packages/engine` GRT Traditional engine written from `docs/model/grt-traditional.md`; parity tests against GRT's captured results pass on 11 of 12 fixtures to machine precision (the revolver needs gas leaks). Key recovery: GRT derives the degressive scale zb by iteration for continuity at z1. |
 | 2026-10-13 | M2: all 67 of the maintainer's loads captured locally (`~/.cache/gordons-legacy/references/maintainer`); `tools/grt-capture/compare.ts`: the engine matches GRT to machine precision on all 62 supported loads; the 5 revolver loads with a cylinder gap need gas leaks (peak pressure already exact). |
 | 2026-10-14 | M2: GRT's time integration recovered (a pair rule on 1/v with a second-difference correction); barrel time and curve times match GRT to 1e-12. |
+| 2026-10-14 | M2: gas leaks recovered (open area, smoothed pressure loss, escaping charge, smoothed acceleration after burnout) with a second snapshot of GRT running the revolver fixture; all 67 maintainer loads now match GRT to machine precision. |

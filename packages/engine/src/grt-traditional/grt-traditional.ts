@@ -43,7 +43,7 @@ export const grtTraditional: Engine = {
     const warnings: SimulationWarning[] = [];
     if (peak.pressure < 2 * inputs.initialPressure) warnings.push('pressure-too-low');
     if (inputs.sebertFactor < 0) warnings.push('invalid-input');
-    if (load.barrel.gasLeaks.length > 0 || load.barrel.jumpToLands !== undefined || !solution.supported) {
+    if (load.barrel.jumpToLands !== undefined || !solution.supported) {
       warnings.push('unsupported-feature');
     }
 

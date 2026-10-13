@@ -18,6 +18,8 @@ export interface GrtInputs {
   grooveDiameter: number;
   /** D_p, m. */
   projectileDiameter: number;
+  /** L_p, m. */
+  projectileLength: number;
   /** d, m. */
   seatingDepth: number;
   base: ProjectileBase;
@@ -49,6 +51,19 @@ export interface GrtInputs {
   /** T, °C. */
   temperature: number;
   shotshell: boolean;
+  gasLeaks: GrtLeak[];
+}
+
+/** An opening in the bore (grt-traditional.md, Gas leaks). */
+export interface GrtLeak {
+  /** GRT's leak type: 0 cylinder gap, 1 round hole, 2 rectangular hole, 3 slot. */
+  type: number;
+  /** Distance from the breech face to the opening, m. */
+  position: number;
+  /** Width along the bore, m. */
+  width: number;
+  /** Height, m. */
+  height: number;
 }
 
 const PASCALS_PER_BAR = 1e5;
@@ -64,6 +79,7 @@ export function grtInputs(load: Load): GrtInputs {
     boreArea: cartridge.effectiveBoreArea,
     grooveDiameter: cartridge.grooveDiameter,
     projectileDiameter: projectile.diameter,
+    projectileLength: projectile.length,
     seatingDepth: seatingDepth(load),
     base: projectile.base,
     caseCapacity: cartridge.caseCapacity,
@@ -84,5 +100,6 @@ export function grtInputs(load: Load): GrtInputs {
     hotTemperatureCoefficient: propellant.burnModel.hotTemperatureCoefficient,
     temperature: charge.temperature - ZERO_CELSIUS,
     shotshell: cartridge.shotshell,
+    gasLeaks: barrel.gasLeaks.map(({ type, position, width, height }) => ({ type, position, width, height })),
   };
 }

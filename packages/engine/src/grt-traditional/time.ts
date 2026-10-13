@@ -9,6 +9,8 @@ export class TimeIntegrator {
   readonly times: number[] = [];
   private readonly travels: number[] = [];
   private elapsed = 0;
+  /** Increase of the time at the last pair step, ms: GRT's time step, used by gas leaks. */
+  lastIncrement = 0;
   private inverseVelocity = 0;
   private firstDifference = 0;
   private pairCount = 0;
@@ -28,7 +30,9 @@ export class TimeIntegrator {
       this.pairCount = 0;
       const secondDifference = Math.abs(firstDifference - this.firstDifference);
       const rate = inverseVelocity * 1000 + Math.abs(secondDifference - firstDifference) * 1000 * (1 / 6);
-      this.elapsed = this.elapsed + rate * Math.abs(travel - this.travels[index - 2]!);
+      const elapsed = this.elapsed + rate * Math.abs(travel - this.travels[index - 2]!);
+      this.lastIncrement = elapsed - this.elapsed;
+      this.elapsed = elapsed;
       if (index - 1 > 1) this.times[index - 1] = (this.elapsed + this.times[index - 2]!) / 2;
     }
     this.firstDifference = firstDifference;

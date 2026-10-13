@@ -7,8 +7,9 @@ from it. How each part was recovered and checked is in [grt-structure.md](grt-st
 Status marks: **confirmed** parts reproduce GRT to machine precision under emulation; **partial**
 parts are understood but not yet confirmed in every branch; **open** parts are not yet recovered.
 
-The engine built from this page reproduces GRT's peak pressure and muzzle velocity to within 10⁻¹⁴
-(the last bits of a double) on every fixture load without gas leaks (`packages/engine/test/grt-parity.test.ts`).
+The engine built from this page reproduces GRT's peak pressure, muzzle velocity and barrel time to within
+10⁻¹⁴ (the last bits of a double) on every fixture load (`packages/engine/test/grt-parity.test.ts`) and on
+all 67 of the maintainer's loads, revolvers with cylinder gaps included.
 
 Notation: SI units unless stated. GRT mixes units in a few places (bar, kJ/kg, cm³); where it does,
 the formula says so, because reproducing GRT means reproducing its conversions.
@@ -104,31 +105,50 @@ Initially everything is 0, except B₁ = B = Ba₀.
 4. v_θ = θ · 2 · Q · 1000 · m_c · B / (A p₀).
 5. z = v_θ · m · B / (A p₀).
 6. p_abs = 2 (k − 1) · m · (B m_c Q)² / (p₀² A² V₀); p_m = 10 · p_abs · θ (1 − θ) / (1 + ξ_c) (bar).
-7. p = p_m + p_s (1 − z) − p_leak (bar; p_leak = 0 without gas leaks, open otherwise).
+7. p = p_m + p_s (1 − z) − p_leak (bar; see Gas leaks).
 8. p̃ ← 0.27 p + 0.73 p̃ (p̃ = p at the first step).
 9. Energies of the step: E_rot = Δ · τ · v_θ² · m_p · π² / 4;
-   E_U = Δ · v_θ² · m_f / 2 (engraving friction); E_I and E_air are multiplied by the leak factor and are
-   0 without gas leaks. Cumulative: E_friction += E_U + E_I; E_air += E_air; E_rot,total += E_rot.
+   E_U = Δ · v_θ² · m_f / 2 (engraving friction); internal friction
+   E_I = δ · Δ · x_eff · (0.6 π D_g L_p) · G · 10⁶ and air drag E_air = δ · Δ · A · v_θ² · k, where δ is the
+   open fraction of the bore through gas leaks (0 without leaks). Cumulative: E_friction ← (E_U + E_I) +
+   E_friction; E_air,total ← E_air + E_air,total.
 10. a = (p̃ · 10⁵ · A − E_friction − E_air − E_rot) / m (E_rot of this step only).
 11. v ← √(v² + 2 a (x − x_previous)).
 
 The point records x, p̃, v, z, the projectile energy m_p v² / 2, and the propellant energy z · Q · m_c ·
 1000.
 
+### Gas leaks (confirmed for cylinder gaps)
+
+Each opening of the gun is placed on the projectile's travel: it starts at s = position − (L_case − d)
+and is uncovered over its width w. Its area, with r = D_g / 2: cylinder gap 2 π r w; round hole
+π (w/2)², or the ellipse π (w/2)(h/2) with a height h; rectangular hole w h (slots: open).
+
+At each step, with Δt the time step (the last increase of T, in s) and p the step's pressure (bar):
+
+1. Nothing leaks before the first time step (Δt ≤ 0) or without openings.
+2. Open area: A_o = min(A, Σ clamp((x − s)/w, 0, 1) · area) over the openings with x ≥ s > 0.
+3. If A_o = 0, the loss is reset to 0. Otherwise the loss is smoothed:
+   p_leak ← min(p, 0.85 p_leak + 0.15 min(p, √(A_o / A) · p)).
+4. If p_leak > 0: δ = clamp(A_o / A, 0, 1), and the charge loses
+   Δ · (p_leak / p) · (1 − z) · s · m_c (never below 0). V₀, m and everything derived from m_c follow.
+
+In phase A the leak is evaluated before the step's energies, in phase B after them (phase B's energies
+use the previous step's δ). In phase B, z is the last value of phase A, which may slightly exceed 1.
+
 ### End of burning (partial)
 
 θ_B is the last θ of phase A. The result notes whether the peak pressure was reached before burnout:
 θ_B ≥ (k − 1)/(2k).
 
-### Phase B: after burnout (confirmed for loads without gas leaks)
+### Phase B: after burnout (confirmed)
 
 1. σ = 1 − 1 / ((1 + ξ_c)^(k − 1) · (1 − θ_B)).
 2. v_σ = √(2 σ Q · 1000 · m_c / m).
 3. p = (Q · 1000 · m_c − m v_σ² / 2) · (k − 1) / ((V₀ + A x) · 10⁵) − p_leak (bar).
 4. p̃ ← 0.18 p + 0.82 p̃.
-5. Energies as in phase A with v_σ in place of v_θ; a and v as in phase A, except that a negative
-   driving force sets the effective gas velocity to 0 (open: the separate acceleration used with gas
-   leaks).
+5. Energies as in phase A with v_σ in place of v_θ; a and v as in phase A, except that while gas leaks
+   (δ > 0) the acceleration is smoothed: a ← 0.95 a_previous + 0.05 a.
 
 The point records z = 1.
 
@@ -153,5 +173,5 @@ time is the last point's T.
 
 ## Not yet covered
 
-Gas leaks (`fn_pLoss`), the jump to the lands (`fn_VbAdjust_gjump`, `fn_jumpTime`), air drag, recoil,
+Slot-type leaks, the jump to the lands (`fn_VbAdjust_gjump`, `fn_jumpTime`), air drag, recoil,
 OBT, the 10 %-of-peak times, and ladders.
