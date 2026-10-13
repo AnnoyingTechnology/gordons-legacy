@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Starts GRT headless (Xvfb, Wine), captures reference results, then stops GRT.
+# Starts GRT headless (Xvfb, Wine), runs a command against it, then stops GRT.
 #
-#   tools/grt-capture/run.sh <output directory> <file.grtload>...
+#   tools/grt-capture/run.sh capture --out <directory> <file.grtload>...
+#   tools/grt-capture/run.sh sweep <base.grtload> <name>=<v1>,<v2>... ...
 set -eu
 
 CACHE=$HOME/.cache/gordons-legacy
@@ -33,4 +34,9 @@ for _ in $(seq 1 120); do
 done
 sleep 2
 
-"$NODE" "$TOOL_DIR/capture.ts" --out "$@"
+COMMAND=$1
+shift
+case $COMMAND in
+  capture | sweep) "$NODE" "$TOOL_DIR/$COMMAND.ts" "$@" ;;
+  *) echo "Unknown command $COMMAND; use capture or sweep." >&2; exit 2 ;;
+esac

@@ -18,10 +18,10 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 
 ## Next steps
 
-1. M2: experiments on GRT through IPC: ladder semantics (index 7 of 8 looked like the main charge), then
-   one-parameter sweeps to identify the model's behaviour.
-2. M2: derive GRT's equations: manual first, then Ghidra (installed in
-   `~/.local/opt/ghidra_12.1.4_PUBLIC`).
+1. M2: derive GRT's equations: manual first, then Ghidra (installed in
+   `~/.local/opt/ghidra_12.1.4_PUBLIC`; project `~/.cache/gordons-legacy/ghidra/GRT`). Ladder semantics
+   can't be read through the IPC (it always reports the main charge); find them in the binary.
+2. M2: one-parameter sweeps (`tools/grt-capture/run.sh sweep`) to check each equation found.
 3. M2: engine package and comparison harness against `packages/engine/test/reference/grt/`.
 
 ## Decisions
@@ -79,3 +79,4 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 | 2026-10-13 | M1: `.grtload` import preview on the Pages site; app split into small modules. |
 | 2026-10-13 | Codex (`gpt-6.1-sol`, xhigh) reviewed the importer's units: no conversion-factor error. It found the ladder direction inverted in the format docs (GRT steps down from the main charge, manual p. 36) and that impossible values (Infinity, below 0 K) imported; both fixed, with regression tests. Measured-pressure unit stays unverified. |
 | 2026-10-13 | M2: GRT plugin IPC found and documented; `tools/grt-capture` captures GRT's results and full curves headlessly (12 loads in 22 s); references stored in `packages/engine/test/reference/grt/`. GRT's curve is uniform in projectile travel (2000 steps). |
+| 2026-10-13 | M2: `sweep` command for one-at-a-time studies. Finding: the IPC always reports the main charge, whatever the ladder settings. Ghidra analysis of GRT's binary started. |

@@ -36,8 +36,9 @@ double precision.
 
 ## Results (`Get_TabResults` → `data`)
 
-The results are those of the curve shown in the tab: with a ladder, the selected step
-(`CurveFocusIdx`). Observed fields:
+The results are always those of the load's main charge (`mc`), whatever the ladder settings: the
+.327 Federal fixture gives identical results for `CurveFocusIdx` 0 to 8 and `laddercnt` 1 and 2. The IPC
+therefore can't show the other ladder steps. Observed fields:
 
 | Field | Unit | Meaning |
 |---|---|---|

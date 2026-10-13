@@ -9,15 +9,11 @@
  * selected, so that the results are those of the load's own charge.
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { homedir } from 'node:os';
 import { basename, join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { BRIDGE_PORT } from './bridge.ts';
-import { GrtIpcClient, type GrtCurvePoint, type GrtTab } from './grt-ipc-client.ts';
-
-const WORK_DIRECTORY = join(homedir(), '.cache/gordons-legacy/capture-work');
-const TAB_TIMEOUT_MS = 20_000;
-const POLL_INTERVAL_MS = 250;
+import { GrtIpcClient, type GrtCurvePoint } from './grt-ipc-client.ts';
+import { simulateInGrt } from './simulate.ts';
 /** Significant digits kept in curves: far below any comparison tolerance, and keeps files small. */
 const CURVE_DIGITS = 10;
 
@@ -51,7 +47,6 @@ async function main(): Promise<void> {
     process.exit(2);
   }
   mkdirSync(values.out, { recursive: true });
-  mkdirSync(WORK_DIRECTORY, { recursive: true });
 
   const client = await GrtIpcClient.connect(BRIDGE_PORT);
   let failures = 0;
@@ -76,15 +71,7 @@ async function main(): Promise<void> {
 async function captureLoad(client: GrtIpcClient, path: string): Promise<GrtReference> {
   const original = readFileSync(path, 'utf8');
   const { text, changes } = prepareForCapture(original);
-  // Unique name, so that the new tab can be told apart from earlier ones with the same file name.
-  const workName = `${basename(path, '.grtload')}-${Date.now()}`;
-  const workPath = join(WORK_DIRECTORY, `${workName}.grtload`);
-  writeFileSync(workPath, text);
-
-  await client.loadFile(`Z:${workPath.replaceAll('/', '\\')}`);
-  const tab = await waitForTab(client, workName);
-  const { results, curve } = await client.tabResults(tab);
-  if (results['invalidData'] === 'true') throw new Error('GRT reports invalid data for this load');
+  const { results, curve } = await simulateInGrt(client, text, basename(path, '.grtload'));
 
   return {
     source: basename(path),
@@ -110,16 +97,6 @@ function prepareForCapture(text: string): { text: string; changes: string[] } {
     return `${prefix}0"`;
   });
   return { text: prepared, changes };
-}
-
-async function waitForTab(client: GrtIpcClient, caption: string): Promise<GrtTab> {
-  const deadline = Date.now() + TAB_TIMEOUT_MS;
-  while (Date.now() < deadline) {
-    const tab = await client.tabOnTop();
-    if (tab.caption === caption) return tab;
-    await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
-  }
-  throw new Error(`GRT did not open ${caption} within ${TAB_TIMEOUT_MS / 1000} s`);
 }
 
 function toColumns(points: GrtCurvePoint[]): GrtReference['curve'] {
