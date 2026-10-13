@@ -132,10 +132,17 @@ The point records x, p̃, v, z, the projectile energy m_p v² / 2, and the prope
 
 The point records z = 1.
 
-### Time (open)
+### Time (confirmed)
 
-Each point stores 1/v; time is integrated over pairs of steps, every second point being assigned the
-mean of its neighbours. The exact rule is not yet recovered; trapezoidal integration is 0.3 % short.
+Time T (ms) starts at 0 and is integrated as points are added. For each new point n ≥ 2 whose
+predecessor has moved (x_{n−1} > 0): u = 1/v_{n−1}, d₁ = |u − u_prev|; on every second such point,
+with d₂ = |d₁ − d₁,prev|:
+
+T ← T + (1000 u + |d₂ − d₁| · 1000 · (1/6)) · |x_n − x_{n−2}|
+
+and the point in between gets t_{n−1} = (T + t_{n−2}) / 2. Every point gets t_n = T when added; the
+change of T at the last pair step, Δt = T − T_previous, is the time step used by gas leaks. The barrel
+time is the last point's T.
 
 ## Results (partial)
 

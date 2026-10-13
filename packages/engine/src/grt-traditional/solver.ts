@@ -2,6 +2,7 @@ import { exponentialMean, FormFunction, vivacityAtTemperature, VivacitySmoother 
 import { CONFIG } from './config.ts';
 import { chamberVolume } from './geometry.ts';
 import type { GrtInputs } from './inputs.ts';
+import { TimeIntegrator } from './time.ts';
 
 /** One technical atmosphere, Pa: the reference pressure of GRT's burn law. */
 const TECHNICAL_ATMOSPHERE = 98066.5;
@@ -22,6 +23,8 @@ export interface GrtPoint {
   velocity: number;
   burntFraction: number;
   projectileEnergy: number;
+  /** Time since ignition, ms. */
+  time: number;
 }
 
 export interface GrtSolution {
@@ -112,14 +115,18 @@ export function solve(inputs: GrtInputs): GrtSolution {
   const vivacity = new VivacitySmoother(ba0, inputs);
   const motion = new Motion(inputs, constants);
   const points: GrtPoint[] = [];
-  const record = (burntFraction: number, pressure: number) =>
+  const time = new TimeIntegrator();
+  const record = (burntFraction: number, pressure: number) => {
+    time.add(motion.travel, points.at(-1)?.velocity ?? 0);
     points.push({
       travel: motion.travel,
       pressure,
       velocity: motion.velocity,
       burntFraction,
       projectileEnergy: motion.velocity ** 2 * (inputs.projectileMass / 2),
+      time: 0,
     });
+  };
 
   let expansion = 0;
   let previousExpansion = 0;
@@ -168,6 +175,9 @@ export function solve(inputs: GrtInputs): GrtSolution {
     previousExpansion = clamped;
     expansion += step;
   }
+
+  // Times are final only now: each pair step revises the point before it.
+  points.forEach((point, index) => (point.time = time.times[index]!));
 
   return {
     points,

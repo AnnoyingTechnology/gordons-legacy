@@ -24,6 +24,8 @@ export interface Simulation {
   muzzleVelocity: number;
   /** Pressure when the projectile leaves the muzzle, Pa. */
   muzzlePressure: number;
+  /** Time from ignition until the projectile leaves the muzzle, s. */
+  barrelTime: number;
   /** Fraction of the charge burnt when the projectile leaves the muzzle, 0 to 1. */
   burntFractionAtMuzzle: number;
   /** Where the charge finished burning, if it did before the muzzle. */
@@ -48,6 +50,8 @@ export interface SimulationCurve {
   burntFraction: Float64Array;
   /** Projectile kinetic energy, J. */
   projectileEnergy: Float64Array;
+  /** Time since ignition, s. */
+  time: Float64Array;
 }
 
 export type SimulationWarning =

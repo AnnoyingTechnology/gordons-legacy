@@ -19,8 +19,7 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 
 ## Next steps
 
-1. M2: remaining parts of GRT's model, from the binary into `docs/model/grt-traditional.md`: time
-   integration (`InnerBallistikResult.AddPoint`), gas leaks (`fn_pLoss`, the revolver fixture),
+1. M2: remaining parts of GRT's model, from the binary into `docs/model/grt-traditional.md`: gas leaks (`fn_pLoss`, the revolver fixture),
    jump to the lands, z2 recomputation, results (OBT, 10 %-Pmax times, recoil), ladders. Then capture
    references for all the maintainer's loads (locally) and widen the parity tests.
 2. M2: CLI to simulate a load file. M3: diagram in the app.
@@ -98,3 +97,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-13 | M2: GRT's step function emulated (Unicorn) on a memory snapshot of a running GRT reproduces the reference curve digit for digit; loop structure, travel step ξE/2000, form function φ(z), smoothing weights and configuration constants recovered (`docs/model/grt-structure.md`). Local tools in `~/.cache/gordons-legacy/re/` (`emu.py`, `emu2.py`, `steps.py`, `annotate.py`, `disasm.py`). |
 | 2026-10-13 | M2: `packages/engine` GRT Traditional engine written from `docs/model/grt-traditional.md`; parity tests against GRT's captured results pass on 11 of 12 fixtures to machine precision (the revolver needs gas leaks). Key recovery: GRT derives the degressive scale zb by iteration for continuity at z1. |
 | 2026-10-13 | M2: all 67 of the maintainer's loads captured locally (`~/.cache/gordons-legacy/references/maintainer`); `tools/grt-capture/compare.ts`: the engine matches GRT to machine precision on all 62 supported loads; the 5 revolver loads with a cylinder gap need gas leaks (peak pressure already exact). |
+| 2026-10-14 | M2: GRT's time integration recovered (a pair rule on 1/v with a second-difference correction); barrel time and curve times match GRT to 1e-12. |

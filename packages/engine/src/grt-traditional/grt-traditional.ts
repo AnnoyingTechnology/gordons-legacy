@@ -4,6 +4,7 @@ import { grtInputs } from './inputs.ts';
 import { solve } from './solver.ts';
 
 const PASCALS_PER_BAR = 1e5;
+const SECONDS_PER_MILLISECOND = 1e-3;
 
 /**
  * The "GRT Traditional" engine: reproduces Gordon's Reloading Tool 2021.2030
@@ -23,6 +24,7 @@ export const grtTraditional: Engine = {
       velocity: new Float64Array(count),
       burntFraction: new Float64Array(count),
       projectileEnergy: new Float64Array(count),
+      time: new Float64Array(count),
     };
     let peakIndex = 0;
     points.forEach((point, index) => {
@@ -31,6 +33,7 @@ export const grtTraditional: Engine = {
       curve.velocity[index] = point.velocity;
       curve.burntFraction[index] = point.burntFraction;
       curve.projectileEnergy[index] = point.projectileEnergy;
+      curve.time[index] = point.time * SECONDS_PER_MILLISECOND;
       if (point.pressure > points[peakIndex]!.pressure) peakIndex = index;
     });
     const muzzle = points[count - 1]!;
@@ -50,6 +53,7 @@ export const grtTraditional: Engine = {
       maxPressureTravel: peak.travel,
       muzzleVelocity: muzzle.velocity,
       muzzlePressure: muzzle.pressure * PASCALS_PER_BAR,
+      barrelTime: muzzle.time * SECONDS_PER_MILLISECOND,
       burntFractionAtMuzzle: solution.finalBurntFraction,
       ...(burnout ? { burnout: { travel: burnout.travel, pressure: burnout.pressure * PASCALS_PER_BAR } } : {}),
       seatedBasePosition: solution.seatedBasePosition,

@@ -15,7 +15,7 @@ const FIXTURES = join(import.meta.dirname, '../../formats/test/fixtures');
 interface Reference {
   source: string;
   results: Record<string, string>;
-  curve: { position_mm: number[]; pressure_bar: number[]; velocity_m_s: number[]; burntFraction: number[] };
+  curve: { position_mm: number[]; pressure_bar: number[]; velocity_m_s: number[]; burntFraction: number[]; time_ms: number[] };
 }
 
 /** GRT writes results as "value unit"; returns the value. */
@@ -57,6 +57,7 @@ describe.each(references.map((reference) => [reference.source, reference] as con
     expect(relativeError(simulation.maxPressure / 1e5, value(reference.results['MaxPressure']))).toBeLessThan(SCALAR_TOLERANCE);
     expect(relativeError(simulation.muzzleVelocity, value(reference.results['MuzzleVelocity']))).toBeLessThan(SCALAR_TOLERANCE);
     expect(relativeError(simulation.muzzlePressure / 1e5, value(reference.results['MuzzlePressure']))).toBeLessThan(SCALAR_TOLERANCE);
+    expect(relativeError(simulation.barrelTime * 1000, value(reference.results['MuzzleTime']))).toBeLessThan(SCALAR_TOLERANCE);
   });
 
   test.skipIf(unsupported)('the whole curve matches GRT', () => {
@@ -69,6 +70,7 @@ describe.each(references.map((reference) => [reference.source, reference] as con
         relativeError(simulation.curve.pressure[index]! / 1e5, curve.pressure_bar[index]!),
         index > 0 ? relativeError(simulation.curve.velocity[index]!, curve.velocity_m_s[index]!) : 0,
         Math.abs(simulation.curve.burntFraction[index]! - curve.burntFraction[index]!),
+        index > 1 ? relativeError(simulation.curve.time[index]! * 1000, curve.time_ms[index]!) : 0,
       );
     }
     expect(worst).toBeLessThan(CURVE_TOLERANCE);
