@@ -7,7 +7,7 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 - **Milestone:** M2 in progress: the GRT Traditional engine reproduces GRT to machine precision (peak
   pressure, muzzle velocity, barrel time within 10⁻¹⁴) on all 12 fixtures and all 67 maintainer loads,
   gas leaks included. Remaining: jump to the lands, z2 recomputation, slot leaks, derived results
-  (OBT, 10 %-Pmax times, recoil, efficiency), ladders.
+  (OBT, 10 %-Pmax times, recoil, efficiency).
 - **Code:** `packages/formats` imports `.grtload`, `.caliber`, `.projectile` and `.propellant` files into
   the load format (SI units), and saves and reads JSON loads with field-by-field validation; 182 tests on
   the CC0 corpus and five of the maintainer's loads. Imports are checked against the same specification as
@@ -21,7 +21,7 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 ## Next steps
 
 1. M2: remaining parts of GRT's model, from the binary into `docs/model/grt-traditional.md`: gas leaks (`fn_pLoss`, the revolver fixture),
-   jump to the lands, z2 recomputation, results (OBT, 10 %-Pmax times, recoil), ladders. Then capture
+   jump to the lands, z2 recomputation, results (OBT, 10 %-Pmax times, recoil). Then capture
    references for all the maintainer's loads (locally) and widen the parity tests.
 2. M3: the app preview now simulates; next, the load editor (edit values, re-simulate live), in GRT's layout.
 
@@ -102,3 +102,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | M2: gas leaks recovered (open area, smoothed pressure loss, escaping charge, smoothed acceleration after burnout) with a second snapshot of GRT running the revolver fixture; all 67 maintainer loads now match GRT to machine precision. |
 | 2026-10-14 | M2: CLI (`packages/cli`, `simulate [--json] <file>`). |
 | 2026-10-14 | M3 start: the app's load preview simulates the load with GRT Traditional and shows key figures, pressure and velocity charts (shared axis, travel or time, linked crosshair, CIP limit, burnout) and a curve table; plain SVG, palette validated in light and dark. |
+| 2026-10-14 | M2: ladder semantics read from `Compute`: n charges, the main one included, stepping down by repeated subtraction. `ladderChargeMasses` in formats; the app preview lists the ladder's simulated results. |

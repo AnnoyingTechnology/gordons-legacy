@@ -171,7 +171,14 @@ time is the last point's T.
 - Validity: the result is invalid when the peak pressure is below 2 p_s, the Sebert factor is negative,
   or the propellant is invalid.
 
+## Ladder (read)
+
+A ladder of n charges is the load's charge m_c and n − 1 reduced charges, each one step less:
+m_c − Δm, m_c − Δm − Δm, … (the step subtracted repeatedly). Each is simulated on its own, as a
+separate load (`ladderChargeMasses` in the formats package). GRT can also hold a custom list of steps,
+which no load file seen so far carries.
+
 ## Not yet covered
 
 Slot-type leaks, the jump to the lands (`fn_VbAdjust_gjump`, `fn_jumpTime`), air drag, recoil,
-OBT, the 10 %-of-peak times, and ladders.
+OBT, the 10 %-of-peak times, and custom ladder steps.

@@ -318,15 +318,20 @@ code {
   margin-top: 0.6rem;
 }
 
-.curve-table table {
+.data-table {
   border-collapse: collapse;
   font-variant-numeric: tabular-nums;
   margin-top: 0.4rem;
 }
 
-.curve-table th,
-.curve-table td {
+.data-table th,
+.data-table td {
   padding: 0.15rem 0.8rem;
   text-align: right;
   border-bottom: 1px solid var(--grid);
+}
+
+.data-table th {
+  color: var(--muted);
+  font-weight: 500;
 }

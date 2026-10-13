@@ -14,6 +14,7 @@ export {
   type Note,
   type Picture,
 } from './load/load.ts';
+export { ladderChargeMasses } from './load/ladder.ts';
 export type { MeasuredCharge, MeasurementSeries, Shot } from './load/measurement.ts';
 export type { Projectile, ProjectileBase } from './load/projectile.ts';
 export type { GrtBurnModel, Propellant } from './load/propellant.ts';

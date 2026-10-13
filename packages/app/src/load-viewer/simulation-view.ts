@@ -1,5 +1,5 @@
-import type { Simulation, SimulationWarning } from '@gordons-legacy/engine';
-import type { Load } from '@gordons-legacy/formats';
+import { grtTraditional, type Simulation, type SimulationWarning } from '@gordons-legacy/engine';
+import { ladderChargeMasses, type Load } from '@gordons-legacy/formats';
 import { LineChart } from '../charts/line-chart.ts';
 import { element } from '../dom.ts';
 
@@ -22,6 +22,7 @@ export function renderSimulation(load: Load, shot: Simulation): HTMLElement {
   const switcher = renderAxisSwitch((axis) => charts.replaceChildren(...renderCharts(load, shot, axis)));
   charts.append(...renderCharts(load, shot, 'travel'));
   container.append(switcher, charts, renderTable(shot));
+  if (load.ladder !== undefined) container.append(renderLadder(load));
   return container;
 }
 
@@ -154,7 +155,33 @@ function renderTable(shot: Simulation): HTMLElement {
   const head = ['Travel (mm)', 'Time (ms)', 'Pressure (bar)', 'Velocity (m/s)', 'Burnt (%)'];
   return element('details', { class: 'curve-table' }, [
     element('summary', {}, ['Curve as a table']),
-    element('table', {}, [
+    element('table', { class: 'data-table' }, [
+      element('thead', {}, [element('tr', {}, head.map((label) => element('th', {}, [label])))]),
+      element('tbody', {}, rows),
+    ]),
+  ]);
+}
+
+/** One row per charge of the load's ladder, heaviest first. */
+function renderLadder(load: Load): HTMLElement {
+  const limit = load.cartridge.maxPressure;
+  const rows = ladderChargeMasses(load).map((mass) => {
+    const shot = grtTraditional.simulate({ ...load, charge: { ...load.charge, mass } });
+    const share = shot.maxPressure / limit;
+    const cells = [
+      `${format(mass * 1000, 3)} g (${format(mass / 64.79891e-6, 2)} gr)`,
+      `${format(shot.maxPressure / 1e5, 0)} bar`,
+      `${format(share * 100, 0)} %`,
+      `${format(shot.muzzleVelocity, 0)} m/s`,
+      `${format(shot.barrelTime * 1000, 3)} ms`,
+    ].map((cell) => element('td', {}, [cell]));
+    const note = share > 1 ? [element('span', { class: 'severity error' }, ['above the maximum'])] : [];
+    return element('tr', {}, [...cells, element('td', {}, note)]);
+  });
+  const head = ['Charge', 'Peak pressure', 'Of maximum', 'Muzzle velocity', 'Barrel time', ''];
+  return element('section', { class: 'ladder' }, [
+    element('h4', {}, ['Ladder']),
+    element('table', { class: 'data-table' }, [
       element('thead', {}, [element('tr', {}, head.map((label) => element('th', {}, [label])))]),
       element('tbody', {}, rows),
     ]),
