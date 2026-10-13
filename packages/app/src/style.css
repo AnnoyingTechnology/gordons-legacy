@@ -8,6 +8,10 @@
   --error-fg: #a1121b;
   --accent: #2f5d8a;
   --panel: #ffffff;
+  --series-pressure: #2a78d6;
+  --series-velocity: #eb6834;
+  --critical: #d03b3b;
+  --grid: #e4e6e9;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   font-size: 15px;
   line-height: 1.45;
@@ -27,6 +31,9 @@
     --error-fg: #ff8a8f;
     --accent: #8fb8e0;
     --panel: #1d2024;
+    --series-pressure: #3987e5;
+    --series-velocity: #d95926;
+    --grid: #2b2f34;
   }
 }
 
@@ -178,4 +185,148 @@ code {
   border: 1px solid var(--accent);
   color: var(--accent);
   text-decoration: none;
+}
+
+.simulation h4 {
+  font-size: 0.95rem;
+  margin: 1.2rem 0 0.5rem;
+}
+
+.figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.5rem 1.5rem;
+  margin: 0.8rem 0;
+}
+
+.figure-label {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.figure-value {
+  font-size: 1.35rem;
+  font-weight: 600;
+  font-variant-numeric: normal;
+}
+
+.figure-detail {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.axis-switch {
+  margin: 0.6rem 0;
+  color: var(--muted);
+}
+
+.axis-switch label {
+  margin-right: 1rem;
+  color: var(--fg);
+}
+
+.readout {
+  min-height: 1.5rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.readout-item {
+  margin-right: 1.2rem;
+  color: var(--fg);
+}
+
+.line-key {
+  display: inline-block;
+  width: 0.9rem;
+  height: 2px;
+  margin-right: 0.35rem;
+  vertical-align: middle;
+}
+
+.line-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-bottom: 0.4rem;
+  touch-action: none;
+}
+
+.line-chart .grid {
+  stroke: var(--grid);
+  stroke-width: 1;
+}
+
+.line-chart .axis {
+  stroke: var(--muted);
+  stroke-width: 1;
+}
+
+.line-chart .tick,
+.line-chart .axis-label {
+  fill: var(--muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.line-chart .chart-title {
+  fill: var(--fg);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.line-chart .series {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.line-chart .limit {
+  stroke: var(--critical);
+  stroke-width: 1;
+}
+
+.line-chart .limit-label {
+  fill: var(--fg);
+  font-size: 11px;
+}
+
+.line-chart .event {
+  stroke: var(--muted);
+  stroke-width: 1;
+}
+
+.line-chart .event-label,
+.line-chart .marker-label {
+  fill: var(--fg);
+  font-size: 11px;
+}
+
+.line-chart .marker,
+.line-chart .hover-dot {
+  stroke: var(--bg);
+  stroke-width: 2;
+}
+
+.line-chart .crosshair {
+  stroke: var(--muted);
+  stroke-width: 1;
+}
+
+.curve-table {
+  margin-top: 0.6rem;
+}
+
+.curve-table table {
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+  margin-top: 0.4rem;
+}
+
+.curve-table th,
+.curve-table td {
+  padding: 0.15rem 0.8rem;
+  text-align: right;
+  border-bottom: 1px solid var(--grid);
 }

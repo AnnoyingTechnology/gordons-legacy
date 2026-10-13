@@ -13,7 +13,7 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
   the CC0 corpus and five of the maintainer's loads. Imports are checked against the same specification as
   saved loads. All
   198 GRT files available import without errors. The app is a status page with the dedication dialog
-  and a `.grtload` import preview (open a file, see the values, issues, and download the JSON).
+  and a load preview (open a `.grtload`, see the values, issues and the simulated shot, download the JSON).
   Other packages are empty.
 - **Docs:** [formats/json-v1.md](formats/json-v1.md) (load format), [formats/grtload.md](formats/grtload.md)
   (GRT files), [development.md](development.md) (commands, pitfalls), `packages/formats/README.md`.
@@ -23,7 +23,7 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 1. M2: remaining parts of GRT's model, from the binary into `docs/model/grt-traditional.md`: gas leaks (`fn_pLoss`, the revolver fixture),
    jump to the lands, z2 recomputation, results (OBT, 10 %-Pmax times, recoil), ladders. Then capture
    references for all the maintainer's loads (locally) and widen the parity tests.
-2. M3: simulation diagram in the app preview (pressure and velocity against travel or time).
+2. M3: the app preview now simulates; next, the load editor (edit values, re-simulate live), in GRT's layout.
 
 Reverse-engineering workspace (local, never committed; procedure in `docs/model/grt-structure.md`):
 
@@ -101,3 +101,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | M2: GRT's time integration recovered (a pair rule on 1/v with a second-difference correction); barrel time and curve times match GRT to 1e-12. |
 | 2026-10-14 | M2: gas leaks recovered (open area, smoothed pressure loss, escaping charge, smoothed acceleration after burnout) with a second snapshot of GRT running the revolver fixture; all 67 maintainer loads now match GRT to machine precision. |
 | 2026-10-14 | M2: CLI (`packages/cli`, `simulate [--json] <file>`). |
+| 2026-10-14 | M3 start: the app's load preview simulates the load with GRT Traditional and shows key figures, pressure and velocity charts (shared axis, travel or time, linked crosshair, CIP limit, burnout) and a curve table; plain SVG, palette validated in light and dark. |

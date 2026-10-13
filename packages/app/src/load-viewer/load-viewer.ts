@@ -1,6 +1,8 @@
 import { importGrtLoad, serializeLoad, type ImportIssue, type ImportResult, type Load } from '@gordons-legacy/formats';
 import { element, fillDefinitionList } from '../dom.ts';
 import { summarizeLoad } from './load-summary.ts';
+import { renderSimulation } from './simulation-view.ts';
+import { grtTraditional } from '@gordons-legacy/engine';
 
 /**
  * A preview of the GRT importer: the user opens or drops a `.grtload` file and sees what was read, the
@@ -44,7 +46,7 @@ function renderImport(fileName: string, result: ImportResult<Load>): HTMLElement
     fillDefinitionList(list, group.rows);
     groups.append(element('section', {}, [element('h4', {}, [group.title]), list]));
   }
-  container.append(groups, downloadLink(fileName, result.value));
+  container.append(renderSimulation(result.value, grtTraditional.simulate(result.value)), groups, downloadLink(fileName, result.value));
   return container;
 }
 

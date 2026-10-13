@@ -13,8 +13,9 @@ function commit(): string {
 // The milestone line of the handoff record, without its Markdown markup.
 function milestone(): string {
   const progress = readFileSync(new URL('../../docs/PROGRESS.md', import.meta.url), 'utf8');
-  const line = /^- \*\*Milestone:\*\* (.+)$/m.exec(progress)?.[1] ?? 'unknown';
-  return line.replace(/[*`]/g, '');
+  // The bullet may continue on indented lines.
+  const bullet = /^- \*\*Milestone:\*\* (.+(?:\n {2}.+)*)/m.exec(progress)?.[1] ?? 'unknown';
+  return bullet.replace(/\n\s+/g, ' ').replace(/[*`]/g, '');
 }
 
 export default defineConfig({
