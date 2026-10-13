@@ -23,7 +23,13 @@ tools/grt-capture/run.sh sweep [--fields MaxPressure,MuzzleVelocity] <base.grtlo
 ```
 
 `sweep` varies one input at a time around a base load and prints GRT's results as a table, to study the
-model.
+model. `compare.ts` checks the GRT Traditional engine against captured references, for load files
+that can't be committed:
+
+```sh
+tools/grt-capture/run.sh capture --out ~/.cache/gordons-legacy/references/mine my-loads/*.grtload
+$NODE tools/grt-capture/compare.ts --references ~/.cache/gordons-legacy/references/mine my-loads/*.grtload
+```
 
 `setup.sh` copies GRT to `~/.cache/gordons-legacy/grt`, installs the plugin into the copy and creates a
 Wine prefix in `~/.cache/gordons-legacy/wine`. The original install is never modified.
@@ -40,6 +46,7 @@ Wine prefix in `~/.cache/gordons-legacy/wine`. The original install is never mod
 | `simulate.ts` | Runs one load text through GRT; edits input values. |
 | `capture.ts` | Loads each file in GRT and writes the reference JSON (`GrtReference`). |
 | `sweep.ts` | Varies inputs one at a time and tabulates GRT's results. |
+| `compare.ts` | Compares the engine with captured references (no GRT needed). |
 
 Each load is simulated from a working copy with the ladder disabled and the first curve selected, so the
 results belong to the load's own charge; the reference file lists these changes.
