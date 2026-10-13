@@ -72,7 +72,11 @@ A serious engineering tool, not a consumer app.
 - Restrained neutral palette; colour reserved for data series, limits and warnings. No decorative
   imagery, gradients or playful widgets.
 - Light and dark themes, high contrast, full keyboard navigation, print-ready reports.
-- Localized from the start (GRT shipped nine languages): English, French and German first.
+- Localized from the start, in the five languages most spoken where handloading is common (not the world's
+  most spoken). Proposed, to confirm: English, German, French, Spanish, Italian; Russian is the main
+  alternative. GRT shipped nine languages.
+- Icons are original SVG drawn for this project from each icon's function, never traced from GRT's
+  pixel icons, which are copyrighted and low-resolution.
 
 ## Data
 
@@ -121,5 +125,5 @@ Intake:
 | M3 | UI: load editor, main diagram and results in GRT's layout; offline install; English, French, German. |
 | M4 | Data: data repository, intake checks, auto-download, GRT database import. |
 | M5 | Parity: ladders, OBT, measurements and chronograph import, parametric powder search, tolerance synthesis, cartridge designer, reports. |
-| M6 | Release on GitHub Pages and announce to the GRT community (Discord, wiederladeforum.de, French Reloading Team). |
+| M6 | Release on GitHub Pages; packages for users who want to own a copy (proposed: a self-contained HTML file and a zip of the site attached to each GitHub Release); announce to the GRT community (Discord, wiederladeforum.de, French Reloading Team). |
 | M7 | Research engine from published interior-ballistics work and first principles, selectable next to GRT Traditional. It ships only when its measured error is no worse than GRT Traditional's on the validation corpus. |

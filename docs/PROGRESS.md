@@ -4,22 +4,24 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 
 ## Current state
 
-- **Milestone:** M1 in progress.
-- **Code:** workspace scaffold (`packages/engine`, `formats`, `data`, `app`, `cli`). The app is a status
-  page with the dedication dialog. `npm test` runs Vitest, `npm run typecheck` runs `tsc`, `npm run build`
-  builds the app. CI deploys it to GitHub Pages.
-- **Known knowledge:** `.grtload` structure documented in [formats/grtload.md](formats/grtload.md) from
-  the maintainer's 67 load files.
+- **Milestone:** M1 in progress: JSON load format v1 and GRT importers done; JSON reading and validation
+  next.
+- **Code:** `packages/formats` imports `.grtload`, `.caliber`, `.projectile` and `.propellant` files into
+  the load format (SI units), with 160 tests on the CC0 corpus and five of the maintainer's loads. All
+  198 GRT files available import without errors. The app is a status page with the dedication dialog.
+  Other packages are empty.
+- **Docs:** [formats/json-v1.md](formats/json-v1.md) (load format), [formats/grtload.md](formats/grtload.md)
+  (GRT files), [development.md](development.md) (commands, pitfalls), `packages/formats/README.md`.
 
-## Next steps (M1: formats)
+## Next steps
 
-1. ~~Scaffold the monorepo~~ (done 2026-10-13).
-2. Define JSON schema v1 for loads and components (caliber, projectile, powder, gun, measurements),
-   SI units, with a `schemaVersion` field.
-3. Write the `.grtload` importer from `formats/grtload.md`, with tests on the CC0 corpus
-   ([zen/grt_databases](https://github.com/zen/grt_databases)).
-4. Import GRT component files (`.caliber`, `.projectile`, `.propellant`), including the known Linux
-   export defect (`<svar` instead of `<var`).
+1. M1: read and validate saved JSON loads (`parseLoad`), with clear errors, and a version-upgrade hook.
+2. M1: a `.grtload` viewer on the Pages site (drop a file, see the imported load and the issues), so
+   progress is visible.
+3. M2: confirm how to capture GRT's results (report templates, see Open questions), capture reference
+   outputs for the fixtures, then derive GRT's model (manual, then binary analysis with Ghidra, to be
+   unpacked into `~/.local`; not installed system-wide).
+4. Decide how the CLI runs TypeScript (Debian's Node can't; see development.md).
 
 ## Decisions
 
@@ -43,15 +45,27 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 | 2026-10-13 | Dedication to RGF in the README and in a first-visit dialog: we carry on his work, take no credit for it, and may try to improve on it. | Julien |
 | 2026-10-13 | Once a feature reaches parity with GRT (for example OBT / barrel-harmonics node suggestions, which did not always work well), check it against the published science and improve it where the evidence supports that. | Julien |
 | 2026-10-13 | Never add `Co-Authored-By` or other AI attribution. Git history restarted from a single commit to remove earlier trailers (backup of the old repository kept locally by the maintainer). | Julien |
+| 2026-10-13 | No XML dependency: a ~150-line parser covers GRT's XML subset, and browsers' DOMParser doesn't exist in Node. No JSON Schema library: the TypeScript types are the format reference. | Agent, for review |
+| 2026-10-13 | Load format v1 stores the GRT burn model as a named model block (`burnModel.kind = 'grt'`) with GRT's own coefficients, since their units come from GRT's equations; physical powder properties are SI. Values without a field are kept verbatim in `unmapped`. Derived values (seating depth, Bp/Br/Brp) aren't stored. | Agent, for review |
+| 2026-10-13 | UI icons: original SVG, drawn by a Sonnet subagent from each icon's function; never copy GRT's icons. | Julien |
+| 2026-10-13 | UI in the five languages most spoken where handloading is common; the list is to be confirmed (see Open questions). | Julien |
+| 2026-10-13 | Offer a lightweight package for users who want to own the software; format to be decided (see Open questions). | Julien |
 
 ## Open questions
 
 - How GRT exposes simulation results for automated capture. Most promising: report templates (a note with
   `reporttemplate="true"`) can print `Result.MaxPressure`, `Result.MuzzleVelocity`, `Result.BurnRatio` and
-  more (manual p. 76); otherwise its plugin interface (see
+  more (manual p. 77); otherwise its plugin interface (see
   [GRT-Reloading-Toolkit](https://github.com/FREESHOTER/GRT-Reloading-Toolkit)).
 - Unit and reference pressure of GRT's `Ba` (needed for M2).
+- The five UI languages. Proposed: English, German, French, Spanish, Italian (Russian the main
+  alternative).
 - Format and encryption of `GordonsReloadingTool.db` (M4).
+- Licence of the maintainer's loads in `packages/formats/test/fixtures/maintainer/` (CC0 like the corpus?).
+  The selected 9 mm load is the hottest one (`glock17_eng5_n340_115grain_xtp_PLUS-P`); no 9 mm file is
+  named "full patate", so confirm it is the intended one.
+- Lightweight packaging for users who want to own a copy (M6). Proposed: attach to each GitHub Release a
+  single self-contained HTML file that runs from disk with no server, plus a zip of the static site.
 
 ## Log
 
@@ -61,3 +75,4 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 | 2026-10-13 | M1: npm-workspace scaffold with TypeScript 7 and Vitest; decisions on pushing, fixtures and binary analysis recorded. |
 | 2026-10-13 | CI and GitHub Pages deployment; app status page with dedication dialog; README dedication. |
 | 2026-10-13 | Git history restarted (no AI attribution). Code-quality rules added to `AGENTS.md`. M1 step 2 (JSON schema v1) in progress. |
+| 2026-10-13 | M1: load format v1 types; GRT importers for loads and component files; fixtures (CC0 corpus and five maintainer loads); format docs extended (eta unit defect, component files, notes, Latin-1). |

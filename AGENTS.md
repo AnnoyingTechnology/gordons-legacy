@@ -72,3 +72,10 @@ way through it without help.
   unusable input) instead of failing silently or guessing.
 - Tests sit in each package's `test/` folder and read as examples of use. Every importer and every
   equation has tests on real files or on published values.
+
+## Second opinions
+
+When the maintainer is unavailable, an agent may ask Codex (`codex`, model `gpt-6.1-sol`, reasoning
+effort `xhigh`) for a reality check. Use it where rigour matters most: physics, model equations, unit
+conversions, safety wording and data intake. Codex is a strict reviewer; on non-critical code, weigh its
+remarks against this file's code-quality rules instead of applying them all.
