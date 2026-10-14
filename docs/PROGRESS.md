@@ -126,3 +126,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | M3: a Units dialog chooses the display unit of each kind of quantity, on top of the metric/imperial presets; saved with the settings. |
 | 2026-10-14 | M3: About dialog (dedication, safety notice, build, licence) in the five languages, opening on a first visit and from the toolbar; the page footer moved into the app and is translated. |
 | 2026-10-14 | M3: the load's chronograph measurements are listed per charge (shots, mean, SD, ES) beside the simulated velocity and the difference, for calibration. |
+| 2026-10-14 | M3: opening a `.propellant` or `.projectile` file swaps that component in the active load (a chooser for multi-projectile files; the overall length and the caliber's initial pressure stay). A peak pressure above the cartridge maximum is now shown in the critical colour with a marker and words. |

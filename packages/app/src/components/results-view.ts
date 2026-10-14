@@ -73,18 +73,22 @@ export function renderProblems(problems: SimulationProblem[], context: UiContext
 
 function renderFigures(load: Load, shot: Simulation, context: UiContext): HTMLElement {
   const { t, quantity, number } = context;
-  const figure = (label: string, value: string, detail?: string) =>
-    element('div', { class: 'figure' }, [
+  const figure = (label: string, value: string, detail?: string, critical = false) =>
+    element('div', { class: critical ? 'figure critical' : 'figure' }, [
       element('div', { class: 'figure-label' }, [label]),
       element('div', { class: 'figure-value' }, [value]),
       ...(detail ? [element('div', { class: 'figure-detail' }, [detail])] : []),
     ]);
   const share = (shot.maxPressure / load.cartridge.maxPressure) * 100;
+  // Above the cartridge's maximum, the figure says so in words and with a marker, not by colour alone.
+  const aboveMaximum = shot.maxPressure > load.cartridge.maxPressure;
+  const ofMaximum = t('results.ofMaximum', { percent: number(share, 0), maximum: quantity(load.cartridge.maxPressure, 'pressure') });
   return element('div', { class: 'figures' }, [
     figure(
       t('results.peakPressure'),
       quantity(shot.maxPressure, 'pressure'),
-      t('results.ofMaximum', { percent: number(share, 0), maximum: quantity(load.cartridge.maxPressure, 'pressure') }),
+      aboveMaximum ? `▲ ${t('results.aboveMaximum')}: ${ofMaximum}` : ofMaximum,
+      aboveMaximum,
     ),
     figure(t('results.muzzleVelocity'), quantity(shot.muzzleVelocity, 'velocity')),
     figure(t('results.barrelTime'), quantity(shot.barrelTime, 'time')),

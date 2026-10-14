@@ -1,5 +1,5 @@
-import type { ImportIssue, Load } from '@gordons-legacy/formats';
-import { serializeLoad } from '@gordons-legacy/formats';
+import type { Load, Projectile } from '@gordons-legacy/formats';
+import { importGrtProjectiles, importGrtPropellant, serializeLoad } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
 import { LANGUAGE_NAMES, type Language } from '../i18n/i18n.ts';
 import { icon } from '../icons/icons.ts';
@@ -7,7 +7,9 @@ import { DocumentStore } from '../state/documents.ts';
 import { loadSettings, saveSettings, type Settings } from '../state/settings.ts';
 import { presetPreferences, type UnitPreferences, type UnitSystem } from '../units/units.ts';
 import { createContext, type UiContext } from './context.ts';
+import { withProjectile, withPropellant } from '../editor/components.ts';
 import { REPOSITORY } from './about-dialog.ts';
+import './choice-dialog.ts';
 import './load-editor.ts';
 import './units-dialog.ts';
 
@@ -23,10 +25,14 @@ export class AppShell extends LitElement {
     openErrors: { state: true },
     unitsOpen: { state: true },
     aboutOpen: { state: true },
+    projectileChoice: { state: true },
   };
 
   declare context: UiContext;
-  declare openErrors: ImportIssue[];
+  /** Why the last opened files couldn't be used. */
+  declare openErrors: string[];
+  /** Projectiles of an opened `.projectile` file to choose from, for the active load. */
+  declare projectileChoice: Projectile[] | undefined;
   declare unitsOpen: boolean;
   declare aboutOpen: boolean;
   private readonly store = new DocumentStore(window.localStorage);
@@ -37,6 +43,7 @@ export class AppShell extends LitElement {
     this.context = createContext(this.settings.language, this.settings.units);
     this.openErrors = [];
     this.unitsOpen = false;
+    this.projectileChoice = undefined;
     // The dedication and safety notice open on a browser's first visit.
     this.aboutOpen = window.localStorage.getItem(WELCOME_SEEN_KEY) === null;
     this.store.subscribe(() => this.requestUpdate());
@@ -55,7 +62,7 @@ export class AppShell extends LitElement {
         <h1>${t('app.title')}</h1>
         <label class="button">
           ${icon('open')} ${t('toolbar.open')}
-          <input type="file" accept=".grtload,.json" multiple hidden @change=${this.openFromInput} />
+          <input type="file" accept=".grtload,.json,.propellant,.projectile" multiple hidden @change=${this.openFromInput} />
         </label>
         <button ?disabled=${!active} @click=${() => active && this.save(active.id)}>${icon('save')} ${t('toolbar.save')}</button>
         <span class="spacer"></span>
@@ -91,7 +98,7 @@ export class AppShell extends LitElement {
       </nav>
       <main @dragover=${(event: DragEvent) => event.preventDefault()} @drop=${this.openFromDrop}>
         ${this.openErrors.length > 0
-          ? html`<ul class="issues">${this.openErrors.map((issue) => html`<li class="error"><span class="severity">!</span> ${issue.message}</li>`)}</ul>`
+          ? html`<ul class="issues">${this.openErrors.map((message) => html`<li class="error"><span class="severity">!</span> ${message}</li>`)}</ul>`
           : nothing}
         ${active
           ? html`<gl-load-editor
@@ -109,6 +116,13 @@ export class AppShell extends LitElement {
         </p>
       </footer>
       <gl-about-dialog .open=${this.aboutOpen} .context=${this.context} @close=${this.closeAbout}></gl-about-dialog>
+      <gl-choice-dialog
+        .heading=${this.projectileChoice ? t('components.chooseProjectile') : undefined}
+        .options=${(this.projectileChoice ?? []).map((projectile) => projectile.name)}
+        .context=${this.context}
+        @choose=${(event: CustomEvent<number>) => this.useProjectile(this.projectileChoice?.[event.detail])}
+        @close=${() => (this.projectileChoice = undefined)}
+      ></gl-choice-dialog>
       <gl-units-dialog
         .open=${this.unitsOpen}
         .context=${this.context}
@@ -118,13 +132,43 @@ export class AppShell extends LitElement {
     `;
   }
 
+  /**
+   * Opens loads in new tabs; powder and projectile files replace the active load's component instead.
+   */
   private async openFiles(files: Iterable<File>): Promise<void> {
-    const errors: ImportIssue[] = [];
+    const errors: string[] = [];
     for (const file of files) {
-      const result = this.store.open(file.name, await file.text());
-      if (!result.ok) errors.push(...result.issues.filter((issue) => issue.severity === 'error'));
+      const text = await file.text();
+      const extension = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
+      if (extension === '.propellant' || extension === '.projectile') {
+        errors.push(...this.openComponent(extension, text));
+        continue;
+      }
+      const result = this.store.open(file.name, text);
+      if (!result.ok) errors.push(...result.issues.filter((issue) => issue.severity === 'error').map((issue) => issue.message));
     }
     this.openErrors = errors;
+  }
+
+  /** Puts a powder or projectile into the active load; returns error messages. */
+  private openComponent(extension: string, text: string): string[] {
+    const active = this.store.active;
+    if (!active) return [this.context.t('components.noLoad')];
+    const result = extension === '.propellant' ? importGrtPropellant(text) : importGrtProjectiles(text);
+    if (!result.ok) return result.issues.filter((issue) => issue.severity === 'error').map((issue) => issue.message);
+    if (!Array.isArray(result.value)) {
+      this.store.update(active.id, withPropellant(active.load, result.value));
+    } else if (result.value.length === 1) {
+      this.useProjectile(result.value[0]);
+    } else {
+      this.projectileChoice = result.value;
+    }
+    return [];
+  }
+
+  private useProjectile(projectile: Projectile | undefined): void {
+    const active = this.store.active;
+    if (active && projectile) this.store.update(active.id, withProjectile(active.load, projectile));
   }
 
   private openFromInput = (event: Event) => {

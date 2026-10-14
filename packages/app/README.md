@@ -20,12 +20,14 @@ src/
     app-shell.ts          <gl-app>: toolbar, tabs, drag and drop, open and save, footer
     about-dialog.ts       dedication, safety notice and build; opens on a first visit
     units-dialog.ts       display unit of each kind of quantity
+    choice-dialog.ts      pick one of several options (projectiles of a file)
     load-editor.ts        <gl-load-editor>: inputs beside results, re-simulated on every edit
     property-table.ts     <gl-property-table>: one group of inputs (label, value, unit)
     results-view.ts       key figures, charts, curve table, ladder
     measurements-view.ts  chronograph measurements beside the simulated velocities
     context.ts            UiContext: language and units handed down to every component
   editor/fields.ts      which load values the editor shows, grouped as in GRT, and how to set them
+  editor/components.ts  swapping the powder or projectile of a load
   charts/               SVG line chart and axis ticks, no chart library
   units/units.ts        display units per kind of quantity (metric and imperial presets)
   i18n/                 message catalogs (en is the source; the compiler checks the others are complete)

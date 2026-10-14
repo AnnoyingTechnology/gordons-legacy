@@ -214,6 +214,12 @@ code {
   font-size: 0.8rem;
 }
 
+.figure.critical .figure-value,
+.figure.critical .figure-detail {
+  color: var(--critical);
+  font-weight: 600;
+}
+
 .result-details {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
@@ -634,4 +640,18 @@ main {
 .measurements .note {
   color: var(--muted);
   font-size: 0.85rem;
+}
+
+.choices {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 1rem;
+  max-height: 60vh;
+  overflow: auto;
+}
+
+.choices button {
+  width: 100%;
+  justify-content: flex-start;
+  margin-bottom: 0.25rem;
 }
