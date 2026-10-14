@@ -196,3 +196,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | Library (#12): Save stores the load in the browser's library, Export writes a file; library view by cartridge and firearm with velocity, energy, % of maximum, review level, measured velocity and best group; import of files or a whole folder; backup and restore; "use the barrel of…" firearm chooser. All 63 of the maintainer's loads import; the one he named `borked_DANGEROUS` is the only Danger. |
 | 2026-10-14 | #15: the single-file copy downloads as `gordons-legacy-<build date>-<commit>.html`. |
 | 2026-10-14 | #10: survey of GRT users' complaints and of reloading inventory tools (`docs/research/grt-user-feedback.md`); proposals posted on the issue. |
+| 2026-10-14 | Pressure and velocity charts side by side from a 1,500 px window, stacked below (maintainer's request); half-width charts use their own drawing size so their text stays readable. Same in Compare. |

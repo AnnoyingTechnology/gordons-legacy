@@ -6,6 +6,7 @@ import { element } from '../dom.ts';
 import type { OpenDocument } from '../state/documents.ts';
 import { displayUnit } from '../units/units.ts';
 import type { UiContext } from './context.ts';
+import { onChartLayoutChange, pairedChartSize } from './charts-view.ts';
 import type { ChartAxis } from './results-view.ts';
 
 /** The categorical palette has eight validated slots; more loads would need hues that fail its checks. */
@@ -41,6 +42,19 @@ export class CompareView extends LitElement {
     this.documents = [];
     this.excluded = new Set();
     this.axis = 'travel';
+  }
+
+  private stopWatchingLayout = () => {};
+
+  // The charts are drawn for the window's width: redraw them when it crosses the side-by-side width.
+  override connectedCallback(): void {
+    super.connectedCallback();
+    this.stopWatchingLayout = onChartLayoutChange(() => this.requestUpdate());
+  }
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.stopWatchingLayout();
   }
 
   protected override createRenderRoot(): HTMLElement {
@@ -109,6 +123,7 @@ export class CompareView extends LitElement {
     const chart = (title: string, symbol: string, toUnit: (value: number) => number, values: (simulation: Simulation) => Float64Array) =>
       new LineChart({
         title,
+        size: pairedChartSize(),
         x: xOf(first!.simulation),
         y: Float64Array.from(values(first!.simulation), toUnit),
         xLabel,
@@ -124,8 +139,10 @@ export class CompareView extends LitElement {
       return element('li', {}, [swatch, entry.name]);
     }));
     return [
-      chart(t('results.pressure'), pressureUnit.symbol, pressureUnit.fromSi, (simulation) => simulation.curve.pressure),
-      chart(t('results.velocity'), velocityUnit.symbol, velocityUnit.fromSi, (simulation) => simulation.curve.velocity),
+      element('div', { class: 'chart-pair' }, [
+        chart(t('results.pressure'), pressureUnit.symbol, pressureUnit.fromSi, (simulation) => simulation.curve.pressure),
+        chart(t('results.velocity'), velocityUnit.symbol, velocityUnit.fromSi, (simulation) => simulation.curve.velocity),
+      ]),
       legend,
     ];
   }

@@ -68,7 +68,7 @@ native code is needed.
 A serious engineering tool, not a consumer app.
 
 - GRT's organization: load files in tabs; inputs grouped as caliber, projectile, powder and barrel; main
-  diagram (pressure, velocity and burn against time or travel); results table; measurements; ladder;
+  diagram (pressure and velocity against time or travel, side by side on wide screens, stacked on narrow ones); results table; measurements; ladder;
   powder search.
 - Dense layout, aligned tabular figures, explicit units, metric/imperial switch. A clear hierarchy of
   results: velocity and pressure first, on scales against the speed of sound and the CIP and SAAMI

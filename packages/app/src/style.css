@@ -305,6 +305,20 @@ code {
   vertical-align: middle;
 }
 
+/* Pressure and velocity charts: stacked on narrower screens, side by side on wide ones, where a single
+   chart across the whole results column would be far wider than tall. They share the x axis either way. */
+.chart-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 1.2rem;
+}
+
+@media (min-width: 1500px) {
+  .chart-pair {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .line-chart {
   display: block;
   width: 100%;

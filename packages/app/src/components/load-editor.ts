@@ -12,6 +12,7 @@ import './notes-panel.ts';
 import './shot-groups-panel.ts';
 import './property-table.ts';
 import { renderProblems, renderResults, type ChartAxis } from './results-view.ts';
+import { onChartLayoutChange } from './charts-view.ts';
 
 /**
  * One load: its inputs, grouped as in GRT, beside the simulated shot, which follows every edit.
@@ -39,6 +40,19 @@ export class LoadEditor extends LitElement {
     this.axis = 'travel';
     this.assistant = undefined;
     this.firearms = [];
+  }
+
+  private stopWatchingLayout = () => {};
+
+  // The charts are drawn for the window's width: redraw them when it crosses the side-by-side width.
+  override connectedCallback(): void {
+    super.connectedCallback();
+    this.stopWatchingLayout = onChartLayoutChange(() => this.requestUpdate());
+  }
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.stopWatchingLayout();
   }
 
   protected override createRenderRoot(): HTMLElement {

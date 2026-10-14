@@ -10,6 +10,21 @@ import { ladderOpacity, type LadderShot } from './ladder-view.ts';
 
 export type ChartAxis = 'travel' | 'time';
 
+/** From this width the pressure and velocity charts sit side by side (`.chart-pair` in style.css). */
+export const SIDE_BY_SIDE = '(min-width: 1500px)';
+
+/** Calls `redraw` when the window crosses the side-by-side width; returns a function that stops it. */
+export function onChartLayoutChange(redraw: () => void): () => void {
+  const query = window.matchMedia(SIDE_BY_SIDE);
+  query.addEventListener('change', redraw);
+  return () => query.removeEventListener('change', redraw);
+}
+
+/** The drawing size for the charts of a pair, at the current window width. */
+export function pairedChartSize(): 'full' | 'half' {
+  return window.matchMedia(SIDE_BY_SIDE).matches ? 'half' : 'full';
+}
+
 export function renderAxisSwitch(current: ChartAxis, onAxis: (axis: ChartAxis) => void, context: UiContext): HTMLElement {
   const option = (axis: ChartAxis, label: string) => {
     const input = element('input', { type: 'radio', name: 'chart-axis', value: axis });
@@ -45,6 +60,7 @@ export function renderCharts(shot: Simulation, ladder: LadderShot[], axis: Chart
 
   const pressure = new LineChart({
     title: t('results.pressure'),
+    size: pairedChartSize(),
     x,
     y: Float64Array.from(curve.pressure, pressureUnit.fromSi),
     xLabel,
@@ -66,6 +82,7 @@ export function renderCharts(shot: Simulation, ladder: LadderShot[], axis: Chart
   });
   const velocity = new LineChart({
     title: t('results.velocity'),
+    size: pairedChartSize(),
     x,
     y: Float64Array.from(curve.velocity, velocityUnit.fromSi),
     xLabel,
@@ -97,7 +114,7 @@ export function renderCharts(shot: Simulation, ladder: LadderShot[], axis: Chart
   };
   pressure.onHover(show);
   velocity.onHover(show);
-  return [readout, pressure.element, velocity.element];
+  return [readout, element('div', { class: 'chart-pair' }, [pressure.element, velocity.element])];
 }
 
 /** A value of the hover readout, keyed with a short line of its series colour when it has one. */

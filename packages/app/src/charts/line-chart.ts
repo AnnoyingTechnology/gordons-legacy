@@ -26,16 +26,23 @@ export interface LineChartOptions {
    * or in their own colour (another load, same width).
    */
   others?: { x: ArrayLike<number>; y: ArrayLike<number>; opacity?: number; color?: string }[];
+  /** `half` when the chart shares the width with another; `full` by default. */
+  size?: keyof typeof SIZES;
 }
 
-const WIDTH = 720;
-const HEIGHT = 230;
+/**
+ * Drawing sizes in SVG units. The SVG scales to its container, text included, so a chart drawn for half
+ * the width (two side by side) uses a smaller drawing to keep its text the same size on screen.
+ */
+const SIZES = { full: { width: 720, height: 230 }, half: { width: 460, height: 250 } } as const;
 const MARGIN = { top: 30, right: 16, bottom: 34, left: 58 };
 const SVG = 'http://www.w3.org/2000/svg';
 
 export class LineChart {
   readonly element: SVGSVGElement;
   private readonly options: LineChartOptions;
+  private readonly width: number;
+  private readonly height: number;
   private readonly crosshair: SVGLineElement;
   private readonly dot: SVGCircleElement;
   private readonly xScale: (value: number) => number;
@@ -45,6 +52,7 @@ export class LineChart {
 
   constructor(options: LineChartOptions) {
     this.options = options;
+    ({ width: this.width, height: this.height } = SIZES[options.size ?? 'full']);
     const all = [options, ...(options.others ?? [])];
     this.xMin = Math.min(...all.map((series) => series.x[0] ?? 0));
     this.xMax = Math.max(...all.map((series) => series.x[series.x.length - 1] ?? 1));
@@ -52,12 +60,12 @@ export class LineChart {
     // Headroom above the highest value, so that labels above points stay inside the plot.
     const yTicks = niceTicks(0, yMax * 1.15);
     yMax = yTicks[yTicks.length - 1]!;
-    const plotWidth = WIDTH - MARGIN.left - MARGIN.right;
-    const plotHeight = HEIGHT - MARGIN.top - MARGIN.bottom;
+    const plotWidth = this.width - MARGIN.left - MARGIN.right;
+    const plotHeight = this.height - MARGIN.top - MARGIN.bottom;
     this.xScale = (value) => MARGIN.left + ((value - this.xMin) / (this.xMax - this.xMin || 1)) * plotWidth;
     this.yScale = (value) => MARGIN.top + plotHeight - (value / yMax) * plotHeight;
 
-    this.element = svg('svg', { viewBox: `0 0 ${WIDTH} ${HEIGHT}`, class: 'line-chart', role: 'img' });
+    this.element = svg('svg', { viewBox: `0 0 ${this.width} ${this.height}`, class: 'line-chart', role: 'img' });
     this.element.append(svg('title', {}, options.title));
     this.drawAxes(yTicks, niceTicks(this.xMin, this.xMax, 8).filter((tick) => tick >= this.xMin && tick <= this.xMax));
     this.drawLimits();
@@ -76,7 +84,7 @@ export class LineChart {
     this.element.append(svg('path', { d: this.linePath(options.x, options.y), class: 'series', stroke: options.color }));
     this.drawMarkers();
 
-    this.crosshair = svg('line', { y1: MARGIN.top, y2: HEIGHT - MARGIN.bottom, class: 'crosshair', visibility: 'hidden' });
+    this.crosshair = svg('line', { y1: MARGIN.top, y2: this.height - MARGIN.bottom, class: 'crosshair', visibility: 'hidden' });
     this.dot = svg('circle', { r: 4, class: 'hover-dot', fill: options.color, visibility: 'hidden' });
     this.element.append(this.crosshair, this.dot);
   }
@@ -85,8 +93,8 @@ export class LineChart {
   onHover(listener: (index: number | null) => void): void {
     this.element.addEventListener('pointermove', (event) => {
       const box = this.element.getBoundingClientRect();
-      const svgX = ((event.clientX - box.left) / box.width) * WIDTH;
-      const value = this.xMin + ((svgX - MARGIN.left) / (WIDTH - MARGIN.left - MARGIN.right)) * (this.xMax - this.xMin);
+      const svgX = ((event.clientX - box.left) / box.width) * this.width;
+      const value = this.xMin + ((svgX - MARGIN.left) / (this.width - MARGIN.left - MARGIN.right)) * (this.xMax - this.xMin);
       listener(nearestIndex(this.options.x, value));
     });
     this.element.addEventListener('pointerleave', () => listener(null));
@@ -115,8 +123,8 @@ export class LineChart {
   private drawAxes(yTicks: number[], xTicks: number[]): void {
     const { formatX, formatY, xLabel, yLabel, title } = this.options;
     const left = MARGIN.left;
-    const right = WIDTH - MARGIN.right;
-    const bottom = HEIGHT - MARGIN.bottom;
+    const right = this.width - MARGIN.right;
+    const bottom = this.height - MARGIN.bottom;
     for (const tick of yTicks) {
       const y = this.yScale(tick);
       this.element.append(svg('line', { x1: left, x2: right, y1: y, y2: y, class: 'grid' }));
@@ -128,7 +136,7 @@ export class LineChart {
     }
     this.element.append(svg('line', { x1: left, x2: right, y1: bottom, y2: bottom, class: 'axis' }));
     this.element.append(svg('text', { x: left, y: 16, class: 'chart-title' }, `${title} (${yLabel})`));
-    this.element.append(svg('text', { x: right, y: HEIGHT - 4, class: 'axis-label', 'text-anchor': 'end' }, xLabel));
+    this.element.append(svg('text', { x: right, y: this.height - 4, class: 'axis-label', 'text-anchor': 'end' }, xLabel));
   }
 
   private drawLimits(): void {
@@ -136,11 +144,11 @@ export class LineChart {
     let previousY = -Infinity;
     for (const limit of limits) {
       const y = this.yScale(limit.value);
-      this.element.append(svg('line', { x1: MARGIN.left, x2: WIDTH - MARGIN.right, y1: y, y2: y, class: 'limit' }));
+      this.element.append(svg('line', { x1: MARGIN.left, x2: this.width - MARGIN.right, y1: y, y2: y, class: 'limit' }));
       // Two maxima close together (CIP's and SAAMI's often are): the lower one's label goes under its line.
       const below = y - previousY < 16;
       this.element.append(
-        svg('text', { x: WIDTH - MARGIN.right - 4, y: below ? y + 13 : y - 5, class: 'limit-label', 'text-anchor': 'end' }, limit.label),
+        svg('text', { x: this.width - MARGIN.right - 4, y: below ? y + 13 : y - 5, class: 'limit-label', 'text-anchor': 'end' }, limit.label),
       );
       previousY = y;
     }
@@ -149,8 +157,8 @@ export class LineChart {
   private drawEvents(): void {
     for (const event of this.options.events ?? []) {
       const x = this.xScale(event.x);
-      this.element.append(svg('line', { x1: x, x2: x, y1: MARGIN.top, y2: HEIGHT - MARGIN.bottom, class: 'event' }));
-      this.element.append(svg('text', { x: x + 4, y: HEIGHT - MARGIN.bottom - 6, class: 'event-label' }, event.label));
+      this.element.append(svg('line', { x1: x, x2: x, y1: MARGIN.top, y2: this.height - MARGIN.bottom, class: 'event' }));
+      this.element.append(svg('text', { x: x + 4, y: this.height - MARGIN.bottom - 6, class: 'event-label' }, event.label));
     }
   }
 
@@ -161,7 +169,7 @@ export class LineChart {
       this.element.append(svg('circle', { cx, cy, r: 4, class: 'marker', fill: this.options.color }));
       // Near the right edge, the label goes to the left of its point so it isn't cut off; near the top,
       // below it.
-      const nearRightEdge = cx > WIDTH - MARGIN.right - 80;
+      const nearRightEdge = cx > this.width - MARGIN.right - 80;
       const nearTop = cy < MARGIN.top + 14;
       this.element.append(
         svg(
