@@ -85,6 +85,11 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 - Licence of the maintainer's loads in `packages/formats/test/fixtures/maintainer/` (CC0 like the corpus?).
   The selected 9 mm load is the hottest one (`glock17_eng5_n340_115grain_xtp_PLUS-P`); no 9 mm file is
   named "full patate", so confirm it is the intended one.
+- Pressure validation needs published loads with measured pressures and matching components (powder
+  model, exact bullet length): can the maintainer point to such data (Hodgdon/Alliant pressure data,
+  pressure-trace recordings)? See `docs/model/validation.md`.
+- The data repository `gordons-legacy-data` (CC0, PLAN.md Data) doesn't exist yet: create it on
+  GitHub? The community corpus is small (12 powders, 48 projectiles, 49 calibers).
 - Lightweight packaging for users who want to own a copy (M6). Proposed: attach to each GitHub Release a
   single self-contained HTML file that runs from disk with no server, plus a zip of the static site.
 

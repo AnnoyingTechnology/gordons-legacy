@@ -34,6 +34,20 @@ measurements were taken in another gun than the load's barrel (see each charge's
 strings have one to three shots; calibrated copies and their originals share measurements, so the
 subsets overlap.
 
+## Pressure (open)
+
+No sound pressure comparison is possible with the data at hand (2026-10-14):
+
+- The published tables available locally (Hornady, Sierra, Vihtavuori 300 BLK; Hornady basic data)
+  give charges and velocities but no pressures; their maximum loads sit near the cartridge's limit,
+  which is a usable but loose proxy.
+- Most of their powders (H110, Power Pistol, CFE BLK, Accurate…) have no model in the files
+  available; where the powder matches (N105, N110 in 300 BLK), the bullets don't, and the seating
+  depth needs each bullet's exact length.
+- A loaded check needs: published loads with measured pressures (Hodgdon and Alliant publish PSI or
+  CUP), matched to powder models and bullet specifications (length, base), with the test barrel and
+  case. A first test file was tried and dropped: a load named "135gr FTX" actually held a 125 gr FMJ.
+
 ## Next
 
 - Published data (Vihtavuori, Hodgdon…): charge, velocity and pressure for named components and
