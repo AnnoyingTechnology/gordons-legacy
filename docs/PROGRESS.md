@@ -141,3 +141,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | M3: Compare view: up to eight open loads overlaid (pressure and velocity against travel or time), one colour each from the validated categorical palette, with a legend and a table of key figures (above-maximum flagged). |
 | 2026-10-14 | M6 start: the single-file copy (`gordons-legacy.html`) is built with the site and linked from the About dialog; checked from `file://` in headless Chromium. |
 | 2026-10-14 | Powder-temperature table (−20 to 50 °C: peak pressure, share of the maximum, velocity), its folded summary flagging the first temperature above the maximum. |
+| 2026-10-14 | Notes panel under the inputs: the load's notes (editable, new ones can be added; GRT report templates hidden) and its pictures (raster types only). |

@@ -3,6 +3,7 @@ import type { Load } from '@gordons-legacy/formats';
 import { html, LitElement } from 'lit';
 import { FIELD_GROUPS } from '../editor/fields.ts';
 import type { UiContext } from './context.ts';
+import './notes-panel.ts';
 import './property-table.ts';
 import { renderProblems, renderResults, type ChartAxis } from './results-view.ts';
 
@@ -44,6 +45,7 @@ export class LoadEditor extends LitElement {
               .problems=${problems}
             ></gl-property-table>`,
           )}
+          <gl-notes-panel .load=${this.load} .context=${this.context}></gl-notes-panel>
         </div>
         <div class="results">
           ${result.ok

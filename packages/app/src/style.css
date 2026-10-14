@@ -550,7 +550,8 @@ main {
   }
 }
 
-.property-group h3 {
+.property-group h3,
+.notes-panel h3 {
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -795,4 +796,57 @@ button[aria-pressed='true'] {
 .temperatures .note {
   color: var(--muted);
   font-size: 0.85rem;
+}
+
+.notes-panel {
+  margin-top: 1rem;
+}
+
+.notes-panel .note {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.6rem;
+}
+
+.notes-panel .note-title {
+  font-weight: 600;
+}
+
+.notes-panel textarea,
+.notes-panel .note-title {
+  font: inherit;
+  color: var(--fg);
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  padding: 0.3rem 0.4rem;
+}
+
+.pictures {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.pictures figure {
+  margin: 0;
+}
+
+.pictures img {
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--rule);
+}
+
+.pictures figcaption {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+@media print {
+  .notes-panel textarea {
+    border: none;
+    resize: none;
+  }
 }
