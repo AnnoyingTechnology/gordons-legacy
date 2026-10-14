@@ -283,6 +283,9 @@ Gordon's Legacy refuses such loads with a typed problem instead of numbers (`val
 - a free volume V₀ of 0 or less (the charge doesn't fit), or x_eff of 0 or less (barrel too short);
 - a case fill L_v = (m_c / ρ_bulk) / V_b above 1.2 (GRT's own limit, `PropellantChargeTooHigh`: GRT
   doesn't simulate such a load either);
+- GRT's start conditions (`computeMain`): the seated base ahead of the breech (d < L_case), 0 < ξ_E
+  < 300, and p_s < 0.6 · p_abs (`pMaxStart`, with p_abs at setup from Ba at the powder's temperature;
+  bar compared with p_abs as GRT does: the .327 fixture's limit is 2417.05 bar, as in GRT's memory);
 - gas leaks of negative or non-integer type, of zero width, or with a negative height.
 
 As a safety net, a result with any non-finite value, or a solver that runs past 100 000 steps (valid

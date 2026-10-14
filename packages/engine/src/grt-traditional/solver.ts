@@ -148,6 +148,33 @@ class Motion {
   }
 }
 
+/**
+ * p_abs, GRT's pressure scale (grt-traditional.md, Phase A step 6; GRT's `fn_pAbs`): 10 · p_abs is in
+ * bar. `vivacity` B, `chargeMass` kg, `heatOfExplosion` kJ/kg, `mass` the effective mass kg, `boreArea`
+ * m², `freeVolume` V₀ m³.
+ */
+export function theoreticalPressure(
+  vivacity: number,
+  chargeMass: number,
+  heatOfExplosion: number,
+  mass: number,
+  k: number,
+  boreArea: number,
+  freeVolume: number,
+): number {
+  return ((vivacity * chargeMass * heatOfExplosion) ** 2 * mass * (k - 1) * 2) / (boreArea ** 2 * TECHNICAL_ATMOSPHERE ** 2 * freeVolume);
+}
+
+/** The setup's effective mass m, kg (grt-traditional.md, Geometry). */
+export function initialEffectiveMass(inputs: GrtInputs): number {
+  return new Charge(inputs).effectiveMass;
+}
+
+/** The setup's free volume V₀, m³. */
+export function initialFreeVolume(inputs: GrtInputs): number {
+  return new Charge(inputs).freeVolume;
+}
+
 /** Runs GRT's solver (grt-traditional.md, Integration). */
 export function solve(inputs: GrtInputs): GrtSolution {
   const { boreArea, heatOfExplosion, heatCapacityRatio: k, initialPressure } = inputs;
@@ -194,9 +221,7 @@ export function solve(inputs: GrtInputs): GrtSolution {
     const mass = charge.effectiveMass;
     const idealVelocity = theta * ((heatOfExplosion * chargeMass * b * 2 * 1000) / (boreArea * TECHNICAL_ATMOSPHERE));
     burntFraction = idealVelocity * ((mass * b) / (boreArea * TECHNICAL_ATMOSPHERE));
-    const absolutePressure =
-      ((b * chargeMass * heatOfExplosion) ** 2 * mass * (k - 1) * 2) /
-      (boreArea ** 2 * TECHNICAL_ATMOSPHERE ** 2 * charge.freeVolume);
+    const absolutePressure = theoreticalPressure(b, chargeMass, heatOfExplosion, mass, k, boreArea, charge.freeVolume);
     const meanPressure = ((theta - theta ** 2) / (clamped + 1)) * absolutePressure * 10;
     const pressure = (1 - burntFraction) * initialPressure + meanPressure;
     const loss = leaks.pressureLoss(relativeStep, timeStep, pressure, travel, burntFraction, charge);

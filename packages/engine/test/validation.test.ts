@@ -55,6 +55,16 @@ describe('input validation', () => {
     // 0.00145 kg of powder poured at its bulk density fills more than 120 % of this chamber but less
     // than its solid volume does.
     ['a charge compressed beyond GRT\'s 120 % fill', (l) => ({ ...l, charge: { ...l.charge, mass: 0.00145 } }), 'charge-too-compressed', 'charge.mass'],
+    // A thin projectile, so that seating it a whole case length deep still leaves room for the charge.
+    [
+      'a projectile seated as deep as the case is long',
+      (l) => ({ ...l, projectile: { ...l.projectile, diameter: 0.001 }, cartridge: { ...l.cartridge, overallLength: l.projectile.length } }),
+      'seated-too-deep',
+      'cartridge.overallLength',
+    ],
+    ['a barrel too long for the chamber', (l) => ({ ...l, barrel: { ...l.barrel, length: 30 } }), 'expansion-too-large', 'cartridge.caseCapacity'],
+    // GRT's limit for this load is 0.6 · p_abs = 2417.05 bar (its pMaxStart in a memory snapshot).
+    ['an initial pressure the charge cannot overcome', (l) => ({ ...l, projectile: { ...l.projectile, shotStartPressure: 2500e5 } }), 'initial-pressure-too-high', 'projectile.shotStartPressure'],
     ['a barrel shorter than the seated projectile', (l) => ({ ...l, barrel: { ...l.barrel, length: 0.01 } }), 'barrel-too-short', 'barrel.length'],
     [
       'a gas leak of negative type',

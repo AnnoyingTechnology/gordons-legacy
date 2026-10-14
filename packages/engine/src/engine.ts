@@ -41,6 +41,12 @@ export type SimulationProblemCode =
   | 'charge-too-compressed'
   /** The seated projectile's base is at or beyond the muzzle. */
   | 'barrel-too-short'
+  /** The projectile is seated as deep as the case is long, or deeper. */
+  | 'seated-too-deep'
+  /** The barrel is too long for the chamber: GRT's expansion ratio ξ_E reaches 300. */
+  | 'expansion-too-large'
+  /** The initial pressure is too high for the charge to start the projectile in GRT's model. */
+  | 'initial-pressure-too-high'
   /** A gas leak has a type the engine doesn't know. */
   | 'unknown-gas-leak'
   /** A gas leak's height doesn't suit its type: a square hole needs one, a slot one up to the bore radius. */

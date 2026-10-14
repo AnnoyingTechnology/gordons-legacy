@@ -2,6 +2,7 @@ import type { SimulationProblem } from '../engine.ts';
 import { FormFunction, vivacityAtTemperature } from './burn.ts';
 import { chamberVolume } from './geometry.ts';
 import type { GrtInputs } from './inputs.ts';
+import { initialEffectiveMass, initialFreeVolume, theoreticalPressure } from './solver.ts';
 
 /** GRT's limit on the case fill: more than 120 % is a compressed charge outside the model. */
 const MAXIMUM_CASE_FILL = 1.2;
@@ -85,6 +86,8 @@ export function validateInputs(inputs: GrtInputs): SimulationProblem[] {
   if (!(inputs.barrelLength - (inputs.caseLength - inputs.seatingDepth) > 0)) {
     problems.push({ code: 'barrel-too-short', path: 'barrel.length' });
   }
+  if (problems.length > 0) return problems;
+  checkStartConditions(inputs, problems);
   return problems;
 }
 
@@ -115,4 +118,38 @@ function checkLeaks(inputs: GrtInputs, problems: SimulationProblem[]): void {
     if (!(leak.width > 0 && Number.isFinite(leak.width))) problems.push({ code: 'not-positive', path: `${path}.width` });
     if (!(leak.height >= 0 && Number.isFinite(leak.height))) problems.push({ code: 'negative', path: `${path}.height` });
   });
+}
+
+/** GRT's ξ_E must stay below this for it to simulate (`computeMain`). */
+const MAXIMUM_EXPANSION = 300;
+/** GRT simulates only when the initial pressure is below this share of p_abs (`pMaxStart`). */
+const MAXIMUM_START_SHARE = 0.6;
+
+/**
+ * The conditions under which GRT starts a simulation at all (`computeMain`, grt-traditional.md, Inputs
+ * outside the model): the projectile's base ahead of the breech, ξ_E below 300, and the initial
+ * pressure below 60 % of p_abs (bar against GRT's p_abs scale, as GRT compares them).
+ */
+function checkStartConditions(inputs: GrtInputs, problems: SimulationProblem[]): void {
+  if (!(inputs.caseLength - inputs.seatingDepth > 0)) {
+    problems.push({ code: 'seated-too-deep', path: 'cartridge.overallLength' });
+    return;
+  }
+  const freeVolume = initialFreeVolume(inputs);
+  const travelToMuzzle = inputs.barrelLength - (inputs.caseLength - inputs.seatingDepth);
+  if (!(travelToMuzzle * (inputs.boreArea / freeVolume) < MAXIMUM_EXPANSION)) {
+    problems.push({ code: 'expansion-too-large', path: 'cartridge.caseCapacity' });
+  }
+  const scale = theoreticalPressure(
+    vivacityAtTemperature(inputs),
+    inputs.chargeMass,
+    inputs.heatOfExplosion,
+    initialEffectiveMass(inputs),
+    inputs.heatCapacityRatio,
+    inputs.boreArea,
+    freeVolume,
+  );
+  if (!(inputs.initialPressure < scale * MAXIMUM_START_SHARE)) {
+    problems.push({ code: 'initial-pressure-too-high', path: 'projectile.shotStartPressure' });
+  }
 }
