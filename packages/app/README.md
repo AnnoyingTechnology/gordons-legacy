@@ -24,7 +24,8 @@ src/
     load-editor.ts        <gl-load-editor>: inputs beside results, re-simulated on every edit
     property-table.ts     <gl-property-table>: one group of inputs (label, value, unit)
     results-view.ts       key figures, charts, curve table, ladder
-    measurements-view.ts  chronograph measurements beside the simulated velocities
+    measurements-view.ts  chronograph measurements beside the simulated velocities; calibration
+    obt-view.ts           OBT nodes near the load and the charge for each
     context.ts            UiContext: language and units handed down to every component
   editor/fields.ts      which load values the editor shows, grouped as in GRT, and how to set them
   editor/components.ts  swapping the powder or projectile of a load

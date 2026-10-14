@@ -655,3 +655,11 @@ main {
   justify-content: flex-start;
   margin-bottom: 0.25rem;
 }
+
+.obt-nodes {
+  margin: 0.6rem 0;
+}
+
+.obt-nodes tr.current td {
+  font-weight: 600;
+}

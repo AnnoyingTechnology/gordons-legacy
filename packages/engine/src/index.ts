@@ -11,3 +11,5 @@ export type {
   SimulationWarning,
 } from './engine.ts';
 export { grtTraditional } from './grt-traditional/grt-traditional.ts';
+export { calibrateToVelocity, chargeForLeadTime, type Calibration } from './grt-traditional/calibration.ts';
+export { obtNodeTimes } from './grt-traditional/obt.ts';

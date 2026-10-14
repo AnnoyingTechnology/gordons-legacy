@@ -248,6 +248,25 @@ with (a, b, c, d) = (0.00440803571, 0.0268380952, −0.002401881, 0.0439015873) 
 with the smallest |1 − t_L / OBT_n|, if below 1; GRT shows it as "#15" or "#15 ½". GRT doesn't say where
 the coefficients come from; to be checked against the published OBT work (Chris Long) after parity.
 
+## OBT tool (read; not capturable through the IPC)
+
+GRT's OBT window (`calibrateToVelocity`, `calibrateToCharge` and their `_up`/`_down` helpers) runs two
+searches over full simulations:
+
+- **Velocity calibration.** Target: the muzzle velocity (the window derives it from the chronograph
+  reading, its distance and the BC), rounded to 0.1 m/s; the simulated muzzle velocity is rounded the
+  same way. For each factor f in 0.01, 0.005, 0.001, 0.0001, 0.00005: step k and Ba together by k₀·f
+  and Ba₀·f (k₀, Ba₀ the original values) towards the target while the velocity hasn't crossed it,
+  |1 − k₀/k| < 0.045, |1 − Ba₀/Ba| < 0.045 and the 10 %-of-peak time exists; on overshoot, step back
+  once.
+- **Charge for a node.** Target: the node's OBT. For each step of 1, 0.5, 0.1 and 0.01 grains: change
+  the charge (more powder shortens the lead time) while the lead time hasn't crossed the target and
+  the result is valid; on overshoot, step back once.
+
+Gordon's Legacy (`calibration.ts`) follows these searches. It differs on purpose in one place: a
+charge step that loses the lead time is not taken, and the finer steps continue, where GRT's search
+would stop. The charge search counts as reached when one more 0.01-grain step would cross the target.
+
 ## Inputs outside the model (Gordon's Legacy)
 
 GRT simulated almost any input and showed plausible numbers even where its equations are undefined.

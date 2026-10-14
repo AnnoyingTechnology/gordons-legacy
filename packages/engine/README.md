@@ -14,6 +14,7 @@ the powder or bullet maker.
 | `SimulationResult` | `{ ok: true, simulation }`, or `{ ok: false, problems }` for loads outside the model. |
 | `Simulation`, `SimulationCurve`, `SimulationWarning` | The simulated shot, in SI units. |
 | `SimulationProblem`, `SimulationProblemCode` | Why a load can't be simulated, with the input's path in the load. |
+| `calibrateToVelocity`, `chargeForLeadTime`, `obtNodeTimes` | GRT's OBT tool: fitting the powder to a measured velocity, the charge for a node, node times. |
 | `grtTraditional` | The engine that reproduces Gordon's Reloading Tool 2021.2030. |
 
 ```ts
@@ -40,6 +41,9 @@ src/grt-traditional/
   jump.ts             Jump to the lands: the chamber enlarged during the jump
   leaks.ts            Gas leaks
   validation.ts       Inputs outside the model: refused before solving
+  results.ts          Derived results: 10 %-of-peak time, recoil, OBT
+  obt.ts              Node times of a barrel (OBT)
+  calibration.ts      The OBT tool's searches: fit to a measured velocity, charge for a node
   time.ts             Time
   burn.ts             Form function setup, temperature, vivacity smoothing
   config.ts           Configuration constants

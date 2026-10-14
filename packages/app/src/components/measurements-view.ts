@@ -1,4 +1,4 @@
-import { grtTraditional } from '@gordons-legacy/engine';
+import { calibrateToVelocity, grtTraditional } from '@gordons-legacy/engine';
 import type { Load, MeasuredCharge } from '@gordons-legacy/formats';
 import { element } from '../dom.ts';
 import { shotStatistics } from '../measurements/statistics.ts';
@@ -20,7 +20,7 @@ export function renderMeasurements(load: Load, context: UiContext): HTMLElement 
         element('caption', {}, [entry.title]),
         element('thead', {}, [element('tr', {}, [
           t('field.chargeMass'), t('measurements.shots'), t('measurements.mean'), t('measurements.deviation'),
-          t('measurements.spread'), t('measurements.simulated'), t('measurements.difference'), t('measurements.note'),
+          t('measurements.spread'), t('measurements.simulated'), t('measurements.difference'), t('measurements.note'), '',
         ].map((label) => element('th', {}, [label])))]),
         element('tbody', {}, entry.charges.filter((charge) => charge.shots.length > 0).map((charge) => renderCharge(load, charge, context))),
       ]),
@@ -44,5 +44,23 @@ function renderCharge(load: Load, charge: MeasuredCharge, context: UiContext): H
     difference,
     charge.note,
   ];
-  return element('tr', {}, cells.map((cell) => element('td', {}, [cell])));
+  const calibrate = element('button', { type: 'button', title: context.t('measurements.calibrateHelp') }, [context.t('measurements.calibrate')]);
+  calibrate.addEventListener('click', () => {
+    const measured = { ...load, charge: { ...load.charge, mass: charge.chargeMass } };
+    const calibration = calibrateToVelocity(measured, statistics.mean);
+    calibrate.dispatchEvent(new CustomEvent<CalibratedLoad>('calibrated', {
+      bubbles: true,
+      detail: calibration
+        ? { load: calibration.load, reached: calibration.reached, velocity: statistics.mean }
+        : { load: undefined, reached: false, velocity: statistics.mean },
+    }));
+  });
+  return element('tr', {}, [...cells.map((cell) => element('td', {}, [cell])), element('td', {}, [calibrate])]);
+}
+
+/** Detail of the `calibrated` event: the load fitted to a measured velocity (m/s), if the fit ran. */
+export interface CalibratedLoad {
+  load: Load | undefined;
+  reached: boolean;
+  velocity: number;
 }

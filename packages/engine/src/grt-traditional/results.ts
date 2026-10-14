@@ -130,17 +130,25 @@ export interface GrtOptimalBarrelTime {
   deviation: number;
 }
 
+/** Every node GRT considers, −6 to 25 (by halves with `halfNodes`), with its optimal barrel time, ms. */
+export function nodeTimes(barrelLength: number, halfNodes: boolean): Array<{ node: number; time: number }> {
+  const inches = barrelLength / METRES_PER_INCH;
+  const nodes: Array<{ node: number; time: number }> = [];
+  for (let node = -6; !(25 < node); node += halfNodes ? 0.5 : 1) {
+    const { a, b, c, d } = Math.trunc(node) % 2 !== 0 ? ODD_NODE : EVEN_NODE;
+    nodes.push({ node, time: d + node * c + inches * (b + node * a) });
+  }
+  return nodes;
+}
+
 /**
- * GRT's OBT search: every node from −6 to 25 (by halves with `halfNodes`), keeping the one whose
- * deviation 1 − leadTime / OBT is smallest in size, and below 1. `leadTime` in ms, `barrelLength` in m.
+ * GRT's OBT search: the node whose deviation 1 − leadTime / OBT is smallest in size, and below 1.
+ * `leadTime` in ms, `barrelLength` in m.
  */
 export function optimalBarrelTime(leadTime: number, barrelLength: number, halfNodes: boolean): GrtOptimalBarrelTime | undefined {
   if (!(leadTime > 0 && barrelLength > 0)) return undefined;
-  const inches = barrelLength / METRES_PER_INCH;
   let best: GrtOptimalBarrelTime | undefined;
-  for (let node = -6; !(25 < node); node += halfNodes ? 0.5 : 1) {
-    const { a, b, c, d } = Math.trunc(node) % 2 !== 0 ? ODD_NODE : EVEN_NODE;
-    const time = d + node * c + inches * (b + node * a);
+  for (const { node, time } of nodeTimes(barrelLength, halfNodes)) {
     const deviation = 1 - leadTime / time;
     if (Math.abs(deviation) < Math.abs(best?.deviation ?? 1)) best = { node, time, deviation };
   }

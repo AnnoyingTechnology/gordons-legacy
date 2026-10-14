@@ -6,6 +6,7 @@ import { fieldAt } from '../editor/fields.ts';
 import { displayUnit } from '../units/units.ts';
 import type { UiContext } from './context.ts';
 import { renderMeasurements } from './measurements-view.ts';
+import { renderObtNodes } from './obt-view.ts';
 
 export type ChartAxis = 'travel' | 'time';
 
@@ -33,6 +34,8 @@ export function renderResults(load: Load, shot: Simulation, context: UiContext, 
   if (ladder.length > 1) container.append(renderLegend(ladder, context));
   container.append(renderTable(shot, context));
   if (ladder.length > 1) container.append(renderLadder(load, ladder, context));
+  const obtNodes = renderObtNodes(load, shot, context);
+  if (obtNodes) container.append(obtNodes);
   const measurements = renderMeasurements(load, context);
   if (measurements) container.append(measurements);
   return container;

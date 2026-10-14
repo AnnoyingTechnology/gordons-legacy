@@ -10,6 +10,7 @@ import { createContext, type UiContext } from './context.ts';
 import { withProjectile, withPropellant } from '../editor/components.ts';
 import { REPOSITORY } from './about-dialog.ts';
 import './choice-dialog.ts';
+import type { CalibratedLoad } from './measurements-view.ts';
 import './load-editor.ts';
 import './units-dialog.ts';
 
@@ -105,6 +106,7 @@ export class AppShell extends LitElement {
               .load=${active.load}
               .context=${this.context}
               @load-change=${(event: CustomEvent<Load>) => this.store.update(active.id, event.detail)}
+              @calibrated=${(event: CustomEvent<CalibratedLoad>) => this.openCalibrated(active.name, event.detail)}
             ></gl-load-editor>`
           : html`<p class="empty">${t('documents.empty')}</p>`}
       </main>
@@ -164,6 +166,19 @@ export class AppShell extends LitElement {
       this.projectileChoice = result.value;
     }
     return [];
+  }
+
+  /** Opens a load fitted to a measured velocity as a new, unsaved document; the original stays. */
+  private openCalibrated(name: string, calibration: CalibratedLoad): void {
+    const { t, quantity } = this.context;
+    const velocity = quantity(calibration.velocity, 'velocity');
+    if (!calibration.load) {
+      this.openErrors = [t('measurements.calibrationFailed', { velocity })];
+      return;
+    }
+    const base = name.replace(/\.json$/i, '');
+    this.store.openNew(`${base} ${t('measurements.calibratedSuffix', { velocity })}.json`, calibration.load);
+    this.openErrors = calibration.reached ? [] : [t('measurements.calibrationLimited', { velocity })];
   }
 
   private useProjectile(projectile: Projectile | undefined): void {

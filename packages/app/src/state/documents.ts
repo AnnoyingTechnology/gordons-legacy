@@ -54,6 +54,14 @@ export class DocumentStore {
     return { ok: true, issues: result.issues };
   }
 
+  /** Opens a load made in the application (a calibrated copy…) in a new tab, unsaved. */
+  openNew(name: string, load: Load): void {
+    const document: OpenDocument = { id: this.nextId++, name, load, savedText: '', issues: [] };
+    this.documents = [...this.documents, document];
+    this.activeId = document.id;
+    this.changed();
+  }
+
   /** Replaces a document's load (after an edit). */
   update(id: number, load: Load): void {
     this.documents = this.documents.map((document) => (document.id === id ? { ...document, load } : document));
