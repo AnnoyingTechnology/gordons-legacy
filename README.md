@@ -8,9 +8,10 @@ free. After his death, volunteers kept it running, but development has ended and
 was removed on 2026-07-27. Its code was never published, so the tool can't be maintained or ported.
 Gordon's Legacy is a from-scratch, GPL-licensed rewrite so that his work stays available for decades.
 
-> **Status: early development.** Nothing is usable yet. Follow progress on the
-> [development site](https://annoyingtechnology.github.io/gordons-legacy/), in
-> [docs/PROGRESS.md](docs/PROGRESS.md) and [docs/PLAN.md](docs/PLAN.md).
+> **Status: in development, not released.** The "GRT Traditional" engine reproduces GRT's results to
+> machine precision on every reference load, and the [development site](https://annoyingtechnology.github.io/gordons-legacy/)
+> opens, edits and simulates GRT load files. It hasn't been reviewed for use: don't develop loads with
+> it yet. Progress: [docs/PROGRESS.md](docs/PROGRESS.md), plan: [docs/PLAN.md](docs/PLAN.md).
 
 ## Dedication
 
