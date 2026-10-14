@@ -231,4 +231,6 @@ export const fr: Messages = {
   'problem.unknown-gas-leak': 'type de fuite de gaz inconnu',
   'problem.gas-leak-out-of-range': 'cette hauteur ne convient pas au type de fuite : un trou carré en demande une, une fente au plus le rayon du canon',
   'problem.numerical-failure': 'le calcul a échoué ; merci de signaler cette charge',
+  'problem.not-modelled': "ce moteur ne modélise pas une fonction utilisée par le chargement (fuites de gaz, saut jusqu'aux rayures)",
+  'problem.projectile-stops': "le projectile s'arrête dans le canon : la charge ne peut pas l'en faire sortir",
 };

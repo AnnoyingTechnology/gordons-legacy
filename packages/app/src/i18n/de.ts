@@ -231,4 +231,6 @@ export const de: Messages = {
   'problem.unknown-gas-leak': 'unbekannter Gasverlusttyp',
   'problem.gas-leak-out-of-range': 'diese Höhe passt nicht zum Verlusttyp: Ein quadratisches Loch braucht eine, ein Schlitz höchstens den Laufradius',
   'problem.numerical-failure': 'die Berechnung ist fehlgeschlagen; bitte melden Sie diese Ladung',
+  'problem.not-modelled': 'dieses Modell bildet eine Funktion der Ladung nicht ab (Gasverluste, Freiflug)',
+  'problem.projectile-stops': 'das Geschoss bleibt im Lauf stecken: die Ladung kann es nicht hinaustreiben',
 };

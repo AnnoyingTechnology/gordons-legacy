@@ -233,6 +233,8 @@ export const en = {
   'problem.unknown-gas-leak': 'unknown gas leak type',
   'problem.gas-leak-out-of-range': "this height doesn't suit the leak type: a square hole needs one, a slot one no deeper than the bore radius",
   'problem.numerical-failure': 'the computation failed; please report this load',
+  'problem.not-modelled': "this engine doesn't model a feature the load uses (gas leaks, a jump to the lands)",
+  'problem.projectile-stops': "the projectile stops in the barrel: the charge can't push it out",
 } as const;
 
 export type MessageKey = keyof typeof en;

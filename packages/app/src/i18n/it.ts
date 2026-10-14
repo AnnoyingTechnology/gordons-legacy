@@ -231,4 +231,6 @@ export const it: Messages = {
   'problem.unknown-gas-leak': 'tipo di perdita di gas sconosciuto',
   'problem.gas-leak-out-of-range': 'questa altezza non è adatta al tipo di perdita: un foro quadrato ne richiede una, una fessura al massimo il raggio della canna',
   'problem.numerical-failure': 'il calcolo non è riuscito; si prega di segnalare questa carica',
+  'problem.not-modelled': 'questo motore non modella una funzione usata dalla ricarica (perdite di gas, salto fino alle rigature)',
+  'problem.projectile-stops': 'il proiettile si ferma nella canna: la carica non riesce a spingerlo fuori',
 };

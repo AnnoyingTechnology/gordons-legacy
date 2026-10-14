@@ -3,14 +3,14 @@
  * measured charge, the simulated muzzle velocity against the measured mean. Maintainer tool; prints
  * one line per charge and a summary.
  *
- *     node tools/validation/chronograph.ts <file.grtload | file.json>...
+ *     node tools/validation/chronograph.ts [--engine research-1] <file.grtload | file.json>...
  *
  * The measured velocity is taken at the chronograph, a few metres out, so it reads slightly below the
  * muzzle velocity; and a measurement note may name another gun than the load's barrel.
  */
 import { readFileSync } from 'node:fs';
 import { basename, extname } from 'node:path';
-import { grtTraditional } from '@gordons-legacy/engine';
+import { grtTraditional, researchEngine, type Engine } from '@gordons-legacy/engine';
 import { importGrtLoad, parseLoad, type Load } from '@gordons-legacy/formats';
 
 interface Comparison {
@@ -32,7 +32,7 @@ function readLoad(path: string): Load | undefined {
   return result.ok ? result.value : undefined;
 }
 
-export function compare(paths: string[]): Comparison[] {
+export function compare(paths: string[], engine: Engine = grtTraditional): Comparison[] {
   const comparisons: Comparison[] = [];
   for (const path of paths) {
     const load = readLoad(path);
@@ -41,7 +41,7 @@ export function compare(paths: string[]): Comparison[] {
       for (const charge of series.charges) {
         const velocities = charge.shots.map((shot) => shot.velocity).filter((velocity) => velocity > 0);
         if (velocities.length === 0) continue;
-        const result = grtTraditional.simulate({ ...load, charge: { ...load.charge, mass: charge.chargeMass } });
+        const result = engine.simulate({ ...load, charge: { ...load.charge, mass: charge.chargeMass } });
         if (!result.ok) continue;
         comparisons.push({
           file: basename(path),
@@ -65,7 +65,12 @@ function percentile(sorted: number[], fraction: number): number {
 }
 
 function main(): void {
-  const comparisons = compare(process.argv.slice(2));
+  const args = process.argv.slice(2);
+  const engineIndex = args.indexOf('--engine');
+  const engine = engineIndex >= 0 && args[engineIndex + 1] === researchEngine.id ? researchEngine : grtTraditional;
+  const paths = args.filter((_, index) => index !== engineIndex && index !== engineIndex + 1);
+  console.log(`engine: ${engine.name}`);
+  const comparisons = compare(paths, engine);
   const errors = comparisons.map((entry) => (entry.simulated - entry.measured) / entry.measured);
   for (const [index, entry] of comparisons.entries()) {
     console.log(

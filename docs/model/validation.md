@@ -48,6 +48,11 @@ No sound pressure comparison is possible with the data at hand (2026-10-14):
   CUP), matched to powder models and bullet specifications (length, base), with the test barrel and
   case. A first test file was tried and dropped: a load named "135gr FTX" actually held a 125 gr FMJ.
 
+## Research engine R1
+
+See [research-engine.md](research-engine.md), First results: with GRT's powder data as is, R1's mean
+velocity error is +12.2 % (GRT Traditional: +6.8 %); GRT's powder data don't transfer unchanged.
+
 ## Next
 
 - Published data (Vihtavuori, Hodgdon…): charge, velocity and pressure for named components and

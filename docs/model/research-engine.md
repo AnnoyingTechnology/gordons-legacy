@@ -102,6 +102,30 @@ Traditional's uniform travel grid (2000 points) so that the engines compare poin
 The engine is shown to users only when 2 and 3 show it no worse than GRT Traditional; until then it
 runs in tools and tests only.
 
+## First results (R1, 2026-10-14)
+
+Implemented as `packages/engine/src/research/` (tools and tests only). With GRT's powder data used
+as is, R1 burns much faster than GRT Traditional: on the .327 Federal fixture 3258 bar and 446 m/s
+against GRT's 1962 bar and 411 m/s; on the hottest 300 BLK fixture 6114 bar against 3445 bar.
+Against the chronograph corpus (`tools/validation/chronograph.ts --engine research-1`):
+
+| Engine | Charges | Mean error | RMS | 90th percentile |
+|---|---|---|---|---|
+| GRT Traditional | 51 | +6.8 % | 13.3 % | 26.9 % |
+| Research R1 | 47 | +12.2 % | 15.8 % | 22.2 % |
+
+(R1 refuses the revolver loads with gas leaks.) So GRT's Ba doesn't transfer to standard gas dynamics:
+GRT's powder data were fitted under GRT's own devices, which slow the effective burn and damp the
+peak: the vivacity is averaged since ignition (B₁ smoothed, then the running mean S/n) and the
+pressure is smoothed (0.27 / 0.18). R1 is not a candidate for users in this form.
+
+Next steps, in order:
+
+1. Measure which of GRT's devices accounts for the difference (switch each into R1).
+2. Decide how to carry powder data across: a documented transformation from GRT's Ba to a Vieille
+   vivacity for R1, or R1's own powder parameters fitted to closed-vessel or published data.
+3. Pressure data (validation.md): without it, neither engine's pressure can be judged.
+
 ## Open questions
 
 - Which pressure GRT's "Pmax" corresponds to (mean, base or breech): GRT Traditional has no gradient,

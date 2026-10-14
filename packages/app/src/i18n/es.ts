@@ -231,4 +231,6 @@ export const es: Messages = {
   'problem.unknown-gas-leak': 'tipo de fuga de gas desconocido',
   'problem.gas-leak-out-of-range': 'esta altura no corresponde al tipo de fuga: un agujero cuadrado necesita una, una ranura como máximo el radio del ánima',
   'problem.numerical-failure': 'el cálculo ha fallado; por favor, informe de esta carga',
+  'problem.not-modelled': 'este motor no modela una función que usa la carga (fugas de gas, salto hasta las estrías)',
+  'problem.projectile-stops': 'el proyectil se detiene en el cañón: la carga no puede sacarlo',
 };
