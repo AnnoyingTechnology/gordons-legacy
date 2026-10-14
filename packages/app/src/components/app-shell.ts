@@ -5,9 +5,10 @@ import { LANGUAGE_NAMES, type Language } from '../i18n/i18n.ts';
 import { icon } from '../icons/icons.ts';
 import { DocumentStore } from '../state/documents.ts';
 import { loadSettings, saveSettings, type Settings } from '../state/settings.ts';
-import { presetPreferences, type UnitSystem } from '../units/units.ts';
+import { presetPreferences, type UnitPreferences, type UnitSystem } from '../units/units.ts';
 import { createContext, type UiContext } from './context.ts';
 import './load-editor.ts';
+import './units-dialog.ts';
 
 /**
  * The application: toolbar, one tab per open load, and the active load's editor. Owns the document
@@ -17,10 +18,12 @@ export class AppShell extends LitElement {
   static override properties = {
     context: { state: true },
     openErrors: { state: true },
+    unitsOpen: { state: true },
   };
 
   declare context: UiContext;
   declare openErrors: ImportIssue[];
+  declare unitsOpen: boolean;
   private readonly store = new DocumentStore(window.localStorage);
   private settings: Settings = loadSettings(window.localStorage, navigator.languages);
 
@@ -28,6 +31,7 @@ export class AppShell extends LitElement {
     super();
     this.context = createContext(this.settings.language, this.settings.units);
     this.openErrors = [];
+    this.unitsOpen = false;
     this.store.subscribe(() => this.requestUpdate());
     document.documentElement.lang = this.settings.language;
   }
@@ -55,6 +59,7 @@ export class AppShell extends LitElement {
             <option value="imperial" ?selected=${this.settings.unitSystem === 'imperial'}>${t('units.imperial')}</option>
           </select>
         </label>
+        <button @click=${() => (this.unitsOpen = true)}>${icon('units')} ${t('units.customize')}</button>
         <label>
           ${t('toolbar.language')}
           <select @change=${(event: Event) => this.setLanguage((event.target as HTMLSelectElement).value as Language)}>
@@ -88,6 +93,12 @@ export class AppShell extends LitElement {
             ></gl-load-editor>`
           : html`<p class="empty">${t('documents.empty')}</p>`}
       </main>
+      <gl-units-dialog
+        .open=${this.unitsOpen}
+        .context=${this.context}
+        @units-change=${(event: CustomEvent<UnitPreferences>) => this.setUnitPreferences(event.detail)}
+        @close=${() => (this.unitsOpen = false)}
+      ></gl-units-dialog>
     `;
   }
 
@@ -140,6 +151,12 @@ export class AppShell extends LitElement {
 
   private setUnits(system: UnitSystem): void {
     this.settings = { ...this.settings, unitSystem: system, units: presetPreferences(system) };
+    this.applySettings();
+  }
+
+  /** Units chosen one kind at a time; the preset shown stays the one they started from. */
+  private setUnitPreferences(units: UnitPreferences): void {
+    this.settings = { ...this.settings, units };
     this.applySettings();
   }
 

@@ -1,9 +1,8 @@
 import { expect, test } from 'vitest';
-import { displayUnit, formatQuantity, parseNumber, presetPreferences, unitsFor, type QuantityKind } from '../src/units/units.ts';
+import { CHOOSABLE_KINDS, displayUnit, formatQuantity, parseNumber, presetPreferences, unitsFor } from '../src/units/units.ts';
 
 test('every unit converts back to the SI value it came from', () => {
-  const kinds: QuantityKind[] = ['length', 'caseCapacity', 'projectileMass', 'chargeMass', 'pressure', 'temperature', 'velocity', 'energy'];
-  for (const kind of kinds) {
+  for (const kind of CHOOSABLE_KINDS) {
     for (const unit of unitsFor(kind)) {
       expect(unit.toSi(unit.fromSi(1.2345))).toBeCloseTo(1.2345, 12);
     }

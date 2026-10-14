@@ -85,6 +85,11 @@ const UNITS: Record<QuantityKind, DisplayUnit[]> = {
   ballisticCoefficient: [linear('lb/in2', 'lb/in²', units.POUND_PER_SQUARE_INCH_MASS, 3), linear('kg/m2', 'kg/m²', 1, 1)],
 };
 
+/** The kinds a user can choose a unit for: those with more than one. */
+export const CHOOSABLE_KINDS: readonly QuantityKind[] = (Object.keys(UNITS) as QuantityKind[]).filter(
+  (kind) => UNITS[kind].length > 1,
+);
+
 export type UnitSystem = 'metric' | 'imperial';
 
 /** The unit of each kind in each preset, by id. Kinds not listed use their first unit. */
