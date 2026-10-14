@@ -1,9 +1,11 @@
 import type { Simulation } from '@gordons-legacy/engine';
 import type { Load } from '@gordons-legacy/formats';
+import { pressureLimits } from '../analysis/load-assessment.ts';
 import { LineChart } from '../charts/line-chart.ts';
 import { element } from '../dom.ts';
 import { displayUnit } from '../units/units.ts';
 import type { UiContext } from './context.ts';
+import { limitName } from './gauges.ts';
 import { ladderOpacity, type LadderShot } from './ladder-view.ts';
 
 export type ChartAxis = 'travel' | 'time';
@@ -50,7 +52,10 @@ export function renderCharts(shot: Simulation, ladder: LadderShot[], axis: Chart
     color: 'var(--series-pressure)',
     formatX,
     formatY: (value) => number(value, 0),
-    limit: { value: pressureUnit.fromSi(load.cartridge.maxPressure), label: t('results.maximum', { value: quantity(load.cartridge.maxPressure, 'pressure') }) },
+    limits: pressureLimits(load).map((limit) => ({
+      value: pressureUnit.fromSi(limit.pressure),
+      label: `${limitName(limit, context)} ${quantity(limit.pressure, 'pressure')}`,
+    })),
     markers: peakIndex >= 0 ? [{ index: peakIndex, label: quantity(shot.maxPressure, 'pressure') }] : [],
     events,
     others: reduced.map(({ simulation, opacity }) => ({

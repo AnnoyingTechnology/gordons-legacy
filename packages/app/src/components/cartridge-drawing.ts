@@ -15,8 +15,9 @@ type Station = [x: number, radius: number];
 
 /**
  * A side view of the cartridge as loaded: the case (from the standard's outline when the load has one,
- * else a plain cylinder), the projectile where it is seated, and the powder up to the case fill. Not to
- * be used as a technical drawing: some features (extractor groove, ogive) are drawn schematically.
+ * else a plain cylinder), the projectile where it is seated, and the powder filling the case's inside to
+ * the case fill, by volume, with the fill written over it. Not to be used as a technical drawing: some
+ * features (extractor groove, ogive) are drawn schematically.
  */
 export function cartridgeDrawing(load: Load, shot: Simulation | undefined, context: UiContext) {
   const { cartridge, projectile } = load;
@@ -36,9 +37,7 @@ export function cartridgeDrawing(load: Load, shot: Simulation | undefined, conte
   const baseAt = cartridge.caseLength - depth;
   const bullet = projectileStations(load, baseAt);
   const fill = shot?.caseFill;
-  const head = outlineOfCase.insideFrom;
-  const powderEnd = head + Math.min(1, fill ?? 0) * Math.max(0, baseAt - head);
-  const { innerRadius } = outlineOfCase;
+  const powder = fill === undefined ? undefined : powderOutline(outlineOfCase, baseAt, fill);
 
   const dimension = (from: number, to: number, row: number, label: string): SVGTemplateResult => {
     const y = axis + caseRadius * scale + 11 + row * 13;
@@ -61,29 +60,70 @@ export function cartridgeDrawing(load: Load, shot: Simulation | undefined, conte
         </defs>
         <path class="projectile" d=${outline(bullet)} />
         <path class="case" d=${outline(outlineOfCase.stations)} />
-        ${fill === undefined
-          ? ''
-          : svg`<rect class="powder" x=${x(head)} y=${axis - innerRadius * scale} width=${Math.max(0, x(powderEnd) - x(head))}
-              height=${2 * innerRadius * scale} />`}
+        ${powder === undefined ? '' : svg`<path class="powder" d=${outline(powder)} />`}
         <path class="projectile seated" d=${outline(bullet.filter(([position]) => position <= cartridge.caseLength))} />
         <line class="axis-line" x1=${x(0) - 4} x2=${x(overallLength) + 4} y1=${axis} y2=${axis} />
         ${dimension(0, cartridge.overallLength, 1, `${t('field.overallLength')} ${quantity(cartridge.overallLength, 'length')}`)}
         ${dimension(0, cartridge.caseLength, 0, `${t('field.caseLength')} ${quantity(cartridge.caseLength, 'length')}`)}
         ${depth > 0 ? dimension(baseAt, cartridge.caseLength, 2, `${t('field.seatingDepth')} ${quantity(depth, 'length')}`) : ''}
+        ${fill === undefined
+          ? ''
+          : svg`<text class="fill-label" x=${x((outlineOfCase.insideFrom + baseAt) / 2)} y=${axis + 4} text-anchor="middle">
+              ${context.number(fill * 100, 0)} %${fill > 1 ? ` · ${t('results.compressed')}` : ''}</text>`}
       </svg>
       <figcaption>
         ${outlineOfCase.fromStandard ? t('drawing.fromStandard') : t('drawing.schematic')}
-        ${fill === undefined ? '' : html` · ${t('results.caseFill')} ${context.number(fill * 100, 0)} %`}
       </figcaption>
     </figure>
   `;
 }
 
+/**
+ * The powder inside the case, drawn to scale by volume: it fills the case's inside, from the head towards
+ * the projectile's base, until it holds `fill` of the inside's volume. A compressed charge fills it all.
+ */
+function powderOutline(outlineOfCase: CaseOutline, baseAt: number, fill: number): Station[] | undefined {
+  const from = outlineOfCase.insideFrom;
+  if (!(baseAt > from)) return undefined;
+  const slices = 200;
+  const width = (baseAt - from) / slices;
+  const radii = Array.from({ length: slices + 1 }, (_, index) => insideRadius(outlineOfCase, from + index * width));
+  const volumes = radii.slice(1).map((radius, index) => (Math.PI * width * (radius ** 2 + radii[index]! ** 2)) / 2);
+  const target = Math.min(1, fill) * volumes.reduce((sum, volume) => sum + volume, 0);
+  const stations: Station[] = [[from, radii[0]!]];
+  let held = 0;
+  for (let index = 0; index < slices; index++) {
+    const volume = volumes[index]!;
+    if (held + volume >= target) {
+      // The surface of the powder falls inside this slice.
+      const part = volume > 0 ? (target - held) / volume : 0;
+      const end = from + (index + part) * width;
+      stations.push([end, insideRadius(outlineOfCase, end)]);
+      return stations;
+    }
+    held += volume;
+    stations.push([from + (index + 1) * width, radii[index + 1]!]);
+  }
+  return stations;
+}
+
+/** The case's inside radius at a distance from the head: the outline less a wall, m. */
+function insideRadius(outlineOfCase: CaseOutline, position: number): number {
+  const { stations } = outlineOfCase;
+  for (let index = 1; index < stations.length; index++) {
+    const [x0, r0] = stations[index - 1]!;
+    const [x1, r1] = stations[index]!;
+    if (position <= x1) {
+      const radius = x1 > x0 ? r0 + ((position - x0) / (x1 - x0)) * (r1 - r0) : r1;
+      return Math.max(0, radius - WALL);
+    }
+  }
+  return Math.max(0, stations[stations.length - 1]![1] - WALL);
+}
+
 /** The case's outline, at the load's case length, and the radius inside it for the powder. */
 interface CaseOutline {
   stations: Station[];
-  /** The body's inner radius, m: the outline less a wall. */
-  innerRadius: number;
   /** Where the inside starts, m: past the head. */
   insideFrom: number;
   /** True when the outline comes from the caliber's standard. */
@@ -98,7 +138,7 @@ function caseOutline(load: Load): CaseOutline {
   const dimensions = load.cartridge.definition?.caseDimensions;
   if (!dimensions || !(dimensions.bodyBaseDiameter > 0)) {
     const radius = (load.projectile.diameter * 1.25) / 2;
-    return { stations: [[0, radius], [caseLength, radius]], innerRadius: radius - WALL, insideFrom: radius * 0.6, fromStandard: false };
+    return { stations: [[0, radius], [caseLength, radius]], insideFrom: radius * 0.6, fromStandard: false };
   }
   const { rimDiameter, rimThickness, bodyBaseDistance, bodyBaseDiameter, shoulderStart, shoulderDiameter, neckStart, neckDiameter, mouthDiameter } =
     dimensions;
@@ -119,9 +159,7 @@ function caseOutline(load: Load): CaseOutline {
     // A straight or tapered case, from the body to the mouth.
     stations.push([caseLength, (mouthDiameter || neckDiameter || bodyBaseDiameter) / 2]);
   }
-  const bodyStations = stations.filter(([position]) => position >= bodyFrom);
-  const narrowest = Math.min(...bodyStations.map(([, radius]) => radius));
-  return { stations, innerRadius: Math.max(0, narrowest - WALL), insideFrom: bodyFrom, fromStandard: true };
+  return { stations, insideFrom: bodyFrom, fromStandard: true };
 }
 
 /** The projectile's outline from base to tip; the ogive is drawn as a tangent arc. */

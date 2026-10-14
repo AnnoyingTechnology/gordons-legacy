@@ -1,6 +1,7 @@
 import { grtTraditional } from '@gordons-legacy/engine';
 import type { Load } from '@gordons-legacy/formats';
 import { html, LitElement } from 'lit';
+import { assessLoad } from '../analysis/load-assessment.ts';
 import { FIELD_GROUPS } from '../editor/fields.ts';
 import { cartridgeDrawing } from './cartridge-drawing.ts';
 import type { UiContext } from './context.ts';
@@ -41,10 +42,11 @@ export class LoadEditor extends LitElement {
   protected override render() {
     const result = grtTraditional.simulate(this.load);
     const problems = result.ok ? [] : result.problems;
+    const assessment = result.ok ? assessLoad(this.load, result.simulation) : undefined;
+    // A load the review finds dangerous gets a striped border around the whole editor.
     return html`
-      <div class="load-editor" @assistant=${(event: CustomEvent<'boreArea'>) => (this.assistant = event.detail)}>
+      <div class="load-editor concern-${assessment?.level ?? 'none'}" @assistant=${(event: CustomEvent<'boreArea'>) => (this.assistant = event.detail)}>
         <div class="inputs">
-          ${cartridgeDrawing(this.load, result.ok ? result.simulation : undefined, this.context)}
           ${FIELD_GROUPS.map(
             (group) => html`<gl-property-table
               .group=${group}
@@ -63,9 +65,9 @@ export class LoadEditor extends LitElement {
           ></gl-bore-area-dialog>
         </div>
         <div class="results">
-          ${result.ok
-            ? renderResults(this.load, result.simulation, this.context, this.axis, (axis) => (this.axis = axis))
-            : renderProblems(result.problems, this.context)}
+          ${result.ok && assessment
+            ? renderResults(this.load, result.simulation, assessment, this.context, this.axis, (axis) => (this.axis = axis))
+            : html`${cartridgeDrawing(this.load, undefined, this.context)}${renderProblems(problems, this.context)}`}
         </div>
       </div>
     `;

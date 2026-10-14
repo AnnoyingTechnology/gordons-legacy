@@ -1,5 +1,5 @@
 import type { Barrel, GasLeak } from '../load/barrel.ts';
-import type { CaliberDefinition, Cartridge, CaseDimensions } from '../load/cartridge.ts';
+import type { CaliberDefinition, Cartridge, CaseDimensions, StandardMaxPressures } from '../load/cartridge.ts';
 import type { ComponentInfo } from '../load/component-info.ts';
 import type { Charge, ImportOrigin, Ladder, Load, Note, Picture, ShotGroup } from '../load/load.ts';
 import { LOAD_FORMAT, LOAD_SCHEMA_VERSION } from '../load/load.ts';
@@ -58,12 +58,18 @@ const caliberDefinition = {
   unmapped,
 } satisfies ShapeOf<CaliberDefinition>;
 
+const standardMaxPressuresShape = {
+  cip: { optional: 'positive' },
+  saami: { optional: 'positive' },
+} satisfies ShapeOf<StandardMaxPressures>;
+
 const cartridge = {
   name: 'string',
   grooveDiameter: 'positive',
   effectiveBoreArea: 'positive',
   maxPressure: 'positive',
   pressureMeasurementMethod: 'string',
+  standardMaxPressures: { optional: { object: standardMaxPressuresShape } },
   caseLength: 'positive',
   caseCapacity: 'positive',
   overallLength: 'positive',

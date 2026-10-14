@@ -35,10 +35,10 @@ Maintainer issues picked up 2026-10-14 (GitHub #1–#13, all UI or features beyo
 | Issue | Plan | State |
 |---|---|---|
 | #1, #3 | Full-height toolbar buttons, bigger tabs and inputs; notes typed in place, no "add note" button. | Done |
-| #5, #7, #8, #9 | Results hierarchy: large key cards (velocity, energy, recoil, sound), fill and pressure as gauges, velocity on a speed scale with the transonic band. | To do |
+| #5, #7, #8, #9 | Results hierarchy: large key cards (velocity, energy, recoil, sound), fill and pressure as gauges, velocity on a speed scale with the transonic band. | Done (sound waits for #6) |
 | #11 | Tab badges: cartridge, projectile, powder. | Done |
-| #2, #13 | One warning system with a load danger level (overpressure, compressed or low fill, …) and cold/hot climate warnings. | To do |
-| #4 | CIP and SAAMI maximum pressures both on the charts. | To do |
+| #2, #13 | One warning system with a load danger level (overpressure, compressed or low fill, …) and cold/hot climate warnings. | Done |
+| #4 | CIP and SAAMI maximum pressures both on the charts. | Done (values entered by the user until the data repository) |
 | #6 | Muzzle-blast sound level estimate at 1 m; physics to check with Codex. | To do |
 | #12 | Local load library (browse by cartridge, then powder/projectile, with key figures). | To do |
 | #10 | Survey of GRT users' complaints; report on the issue for the maintainer to choose. | To do |
@@ -93,6 +93,9 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | Chronograph exports: one CSV import for any device (velocity column and unit guessed from the headers, confirmed by the user in a dialog; no unit assumed when the file states none), instead of GRT's four device-specific importers, which would need sample files to reproduce. | Agent, for review |
 | 2026-10-14 | Research engine R1 runs without covolume by default: GRT's powder data were fitted without it and overshoot with it; the covolume returns with powder data fitted for it. R1 stays out of the app until pressure is validated. | Agent, for review |
 | 2026-10-14 | UI languages built in for English, French, German, Spanish and Italian (the proposal); translations need review by native reloaders before release. | Agent, for review |
+| 2026-10-14 | Load review (#2, #13): one list of findings on a four-step scale (no flag, note, caution, danger), never worded as safe; a dangerous load gets a striped red frame. Thresholds in `docs/load-review.md` (near maximum 90 %, double charge fits at ≤ 55 % fill, low fill < 60 %, compressed > 100/110 %, burn < 85 %, cold −5 °C and hot 40 °C days per the maintainer). | Agent, for review |
+| 2026-10-14 | CIP and SAAMI maxima (#4): optional `cartridge.standardMaxPressures` (format v1, optional field), plus the caliber definition's own standard; GRT's `method` isn't used (it says "Piezo CIP" for SAAMI values). Loads are checked against every maximum known. | Agent, for review |
+| 2026-10-14 | Speed scale fixed at 150–1,300 m/s for every load (.22 Short to .204 Ruger); transonic band Mach 0.95–1.1 at the powder temperature. | Agent, for review |
 
 ## Open questions
 
@@ -184,3 +187,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | M7: the covolume explains most of R1's gap to GRT (median peak ratio 1.75 → 1.12, velocity 1.08 → 0.975 without it); the vivacity averaging hardly matters. R1 without covolume beats GRT Traditional on the chronograph corpus (same 47 charges: mean +4.1 % vs +8.0 %, RMS 11.1 % vs 13.5 %, p90 16.6 % vs 26.9 %); its peaks are a median 12 % above GRT's, unvalidated. |
 | 2026-10-14 | `AGENTS.md`: check GitHub issues regularly; the maintainer's issues and comments count as chat requests. Issues #1–#13 triaged (Next steps). |
 | 2026-10-14 | UI (#1, #3, #11): toolbar of full-height buttons (icon above label) in groups; two-line tabs with cartridge, projectile and powder badges; larger bordered inputs; notes typed straight into an empty note at the end (no "add" button; clearing a note removes it). |
+| 2026-10-14 | Load review and results hierarchy (#2, #4, #5, #7, #8, #9, #13): review panel with level, findings and cold/hot days; velocity on a speed scale with the transonic band; pressure gauge and chart lines for CIP and SAAMI maxima (new optional format field); energy and recoil cards; the case drawn filled to scale by volume. Found on the maintainer's loads: subsonic 300 BLK and .38 Special loads at 41–58 % fill hold a double charge (simulated: 351 % of the maximum for the .38 Special). |

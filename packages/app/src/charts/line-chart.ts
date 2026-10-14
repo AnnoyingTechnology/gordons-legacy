@@ -1,7 +1,7 @@
 import { niceTicks } from './ticks.ts';
 
 /**
- * An SVG line chart of one main series, with a crosshair, a limit line, labelled points and labelled
+ * An SVG line chart of one main series, with a crosshair, limit lines, labelled points and labelled
  * events, and optionally fainter curves behind it for comparison. Sized by its container; drawn in a
  * fixed coordinate system scaled with `viewBox`.
  */
@@ -15,8 +15,8 @@ export interface LineChartOptions {
   color: string;
   formatX: (value: number) => string;
   formatY: (value: number) => string;
-  /** A horizontal limit, drawn in the critical colour with its label. */
-  limit?: { value: number; label: string };
+  /** Horizontal limits (CIP's and SAAMI's maxima…), drawn in the critical colour with their labels. */
+  limits?: { value: number; label: string }[];
   /** Points labelled directly, by index. */
   markers?: { index: number; label: string }[];
   /** Vertical hairlines at x values, labelled at the bottom. */
@@ -48,7 +48,7 @@ export class LineChart {
     const all = [options, ...(options.others ?? [])];
     this.xMin = Math.min(...all.map((series) => series.x[0] ?? 0));
     this.xMax = Math.max(...all.map((series) => series.x[series.x.length - 1] ?? 1));
-    let yMax = Math.max(...all.flatMap((series) => Array.from(series.y)), options.limit?.value ?? 0);
+    let yMax = Math.max(...all.flatMap((series) => Array.from(series.y)), ...(options.limits ?? []).map((limit) => limit.value), 0);
     // Headroom above the highest value, so that labels above points stay inside the plot.
     const yTicks = niceTicks(0, yMax * 1.15);
     yMax = yTicks[yTicks.length - 1]!;
@@ -60,7 +60,7 @@ export class LineChart {
     this.element = svg('svg', { viewBox: `0 0 ${WIDTH} ${HEIGHT}`, class: 'line-chart', role: 'img' });
     this.element.append(svg('title', {}, options.title));
     this.drawAxes(yTicks, niceTicks(this.xMin, this.xMax, 8).filter((tick) => tick >= this.xMin && tick <= this.xMax));
-    this.drawLimit();
+    this.drawLimits();
     this.drawEvents();
     for (const series of options.others ?? []) {
       const faint = series.color === undefined;
@@ -131,14 +131,19 @@ export class LineChart {
     this.element.append(svg('text', { x: right, y: HEIGHT - 4, class: 'axis-label', 'text-anchor': 'end' }, xLabel));
   }
 
-  private drawLimit(): void {
-    const { limit } = this.options;
-    if (limit === undefined) return;
-    const y = this.yScale(limit.value);
-    this.element.append(svg('line', { x1: MARGIN.left, x2: WIDTH - MARGIN.right, y1: y, y2: y, class: 'limit' }));
-    this.element.append(
-      svg('text', { x: WIDTH - MARGIN.right - 4, y: y - 5, class: 'limit-label', 'text-anchor': 'end' }, limit.label),
-    );
+  private drawLimits(): void {
+    const limits = [...(this.options.limits ?? [])].sort((a, b) => b.value - a.value);
+    let previousY = -Infinity;
+    for (const limit of limits) {
+      const y = this.yScale(limit.value);
+      this.element.append(svg('line', { x1: MARGIN.left, x2: WIDTH - MARGIN.right, y1: y, y2: y, class: 'limit' }));
+      // Two maxima close together (CIP's and SAAMI's often are): the lower one's label goes under its line.
+      const below = y - previousY < 16;
+      this.element.append(
+        svg('text', { x: WIDTH - MARGIN.right - 4, y: below ? y + 13 : y - 5, class: 'limit-label', 'text-anchor': 'end' }, limit.label),
+      );
+      previousY = y;
+    }
   }
 
   private drawEvents(): void {

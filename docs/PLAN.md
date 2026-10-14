@@ -68,7 +68,11 @@ A serious engineering tool, not a consumer app.
 - GRT's organization: load files in tabs; inputs grouped as caliber, projectile, powder and barrel; main
   diagram (pressure, velocity and burn against time or travel); results table; measurements; ladder;
   powder search.
-- Dense layout, aligned tabular figures, explicit units, metric/imperial switch.
+- Dense layout, aligned tabular figures, explicit units, metric/imperial switch. A clear hierarchy of
+  results: velocity and pressure first, on scales against the speed of sound and the CIP and SAAMI
+  maxima; then energy and recoil; then the rest.
+- One review of every load (over-pressure, margin, double charge, fill, burn, transonic band, cold and
+  hot days) on a four-step scale, never worded as safe (`docs/load-review.md`).
 - Restrained neutral palette; colour reserved for data series, limits and warnings. No decorative
   imagery, gradients or playful widgets.
 - Light and dark themes, high contrast, full keyboard navigation, print-ready reports.

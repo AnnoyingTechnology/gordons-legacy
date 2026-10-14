@@ -8,7 +8,8 @@ export type IconName =
   | 'cartridge' | 'projectile' | 'propellant' | 'barrel' | 'ladder' | 'measurement'
   | 'compare' | 'chart' | 'table' | 'harmonics'
   | 'temperature' | 'calculator' | 'language' | 'units' | 'pressure' | 'velocity'
-  | 'database' | 'search' | 'undo' | 'redo';
+  | 'database' | 'search' | 'undo' | 'redo'
+  | 'energy' | 'recoil' | 'sound' | 'cold' | 'hot';
 
 /** Inner markup of each icon (no <svg> wrapper). Dots use `fill="currentColor"` and no stroke. */
 export const ICONS: Record<IconName, SVGTemplateResult> = {
@@ -62,6 +63,16 @@ export const ICONS: Record<IconName, SVGTemplateResult> = {
   search: svg`<circle cx="10.5" cy="10.5" r="7"/><path d="M16 16l5 5"/>`,
   undo: svg`<path d="M9 14L4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>`,
   redo: svg`<path d="M15 14l5-5-5-5M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/>`,
+  // Lightning bolt: energy.
+  energy: svg`<path d="M13 2.5L5 13.5h6l-1 8 8-11h-6z"/>`,
+  // Arrow pushed back against a wall: the gun moving into the shoulder.
+  recoil: svg`<path d="M20 12H7M11 7.5L6.5 12l4.5 4.5M3.5 5v14"/>`,
+  // Loudspeaker with two sound waves.
+  sound: svg`<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/>`,
+  // Snowflake: three crossing lines with tips on the vertical one.
+  cold: svg`<path d="M12 2.5v19M3.8 7.25l16.4 9.5M3.8 16.75l16.4-9.5"/><path d="M9.5 4L12 6.5 14.5 4M9.5 20L12 17.5 14.5 20"/>`,
+  // Sun over dunes: the desert.
+  hot: svg`<circle cx="15" cy="8" r="3"/><path d="M15 2.5V3.5M20.5 8h1M19 4l-.7.7M11 4l.7.7"/><path d="M2.5 19.5c3-3 6-3 9 0s6 2.5 10-1"/><path d="M2.5 15.5c2-1.5 4-1.5 6 0"/>`,
 };
 
 /** Render an icon. With a `label` it is announced as an image, otherwise it is hidden from assistive tech. */

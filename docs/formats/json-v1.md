@@ -27,7 +27,8 @@ field there documents its meaning, unit and GRT counterpart. This page gives the
 ```
 Load
 ├─ format, schemaVersion, title
-├─ cartridge     caliber values as loaded (Cartridge)
+├─ cartridge     caliber values as loaded (Cartridge), with standardMaxPressures (CIP and SAAMI
+│                maxima entered by the user, optional)
 │  └─ definition the standard's definition (CaliberDefinition), optional, with the cartridge's
 │                outline (caseDimensions: CIP table I letters, mapped to names, in m)
 ├─ barrel        the gun (Barrel), with gasLeaks

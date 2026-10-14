@@ -30,8 +30,12 @@ src/
     notes-panel.ts        <gl-notes-panel>: the load's notes and pictures
     shot-groups-panel.ts  <gl-shot-groups-panel>: the load's shot groups
     shot-group-dialog.ts  marks hits on a target photo and measures the group
+    load-badges.ts        cartridge, projectile and powder badges of a tab
     results-view.ts       the simulated shot: composes the sections below
-    figures-view.ts       key figures, details, the fitted-powder notice
+    assessment-view.ts    the load's review: level of concern, findings, cold and hot days
+    key-figures.ts        velocity and pressure on their scales, energy, recoil, the case filled to scale
+    gauges.ts             speed scale (transonic band) and pressure gauge (CIP, SAAMI maxima)
+    figures-view.ts       secondary results, the fitted-powder notice
     charts-view.ts        pressure and velocity charts, axis switch, hover readout
     curve-table.ts        the curve as a table
     ladder-view.ts        the ladder: simulations, legend, table
@@ -52,7 +56,8 @@ src/
   state/                open documents and settings, kept in localStorage
   icons/icons.ts        original SVG icons
   measurements/         statistics of measured shots; reading chronograph CSV exports
-  analysis/             bench variations (sensitivity of the peak pressure); shot-group statistics
+  analysis/             the load's review (docs/load-review.md); speed of sound; bench variations
+                        (sensitivity of the peak pressure); shot-group statistics
   offline.ts, dom.ts
 test/                   Vitest tests of the parts without a DOM
 ```

@@ -16,8 +16,16 @@ export interface Cartridge {
   effectiveBoreArea: number;
   /** Maximum permitted mean pressure from the caliber standard, Pa. GRT `pMaxZul`. */
   maxPressure: number;
-  /** How `maxPressure` is measured, for example `Piezo CIP`. GRT `method`. */
+  /**
+   * How `maxPressure` is measured, for example `Piezo CIP`. GRT `method`. GRT writes `Piezo CIP` even
+   * for SAAMI values (a .223 Rem. load with SAAMI's 3,792 bar says `Piezo CIP`), so don't rely on it.
+   */
   pressureMeasurementMethod: string;
+  /**
+   * The maximum pressures published by CIP and SAAMI, Pa, entered by the user. Use `standardMaxPressures()`
+   * to read them: it also takes the value of the caliber definition's own standard.
+   */
+  standardMaxPressures?: StandardMaxPressures;
   /** Length of the prepared case, m. GRT `caselen`. */
   caseLength: number;
   /** Water capacity of a fired case, m³. GRT `casevol`. */
@@ -33,6 +41,32 @@ export interface Cartridge {
   shotshell: boolean;
   /** The caliber definition the cartridge was based on, when known. GRT `caliberfile`. */
   definition?: CaliberDefinition;
+}
+
+/**
+ * A cartridge's maximum pressure under each standards body, Pa. The two bodies measure differently (CIP
+ * with a transducer through a drilled case, SAAMI with a conformal transducer, and they define the
+ * maximum statistically in different ways), so their values differ for the same cartridge and neither
+ * converts to the other.
+ */
+export interface StandardMaxPressures {
+  /** CIP's maximum mean pressure, Pmax. */
+  cip?: number;
+  /** SAAMI's maximum average pressure, MAP (piezo). */
+  saami?: number;
+}
+
+/**
+ * The cartridge's CIP and SAAMI maximum pressures as far as the load knows them: the user's entries,
+ * else the caliber definition's maximum when its standard is CIP or SAAMI.
+ */
+export function standardMaxPressures(cartridge: Cartridge): StandardMaxPressures {
+  const definition = cartridge.definition;
+  const standard = definition?.standard.trim().toUpperCase();
+  const fromDefinition = definition && definition.maxPressure > 0 ? definition.maxPressure : undefined;
+  const cip = cartridge.standardMaxPressures?.cip ?? (standard === 'CIP' ? fromDefinition : undefined);
+  const saami = cartridge.standardMaxPressures?.saami ?? (standard === 'SAAMI' ? fromDefinition : undefined);
+  return { ...(cip === undefined ? {} : { cip }), ...(saami === undefined ? {} : { saami }) };
 }
 
 /**

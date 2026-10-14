@@ -1,4 +1,4 @@
-import { seatingDepth, type Load, type ProjectileBase } from '@gordons-legacy/formats';
+import { seatingDepth, standardMaxPressures, type Load, type ProjectileBase, type StandardMaxPressures } from '@gordons-legacy/formats';
 import type { MessageKey } from '../i18n/i18n.ts';
 import type { QuantityKind } from '../units/units.ts';
 
@@ -25,6 +25,8 @@ export interface NumberField {
   help?: MessageKey;
   /** Shown only when this holds (for example, a boat-tail's length only for a boat-tail). */
   visible?: (load: Load) => boolean;
+  /** For an optional value: removes it when the field is emptied. */
+  clear?: (load: Load) => Load;
 }
 
 /** One of a fixed set of values, chosen from a list. */
@@ -52,6 +54,26 @@ export interface FieldGroup {
 
 const number = (field: Omit<NumberField, 'type'>): NumberField => ({ type: 'number', ...field });
 
+/** A standard's maximum pressure: shown as known (entered, or from the caliber definition), stored when entered. */
+function standardPressureField(standard: keyof StandardMaxPressures, label: MessageKey): NumberField {
+  const withValue = (load: Load, value: number | undefined): Load => {
+    const { [standard]: _replaced, ...others } = load.cartridge.standardMaxPressures ?? {};
+    const entries: StandardMaxPressures = value === undefined ? others : { ...others, [standard]: value };
+    const { standardMaxPressures: _old, ...cartridge } = load.cartridge;
+    return { ...load, cartridge: Object.keys(entries).length === 0 ? cartridge : { ...cartridge, standardMaxPressures: entries } };
+  };
+  return number({
+    path: `cartridge.standardMaxPressures.${standard}`,
+    help: 'help.standardMaxPressures',
+    label,
+    kind: 'pressure',
+    positive: true,
+    get: (l) => standardMaxPressures(l.cartridge)[standard],
+    set: (l, v) => withValue(l, v),
+    clear: (l) => withValue(l, undefined),
+  });
+}
+
 const BASE_SHAPES: ProjectileBase['shape'][] = ['flat', 'boattail', 'hollow', 'hollow-round'];
 const BASE_DIMENSIONS = [
   ['length', 'field.baseLength'],
@@ -70,6 +92,8 @@ export const FIELD_GROUPS: FieldGroup[] = [
       number({ path: 'cartridge.grooveDiameter', label: 'field.grooveDiameter', kind: 'length', positive: true, get: (l) => l.cartridge.grooveDiameter, set: (l, v) => ({ ...l, cartridge: { ...l.cartridge, grooveDiameter: v } }) }),
       number({ path: 'cartridge.effectiveBoreArea', help: 'help.effectiveBoreArea', assistant: 'boreArea', label: 'field.effectiveBoreArea', kind: 'area', positive: true, get: (l) => l.cartridge.effectiveBoreArea, set: (l, v) => ({ ...l, cartridge: { ...l.cartridge, effectiveBoreArea: v } }) }),
       number({ path: 'cartridge.maxPressure', label: 'field.maxPressure', kind: 'pressure', positive: true, get: (l) => l.cartridge.maxPressure, set: (l, v) => ({ ...l, cartridge: { ...l.cartridge, maxPressure: v } }) }),
+      standardPressureField('cip', 'field.cipMaxPressure'),
+      standardPressureField('saami', 'field.saamiMaxPressure'),
       number({ path: 'cartridge.sebertFactor', help: 'help.sebertFactor', label: 'field.sebertFactor', kind: 'plain', decimals: 2, get: (l) => l.cartridge.sebertFactor, set: (l, v) => ({ ...l, cartridge: { ...l.cartridge, sebertFactor: v } }) }),
     ],
   },

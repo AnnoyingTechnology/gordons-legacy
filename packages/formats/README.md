@@ -15,6 +15,7 @@ Everything is exported from [`src/index.ts`](src/index.ts).
 | `importGrtCaliber`, `importGrtProjectiles`, `importGrtPropellant` | Import GRT component files. A `.projectile` file may hold several projectiles. |
 | `ImportResult`, `ImportIssue` | What importers return: the value, or a failure, with the issues found. |
 | `seatingDepth(load)` | Derived value: the load format stores the overall length, not the seating depth. |
+| `standardMaxPressures(cartridge)` | The CIP and SAAMI maximum pressures known for a cartridge: the user's entries, else the caliber definition's. |
 | `units` | SI conversion factors (`units.GRAIN`, `units.BAR`…). |
 
 ```ts

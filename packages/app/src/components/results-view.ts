@@ -1,10 +1,14 @@
 import type { Simulation } from '@gordons-legacy/engine';
 import type { Load } from '@gordons-legacy/formats';
+import { render } from 'lit';
+import type { Assessment } from '../analysis/load-assessment.ts';
 import { element } from '../dom.ts';
+import { assessmentView } from './assessment-view.ts';
 import { renderAxisSwitch, renderCharts, type ChartAxis } from './charts-view.ts';
 import type { UiContext } from './context.ts';
 import { renderTable } from './curve-table.ts';
-import { renderDetails, renderFigures, renderFitNotice } from './figures-view.ts';
+import { renderDetails, renderFitNotice } from './figures-view.ts';
+import { keyFigures } from './key-figures.ts';
 import { renderLadder, renderLegend, simulateLadder } from './ladder-view.ts';
 import { renderMeasurements } from './measurements-view.ts';
 import { renderObtNodes } from './obt-view.ts';
@@ -16,19 +20,27 @@ export { renderProblems } from './problems-view.ts';
 
 /**
  * The simulated shot, built as plain DOM from the sections in the neighbouring modules: safety notice,
- * key figures and details, charts, curve table, ladder, powder temperature, bench variations, OBT nodes
- * and measurements.
+ * the load's review, key figures and details, charts, curve table, ladder, powder temperature, bench
+ * variations, OBT nodes and measurements.
  */
-export function renderResults(load: Load, shot: Simulation, context: UiContext, axis: ChartAxis, onAxis: (axis: ChartAxis) => void): HTMLElement {
+export function renderResults(
+  load: Load,
+  shot: Simulation,
+  assessment: Assessment,
+  context: UiContext,
+  axis: ChartAxis,
+  onAxis: (axis: ChartAxis) => void,
+): HTMLElement {
   const { t } = context;
   const container = element('section', { class: 'simulation' }, [element('h3', {}, [t('results.title')])]);
   container.append(element('p', { class: 'warning' }, [t('safety.simulated')]));
   const fit = load.propellant.calibration;
   if (fit) container.append(renderFitNotice(fit, context));
-  container.append(
-    renderFigures(load, shot, context),
-    renderDetails(load, shot, context),
-  );
+  const review = element('div');
+  render(assessmentView(assessment, context), review);
+  const figures = element('div');
+  render(keyFigures(load, shot, assessment, context, renderDetails(load, shot, context)), figures);
+  container.append(review, figures);
   if (shot.warnings.length > 0) {
     container.append(
       element('ul', { class: 'issues' }, shot.warnings.map((warning) =>

@@ -4,8 +4,8 @@ import { ICONS, type IconName } from '../src/icons/icons.ts';
 describe('icons', () => {
   const names = Object.keys(ICONS) as IconName[];
 
-  it('defines 33 icons', () => {
-    expect(names).toHaveLength(33);
+  it('defines 38 icons', () => {
+    expect(names).toHaveLength(38);
   });
 
   it.each(names)('%s has markup and no hard-coded colour', (name) => {

@@ -90,7 +90,8 @@ export class PropertyTable extends LitElement {
     }
     const { assistant } = field;
     const draft = this.drafts.get(index);
-    const error = (draft === undefined ? undefined : this.validate(field, draft)) ?? this.problemFor(field);
+    const cleared = field.clear !== undefined && draft?.trim() === '';
+    const error = (draft === undefined || cleared ? undefined : this.validate(field, draft)) ?? this.problemFor(field);
     return html`
       <tr class=${error ? 'invalid' : ''}>
         <th title=${field.help ? t(field.help) : nothing}>
@@ -158,6 +159,10 @@ export class PropertyTable extends LitElement {
 
   private edit(field: NumberField, index: number, text: string): void {
     this.drafts = new Map(this.drafts).set(index, text);
+    if (field.clear && text.trim() === '') {
+      this.emit(field.clear(this.load));
+      return;
+    }
     if (this.validate(field, text) !== undefined) return;
     this.emit(field.set(this.load, this.toSi(field, parseNumber(text)!)));
   }

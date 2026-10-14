@@ -1,7 +1,7 @@
 // Public API of @gordons-legacy/formats.
 
 export type { Barrel, GasLeak } from './load/barrel.ts';
-export type { CaliberDefinition, Cartridge, CaseDimensions } from './load/cartridge.ts';
+export { standardMaxPressures, type CaliberDefinition, type Cartridge, type CaseDimensions, type StandardMaxPressures } from './load/cartridge.ts';
 export type { ComponentInfo } from './load/component-info.ts';
 export {
   LOAD_FORMAT,

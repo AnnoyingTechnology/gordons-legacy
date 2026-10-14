@@ -5,6 +5,7 @@
   --rule: #d4d7db;
   --warn-fg: #6b4a00;
   --warn-bg: #fff4d6;
+  --warn-border: #c98500;
   --error-fg: #a1121b;
   --accent: #2f5d8a;
   --panel: #ffffff;
@@ -39,6 +40,7 @@
     --rule: #33373c;
     --warn-fg: #f0d58a;
     --warn-bg: #3a3017;
+    --warn-border: #eda100;
     --error-fg: #ff8a8f;
     --accent: #8fb8e0;
     --panel: #1d2024;
@@ -1236,4 +1238,416 @@ dialog.shot-group-dialog {
 .photo-choice {
   display: inline-flex;
   margin: 2rem;
+}
+
+/* Review of the load (assessment-view.ts) */
+
+.assessment {
+  margin: 0.8rem 0;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--muted);
+  background: var(--panel);
+}
+
+.assessment.level-note {
+  border-left-color: var(--accent);
+}
+
+.assessment.level-caution {
+  border-left-color: var(--warn-border);
+}
+
+.assessment.level-danger {
+  border-left-color: var(--critical);
+}
+
+.assessment-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.assessment h4 {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 1rem;
+}
+
+.assessment.level-danger h4 {
+  color: var(--critical);
+}
+
+/* Four steps, the current one filled; the words carry the meaning, the colour only repeats it. */
+.concern-scale {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8rem;
+}
+
+.concern-scale li {
+  min-width: 5.5rem;
+  padding: 0.2rem 0.5rem;
+  text-align: center;
+  color: var(--muted);
+  border: 1px solid var(--rule);
+  border-left-width: 0;
+}
+
+.concern-scale li:first-child {
+  border-left-width: 1px;
+}
+
+.concern-scale li.current {
+  font-weight: 700;
+  color: var(--fg);
+  box-shadow: inset 0 -3px 0 var(--muted);
+}
+
+.concern-scale li.note.current {
+  box-shadow: inset 0 -3px 0 var(--accent);
+}
+
+.concern-scale li.caution.current {
+  background: var(--warn-bg);
+  color: var(--warn-fg);
+  box-shadow: inset 0 -3px 0 var(--warn-border);
+}
+
+.concern-scale li.danger.current {
+  background: var(--critical);
+  color: #fff;
+  box-shadow: none;
+}
+
+.findings {
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0;
+}
+
+.findings li {
+  display: grid;
+  grid-template-columns: 6.5rem 1fr;
+  gap: 0.6rem;
+  padding: 0.25rem 0;
+  border-top: 1px solid var(--grid);
+}
+
+.finding-level {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.findings li.danger .finding-level {
+  color: var(--critical);
+}
+
+.findings li.caution .finding-level {
+  color: var(--warn-fg);
+}
+
+.findings li.note .finding-level {
+  color: var(--muted);
+}
+
+.assessment-none {
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+}
+
+.climate {
+  margin-top: 0.6rem;
+}
+
+.climate-days {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 0.5rem;
+}
+
+.climate-day {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 0.1rem 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--rule);
+}
+
+.climate-day .icon {
+  grid-row: span 2;
+  width: 26px;
+  height: 26px;
+  color: var(--muted);
+}
+
+.climate-day.caution {
+  border-color: var(--warn-border);
+  background: var(--warn-bg);
+}
+
+.climate-day.caution .icon {
+  color: var(--warn-fg);
+}
+
+.climate-name {
+  font-weight: 600;
+}
+
+.climate-clear {
+  color: var(--muted);
+}
+
+.climate-day ul {
+  margin: 0;
+  padding-left: 1rem;
+  font-size: 0.9rem;
+}
+
+.climate .note {
+  margin: 0.4rem 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+/* A load the review finds dangerous: a striped red frame around the whole editor. */
+.load-editor.concern-danger {
+  padding: 0.8rem;
+  border: 8px solid transparent;
+  border-image: repeating-linear-gradient(-45deg, var(--critical) 0 10px, transparent 10px 20px) 8;
+}
+
+/* Key figures (key-figures.ts) */
+
+.key-figures {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: 0.8rem 0;
+}
+
+.key-card {
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--rule);
+  background: var(--panel);
+  min-width: 0;
+}
+
+.key-card.primary {
+  grid-column: span 2;
+}
+
+.key-card.fill-card,
+.key-card.details-card {
+  grid-column: span 2;
+}
+
+.details-card .result-details {
+  grid-template-columns: 1fr;
+  margin: 0;
+}
+
+.details-card .result-details > div.wide {
+  grid-column: auto;
+}
+
+.key-card h4 {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.key-card h4 .icon {
+  width: 18px;
+  height: 18px;
+}
+
+.key-value {
+  font-size: 1.6rem;
+  font-weight: 650;
+  line-height: 1.2;
+  margin-top: 0.15rem;
+}
+
+.key-card.primary .key-value {
+  font-size: 2.4rem;
+}
+
+.key-card.critical .key-value,
+.key-card.critical .key-detail {
+  color: var(--critical);
+}
+
+.key-detail {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 1200px) {
+  .key-figures {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .key-card.primary,
+  .key-card.fill-card,
+  .key-card.details-card {
+    grid-column: span 2;
+  }
+}
+
+/* Scales and gauges (gauges.ts) */
+
+.scale {
+  margin-top: 0.7rem;
+}
+
+.scale-track {
+  position: relative;
+  height: 0.9rem;
+  background: var(--grid);
+  border: 1px solid var(--rule);
+}
+
+.scale-band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+
+.scale-band.transonic,
+.swatch.transonic {
+  background: repeating-linear-gradient(-45deg, var(--warn-border) 0 3px, transparent 3px 6px);
+}
+
+.swatch {
+  display: inline-block;
+  width: 1.2rem;
+  height: 0.7rem;
+  vertical-align: -0.05rem;
+  border: 1px solid var(--rule);
+}
+
+.scale-band.over {
+  background: repeating-linear-gradient(-45deg, var(--critical) 0 2px, transparent 2px 7px);
+  opacity: 0.6;
+}
+
+.scale-mark {
+  position: absolute;
+  top: -0.25rem;
+  bottom: -0.25rem;
+  width: 0;
+  border-left: 2px solid var(--fg);
+}
+
+.scale-mark.sound {
+  border-left: 1px dashed var(--muted);
+}
+
+.scale-mark.limit {
+  border-left-color: var(--critical);
+}
+
+.limit-label {
+  position: absolute;
+  bottom: 100%;
+  right: 0.25rem;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  color: var(--critical);
+}
+
+.limit-label.below {
+  bottom: auto;
+  top: 100%;
+}
+
+.pressure-gauge {
+  margin-top: 1.6rem;
+  margin-bottom: 1.2rem;
+}
+
+.gauge-bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  background: var(--series-pressure);
+}
+
+.gauge-bar.near {
+  background: var(--warn-border);
+}
+
+.gauge-bar.above {
+  background: var(--critical);
+}
+
+.scale-marker {
+  position: absolute;
+  top: -1.05rem;
+  transform: translateX(-50%);
+  font-size: 0.9rem;
+  line-height: 1;
+  color: var(--series-velocity);
+}
+
+.scale-marker::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0.9rem;
+  height: 1.1rem;
+  border-left: 3px solid var(--series-velocity);
+  transform: translateX(-50%);
+}
+
+.scale-ticks {
+  position: relative;
+  height: 1.1rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.scale-ticks span {
+  position: absolute;
+  top: 0.1rem;
+  transform: translateX(-50%);
+}
+
+.scale-ticks .scale-unit {
+  right: 0;
+  transform: none;
+  background: var(--panel);
+  padding-left: 0.3rem;
+}
+
+.scale-caption {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+/* The case drawn filled to scale, larger in its card. */
+.fill-card .cartridge-drawing {
+  margin: 0.3rem 0 0;
+}
+
+.cartridge-drawing .fill-label {
+  font-size: 11px;
+  font-weight: 700;
+  fill: var(--fg);
+  paint-order: stroke;
+  stroke: var(--case-fill);
+  stroke-width: 3px;
 }
