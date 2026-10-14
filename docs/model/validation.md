@@ -47,6 +47,9 @@ No sound pressure comparison is possible with the data at hand (2026-10-14):
 - A loaded check needs: published loads with measured pressures (Hodgdon and Alliant publish PSI or
   CUP), matched to powder models and bullet specifications (length, base), with the test barrel and
   case. A first test file was tried and dropped: a load named "135gr FTX" actually held a 125 gr FMJ.
+- One measured pressure recording exists locally: GRTrace's sample, .30-06 with a 168 gr SMK and
+  50.0 gr of IMR 4166 (5 shots, 3614 bar mean by strain gauge, 837 m/s). It needs an IMR 4166 powder
+  model, the bullet's length and the barrel length to be simulated; none is available yet.
 
 ## Research engine R1
 

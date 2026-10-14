@@ -1,5 +1,5 @@
 import { calibrateToVelocity, grtTraditional } from '@gordons-legacy/engine';
-import type { Load, MeasuredCharge } from '@gordons-legacy/formats';
+import type { Load, MeasuredCharge, MeasurementSeries } from '@gordons-legacy/formats';
 import { element } from '../dom.ts';
 import { shotStatistics } from '../measurements/statistics.ts';
 import type { UiContext } from './context.ts';
@@ -23,15 +23,21 @@ export function renderMeasurements(load: Load, context: UiContext): HTMLElement 
         element('thead', {}, [element('tr', {}, [
           t('field.chargeMass'), t('measurements.shots'), t('measurements.mean'), t('measurements.deviation'),
           t('measurements.spread'), t('measurements.simulated'), t('measurements.difference'),
+          ...(measuresPressure(entry) ? [t('measurements.measuredPeak')] : []),
           t('results.peakPressure'), '%', t('measurements.note'), '',
         ].map((label) => element('th', {}, [label])))]),
-        element('tbody', {}, entry.charges.filter((charge) => charge.shots.length > 0).map((charge) => renderCharge(load, charge, context))),
+        element('tbody', {}, entry.charges.filter((charge) => charge.shots.length > 0).map((charge) => renderCharge(load, charge, measuresPressure(entry), context))),
       ]),
     ),
   ]);
 }
 
-function renderCharge(load: Load, charge: MeasuredCharge, context: UiContext): HTMLElement {
+/** Whether some shot of the series has a measured pressure (a pressure trace). */
+function measuresPressure(series: MeasurementSeries): boolean {
+  return series.charges.some((charge) => charge.shots.some((shot) => shot.pressure !== undefined));
+}
+
+function renderCharge(load: Load, charge: MeasuredCharge, withPressure: boolean, context: UiContext): HTMLElement {
   const { quantity, number } = context;
   const statistics = shotStatistics(charge.shots.map((shot) => shot.velocity))!;
   const result = grtTraditional.simulate({ ...load, charge: { ...load.charge, mass: charge.chargeMass } });
@@ -53,6 +59,7 @@ function renderCharge(load: Load, charge: MeasuredCharge, context: UiContext): H
     quantity(statistics.extremeSpread, 'velocity'),
     simulated === undefined ? context.t('results.notSimulated') : quantity(simulated, 'velocity'),
     difference,
+    ...(withPressure ? [measuredPeak(charge, context)] : []),
     peak === undefined ? '' : quantity(peak, 'pressure'),
     shareCell,
     charge.note,
@@ -88,6 +95,15 @@ function renderCharge(load: Load, charge: MeasuredCharge, context: UiContext): H
     }));
   });
   return element('tr', {}, [...cells.map((cell) => element('td', {}, [cell])), element('td', {}, [calibrate])]);
+}
+
+/** The mean of the shots' measured peaks, with their count when not every shot has one. */
+function measuredPeak(charge: MeasuredCharge, context: UiContext): string {
+  const pressures = charge.shots.flatMap((shot) => (shot.pressure === undefined ? [] : [shot.pressure]));
+  const statistics = shotStatistics(pressures);
+  if (!statistics) return '';
+  const mean = context.quantity(statistics.mean, 'pressure');
+  return statistics.count < charge.shots.length ? `${mean} (${statistics.count})` : mean;
 }
 
 /** Detail of the `calibrated` event: the load fitted to a measured velocity (m/s), if the fit ran. */

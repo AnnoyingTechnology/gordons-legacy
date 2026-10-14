@@ -203,6 +203,7 @@ export const fr: Messages = {
   'measurements.simulated': 'Simulée',
   'measurements.difference': 'Écart',
   'measurements.note': 'Note',
+  'measurements.measuredPeak': 'Pic mesuré',
   'measurements.calibrate': 'Calibrer',
   'measurements.calibrateHelp': "Ajuster la poudre (k et Ba, comme l'outil OBT de GRT) pour que cette charge simule la vitesse moyenne mesurée, prise comme vitesse à la bouche. Ouvre une copie calibrée.",
   'measurements.calibratedSuffix': 'calibré à {velocity}',

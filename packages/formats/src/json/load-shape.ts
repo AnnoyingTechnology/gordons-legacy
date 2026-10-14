@@ -240,3 +240,4 @@ export const LOAD_SPEC: FieldSpec = { object: load };
 export const CALIBER_DEFINITION_SPEC: FieldSpec = { object: caliberDefinition };
 export const PROJECTILE_SPEC: FieldSpec = { object: projectile };
 export const PROPELLANT_SPEC: FieldSpec = { object: propellant };
+export const MEASUREMENT_SERIES_SPEC: FieldSpec = { object: measurementSeries };

@@ -1,5 +1,5 @@
 import type { Load, Projectile } from '@gordons-legacy/formats';
-import { importGrtProjectiles, importGrtPropellant, serializeLoad } from '@gordons-legacy/formats';
+import { importGrtProjectiles, importGrtPropellant, importGrtrace, serializeLoad } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
 import { LANGUAGE_NAMES, type Language } from '../i18n/i18n.ts';
 import { icon } from '../icons/icons.ts';
@@ -68,7 +68,7 @@ export class AppShell extends LitElement {
         <h1>${t('app.title')}</h1>
         <label class="button">
           ${icon('open')} ${t('toolbar.open')}
-          <input type="file" accept=".grtload,.json,.propellant,.projectile" multiple hidden @change=${this.openFromInput} />
+          <input type="file" accept=".grtload,.json,.propellant,.projectile,.grtrace" multiple hidden @change=${this.openFromInput} />
         </label>
         <button ?disabled=${!active} @click=${() => active && this.save(active.id)}>${icon('save')} ${t('toolbar.save')}</button>
         <button ?disabled=${!active} @click=${() => window.print()}>${icon('print')} ${t('toolbar.print')}</button>
@@ -168,6 +168,10 @@ export class AppShell extends LitElement {
         errors.push(...this.openComponent(extension, text));
         continue;
       }
+      if (extension === '.grtrace') {
+        errors.push(...this.openTrace(text));
+        continue;
+      }
       const result = this.store.open(file.name, text);
       if (!result.ok) errors.push(...result.issues.filter((issue) => issue.severity === 'error').map((issue) => issue.message));
     }
@@ -202,6 +206,16 @@ export class AppShell extends LitElement {
     const suffix = calibration.reached ? t('measurements.calibratedSuffix', { velocity }) : t('measurements.fitNotReachedSuffix', { velocity });
     this.store.openNew(`${base} ${suffix}.json`, calibration.load);
     this.openErrors = calibration.reached ? [] : [t('measurements.calibrationLimited', { velocity })];
+  }
+
+  /** Adds a PressureTrace recording to the active load's measurements; returns error messages. */
+  private openTrace(text: string): string[] {
+    const active = this.store.active;
+    if (!active) return [this.context.t('components.noLoad')];
+    const result = importGrtrace(text);
+    if (!result.ok) return result.issues.filter((issue) => issue.severity === 'error').map((issue) => issue.message);
+    this.store.update(active.id, { ...active.load, measurements: [...active.load.measurements, result.value] });
+    return [];
   }
 
   private useProjectile(projectile: Projectile | undefined): void {

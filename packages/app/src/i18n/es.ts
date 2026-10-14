@@ -203,6 +203,7 @@ export const es: Messages = {
   'measurements.simulated': 'Simulada',
   'measurements.difference': 'Diferencia',
   'measurements.note': 'Nota',
+  'measurements.measuredPeak': 'Pico medido',
   'measurements.calibrate': 'Calibrar',
   'measurements.calibrateHelp': 'Ajustar la pólvora (k y Ba, como la herramienta OBT de GRT) para que esta carga simule la velocidad media medida, tomada como velocidad en boca. Abre una copia calibrada.',
   'measurements.calibratedSuffix': 'calibrada a {velocity}',

@@ -205,6 +205,7 @@ export const en = {
   'measurements.simulated': 'Simulated',
   'measurements.difference': 'Difference',
   'measurements.note': 'Note',
+  'measurements.measuredPeak': 'Measured peak',
   'measurements.calibrate': 'Calibrate',
   'measurements.calibrateHelp': "Fit the powder (k and Ba, as GRT's OBT tool does) so that this charge simulates the measured mean velocity, taken as the muzzle velocity. Opens a calibrated copy.",
   'measurements.calibratedSuffix': 'calibrated to {velocity}',

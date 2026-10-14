@@ -203,6 +203,7 @@ export const de: Messages = {
   'measurements.simulated': 'Simuliert',
   'measurements.difference': 'Abweichung',
   'measurements.note': 'Notiz',
+  'measurements.measuredPeak': 'Gemessener Spitzendruck',
   'measurements.calibrate': 'Kalibrieren',
   'measurements.calibrateHelp': 'Das Pulver (k und Ba, wie das OBT-Werkzeug von GRT) so anpassen, dass diese Ladung die gemessene mittlere Geschwindigkeit als Mündungsgeschwindigkeit ergibt. Öffnet eine kalibrierte Kopie.',
   'measurements.calibratedSuffix': 'kalibriert auf {velocity}',

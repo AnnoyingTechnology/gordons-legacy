@@ -22,6 +22,7 @@ export type { GrtBurnModel, Propellant, PropellantCalibration } from './load/pro
 export type { ImportIssue, ImportResult, IssueSeverity } from './import-issues.ts';
 export { parseLoad, serializeLoad } from './json/load-json.ts';
 export { importGrtCaliber, importGrtProjectiles, importGrtPropellant } from './grt/component-import.ts';
+export { importGrtrace } from './grt/grtrace-import.ts';
 export { importGrtLoad, type GrtLoadImportOptions } from './grt/grtload-import.ts';
 
 export * as units from './units.ts';

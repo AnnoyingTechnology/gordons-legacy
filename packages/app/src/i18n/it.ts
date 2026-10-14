@@ -203,6 +203,7 @@ export const it: Messages = {
   'measurements.simulated': 'Simulata',
   'measurements.difference': 'Differenza',
   'measurements.note': 'Nota',
+  'measurements.measuredPeak': 'Picco misurato',
   'measurements.calibrate': 'Calibra',
   'measurements.calibrateHelp': 'Adattare la polvere (k e Ba, come lo strumento OBT di GRT) perché questa carica simuli la velocità media misurata, presa come velocità alla volata. Apre una copia calibrata.',
   'measurements.calibratedSuffix': 'calibrata a {velocity}',
