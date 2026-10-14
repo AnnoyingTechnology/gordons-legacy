@@ -125,3 +125,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | M3: ladder charges drawn behind the load's own curves (fainter for smaller charges), with a legend; the ladder is simulated once for charts and table. Result details reorganised. |
 | 2026-10-14 | M3: a Units dialog chooses the display unit of each kind of quantity, on top of the metric/imperial presets; saved with the settings. |
 | 2026-10-14 | M3: About dialog (dedication, safety notice, build, licence) in the five languages, opening on a first visit and from the toolbar; the page footer moved into the app and is translated. |
+| 2026-10-14 | M3: the load's chronograph measurements are listed per charge (shots, mean, SD, ES) beside the simulated velocity and the difference, for calibration. |

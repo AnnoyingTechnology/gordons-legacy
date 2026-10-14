@@ -23,6 +23,7 @@ src/
     load-editor.ts        <gl-load-editor>: inputs beside results, re-simulated on every edit
     property-table.ts     <gl-property-table>: one group of inputs (label, value, unit)
     results-view.ts       key figures, charts, curve table, ladder
+    measurements-view.ts  chronograph measurements beside the simulated velocities
     context.ts            UiContext: language and units handed down to every component
   editor/fields.ts      which load values the editor shows, grouped as in GRT, and how to set them
   charts/               SVG line chart and axis ticks, no chart library
@@ -30,6 +31,7 @@ src/
   i18n/                 message catalogs (en is the source; the compiler checks the others are complete)
   state/                open documents and settings, kept in localStorage
   icons/icons.ts        original SVG icons
+  measurements/         statistics of measured shots
   offline.ts, dom.ts
 test/                   Vitest tests of the parts without a DOM
 ```
