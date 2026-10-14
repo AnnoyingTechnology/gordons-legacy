@@ -62,6 +62,20 @@ export interface Simulation {
   barrelTime: number;
   /** Fraction of the charge burnt when the projectile leaves the muzzle, 0 to 1. */
   burntFractionAtMuzzle: number;
+  /** Kinetic energy of the projectile at the muzzle (translation only), J. */
+  muzzleEnergy: number;
+  /** Muzzle energy over the charge's chemical energy, 0 to 1. */
+  efficiency: number;
+  /** Projectile spin at the muzzle, revolutions per second; absent when the twist is unknown. */
+  muzzleSpinRate?: number;
+  /**
+   * When the pressure first reaches 10 % of its peak, s; absent when the initial pressure is already
+   * above that or the first step passes it. GRT counts the barrel time from there for its "bullet lead
+   * time".
+   */
+  tenPercentPeakTime?: number;
+  /** Barrel time counted from `tenPercentPeakTime` (GRT's "bullet lead time", BLT), s. */
+  leadTime?: number;
   /** Where the charge finished burning, if it did before the muzzle. */
   burnout?: { travel: number; pressure: number };
   /** Distance from the breech face to the seated projectile's base, m; travel is counted from there. */

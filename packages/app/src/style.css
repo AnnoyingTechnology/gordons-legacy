@@ -214,6 +214,35 @@ code {
   font-size: 0.8rem;
 }
 
+.result-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.15rem 1.5rem;
+  margin: 0 0 0.8rem;
+  font-size: 0.9rem;
+}
+
+.result-details > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.result-details dt,
+.result-details dd {
+  margin: 0;
+}
+
+.result-details dd {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.result-details dt {
+  color: var(--muted);
+}
+
 .axis-switch {
   margin: 0.6rem 0;
   color: var(--muted);

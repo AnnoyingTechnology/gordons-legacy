@@ -61,6 +61,21 @@ describe.each(references.map((reference) => [reference.source, reference] as con
     expect(relativeError(simulation.barrelTime * 1000, value(reference.results['MuzzleTime']))).toBeLessThan(SCALAR_TOLERANCE);
   });
 
+  test('derived results match GRT', () => {
+    const { results } = reference;
+    expect(relativeError(simulation.muzzleEnergy, value(results['MuzzleEnergy']))).toBeLessThan(SCALAR_TOLERANCE);
+    expect(relativeError(simulation.efficiency, value(results['Efficiency']))).toBeLessThan(SCALAR_TOLERANCE);
+    expect(relativeError((simulation.muzzleSpinRate ?? 0) * 60, value(results['MuzzleRPM']))).toBeLessThan(SCALAR_TOLERANCE);
+    // GRT leaves the lead time empty, and the 10 % time at 0, when the initial pressure is above 10 % of the peak.
+    if (results['BulletLeadTime10Pmax'] === '') {
+      expect(simulation.leadTime).toBeUndefined();
+      expect(value(results['Pmax10Time'])).toBe(0);
+    } else {
+      expect(relativeError(simulation.tenPercentPeakTime! * 1000, value(results['Pmax10Time']))).toBeLessThan(SCALAR_TOLERANCE);
+      expect(relativeError(simulation.leadTime! * 1000, value(results['BulletLeadTime10Pmax']))).toBeLessThan(SCALAR_TOLERANCE);
+    }
+  });
+
   test('the whole curve matches GRT', () => {
     const { curve } = reference;
     expect(simulation.curve.pressure.length).toBe(curve.pressure_bar.length);

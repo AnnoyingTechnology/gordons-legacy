@@ -15,7 +15,11 @@ export type ChartAxis = 'travel' | 'time';
 export function renderResults(load: Load, shot: Simulation, context: UiContext, axis: ChartAxis, onAxis: (axis: ChartAxis) => void): HTMLElement {
   const { t } = context;
   const container = element('section', { class: 'simulation' }, [element('h3', {}, [t('results.title')])]);
-  container.append(element('p', { class: 'warning' }, [t('safety.simulated')]), renderFigures(load, shot, context));
+  container.append(
+    element('p', { class: 'warning' }, [t('safety.simulated')]),
+    renderFigures(load, shot, context),
+    renderDetails(load, shot, context),
+  );
   if (shot.warnings.length > 0) {
     container.append(
       element('ul', { class: 'issues' }, shot.warnings.map((warning) =>
@@ -68,6 +72,29 @@ function renderFigures(load: Load, shot: Simulation, context: UiContext): HTMLEl
       shot.burnout ? t('results.burnout', { travel: quantity(shot.burnout.travel, 'length', 1) }) : t('results.stillBurning'),
     ),
   ]);
+}
+
+/** GRT's grains per gram, which it uses for the power factor. */
+const GRT_GRAINS_PER_GRAM = 15.432358353;
+const FEET_PER_METRE = 1 / 0.3048;
+
+/** Secondary results, as a compact list under the key figures. */
+function renderDetails(load: Load, shot: Simulation, context: UiContext): HTMLElement {
+  const { t, quantity, number } = context;
+  // IPSC's power factor: grains times feet per second, over 1000.
+  const powerFactor = (load.projectile.mass * 1000 * GRT_GRAINS_PER_GRAM * (shot.muzzleVelocity * FEET_PER_METRE)) / 1000;
+  const items: Array<{ label: string; value: string; help?: string }> = [
+    { label: t('results.muzzleEnergy'), value: quantity(shot.muzzleEnergy, 'energy') },
+    { label: t('results.efficiency'), value: `${number(shot.efficiency * 100, 1)} %` },
+    ...(shot.leadTime === undefined
+      ? []
+      : [{ label: t('results.leadTime'), value: quantity(shot.leadTime, 'time'), help: t('results.leadTimeHelp') }]),
+    ...(shot.muzzleSpinRate === undefined ? [] : [{ label: t('results.spinRate'), value: quantity(shot.muzzleSpinRate, 'spinRate') }]),
+    { label: t('results.powerFactor'), value: number(powerFactor, 1) },
+  ];
+  return element('dl', { class: 'result-details' }, items.map(({ label, value, help }) =>
+    element('div', help ? { title: help } : {}, [element('dt', {}, [label]), element('dd', {}, [value])]),
+  ));
 }
 
 function renderAxisSwitch(current: ChartAxis, onAxis: (axis: ChartAxis) => void, context: UiContext): HTMLElement {

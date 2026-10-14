@@ -24,7 +24,11 @@ export function formatSummary(load: Load, shot: Simulation): string {
     `Barrel time      ${(shot.barrelTime * 1000).toFixed(4)} ms`,
     `Burnt at muzzle  ${(shot.burntFractionAtMuzzle * 100).toFixed(1)} %` +
       (shot.burnout ? ` (burnout at ${(shot.burnout.travel * 1000).toFixed(1)} mm of travel)` : ''),
+    `Muzzle energy    ${shot.muzzleEnergy.toFixed(0)} J`,
+    `Efficiency       ${(shot.efficiency * 100).toFixed(1)} %`,
   ];
+  if (shot.leadTime !== undefined) lines.push(`Lead time (BLT)  ${(shot.leadTime * 1000).toFixed(4)} ms from 10 % of peak`);
+  if (shot.muzzleSpinRate !== undefined) lines.push(`Spin at muzzle   ${(shot.muzzleSpinRate * 60).toFixed(0)} rpm`);
   if (shot.warnings.length > 0) lines.push(`Warnings         ${shot.warnings.join(', ')}`);
   lines.push('', SAFETY_NOTICE);
   return lines.join('\n');

@@ -1,6 +1,7 @@
 import type { Load } from '@gordons-legacy/formats';
 import type { Engine, SimulationResult, SimulationWarning } from '../engine.ts';
 import { grtInputs } from './inputs.ts';
+import { tenPercentPeakTime } from './results.ts';
 import { solve } from './solver.ts';
 import { validateInputs } from './validation.ts';
 
@@ -47,6 +48,8 @@ export const grtTraditional: Engine = {
     const muzzle = points[count - 1]!;
     const peak = points[peakIndex]!;
     const burnout = solution.burnoutIndex < count ? points[solution.burnoutIndex - 1] : undefined;
+    const muzzleEnergy = Math.pow(muzzle.velocity, 2) * inputs.projectileMass * 0.5;
+    const tenPercentTime = tenPercentPeakTime(points, peak.pressure, inputs.initialPressure);
 
     const warnings: SimulationWarning[] = [];
     if (peak.pressure < 2 * inputs.initialPressure) warnings.push('pressure-too-low');
@@ -59,6 +62,15 @@ export const grtTraditional: Engine = {
       muzzlePressure: muzzle.pressure * PASCALS_PER_BAR,
       barrelTime: muzzle.time * SECONDS_PER_MILLISECOND,
       burntFractionAtMuzzle: solution.finalBurntFraction,
+      muzzleEnergy,
+      efficiency: muzzleEnergy / (inputs.heatOfExplosion * inputs.chargeMass * 1000),
+      ...(inputs.twistLength > 0 ? { muzzleSpinRate: muzzle.velocity / inputs.twistLength } : {}),
+      ...(tenPercentTime === undefined
+        ? {}
+        : {
+            tenPercentPeakTime: tenPercentTime * SECONDS_PER_MILLISECOND,
+            leadTime: (muzzle.time - tenPercentTime) * SECONDS_PER_MILLISECOND,
+          }),
       ...(burnout ? { burnout: { travel: burnout.travel, pressure: burnout.pressure * PASCALS_PER_BAR } } : {}),
       seatedBasePosition: solution.seatedBasePosition,
       curve,

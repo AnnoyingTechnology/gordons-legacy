@@ -203,6 +203,20 @@ last update falls before c reaches j.
 ## Results (partial)
 
 - Peak pressure: the largest p̃; muzzle velocity and pressure: the last point's v and p̃.
+- Muzzle energy E = v² · m_p · 0.5 (translation only); efficiency E / (Q · m_c · 1000), with the
+  load's charge (before leaks).
+- Spin at the muzzle: v / L_tw revolutions per second (GRT shows 60 v / L_tw rpm).
+- Power factors (display only): IPSC = m_p[gr] · v[ft/s] / 1000 with GRT's 15.432358353 gr/g; MIP =
+  v · m_p[g] / 10.
+- 10 % of peak (confirmed on every reference): with p₁₀ = 0.1 · p_max, if p_s < p₁₀, take the points
+  (10 · t[ms], p̃) up to and including the first with p̃ > p₁₀. Resample each segment i → i + 1 (i from
+  0 to the second last point) along a Catmull-Rom spline through p_{max(0,i−1)}, p_i, p_{i+1}, p_{i+2}
+  (the last segment uses the last point for both p_{i+1} and p_{i+2}), at t = k / D for k = 0 …
+  trunc(D − 1), with D = max(2, |x_{i−1} − x_{i+2}| + |y_{i−1} − y_{i+1}|) (GRT pairs x and y with
+  different points). Walking back from the last sample, the time is x / 10 of the first sample with
+  y ≤ p₁₀. The spline is p₁ + t (p₂/2 − p₀/2) + t² (2p₂ + p₀ − 5p₁/2 − p₃/2) + t³ (p₃/2 + 3p₁/2 − p₀/2 −
+  3p₂/2). The lead time ("BLT") is the barrel time minus that time; GRT shows none when the time is 0
+  or p_s ≥ p₁₀.
 - Burnout: the index of the last phase A point; z at the muzzle: min(1, z) at burnout.
 - Validity: the result is invalid when the peak pressure is below 2 p_s, the Sebert factor is negative,
   or the propellant is invalid.

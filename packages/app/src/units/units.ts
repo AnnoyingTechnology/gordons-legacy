@@ -24,6 +24,7 @@ export type QuantityKind =
   | 'density'
   | 'specificVolume'
   | 'time'
+  | 'spinRate'
   | 'ballisticCoefficient';
 
 export interface DisplayUnit {
@@ -77,6 +78,8 @@ const UNITS: Record<QuantityKind, DisplayUnit[]> = {
   density: [linear('kg/m3', 'kg/m³', 1, 0), linear('g/cm3', 'g/cm³', 1000, 3)],
   specificVolume: [linear('cm3/g', 'cm³/g', units.CUBIC_CENTIMETRE_PER_GRAM, 3)],
   time: [linear('ms', 'ms', 1e-3, 3)],
+  // SI: revolutions per second.
+  spinRate: [linear('rpm', 'rpm', 1 / 60, 0)],
   ballisticCoefficient: [linear('lb/in2', 'lb/in²', units.POUND_PER_SQUARE_INCH_MASS, 3), linear('kg/m2', 'kg/m²', 1, 1)],
 };
 

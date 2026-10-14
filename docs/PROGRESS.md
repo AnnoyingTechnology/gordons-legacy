@@ -6,8 +6,8 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 
 - **Milestone:** M2 in progress: the GRT Traditional engine reproduces GRT to machine precision (peak
   pressure, muzzle velocity, barrel time within 10⁻¹⁴) on all 19 fixtures and all 67 maintainer loads,
-  every gas-leak type, jump to the lands and z2 recomputation included. Remaining: derived results
-  (OBT, 10 %-Pmax times, recoil, efficiency).
+  every gas-leak type, jump to the lands and z2 recomputation included, with muzzle energy,
+  efficiency, spin and the 10 %-of-peak lead time (BLT). Remaining: recoil and OBT.
 - **Code:** `packages/formats` imports `.grtload`, `.caliber`, `.projectile` and `.propellant` files into
   the load format (SI units), and saves and reads JSON loads with field-by-field validation; 182 tests on
   the CC0 corpus and five of the maintainer's loads. Imports are checked against the same specification as
@@ -22,8 +22,9 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 
 ## Next steps
 
-1. M2: GRT's derived results, from the binary into `docs/model/grt-traditional.md`: OBT, 10 %-Pmax
-   times, recoil, efficiency.
+1. M2: GRT's recoil (`InnerBallistikRecoil.Compute`, 0x2f9c1ab) and OBT (`compute_OBT`, the
+   `InnerBallistikOBT` class: A, B, C, D, L, half nodes), from the binary into
+   `docs/model/grt-traditional.md`; all captures hold GRT's values to compare.
 2. M3: per-quantity unit choices, ladder curves in the charts,
    About dialog.
 
@@ -118,3 +119,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | Codex (`gpt-6.1-sol`, xhigh) reviewed the engine's edge cases: negative or NaN inputs gave plausible numbers without warnings, a zero free volume or NaN capacity hung the solver, the zb search was unbounded for tiny a0, unknown leak types were ignored. Fixed: input validation (`validation.ts`), a bounded zb search, a step cap and a finite-result check, with one regression test per case. Its boat-tail finding was a wording error in the spec (GRT's code has the same condition); spec fixed. |
 | 2026-10-14 | M2: z2 recomputation recovered (`AutoCompute_z2`, `Compute_z2`): when z2 is outside (z1, 0.99], GRT uses z1 + min(0.99, max(0, 0.792 (1 − z1) − z1^0.8/10)) rounded to 4 decimals. Two variant fixtures match GRT to machine precision. |
 | 2026-10-14 | M2: slot leaks recovered (`ComputeArea`: the uncovered arc w · 2r · acos(1 − h/r)); round holes, square holes and slots now each have a variant fixture matching GRT to machine precision. GRT's type names: cylinder gap, round hole, square hole, slot. The `unsupported-feature` warning is gone: every input the engine accepts is modelled. |
+| 2026-10-14 | M2: derived results recovered and shown in the app and CLI: muzzle energy, efficiency, spin, IPSC/MIP power factors, and the 10 %-of-peak time with the lead time (BLT), which GRT finds on a Catmull-Rom resampling of the rising curve (with its quirks). Match GRT to 10⁻¹² on all fixtures and maintainer loads. |
