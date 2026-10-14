@@ -23,6 +23,7 @@ import { firearms, Library } from '../state/library.ts';
 import { indexedDbStorage } from '../state/library-storage.ts';
 import { ComponentLibrary, type ComponentEntry } from '../state/components.ts';
 import { indexedDbStore } from '../state/indexed-db.ts';
+import './converter-dialog.ts';
 import './units-dialog.ts';
 
 /**
@@ -37,6 +38,7 @@ export class AppShell extends LitElement {
     openErrors: { state: true },
     unitsOpen: { state: true },
     aboutOpen: { state: true },
+    converterOpen: { state: true },
     projectileChoice: { state: true },
     view: { state: true },
     chronograph: { state: true },
@@ -53,6 +55,7 @@ export class AppShell extends LitElement {
   declare chronograph: { csv: ChronographCsv; fileName: string } | undefined;
   declare unitsOpen: boolean;
   declare aboutOpen: boolean;
+  declare converterOpen: boolean;
   private readonly store = new DocumentStore(window.localStorage);
   private readonly library = new Library(indexedDbStorage());
   private readonly components = new ComponentLibrary(indexedDbStore<ComponentEntry>('components'));
@@ -63,6 +66,7 @@ export class AppShell extends LitElement {
     this.context = createContext(this.settings.language, this.settings.units);
     this.openErrors = [];
     this.unitsOpen = false;
+    this.converterOpen = false;
     this.projectileChoice = undefined;
     this.view = 'editor';
     this.chronograph = undefined;
@@ -116,6 +120,9 @@ export class AppShell extends LitElement {
             </select>
           </label>
           <button class="tool" @click=${() => (this.unitsOpen = true)}>${icon('units')}<span>${t('units.customize')}</span></button>
+          <button class="tool" aria-pressed=${this.converterOpen ? 'true' : 'false'} @click=${() => (this.converterOpen = !this.converterOpen)}>
+            ${icon('calculator')}<span>${t('converter.short')}</span>
+          </button>
           <label class="tool tool-select">
             <span>${t('toolbar.language')}</span>
             <select @change=${(event: Event) => this.setLanguage((event.target as HTMLSelectElement).value as Language)}>
@@ -173,6 +180,7 @@ export class AppShell extends LitElement {
             @close=${() => (this.chronograph = undefined)}
           ></gl-chronograph-dialog>`
         : nothing}
+      <gl-converter-dialog .open=${this.converterOpen} .context=${this.context} @close=${() => (this.converterOpen = false)}></gl-converter-dialog>
       <gl-units-dialog
         .open=${this.unitsOpen}
         .context=${this.context}
@@ -214,6 +222,7 @@ export class AppShell extends LitElement {
         .componentEntries=${this.components.entries}
         @load-change=${(event: CustomEvent<Load>) => this.store.update(active.id, event.detail)}
         @calibrated=${(event: CustomEvent<CalibratedLoad>) => this.openCalibrated(active.name, event.detail)}
+        @open-load=${(event: CustomEvent<{ name: string; load: Load }>) => this.store.openNew(`${event.detail.name}.json`, event.detail.load)}
       ></gl-load-editor>
     `;
   }

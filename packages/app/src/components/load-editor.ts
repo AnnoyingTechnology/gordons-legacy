@@ -5,6 +5,7 @@ import { icon } from '../icons/icons.ts';
 import type { Firearm } from '../state/library.ts';
 import type { ComponentEntry, ComponentLibrary } from '../state/components.ts';
 import { withProjectile, withPropellant } from '../editor/components.ts';
+import './charge-synthesis-view.ts';
 import './component-picker.ts';
 import { assessLoad } from '../analysis/load-assessment.ts';
 import { FIELD_GROUPS } from '../editor/fields.ts';
@@ -113,6 +114,9 @@ export class LoadEditor extends LitElement {
           ${result.ok && assessment
             ? renderResults(this.load, result.simulation, assessment, this.context, this.axis, (axis) => (this.axis = axis))
             : html`${cartridgeDrawing(this.load, undefined, this.context)}${renderProblems(problems, this.context)}`}
+          ${result.ok && this.components
+            ? html`<gl-charge-synthesis .load=${this.load} .entries=${this.componentEntries} .context=${this.context}></gl-charge-synthesis>`
+            : nothing}
         </div>
       </div>
     `;

@@ -34,6 +34,13 @@ describe('pressure', () => {
     expect(pressureLimits(load).map((limit) => limit.source)).toEqual(['SAAMI', 'CIP']);
   });
 
+  test("a load maximum slightly below a standard's is kept, so the lowest is always enforced", () => {
+    const own = { ...blackout, cartridge: { ...blackout.cartridge, maxPressure: 3885 * units.BAR } };
+    expect(pressureLimits(own)[0]).toEqual({ source: 'load', pressure: 3885 * units.BAR });
+    const rounded = { ...blackout, cartridge: { ...blackout.cartridge, maxPressure: 3910 * units.BAR } };
+    expect(pressureLimits(rounded)).toEqual([{ source: 'CIP', pressure: 3900 * units.BAR }]);
+  });
+
   test("the load's own maximum is listed only when it differs from the standards'", () => {
     expect(pressureLimits(blackout)).toEqual([{ source: 'CIP', pressure: 3900 * units.BAR }]);
     const own = { ...blackout, cartridge: { ...blackout.cartridge, maxPressure: 3500 * units.BAR } };

@@ -1985,3 +1985,101 @@ dialog.component-picker {
   height: 1.9rem;
   font-size: 0.9rem;
 }
+
+/* Tolerance synthesis (charge-synthesis-view.ts) */
+
+.synthesis {
+  margin-top: 0.6rem;
+}
+
+.synthesis-criteria {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.4rem;
+  margin: 0.6rem 0;
+}
+
+.synthesis-criteria input {
+  width: 4.5rem;
+  font: inherit;
+}
+
+.synthesis-table td.name {
+  text-align: left;
+  white-space: nowrap;
+}
+
+/* Unit converter (converter-dialog.ts): a floating window at the bottom right. */
+dialog.converter-dialog {
+  position: fixed;
+  inset: auto 1.5rem 1.5rem auto;
+  margin: 0;
+  z-index: 10;
+  box-shadow: 0 4px 18px rgb(0 0 0 / 0.25);
+}
+
+dialog.converter-dialog h2 {
+  margin-top: 0;
+}
+
+.converter-input {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.converter-input input[type='text'] {
+  width: 8rem;
+  font: inherit;
+  text-align: right;
+}
+
+.converter-input input[type='number'] {
+  width: 3.5rem;
+  font: inherit;
+}
+
+.converter-results th {
+  text-align: left;
+}
+
+.synthesis-criteria label.invalid input {
+  border-color: var(--critical);
+  outline: 1px solid var(--critical);
+}
+
+.synthesis-table td {
+  text-align: left;
+  vertical-align: top;
+}
+
+.synthesis-table .note {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.end-findings {
+  list-style: none;
+  margin: 0.2rem 0 0;
+  padding: 0;
+  font-size: 0.8rem;
+  max-width: 28rem;
+}
+
+.end-findings li.danger {
+  color: var(--critical);
+}
+
+.end-findings li.caution {
+  color: var(--warn-fg);
+}
+
+.end-findings li.note {
+  color: var(--muted);
+}
+
+.warning-text {
+  color: var(--warn-fg);
+}

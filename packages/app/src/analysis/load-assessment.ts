@@ -28,6 +28,8 @@ export type FindingCode =
   | 'nearLimit'
   /** Ordinary bench variations together take the peak above the lowest maximum. */
   | 'benchVariationsAboveLimit'
+  /** The bench variations couldn't be simulated: unchecked, which is not the same as no finding. */
+  | 'benchVariationsUnchecked'
   /**
    * A loading mistake, not the load itself: a second charge thrown into the case would fit and go
    * unnoticed. Caution when the doubled charge's simulated peak is above the maximum, else a note.
@@ -122,7 +124,8 @@ export function assessLoad(load: Load, shot: Simulation): Assessment {
   if (exceeded.length === 0) {
     if (peak >= NEAR_LIMIT_SHARE * lowest.pressure) findings.push({ code: 'nearLimit', level: 'caution', limit: lowest, pressure: peak });
     const varied = simulate(vary(load, 'combined'));
-    if (varied && varied.maxPressure > lowest.pressure) {
+    if (!varied) findings.push({ code: 'benchVariationsUnchecked', level: 'note' });
+    else if (varied.maxPressure > lowest.pressure) {
       findings.push({ code: 'benchVariationsAboveLimit', level: 'caution', limit: lowest, pressure: varied.maxPressure });
     }
   }
@@ -163,16 +166,20 @@ export function assessLoad(load: Load, shot: Simulation): Assessment {
 }
 
 /**
- * The maxima the load is checked against, lowest first: CIP's and SAAMI's when known, and the load's own
- * when it differs from both (by more than 0.5 %, which covers GRT's rounding of converted values).
+ * The maxima the load is checked against, lowest first: CIP's and SAAMI's when known, and the load's own.
+ * The load's own is left out only when a standard's value is at most it and within 0.5 % of it (GRT's
+ * rounding of converted values), so that the lowest maximum is always enforced. Values that aren't
+ * finite and positive are ignored.
  */
 export function pressureLimits(load: Load): PressureLimit[] {
   const standards = standardMaxPressures(load.cartridge);
+  const valid = (pressure: number | undefined): pressure is number => pressure !== undefined && Number.isFinite(pressure) && pressure > 0;
   const limits: PressureLimit[] = [];
-  if (standards.cip !== undefined) limits.push({ source: 'CIP', pressure: standards.cip });
-  if (standards.saami !== undefined) limits.push({ source: 'SAAMI', pressure: standards.saami });
+  if (valid(standards.cip)) limits.push({ source: 'CIP', pressure: standards.cip });
+  if (valid(standards.saami)) limits.push({ source: 'SAAMI', pressure: standards.saami });
   const own = load.cartridge.maxPressure;
-  if (!limits.some((limit) => Math.abs(limit.pressure / own - 1) <= 0.005)) limits.push({ source: 'load', pressure: own });
+  const covered = limits.some((limit) => limit.pressure <= own && own / limit.pressure - 1 <= 0.005);
+  if (valid(own) && !covered) limits.push({ source: 'load', pressure: own });
   return limits.sort((a, b) => a.pressure - b.pressure);
 }
 
