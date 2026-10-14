@@ -30,7 +30,8 @@ Load
 ├─ cartridge     caliber values as loaded (Cartridge), with standardMaxPressures (CIP and SAAMI
 │                maxima entered by the user, optional)
 │  └─ definition the standard's definition (CaliberDefinition), optional, with the cartridge's
-│                outline (caseDimensions: CIP table I letters, mapped to names, in m)
+│                outline (caseDimensions: CIP table I letters, mapped to names, in m), the chamber's
+│                (chamberDimensions, GRT's c_ values) and the rifling (rifling: Z, F, Q, N, b)
 ├─ barrel        the gun (Barrel), with gasLeaks
 ├─ projectile    (Projectile)
 ├─ propellant    the powder model (Propellant), with burnModel, and calibration when the model

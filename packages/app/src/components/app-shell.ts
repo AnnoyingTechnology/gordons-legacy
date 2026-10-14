@@ -350,10 +350,10 @@ export class AppShell extends LitElement {
     this.view = 'editor';
   }
 
-  /** Loads go to the library; powder and projectile files to the component library. */
+  /** Loads go to the library; powder, projectile and caliber files to the component library. */
   private async importToLibrary(files: File[]): Promise<void> {
     const read = await Promise.all(files.map(async (file) => ({ name: file.name, text: await file.text() })));
-    const isComponent = (name: string) => /\.(propellant|projectile)$/i.test(name);
+    const isComponent = (name: string) => /\.(propellant|projectile|caliber)$/i.test(name);
     const errors: string[] = [];
     for (const file of read.filter(({ name }) => isComponent(name))) errors.push(...(await this.components.importFile(file.name, file.text)));
     const failed = await this.library.importFiles(read.filter(({ name }) => !isComponent(name)));

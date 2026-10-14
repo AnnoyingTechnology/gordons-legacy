@@ -1,5 +1,5 @@
 import type { Barrel, GasLeak } from '../load/barrel.ts';
-import type { CaliberDefinition, Cartridge, CaseDimensions, StandardMaxPressures } from '../load/cartridge.ts';
+import type { CaliberDefinition, Cartridge, CaseDimensions, ChamberDimensions, Rifling, StandardMaxPressures } from '../load/cartridge.ts';
 import type { ComponentInfo } from '../load/component-info.ts';
 import type { Charge, ImportOrigin, Ladder, Load, Note, Picture, ShotGroup } from '../load/load.ts';
 import { LOAD_FORMAT, LOAD_SCHEMA_VERSION } from '../load/load.ts';
@@ -42,6 +42,26 @@ const caseDimensions = {
   projectileDiameter: 'nonNegative',
 } satisfies ShapeOf<CaseDimensions>;
 
+const chamberDimensions = {
+  bodyBaseDistance: 'nonNegative',
+  bodyBaseDiameter: 'nonNegative',
+  shoulderStart: 'nonNegative',
+  shoulderDiameter: 'nonNegative',
+  neckStart: 'nonNegative',
+  neckDiameter: 'nonNegative',
+  neckEnd: 'nonNegative',
+  mouthDiameter: 'nonNegative',
+  throatDiameter: 'nonNegative',
+} satisfies ShapeOf<ChamberDimensions>;
+
+const rifling = {
+  grooveDiameter: 'positive',
+  boreDiameter: 'nonNegative',
+  effectiveBoreArea: 'positive',
+  grooves: 'nonNegative',
+  grooveWidth: 'nonNegative',
+} satisfies ShapeOf<Rifling>;
+
 const caliberDefinition = {
   name: 'string',
   alternativeNames: 'string',
@@ -54,6 +74,8 @@ const caliberDefinition = {
   maxPressure: 'nonNegative',
   sebertFactor: 'nonNegative',
   caseDimensions: { optional: { object: caseDimensions } },
+  chamberDimensions: { optional: { object: chamberDimensions } },
+  rifling: { optional: { object: rifling } },
   info: { object: componentInfo },
   unmapped,
 } satisfies ShapeOf<CaliberDefinition>;

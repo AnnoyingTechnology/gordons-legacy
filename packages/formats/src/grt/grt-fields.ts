@@ -109,6 +109,12 @@ export class GrtFields {
     return value === 0 ? undefined : value;
   }
 
+  /** True when the value is present and a number other than 0, without marking it read. */
+  hasNonZero(name: string): boolean {
+    const value = Number(this.fields.get(name)?.value);
+    return Number.isFinite(value) && value !== 0;
+  }
+
   /** Reports a numeric code whose meaning is unknown, and what it was read as instead. */
   reportUnknownCode(name: string, code: number, readAs: string): void {
     this.log.warning('unknown-code', `Unknown code ${code}; read as ${readAs}.`, this.path(name));

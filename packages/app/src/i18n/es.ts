@@ -399,4 +399,10 @@ export const es: Messages = {
   'synthesis.candidateNote': "Derivado el {date} por síntesis de tolerancias de la carga «{original}»: pólvora {powder} ({source}), en la coincidencia simulada más baja de los filtros presión {pressure} y llenado {fill}. Una simulación, no datos de recarga: busque los datos publicados por el fabricante de la pólvora para este cartucho y esta bala.",
   'synthesis.fitNotReached': "Ajustada a una velocidad, objetivo no alcanzado.",
   'synthesis.fitCaveat': "Un ajuste a la velocidad no valida la presión.",
+  'components.chooseCaliber': "Elegir un cartucho",
+  'components.caliberNotice': "Los calibres de la comunidad son planos compartidos por usuarios de GRT, sin verificar: compárelos con la ficha CIP o SAAMI. Elegir uno fija el nombre del cartucho, la presión máxima, el factor de Sebert, la longitud de vaina, el diámetro de estrías y la sección efectiva; su capacidad de vaina y su longitud total se mantienen: mídalas.",
+  'components.sameGroove': "Solo el diámetro de estrías de la carga ({diameter})",
+  'components.standard': "Norma",
+  'components.maximumOverallLength': "Longitud total máx.",
+  'components.noCaliber': "Ninguno. Desmarque el filtro de diámetro o importe sus archivos de calibres GRT.",
 };

@@ -1,8 +1,9 @@
 import { IssueLog, type ImportResult } from '../import-issues.ts';
 import { LOAD_FORMAT, LOAD_SCHEMA_VERSION, type Load } from '../load/load.ts';
+import type { CaliberDefinition } from '../load/cartridge.ts';
 import type { Projectile } from '../load/projectile.ts';
 import type { Propellant } from '../load/propellant.ts';
-import { LOAD_SPEC, PROJECTILE_SPEC, PROPELLANT_SPEC } from './load-shape.ts';
+import { CALIBER_DEFINITION_SPEC, LOAD_SPEC, PROJECTILE_SPEC, PROPELLANT_SPEC } from './load-shape.ts';
 import { checkValue } from './shape.ts';
 
 /** Writes a load as the JSON text saved to disk. */
@@ -44,7 +45,7 @@ export function parseLoad(text: string): ImportResult<Load> {
 }
 
 /**
- * Checks a powder or projectile held apart from a load (a component library), field by field as in a
+ * Checks a powder, projectile or caliber held apart from a load (a component library), field by field as in a
  * saved load. `value` is the parsed JSON.
  */
 export function checkPropellant(value: unknown): ImportResult<Propellant> {
@@ -55,4 +56,9 @@ export function checkPropellant(value: unknown): ImportResult<Propellant> {
 export function checkProjectile(value: unknown): ImportResult<Projectile> {
   const log = new IssueLog();
   return log.result(checkValue(value, PROJECTILE_SPEC, '', log) as Projectile);
+}
+
+export function checkCaliber(value: unknown): ImportResult<CaliberDefinition> {
+  const log = new IssueLog();
+  return log.result(checkValue(value, CALIBER_DEFINITION_SPEC, '', log) as CaliberDefinition);
 }

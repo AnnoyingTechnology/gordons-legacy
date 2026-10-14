@@ -1,10 +1,10 @@
 // Builds packages/app/src/data/community-components.json from the CC0 community corpus (the GRT
-// Discord's shared files, zen/grt_databases at 9d2f84d): powders and projectiles in the load format's SI
-// units, each with its file, author and date. Run with an official Node 24:
+// Discord's shared files, zen/grt_databases at 9d2f84d): powders, projectiles and calibers in the load
+// format's SI units, each with its file, author and date. Run with an official Node 24:
 //   node tools/data/build-community.ts
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { importGrtProjectiles, importGrtPropellant, type Projectile, type Propellant } from '@gordons-legacy/formats';
+import { importGrtCaliber, importGrtProjectiles, importGrtPropellant, type CaliberDefinition, type Projectile, type Propellant } from '@gordons-legacy/formats';
 
 const CORPUS = join(import.meta.dirname, '../../packages/formats/test/fixtures/cc0');
 const OUTPUT = join(import.meta.dirname, '../../packages/app/src/data/community-components.json');
@@ -37,6 +37,14 @@ for (const file of files('projectiles', '.projectile')) {
   }
 }
 
+// Calibers keep their unmapped drawing values (angles, radii, belt…) for the cartridge designer.
+const calibers: Array<{ source: ReturnType<typeof provenance>; caliber: CaliberDefinition }> = [];
+for (const file of files('calibers', '.caliber')) {
+  const result = importGrtCaliber(readFileSync(join(CORPUS, 'calibers', file), 'utf8'));
+  if (!result.ok) throw new Error(`${file}: ${result.issues.map((issue) => issue.message).join('; ')}`);
+  calibers.push({ source: provenance(file), caliber: result.value });
+}
+
 const snapshot = {
   source: 'https://github.com/zen/grt_databases',
   commit: '9d2f84d',
@@ -44,6 +52,7 @@ const snapshot = {
   status: 'community, unverified',
   powders,
   projectiles,
+  calibers,
 };
 writeFileSync(OUTPUT, `${JSON.stringify(snapshot)}\n`);
-console.log(`${powders.length} powders, ${projectiles.length} projectiles → ${OUTPUT}`);
+console.log(`${powders.length} powders, ${projectiles.length} projectiles, ${calibers.length} calibers → ${OUTPUT}`);

@@ -1,4 +1,14 @@
-import { checkProjectile, checkPropellant, importGrtProjectiles, importGrtPropellant, type Projectile, type Propellant } from '@gordons-legacy/formats';
+import {
+  checkCaliber,
+  checkProjectile,
+  checkPropellant,
+  importGrtCaliber,
+  importGrtProjectiles,
+  importGrtPropellant,
+  type CaliberDefinition,
+  type Projectile,
+  type Propellant,
+} from '@gordons-legacy/formats';
 import community from '../data/community-components.json' with { type: 'json' };
 import type { RecordStore } from './indexed-db.ts';
 
@@ -16,12 +26,14 @@ export interface ComponentSource {
 
 export type ComponentEntry =
   | { id: string; kind: 'propellant'; source: ComponentSource; value: Propellant }
-  | { id: string; kind: 'projectile'; source: ComponentSource; value: Projectile };
+  | { id: string; kind: 'projectile'; source: ComponentSource; value: Projectile }
+  | { id: string; kind: 'caliber'; source: ComponentSource; value: CaliberDefinition };
 
 /** The bundled snapshot of the community corpus (tools/data/build-community.ts). */
 interface CommunitySnapshot {
   powders: Array<{ source: { file: string; author: string; date: string }; propellant: unknown }>;
   projectiles: Array<{ source: { file: string; author: string; date: string }; projectile: unknown }>;
+  calibers: Array<{ source: { file: string; author: string; date: string }; caliber: unknown }>;
 }
 
 /** The community's powders and projectiles, checked like any input. */
@@ -35,11 +47,15 @@ export function communityComponents(snapshot: CommunitySnapshot = community as C
     const result = checkProjectile(projectile);
     if (result.ok) entries.push({ id: `community-projectile-${index}`, kind: 'projectile', source: { origin: 'community', ...source }, value: result.value });
   });
+  snapshot.calibers.forEach(({ source, caliber }, index) => {
+    const result = checkCaliber(caliber);
+    if (result.ok) entries.push({ id: `community-caliber-${index}`, kind: 'caliber', source: { origin: 'community', ...source }, value: result.value });
+  });
   return entries;
 }
 
 /**
- * Powders and projectiles to choose from: the community's, bundled with the app, and the user's own,
+ * Powders, projectiles and calibers to choose from: the community's, bundled with the app, and the user's own,
  * imported from GRT files and kept in the browser. Listeners are told after every change.
  */
 export class ComponentLibrary {
@@ -70,7 +86,11 @@ export class ComponentLibrary {
     return this.entries.filter((entry) => entry.kind === 'projectile');
   }
 
-  /** Adds the powders or projectiles of a GRT file; returns error messages when it can't be read. */
+  calibers(): Array<Extract<ComponentEntry, { kind: 'caliber' }>> {
+    return this.entries.filter((entry) => entry.kind === 'caliber');
+  }
+
+  /** Adds the powders, projectiles or caliber of a GRT file; returns error messages when it can't be read. */
   async importFile(name: string, text: string): Promise<string[]> {
     const extension = name.slice(name.lastIndexOf('.')).toLowerCase();
     const source: ComponentSource = { origin: 'user', file: name, author: '', date: new Date().toISOString().slice(0, 10) };
@@ -83,8 +103,12 @@ export class ComponentLibrary {
       const result = importGrtProjectiles(text);
       if (!result.ok) return result.issues.filter((issue) => issue.severity === 'error').map((issue) => issue.message);
       for (const projectile of result.value) added.push({ id: crypto.randomUUID(), kind: 'projectile', source, value: projectile });
+    } else if (extension === '.caliber') {
+      const result = importGrtCaliber(text);
+      if (!result.ok) return result.issues.filter((issue) => issue.severity === 'error').map((issue) => issue.message);
+      added.push({ id: crypto.randomUUID(), kind: 'caliber', source, value: result.value });
     } else {
-      return [`${name}: not a .propellant or .projectile file`];
+      return [`${name}: not a .propellant, .projectile or .caliber file`];
     }
     for (const entry of added) await this.store.put(entry);
     this.entries = [...this.entries, ...added];
@@ -107,6 +131,10 @@ export class ComponentLibrary {
 }
 
 function checked(entry: ComponentEntry): ComponentEntry[] {
+  if (entry.kind === 'caliber') {
+    const result = checkCaliber(entry.value);
+    return result.ok ? [{ ...entry, value: result.value }] : [];
+  }
   if (entry.kind === 'propellant') {
     const result = checkPropellant(entry.value);
     return result.ok ? [{ ...entry, value: result.value }] : [];

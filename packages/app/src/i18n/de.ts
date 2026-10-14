@@ -399,4 +399,10 @@ export const de: Messages = {
   'synthesis.candidateNote': "Am {date} per Toleranzsynthese aus der Ladung „{original}“ abgeleitet: Pulver {powder} ({source}), beim niedrigsten simulierten Treffer der Filter Druck {pressure} und Füllgrad {fill}. Eine Simulation, keine Ladedaten: Suchen Sie die veröffentlichten Daten des Pulverherstellers für diese Patrone und dieses Geschoss.",
   'synthesis.fitNotReached': "An eine Geschwindigkeit angepasst, Ziel nicht erreicht.",
   'synthesis.fitCaveat': "Eine Anpassung an die Geschwindigkeit bestätigt den Druck nicht.",
+  'components.chooseCaliber': "Patrone wählen",
+  'components.caliberNotice': "Kaliber der Community sind von GRT-Nutzern geteilte Zeichnungen, ungeprüft: mit dem CIP- oder SAAMI-Blatt vergleichen. Die Wahl setzt Name, Höchstdruck, Sebert-Faktor, Hülsenlänge, Felddurchmesser und Querschnitt; Ihr Hülsenvolumen und Ihre Patronenlänge bleiben: messen Sie sie.",
+  'components.sameGroove': "Nur der Zugdurchmesser der Ladung ({diameter})",
+  'components.standard': "Norm",
+  'components.maximumOverallLength': "Max. Patronenlänge",
+  'components.noCaliber': "Keine. Durchmesserfilter abwählen oder eigene GRT-Kaliberdateien importieren.",
 };

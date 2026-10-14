@@ -401,6 +401,12 @@ export const en = {
   'synthesis.candidateNote': "Derived on {date} by tolerance synthesis from the load “{original}”: powder {powder} ({source}), at the lowest simulated match of the filters peak {pressure} and fill {fill}. A simulation, not load data: find the powder maker’s published data for this cartridge and bullet.",
   'synthesis.fitNotReached': "Fitted to a velocity, target not reached.",
   'synthesis.fitCaveat': "A velocity fit does not validate pressure.",
+  'components.chooseCaliber': "Choose a cartridge",
+  'components.caliberNotice': "Community calibers are drawings shared by GRT users, unverified: check them against the CIP or SAAMI sheet. Choosing one sets the cartridge's name, maximum pressure, Sebert factor, case length, groove diameter and bore area; your case capacity and overall length stay as they are: measure them.",
+  'components.sameGroove': "Only the load's groove diameter ({diameter})",
+  'components.standard': "Standard",
+  'components.maximumOverallLength': "Max. overall length",
+  'components.noCaliber': "None. Untick the diameter filter, or import your GRT caliber files.",
 } as const;
 
 export type MessageKey = keyof typeof en;

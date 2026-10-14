@@ -1,10 +1,10 @@
 import { grtTraditional } from '@gordons-legacy/engine';
-import type { Load, Projectile, Propellant } from '@gordons-legacy/formats';
+import type { CaliberDefinition, Load, Projectile, Propellant } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
 import { icon } from '../icons/icons.ts';
 import type { Firearm } from '../state/library.ts';
 import type { ComponentEntry, ComponentLibrary } from '../state/components.ts';
-import { withProjectile, withPropellant } from '../editor/components.ts';
+import { withCaliber, withProjectile, withPropellant } from '../editor/components.ts';
 import './charge-synthesis-view.ts';
 import './component-picker.ts';
 import { assessLoad } from '../analysis/load-assessment.ts';
@@ -42,7 +42,7 @@ export class LoadEditor extends LitElement {
   declare components: ComponentLibrary | undefined;
   declare componentEntries: ComponentEntry[];
   /** The component being chosen, if the picker is open. */
-  declare picking: 'propellant' | 'projectile' | undefined;
+  declare picking: 'propellant' | 'projectile' | 'caliber' | undefined;
   declare axis: ChartAxis;
   /** The assistant open, if any. */
   declare assistant: 'boreArea' | undefined;
@@ -100,6 +100,7 @@ export class LoadEditor extends LitElement {
                 .context=${this.context}
                 @choose-propellant=${(event: CustomEvent<Propellant>) => this.emit(withPropellant(this.load, event.detail))}
                 @choose-projectile=${(event: CustomEvent<Projectile>) => this.emit(withProjectile(this.load, event.detail))}
+                @choose-caliber=${(event: CustomEvent<CaliberDefinition>) => this.emit(withCaliber(this.load, event.detail))}
                 @close=${() => (this.picking = undefined)}
               ></gl-component-picker>`
             : nothing}
@@ -124,11 +125,13 @@ export class LoadEditor extends LitElement {
 
   /** A button above the powder and projectile groups to choose another one from the component library. */
   private renderComponentChoice(group: string) {
-    const kind = group === 'group.propellant' ? 'propellant' : group === 'group.projectile' ? 'projectile' : undefined;
+    const kinds = { 'group.propellant': 'propellant', 'group.projectile': 'projectile', 'group.cartridge': 'caliber' } as const;
+    const kind = kinds[group as keyof typeof kinds];
     if (!kind || !this.components) return nothing;
     const { t } = this.context;
+    const label = { propellant: 'components.choosePowder', projectile: 'components.chooseProjectileTitle', caliber: 'components.chooseCaliber' } as const;
     return html`<button class="component-choice" @click=${() => (this.picking = kind)}>
-      ${icon(kind)} ${t(kind === 'propellant' ? 'components.choosePowder' : 'components.chooseProjectileTitle')}…
+      ${icon(kind === 'caliber' ? 'cartridge' : kind)} ${t(label[kind])}…
     </button>`;
   }
 

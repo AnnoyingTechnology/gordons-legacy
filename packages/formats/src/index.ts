@@ -1,7 +1,15 @@
 // Public API of @gordons-legacy/formats.
 
 export type { Barrel, GasLeak } from './load/barrel.ts';
-export { standardMaxPressures, type CaliberDefinition, type Cartridge, type CaseDimensions, type StandardMaxPressures } from './load/cartridge.ts';
+export {
+  standardMaxPressures,
+  type CaliberDefinition,
+  type Cartridge,
+  type CaseDimensions,
+  type ChamberDimensions,
+  type Rifling,
+  type StandardMaxPressures,
+} from './load/cartridge.ts';
 export type { ComponentInfo } from './load/component-info.ts';
 export {
   LOAD_FORMAT,
@@ -21,7 +29,7 @@ export type { Projectile, ProjectileBase } from './load/projectile.ts';
 export type { GrtBurnModel, Propellant, PropellantCalibration } from './load/propellant.ts';
 
 export type { ImportIssue, ImportResult, IssueSeverity } from './import-issues.ts';
-export { checkProjectile, checkPropellant, parseLoad, serializeLoad } from './json/load-json.ts';
+export { checkCaliber, checkProjectile, checkPropellant, parseLoad, serializeLoad } from './json/load-json.ts';
 export { importGrtCaliber, importGrtProjectiles, importGrtPropellant } from './grt/component-import.ts';
 export { importGrtrace } from './grt/grtrace-import.ts';
 export { importGrtLoad, type GrtLoadImportOptions } from './grt/grtload-import.ts';

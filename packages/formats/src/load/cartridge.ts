@@ -102,6 +102,47 @@ export interface CaseDimensions {
 }
 
 /**
+ * The chamber's outline as a standard's drawing gives it (CIP chamber table), m, distances from the
+ * breech face. GRT keeps these as `c_` values of the caliber definition. A dimension the source doesn't
+ * give is 0, as in GRT.
+ */
+export interface ChamberDimensions {
+  /** E: where P1 is measured. */
+  bodyBaseDistance: number;
+  /** P1: chamber diameter at E. */
+  bodyBaseDiameter: number;
+  /** L1: where the shoulder starts. */
+  shoulderStart: number;
+  /** P2: diameter where the shoulder starts. */
+  shoulderDiameter: number;
+  /** L2: where the neck starts. */
+  neckStart: number;
+  /** H1: neck diameter at L2. */
+  neckDiameter: number;
+  /** L3: where the neck ends (the case mouth's place). */
+  neckEnd: number;
+  /** H2: neck diameter at L3. */
+  mouthDiameter: number;
+  /** G1: diameter where the throat starts. */
+  throatDiameter: number;
+}
+
+/** The barrel's rifling as a standard gives it. */
+export interface Rifling {
+  /** Z: diameter across the grooves, m. */
+  grooveDiameter: number;
+  /** F: diameter across the lands (the bore), m. */
+  boreDiameter: number;
+  /** Q: cross-section the gas pushes on, m². */
+  effectiveBoreArea: number;
+  /** N: number of grooves (0 when not given). */
+  grooves: number;
+  /** b: width of a groove, m. */
+  grooveWidth: number;
+  // The twist u (GRT `c_u_`) stays in `unmapped`: community files store it in inches or in mm.
+}
+
+/**
  * A caliber as defined by a standards body (CIP, SAAMI) or by a wildcat's author. Corresponds to GRT's
  * `.caliber` files and the `caliberfile` section of a load.
  *
@@ -132,6 +173,10 @@ export interface CaliberDefinition {
   sebertFactor: number;
   /** The cartridge's outline as the standard dimensions it, when given. */
   caseDimensions?: CaseDimensions;
+  /** The chamber's outline (CIP's chamber drawing), when given. */
+  chamberDimensions?: ChamberDimensions;
+  /** The barrel's rifling as the standard gives it, when given. */
+  rifling?: Rifling;
   info: ComponentInfo;
   /** Source values without a field in this format, kept verbatim by name. */
   unmapped?: Record<string, string>;

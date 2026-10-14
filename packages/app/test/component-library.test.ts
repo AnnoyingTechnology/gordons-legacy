@@ -3,10 +3,11 @@ import { expect, test } from 'vitest';
 import { communityComponents, ComponentLibrary, type ComponentEntry } from '../src/state/components.ts';
 import { memoryStore } from '../src/state/indexed-db.ts';
 
-test('the community snapshot gives 12 powders and 393 projectiles, each with its author', () => {
+test('the community snapshot gives 12 powders, 393 projectiles and 48 calibers, each with its author', () => {
   const entries = communityComponents();
   expect(entries.filter((entry) => entry.kind === 'propellant')).toHaveLength(12);
   expect(entries.filter((entry) => entry.kind === 'projectile')).toHaveLength(393);
+  expect(entries.filter((entry) => entry.kind === 'caliber')).toHaveLength(48);
   const redDot = entries.find((entry) => entry.kind === 'propellant' && entry.value.product.includes('Red Dot'))!;
   expect(redDot.source).toMatchObject({ origin: 'community', author: 'Tom24', date: '2023-06-21' });
 });

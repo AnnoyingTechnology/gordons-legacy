@@ -11,7 +11,7 @@ Everything is exported from [`src/index.ts`](src/index.ts).
 |---|---|
 | `Load` and its parts (`Cartridge`, `Barrel`, `Projectile`, `Propellant`, `Charge`…) | The load format, version 1. Every quantity is in SI base units; each field documents its unit. |
 | `serializeLoad(load)`, `parseLoad(text)` | Save a load as JSON; read one back, checking every field. |
-| `checkPropellant(value)`, `checkProjectile(value)` | Check a powder or projectile kept apart from a load (a component library), as in a saved load. |
+| `checkPropellant(value)`, `checkProjectile(value)`, `checkCaliber(value)` | Check a component kept apart from a load (a component library), as in a saved load. |
 | `importGrtLoad(text)` | Imports a `.grtload` file. |
 | `importGrtCaliber`, `importGrtProjectiles`, `importGrtPropellant` | Import GRT component files. A `.projectile` file may hold several projectiles. |
 | `ImportResult`, `ImportIssue` | What importers return: the value, or a failure, with the issues found. |

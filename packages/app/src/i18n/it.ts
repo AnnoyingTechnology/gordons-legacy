@@ -399,4 +399,10 @@ export const it: Messages = {
   'synthesis.candidateNote': "Derivato il {date} per sintesi delle tolleranze dalla carica «{original}»: polvere {powder} ({source}), alla corrispondenza simulata più bassa dei filtri pressione {pressure} e riempimento {fill}. Una simulazione, non dati di ricarica: cercate i dati pubblicati dal produttore della polvere per questa cartuccia e questa palla.",
   'synthesis.fitNotReached': "Adattata a una velocità, obiettivo non raggiunto.",
   'synthesis.fitCaveat': "Un adattamento alla velocità non convalida la pressione.",
+  'components.chooseCaliber': "Scegli una cartuccia",
+  'components.caliberNotice': "I calibri della comunità sono disegni condivisi da utenti di GRT, non verificati: confrontateli con la scheda CIP o SAAMI. Sceglierne uno imposta nome della cartuccia, pressione massima, fattore di Sebert, lunghezza del bossolo, diametro ai fondi delle righe e sezione efficace; la vostra capacità del bossolo e la lunghezza totale restano: misuratele.",
+  'components.sameGroove': "Solo il diametro ai fondi delle righe della carica ({diameter})",
+  'components.standard': "Norma",
+  'components.maximumOverallLength': "Lunghezza totale max.",
+  'components.noCaliber': "Nessuno. Togliete il filtro sul diametro o importate i vostri file di calibri GRT.",
 };

@@ -1,4 +1,4 @@
-import type { Load, Projectile, Propellant } from '@gordons-legacy/formats';
+import type { CaliberDefinition, Load, Projectile, Propellant } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
 import { powderFactors } from '../analysis/powder-factors.ts';
 import { icon } from '../icons/icons.ts';
@@ -8,6 +8,7 @@ import type { UiContext } from './context.ts';
 
 type PowderEntry = Extract<ComponentEntry, { kind: 'propellant' }>;
 type ProjectileEntry = Extract<ComponentEntry, { kind: 'projectile' }>;
+type CaliberEntry = Extract<ComponentEntry, { kind: 'caliber' }>;
 
 /** Projectiles within this of the load's diameter count as the same diameter, m (0.05 mm). */
 const SAME_DIAMETER = 0.00005;
@@ -33,7 +34,7 @@ export class ComponentPicker extends LitElement {
   };
 
   /** What to choose; undefined when closed. */
-  declare kind: 'propellant' | 'projectile' | undefined;
+  declare kind: 'propellant' | 'projectile' | 'caliber' | undefined;
   declare load: Load;
   declare library: ComponentLibrary;
   /** The library's entries, passed apart so that an import re-renders the list. */
@@ -73,7 +74,7 @@ export class ComponentPicker extends LitElement {
     return html`
       <dialog class="component-picker" @close=${this.close}>
         <header class="picker-head">
-          <h2>${icon(this.kind)} ${t(this.kind === 'propellant' ? 'components.choosePowder' : 'components.chooseProjectileTitle')}</h2>
+          <h2>${icon(this.kind === 'caliber' ? 'cartridge' : this.kind)} ${t(TITLES[this.kind])}</h2>
           <input
             type="search"
             placeholder=${t('components.filter')}
@@ -84,13 +85,13 @@ export class ComponentPicker extends LitElement {
           <span class="spacer"></span>
           <label class="button">
             ${icon('open')} ${t('components.importFiles')}
-            <input type="file" accept=${this.kind === 'propellant' ? '.propellant' : '.projectile'} multiple hidden @change=${this.importFiles} />
+            <input type="file" accept=${`.${this.kind}`} multiple hidden @change=${this.importFiles} />
           </label>
           <button @click=${this.close}>${icon('close')}</button>
         </header>
-        <p class="warning">${t(this.kind === 'propellant' ? 'components.powderNotice' : 'components.projectileNotice')}</p>
+        <p class="warning">${t(NOTICES[this.kind])}</p>
         ${this.importErrors.length > 0 ? html`<ul class="issues">${this.importErrors.map((message) => html`<li class="error">${message}</li>`)}</ul>` : nothing}
-        ${this.kind === 'propellant' ? this.renderPowders() : this.renderProjectiles()}
+        ${this.kind === 'propellant' ? this.renderPowders() : this.kind === 'projectile' ? this.renderProjectiles() : this.renderCalibers()}
       </dialog>
     `;
   }
@@ -215,6 +216,56 @@ export class ComponentPicker extends LitElement {
     `;
   }
 
+  private renderCalibers() {
+    const { t, quantity, number } = this.context;
+    const groove = this.load.cartridge.grooveDiameter;
+    const rows = this.entries
+      .filter((entry): entry is CaliberEntry => entry.kind === 'caliber')
+      .filter(({ value }) => !this.sameDiameter || (value.rifling !== undefined && Math.abs(value.rifling.grooveDiameter - groove) <= SAME_DIAMETER))
+      .filter((entry) => matches(this.filter, `${entry.value.name} ${entry.value.alternativeNames} ${entry.value.standard} ${entry.source.author}`))
+      .sort((a, b) => a.value.name.localeCompare(b.value.name, undefined, { numeric: true }));
+    const lengthUnit = displayUnit('length', this.context.units);
+    return html`
+      <div class="picker-options">
+        <label>
+          <input type="checkbox" .checked=${this.sameDiameter} @change=${(event: Event) => (this.sameDiameter = (event.target as HTMLInputElement).checked)} />
+          ${t('components.sameGroove', { diameter: quantity(groove, 'length') })}
+        </label>
+      </div>
+      <div class="table-scroll">
+        <table class="data-table picker-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>${t('group.cartridge')}</th>
+              <th>${t('components.source')}</th>
+              <th>${t('components.standard')}</th>
+              <th>${t('field.maxPressure')}</th>
+              <th>${t('field.grooveDiameter')} (${lengthUnit.symbol})</th>
+              <th>${t('field.caseLength')} (${lengthUnit.symbol})</th>
+              <th>${t('components.maximumOverallLength')} (${lengthUnit.symbol})</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.length === 0 ? html`<tr><td colspan="8" class="note">${t('components.noCaliber')}</td></tr>` : nothing}
+            ${rows.map(
+              (entry) => html`<tr>
+                <td><button @click=${() => this.choose('choose-caliber', entry.value)}>${t('components.use')}</button></td>
+                <td class="name" title=${entry.value.alternativeNames}>${entry.value.name}</td>
+                <td>${this.sourceText(entry.source)}</td>
+                <td>${entry.value.standard}</td>
+                <td>${entry.value.maxPressure > 0 ? quantity(entry.value.maxPressure, 'pressure') : ''}</td>
+                <td>${entry.value.rifling ? number(lengthUnit.fromSi(entry.value.rifling.grooveDiameter), lengthUnit.decimals) : ''}</td>
+                <td>${entry.value.caseDimensions ? number(lengthUnit.fromSi(entry.value.caseDimensions.caseLength), lengthUnit.decimals) : ''}</td>
+                <td>${entry.value.caseDimensions?.maximumOverallLength ? number(lengthUnit.fromSi(entry.value.caseDimensions.maximumOverallLength), lengthUnit.decimals) : ''}</td>
+              </tr>`,
+            )}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
   private sourceText(source: ComponentSource) {
     const { t } = this.context;
     return source.origin === 'community'
@@ -222,7 +273,7 @@ export class ComponentPicker extends LitElement {
       : html`<span class="level-badge" title=${source.file}>${t('components.yours')}</span> ${source.date}`;
   }
 
-  private choose(event: 'choose-propellant' | 'choose-projectile', value: Propellant | Projectile): void {
+  private choose(event: 'choose-propellant' | 'choose-projectile' | 'choose-caliber', value: Propellant | Projectile | CaliberDefinition): void {
     this.dispatchEvent(new CustomEvent(event, { detail: value, bubbles: true }));
     this.close();
   }
@@ -240,6 +291,18 @@ export class ComponentPicker extends LitElement {
     this.dispatchEvent(new CustomEvent('close'));
   };
 }
+
+const TITLES = {
+  propellant: 'components.choosePowder',
+  projectile: 'components.chooseProjectileTitle',
+  caliber: 'components.chooseCaliber',
+} as const;
+
+const NOTICES = {
+  propellant: 'components.powderNotice',
+  projectile: 'components.projectileNotice',
+  caliber: 'components.caliberNotice',
+} as const;
 
 function powderName(propellant: Propellant): string {
   return `${propellant.maker} ${propellant.product}`.trim();

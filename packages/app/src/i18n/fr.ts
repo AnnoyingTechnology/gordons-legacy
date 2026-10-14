@@ -399,4 +399,10 @@ export const fr: Messages = {
   'synthesis.candidateNote': "Dérivé le {date} par synthèse de tolérances du chargement « {original} » : poudre {powder} ({source}), à la plus basse correspondance simulée des filtres pression {pressure} et remplissage {fill}. Une simulation, pas des données de chargement : cherchez les données publiées par le fabricant de poudre pour cette cartouche et cette balle.",
   'synthesis.fitNotReached': "Ajustée sur une vitesse, cible non atteinte.",
   'synthesis.fitCaveat': "Un ajustement sur la vitesse ne valide pas la pression.",
+  'components.chooseCaliber': "Choisir une cartouche",
+  'components.caliberNotice': "Les calibres de la communauté sont des plans partagés par des utilisateurs de GRT, non vérifiés : comparez-les à la fiche CIP ou SAAMI. En choisir un fixe le nom de la cartouche, la pression maximale, le facteur de Sebert, la longueur d'étui, le diamètre à fond de rayures et la section efficace ; votre capacité d'étui et votre longueur totale restent les vôtres : mesurez-les.",
+  'components.sameGroove': "Seulement le diamètre à fond de rayures du chargement ({diameter})",
+  'components.standard': "Norme",
+  'components.maximumOverallLength': "Longueur totale max.",
+  'components.noCaliber': "Aucun. Décochez le filtre de diamètre, ou importez vos fichiers de calibres GRT.",
 };
