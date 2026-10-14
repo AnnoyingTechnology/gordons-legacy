@@ -25,7 +25,10 @@ export type FindingCode =
   | 'nearLimit'
   /** Ordinary bench variations together take the peak above the lowest maximum. */
   | 'benchVariationsAboveLimit'
-  /** Two charges fit in the case without compression, so a double charge can go unnoticed. */
+  /**
+   * A loading mistake, not the load itself: a second charge thrown into the case would fit and go
+   * unnoticed. Caution when the doubled charge's simulated peak is above the maximum, else a note.
+   */
   | 'doubleChargeFits'
   /** The poured charge is compressed by the projectile. */
   | 'compressed'
@@ -132,7 +135,9 @@ export function assessLoad(load: Load, shot: Simulation): Assessment {
   const fill = shot.caseFill;
   if (fill <= DOUBLE_CHARGE_FILL) {
     const doubled = simulate({ ...load, charge: { ...load.charge, mass: 2 * load.charge.mass } });
-    findings.push({ code: 'doubleChargeFits', level: 'caution', fill, limit: lowest, ...(doubled ? { pressure: doubled.maxPressure } : {}) });
+    // A double charge that stays under the maximum in the model (slow powders, light loads) is only noted.
+    const level = doubled && doubled.maxPressure <= lowest.pressure ? 'note' : 'caution';
+    findings.push({ code: 'doubleChargeFits', level, fill, limit: lowest, ...(doubled ? { pressure: doubled.maxPressure } : {}) });
   }
   if (fill > HEAVY_COMPRESSION_FILL) findings.push({ code: 'heavilyCompressed', level: 'caution', fill });
   else if (fill > 1) findings.push({ code: 'compressed', level: 'note', fill });

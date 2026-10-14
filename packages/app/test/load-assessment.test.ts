@@ -81,3 +81,11 @@ test('findings are ordered from the most serious', () => {
   const order = { danger: 0, caution: 1, note: 2 };
   expect(levels.map((level) => order[level])).toEqual([...levels.map((level) => order[level])].sort());
 });
+
+test('a double charge that stays under the maximum is only noted', () => {
+  // A light .38 Special charge, 40 % of the original: doubled (80 %), it peaks near 960 bar, under 1,500.
+  const light = { ...special, charge: { ...special.charge, mass: special.charge.mass * 0.4 } };
+  const finding = assess(light).findings.find((candidate) => candidate.code === 'doubleChargeFits');
+  expect(finding?.pressure).toBeLessThan(special.cartridge.maxPressure);
+  expect(finding?.level).toBe('note');
+});

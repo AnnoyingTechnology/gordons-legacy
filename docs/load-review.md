@@ -25,7 +25,7 @@ drilled case, SAAMI with a conformal transducer), so their values don't convert 
 | Above a maximum | danger | peak > any maximum (one finding per maximum exceeded) |
 | Near the maximum | caution | peak ≥ 90 % of the lowest maximum: less margin than the model's uncertainty (chronograph study: 11–13 % RMS velocity error, docs/model/validation.md) |
 | Bench variations | caution | 1 % more powder, 0.5 mm deeper, 2 % less capacity, 1 % heavier bullet together exceed the lowest maximum |
-| Double charge fits | caution | case fill ≤ 55 %: a double charge fills ≤ 110 % and pours in below the mouth; the double charge is simulated |
+| Double charge fits | caution, or note when the doubled charge stays under the maximum | case fill ≤ 55 %: a double charge fills ≤ 110 % and pours in below the mouth. A check for a loading mistake, not a statement about the load; the double charge is simulated. On the maintainer's nine loads at ≤ 55 % fill, doubled peaks are 118–375 % of the maximum (300 BLK subsonic with A1 118–214 %, N105 168 %; .38 Special 225–375 %): pressure grows much faster than the charge, so a doubled subsonic load is not merely supersonic |
 | Heavily compressed | caution | case fill > 110 % (GRT refuses 120 %) |
 | Compressed | note | case fill 100–110 % |
 | Low fill | note | case fill < 60 %: position-sensitive ignition, spread |
