@@ -21,8 +21,11 @@ export interface LineChartOptions {
   markers?: { index: number; label: string }[];
   /** Vertical hairlines at x values, labelled at the bottom. */
   events?: { x: number; label: string }[];
-  /** Curves drawn thinner behind the main one, in its colour at the given opacity (0 to 1). */
-  background?: { x: ArrayLike<number>; y: ArrayLike<number>; opacity: number }[];
+  /**
+   * Other curves, drawn behind the main one: in the main colour at a lower opacity (faint, thinner),
+   * or in their own colour (another load, same width).
+   */
+  others?: { x: ArrayLike<number>; y: ArrayLike<number>; opacity?: number; color?: string }[];
 }
 
 const WIDTH = 720;
@@ -42,7 +45,7 @@ export class LineChart {
 
   constructor(options: LineChartOptions) {
     this.options = options;
-    const all = [options, ...(options.background ?? [])];
+    const all = [options, ...(options.others ?? [])];
     this.xMin = Math.min(...all.map((series) => series.x[0] ?? 0));
     this.xMax = Math.max(...all.map((series) => series.x[series.x.length - 1] ?? 1));
     let yMax = Math.max(...all.flatMap((series) => Array.from(series.y)), options.limit?.value ?? 0);
@@ -59,9 +62,15 @@ export class LineChart {
     this.drawAxes(yTicks, niceTicks(this.xMin, this.xMax, 8).filter((tick) => tick >= this.xMin && tick <= this.xMax));
     this.drawLimit();
     this.drawEvents();
-    for (const series of options.background ?? []) {
+    for (const series of options.others ?? []) {
+      const faint = series.color === undefined;
       this.element.append(
-        svg('path', { d: this.linePath(series.x, series.y), class: 'series background', stroke: options.color, 'stroke-opacity': series.opacity }),
+        svg('path', {
+          d: this.linePath(series.x, series.y),
+          class: faint ? 'series background' : 'series',
+          stroke: series.color ?? options.color,
+          'stroke-opacity': series.opacity ?? 1,
+        }),
       );
     }
     this.element.append(svg('path', { d: this.linePath(options.x, options.y), class: 'series', stroke: options.color }));

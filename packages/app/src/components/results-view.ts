@@ -193,7 +193,7 @@ function renderCharts(shot: Simulation, ladder: LadderShot[], axis: ChartAxis, c
     limit: { value: pressureUnit.fromSi(load.cartridge.maxPressure), label: t('results.maximum', { value: quantity(load.cartridge.maxPressure, 'pressure') }) },
     markers: peakIndex >= 0 ? [{ index: peakIndex, label: quantity(shot.maxPressure, 'pressure') }] : [],
     events,
-    background: reduced.map(({ simulation, opacity }) => ({
+    others: reduced.map(({ simulation, opacity }) => ({
       x: xOf(simulation),
       y: Float64Array.from(simulation.curve.pressure, pressureUnit.fromSi),
       opacity,
@@ -210,7 +210,7 @@ function renderCharts(shot: Simulation, ladder: LadderShot[], axis: ChartAxis, c
     formatY: (value) => number(value, 0),
     markers: [{ index: curve.velocity.length - 1, label: quantity(shot.muzzleVelocity, 'velocity') }],
     events,
-    background: reduced.map(({ simulation, opacity }) => ({
+    others: reduced.map(({ simulation, opacity }) => ({
       x: xOf(simulation),
       y: Float64Array.from(simulation.curve.velocity, velocityUnit.fromSi),
       opacity,

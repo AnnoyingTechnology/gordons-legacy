@@ -12,6 +12,15 @@
   --series-velocity: #eb6834;
   --critical: #d03b3b;
   --grid: #e4e6e9;
+  /* Categorical palette for comparing loads (validated reference palette, fixed order). */
+  --compare-1: #2a78d6;
+  --compare-2: #eb6834;
+  --compare-3: #1baf7a;
+  --compare-4: #eda100;
+  --compare-5: #e87ba4;
+  --compare-6: #008300;
+  --compare-7: #4a3aa7;
+  --compare-8: #e34948;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   font-size: 15px;
   line-height: 1.45;
@@ -34,6 +43,14 @@
     --series-pressure: #3987e5;
     --series-velocity: #d95926;
     --grid: #2b2f34;
+    --compare-1: #3987e5;
+    --compare-2: #d95926;
+    --compare-3: #199e70;
+    --compare-4: #c98500;
+    --compare-5: #d55181;
+    --compare-6: #008300;
+    --compare-7: #9085e9;
+    --compare-8: #e66767;
   }
 }
 
@@ -735,4 +752,38 @@ main {
 
 .print-header {
   display: none;
+}
+
+.compare-choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1.2rem;
+  border: 1px solid var(--rule);
+  margin: 0.6rem 0;
+}
+
+.compare-table td.name {
+  text-align: left;
+}
+
+.compare-table .swatch,
+.chart-legend .swatch {
+  border-top-width: 3px;
+}
+
+.compare-table .swatch {
+  display: inline-block;
+  width: 1.2rem;
+  border-top-style: solid;
+  vertical-align: middle;
+}
+
+.compare-table td.critical {
+  color: var(--critical);
+  font-weight: 600;
+}
+
+button[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
 }

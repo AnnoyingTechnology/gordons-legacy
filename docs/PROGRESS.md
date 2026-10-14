@@ -23,8 +23,8 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 
 ## Next steps
 
-1. M3: a load-file comparison view (several loads overlaid); long text values are clipped in the
-   printed report.
+1. M3 polish: long text values are clipped in the printed report; native review of the five
+   translations; then M4 (data repository, once the maintainer agrees to create it).
 2. After parity (decision of 2026-10-13): validation against reality started
    (`docs/model/validation.md`, chronograph study done); next, published pressure data, then OBT, the
    energy terms and the covolume handling against the published science.
@@ -136,3 +136,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | M5 start: GRT's OBT tool read from the binary (velocity calibration on k and Ba, charge for a node) and reproduced: each measured charge can be calibrated into a new copy of the load; an "OBT nodes" section lists the nodes around the load with the charge for each, its simulated peak and the max-pressure flag. |
 | 2026-10-14 | Validation: GRT Traditional against 51 chronograph-measured charges of the maintainer's loads (`tools/validation/chronograph.ts`, `docs/model/validation.md`): uncalibrated files over-predict velocity by ~10 % on average (up to 40 % for subsonic rifle loads); calibrated copies are within ~1 %. |
 | 2026-10-14 | M3: Print button and print stylesheet: the active load's inputs and simulation as a report (A4, light theme, safety notice kept); "Save as PDF" from the browser's print dialog replaces GRT's PDF export. |
+| 2026-10-14 | M3: Compare view: up to eight open loads overlaid (pressure and velocity against travel or time), one colour each from the validated categorical palette, with a legend and a table of key figures (above-maximum flagged). |

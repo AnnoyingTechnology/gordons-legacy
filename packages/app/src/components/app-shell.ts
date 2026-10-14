@@ -10,6 +10,7 @@ import { createContext, type UiContext } from './context.ts';
 import { withProjectile, withPropellant } from '../editor/components.ts';
 import { REPOSITORY } from './about-dialog.ts';
 import './choice-dialog.ts';
+import './compare-view.ts';
 import type { CalibratedLoad } from './measurements-view.ts';
 import './load-editor.ts';
 import './units-dialog.ts';
@@ -27,6 +28,7 @@ export class AppShell extends LitElement {
     unitsOpen: { state: true },
     aboutOpen: { state: true },
     projectileChoice: { state: true },
+    comparing: { state: true },
   };
 
   declare context: UiContext;
@@ -34,6 +36,8 @@ export class AppShell extends LitElement {
   declare openErrors: string[];
   /** Projectiles of an opened `.projectile` file to choose from, for the active load. */
   declare projectileChoice: Projectile[] | undefined;
+  /** Whether the main area compares the open loads instead of editing the active one. */
+  declare comparing: boolean;
   declare unitsOpen: boolean;
   declare aboutOpen: boolean;
   private readonly store = new DocumentStore(window.localStorage);
@@ -45,6 +49,7 @@ export class AppShell extends LitElement {
     this.openErrors = [];
     this.unitsOpen = false;
     this.projectileChoice = undefined;
+    this.comparing = false;
     // The dedication and safety notice open on a browser's first visit.
     this.aboutOpen = window.localStorage.getItem(WELCOME_SEEN_KEY) === null;
     this.store.subscribe(() => this.requestUpdate());
@@ -67,6 +72,11 @@ export class AppShell extends LitElement {
         </label>
         <button ?disabled=${!active} @click=${() => active && this.save(active.id)}>${icon('save')} ${t('toolbar.save')}</button>
         <button ?disabled=${!active} @click=${() => window.print()}>${icon('print')} ${t('toolbar.print')}</button>
+        <button
+          ?disabled=${this.store.documents.length < 2}
+          aria-pressed=${this.comparing ? 'true' : 'false'}
+          @click=${() => (this.comparing = !this.comparing)}
+        >${icon('compare')} ${t('toolbar.compare')}</button>
         <span class="spacer"></span>
         <label>
           ${t('toolbar.units')}
@@ -90,7 +100,7 @@ export class AppShell extends LitElement {
         ${this.store.documents.map(
           (document) => html`
             <div class="tab ${document.id === active?.id ? 'active' : ''}" role="tab" aria-selected=${document.id === active?.id}>
-              <button class="tab-name" @click=${() => this.store.activate(document.id)}>
+              <button class="tab-name" @click=${() => this.showDocument(document.id)}>
                 ${document.name}${this.store.isDirty(document) ? html` <span title=${t('documents.unsaved')}>•</span>` : nothing}
               </button>
               <button class="tab-close" aria-label=${t('documents.close', { name: document.name })} @click=${() => this.store.close(document.id)}>${icon('close')}</button>
@@ -102,13 +112,18 @@ export class AppShell extends LitElement {
         ${this.openErrors.length > 0
           ? html`<ul class="issues">${this.openErrors.map((message) => html`<li class="error"><span class="severity">!</span> ${message}</li>`)}</ul>`
           : nothing}
-        ${active
+        ${this.comparing && this.store.documents.length >= 2
+          ? html`<gl-compare-view .documents=${this.store.documents} .context=${this.context}></gl-compare-view>`
+          : nothing}
+        ${active && !(this.comparing && this.store.documents.length >= 2)
           ? html`<header class="print-header">
               <h1>${t('app.title')}: ${active.name.replace(/\.json$/i, '')}</h1>
               <p>${new Date().toLocaleString(this.settings.language)} · ${t('about.version')} ${__BUILD_COMMIT__.slice(0, 7)}</p>
             </header>`
           : nothing}
-        ${active
+        ${this.comparing && this.store.documents.length >= 2
+          ? nothing
+          : active
           ? html`<gl-load-editor
               .load=${active.load}
               .context=${this.context}
@@ -234,6 +249,11 @@ export class AppShell extends LitElement {
   private setUnits(system: UnitSystem): void {
     this.settings = { ...this.settings, unitSystem: system, units: presetPreferences(system) };
     this.applySettings();
+  }
+
+  private showDocument(id: number): void {
+    this.comparing = false;
+    this.store.activate(id);
   }
 
   private closeAbout = () => {
