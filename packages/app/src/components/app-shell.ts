@@ -10,6 +10,8 @@ import { createContext, type UiContext } from './context.ts';
 import { loadBadges } from './load-badges.ts';
 import { withProjectile, withPropellant } from '../editor/components.ts';
 import { REPOSITORY } from './about-dialog.ts';
+// The app icon, inlined so that the single-file copy shows it too.
+import logo from '../../public/icon.svg?raw';
 import './choice-dialog.ts';
 import './chronograph-dialog.ts';
 import { readChronographCsv, type ChronographCsv } from '../measurements/chronograph-csv.ts';
@@ -72,7 +74,7 @@ export class AppShell extends LitElement {
     const active = this.store.active;
     return html`
       <header class="toolbar">
-        <h1>${t('app.title')}</h1>
+        <h1><img class="logo" src=${`data:image/svg+xml,${encodeURIComponent(logo)}`} alt="" />${t('app.title')}</h1>
         <div class="tool-group">
           <label class="tool">
             ${icon('open')}<span>${t('toolbar.open')}</span>

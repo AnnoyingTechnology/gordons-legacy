@@ -453,9 +453,17 @@ code {
 }
 
 .toolbar h1 {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
   align-self: center;
   font-size: 1.05rem;
   margin: 0 1rem 0 0.5rem;
+}
+
+.toolbar .logo {
+  width: 2.1rem;
+  height: 2.1rem;
 }
 
 .toolbar .spacer {
