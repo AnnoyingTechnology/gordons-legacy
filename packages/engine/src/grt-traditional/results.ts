@@ -1,4 +1,5 @@
-import type { GrtPoint } from './solver.ts';
+import type { GrtInputs } from './inputs.ts';
+import type { GrtPoint, GrtSolution } from './solver.ts';
 
 /**
  * GRT's derived results (grt-traditional.md, Results), from the solved curve. Units are GRT's where
@@ -65,4 +66,47 @@ function catmullRom(p0: number, p1: number, p2: number, p3: number, t: number): 
     t * t * (p2 * 2 + (p0 - (p1 * 5) / 2) - p3 / 2) +
     t * t * t * (p3 / 2 + ((p1 * 3) / 2 + -p0 / 2 - (p2 * 3) / 2))
   );
+}
+
+/** GRT's recoil, SI (grt-traditional.md, Recoil). The gun's part is absent without a gun mass. */
+export interface GrtRecoil {
+  projectileImpulse: number;
+  chargeImpulse: number;
+  gasImpulse: number;
+  totalImpulse: number;
+  gasExitVelocity: number;
+  gun?: { energy: number; velocity: number; acceleration: number; force: number };
+}
+
+/**
+ * Recoil as GRT computes it: the projectile's momentum, the Sebert share of the charge moving with it,
+ * and the gas leaving the muzzle at v_a = √(v_m² + v₀²), where v_m is the gas's own exit velocity from
+ * the muzzle pressure. The muzzle point is in GRT's units (bar, ms).
+ */
+export function recoil(inputs: GrtInputs, solution: GrtSolution, muzzle: GrtPoint, gunMass: number | undefined): GrtRecoil {
+  const k = inputs.heatCapacityRatio;
+  const muzzleVelocity = muzzle.velocity;
+  const muzzlePressure = muzzle.pressure * 100000;
+  const barrelTime = muzzle.time / 1000;
+  const charge = solution.finalChargeMass;
+  const gasVolume = inputs.boreArea * solution.travelToMuzzle + solution.finalChamberVolume;
+  const expansion = k * ((gasVolume * muzzlePressure) / (charge * 2));
+  const gasVelocity = Math.sqrt(Math.pow(2 / (1 + k), k / (k - 1)) * expansion);
+  const gasExitVelocity = Math.sqrt(gasVelocity * gasVelocity + muzzleVelocity * muzzleVelocity);
+  const projectileImpulse = muzzleVelocity * inputs.projectileMass;
+  const chargeImpulse = muzzleVelocity * (charge * inputs.sebertFactor);
+  const gasImpulse = gasExitVelocity * charge;
+  const totalImpulse = gasImpulse + (chargeImpulse + projectileImpulse);
+  const result: GrtRecoil = { projectileImpulse, chargeImpulse, gasImpulse, totalImpulse, gasExitVelocity };
+  if (gunMass !== undefined && gunMass > 0) {
+    const velocity = totalImpulse / gunMass;
+    const acceleration = velocity / barrelTime;
+    result.gun = {
+      energy: (totalImpulse * totalImpulse) / (gunMass * 2),
+      velocity,
+      acceleration,
+      force: acceleration * gunMass,
+    };
+  }
+  return result;
 }

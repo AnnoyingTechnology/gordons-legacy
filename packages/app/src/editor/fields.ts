@@ -57,6 +57,17 @@ export const FIELD_GROUPS: FieldGroup[] = [
       { type: 'text', label: 'field.name', get: (l) => l.barrel.name, set: (l, v) => ({ ...l, barrel: { ...l.barrel, name: v } }) },
       number({ path: 'barrel.length', label: 'field.barrelLength', kind: 'barrelLength', positive: true, get: (l) => l.barrel.length, set: (l, v) => ({ ...l, barrel: { ...l.barrel, length: v } }) }),
       number({ path: 'barrel.twistLength', label: 'field.twistLength', kind: 'twistLength', positive: true, get: (l) => l.barrel.twistLength, set: (l, v) => ({ ...l, barrel: { ...l.barrel, twistLength: v } }) }),
+      number({
+        path: 'barrel.gunMass',
+        label: 'field.gunMass',
+        kind: 'gunMass',
+        get: (l) => l.barrel.gunMass,
+        // 0 removes it: recoil is then given without the gun's motion.
+        set: (l, v) => {
+          const { gunMass: _removed, ...barrel } = l.barrel;
+          return { ...l, barrel: v > 0 ? { ...barrel, gunMass: v } : barrel };
+        },
+      }),
       // 0 removes the jump.
       number({
         path: 'barrel.jumpToLands',

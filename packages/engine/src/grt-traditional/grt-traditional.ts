@@ -1,7 +1,7 @@
 import type { Load } from '@gordons-legacy/formats';
 import type { Engine, SimulationResult, SimulationWarning } from '../engine.ts';
 import { grtInputs } from './inputs.ts';
-import { tenPercentPeakTime } from './results.ts';
+import { recoil, tenPercentPeakTime } from './results.ts';
 import { solve } from './solver.ts';
 import { validateInputs } from './validation.ts';
 
@@ -73,6 +73,7 @@ export const grtTraditional: Engine = {
           }),
       ...(burnout ? { burnout: { travel: burnout.travel, pressure: burnout.pressure * PASCALS_PER_BAR } } : {}),
       seatedBasePosition: solution.seatedBasePosition,
+      recoil: recoil(inputs, solution, muzzle, load.barrel.gunMass),
       curve,
       warnings,
     };

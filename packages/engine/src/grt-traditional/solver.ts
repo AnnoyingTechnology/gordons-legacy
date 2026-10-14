@@ -43,6 +43,12 @@ export interface GrtSolution {
   finalBurntFraction: number;
   /** Distance from the breech face to the seated projectile's base, m. */
   seatedBasePosition: number;
+  /** x_eff: the projectile's travel to the muzzle, m. */
+  travelToMuzzle: number;
+  /** The charge left in the gun at the muzzle (less what leaked), kg. */
+  finalChargeMass: number;
+  /** V_b at the muzzle (enlarged by a jump to the lands), m³. */
+  finalChamberVolume: number;
 
   /** False when the solver stopped at its step limit before the muzzle. */
   completed: boolean;
@@ -243,6 +249,9 @@ export function solve(inputs: GrtInputs): GrtSolution {
     burnoutIndex,
     finalBurntFraction,
     seatedBasePosition: inputs.caseLength - inputs.seatingDepth,
+    travelToMuzzle,
+    finalChargeMass: charge.mass,
+    finalChamberVolume: charge.chamber,
     completed: points.length < MAXIMUM_STEPS,
   };
 }

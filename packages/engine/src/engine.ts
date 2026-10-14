@@ -76,6 +76,7 @@ export interface Simulation {
   tenPercentPeakTime?: number;
   /** Barrel time counted from `tenPercentPeakTime` (GRT's "bullet lead time", BLT), s. */
   leadTime?: number;
+  recoil: Recoil;
   /** Where the charge finished burning, if it did before the muzzle. */
   burnout?: { travel: number; pressure: number };
   /** Distance from the breech face to the seated projectile's base, m; travel is counted from there. */
@@ -84,6 +85,23 @@ export interface Simulation {
   curve: SimulationCurve;
   /** Reasons the result should not be trusted; empty when none. */
   warnings: SimulationWarning[];
+}
+
+/** The gun's recoil from the shot alone (no muzzle device). */
+export interface Recoil {
+  /** Momentum of the projectile at the muzzle, N·s. */
+  projectileImpulse: number;
+  /** Momentum of the share of the charge that moves with the projectile, N·s. */
+  chargeImpulse: number;
+  /** Momentum of the gas leaving the muzzle, N·s. */
+  gasImpulse: number;
+  /** The sum, N·s. */
+  totalImpulse: number;
+  /** Velocity of the gas leaving the muzzle, m/s. */
+  gasExitVelocity: number;
+  /** The gun's motion, when the load gives its mass: free recoil energy (J), velocity (m/s), mean
+   * acceleration over the barrel time (m/s²) and the matching force (N). */
+  gun?: { energy: number; velocity: number; acceleration: number; force: number };
 }
 
 /** One array per quantity, all of the same length. */

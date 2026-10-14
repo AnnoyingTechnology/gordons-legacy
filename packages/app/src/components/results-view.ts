@@ -91,6 +91,14 @@ function renderDetails(load: Load, shot: Simulation, context: UiContext): HTMLEl
       : [{ label: t('results.leadTime'), value: quantity(shot.leadTime, 'time'), help: t('results.leadTimeHelp') }]),
     ...(shot.muzzleSpinRate === undefined ? [] : [{ label: t('results.spinRate'), value: quantity(shot.muzzleSpinRate, 'spinRate') }]),
     { label: t('results.powerFactor'), value: number(powerFactor, 1) },
+    { label: t('results.recoilImpulse'), value: quantity(shot.recoil.totalImpulse, 'impulse') },
+    { label: t('results.gasExitVelocity'), value: quantity(shot.recoil.gasExitVelocity, 'velocity') },
+    ...(shot.recoil.gun === undefined
+      ? []
+      : [
+          { label: t('results.recoilEnergy'), value: quantity(shot.recoil.gun.energy, 'energy') },
+          { label: t('results.recoilVelocity'), value: quantity(shot.recoil.gun.velocity, 'velocity', 2) },
+        ]),
   ];
   return element('dl', { class: 'result-details' }, items.map(({ label, value, help }) =>
     element('div', help ? { title: help } : {}, [element('dt', {}, [label]), element('dd', {}, [value])]),

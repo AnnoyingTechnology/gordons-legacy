@@ -29,6 +29,10 @@ export function formatSummary(load: Load, shot: Simulation): string {
   ];
   if (shot.leadTime !== undefined) lines.push(`Lead time (BLT)  ${(shot.leadTime * 1000).toFixed(4)} ms from 10 % of peak`);
   if (shot.muzzleSpinRate !== undefined) lines.push(`Spin at muzzle   ${(shot.muzzleSpinRate * 60).toFixed(0)} rpm`);
+  lines.push(`Recoil impulse   ${shot.recoil.totalImpulse.toFixed(2)} N·s`);
+  if (shot.recoil.gun) {
+    lines.push(`Recoil           ${shot.recoil.gun.energy.toFixed(1)} J free recoil energy, ${shot.recoil.gun.velocity.toFixed(2)} m/s`);
+  }
   if (shot.warnings.length > 0) lines.push(`Warnings         ${shot.warnings.join(', ')}`);
   lines.push('', SAFETY_NOTICE);
   return lines.join('\n');

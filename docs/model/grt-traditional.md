@@ -221,6 +221,20 @@ last update falls before c reaches j.
 - Validity: the result is invalid when the peak pressure is below 2 p_s, the Sebert factor is negative,
   or the propellant is invalid.
 
+## Recoil (confirmed to GRT's displayed precision)
+
+GRT reports recoil rounded (2 decimals), so these are checked to that precision on every reference.
+With m_c the charge left at the muzzle (after leaks), V = A · x_eff + V_b (V_b at the muzzle), p_m the
+muzzle pressure in Pa, v₀ the muzzle velocity and k the heat capacity ratio:
+
+- v_m = √((2 / (1 + k))^(k/(k−1)) · k · V p_m / (2 m_c)), the gas's own velocity at the muzzle;
+- v_a = √(v_m² + v₀²), the gas exit velocity;
+- impulses: projectile I_p = v₀ m_p; charge I_c = v₀ (m_c s); gas I_g = v_a m_c; total I = I_g + (I_c + I_p);
+- with a gun mass M > 0: energy I² / (2M), velocity v_r = I / M, acceleration v_r / t (t the barrel
+  time in s) and force a M (GRT shows kN). Without one, GRT shows 0 for these.
+
+GRT also computes a drag-like term (A · k · c_w · 0.5 · (v_a − v₀)²) that it doesn't report.
+
 ## Inputs outside the model (Gordon's Legacy)
 
 GRT simulated almost any input and showed plausible numbers even where its equations are undefined.

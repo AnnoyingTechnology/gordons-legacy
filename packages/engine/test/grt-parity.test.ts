@@ -66,6 +66,15 @@ describe.each(references.map((reference) => [reference.source, reference] as con
     expect(relativeError(simulation.muzzleEnergy, value(results['MuzzleEnergy']))).toBeLessThan(SCALAR_TOLERANCE);
     expect(relativeError(simulation.efficiency, value(results['Efficiency']))).toBeLessThan(SCALAR_TOLERANCE);
     expect(relativeError((simulation.muzzleSpinRate ?? 0) * 60, value(results['MuzzleRPM']))).toBeLessThan(SCALAR_TOLERANCE);
+    // GRT reports recoil rounded for display: 2 decimals, 3 for the force in kN.
+    const { recoil } = simulation;
+    expect(recoil.projectileImpulse).toBeCloseTo(value(results['RecoilImpulseProjectile']), 2);
+    expect(recoil.chargeImpulse).toBeCloseTo(value(results['RecoilImpulsePropellant']), 2);
+    expect(recoil.totalImpulse).toBeCloseTo(value(results['RecoilImpulse']), 2);
+    expect(recoil.gun?.energy ?? 0).toBeCloseTo(value(results['RecoilEnergy']), 2);
+    expect(recoil.gun?.velocity ?? 0).toBeCloseTo(value(results['RecoilVelocity']), 2);
+    expect(recoil.gun?.acceleration ?? 0).toBeCloseTo(value(results['RecoilAcceleration']), 2);
+    expect((recoil.gun?.force ?? 0) / 1000).toBeCloseTo(value(results['RecoilForce']), 3);
     // GRT leaves the lead time empty, and the 10 % time at 0, when the initial pressure is above 10 % of the peak.
     if (results['BulletLeadTime10Pmax'] === '') {
       expect(simulation.leadTime).toBeUndefined();

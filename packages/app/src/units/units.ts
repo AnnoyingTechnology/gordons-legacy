@@ -25,6 +25,7 @@ export type QuantityKind =
   | 'specificVolume'
   | 'time'
   | 'spinRate'
+  | 'impulse'
   | 'ballisticCoefficient';
 
 export interface DisplayUnit {
@@ -80,6 +81,7 @@ const UNITS: Record<QuantityKind, DisplayUnit[]> = {
   time: [linear('ms', 'ms', 1e-3, 3)],
   // SI: revolutions per second.
   spinRate: [linear('rpm', 'rpm', 1 / 60, 0)],
+  impulse: [linear('N-s', 'N·s', 1, 2), linear('lbf-s', 'lbf·s', 4.4482216152605, 3)],
   ballisticCoefficient: [linear('lb/in2', 'lb/in²', units.POUND_PER_SQUARE_INCH_MASS, 3), linear('kg/m2', 'kg/m²', 1, 1)],
 };
 
@@ -101,6 +103,7 @@ const PRESETS: Record<UnitSystem, Partial<Record<QuantityKind, string>>> = {
     temperature: 'F',
     velocity: 'ft/s',
     energy: 'ft-lbf',
+    impulse: 'lbf-s',
   },
 };
 

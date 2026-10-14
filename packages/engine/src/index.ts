@@ -2,6 +2,7 @@
 
 export type {
   Engine,
+  Recoil,
   Simulation,
   SimulationCurve,
   SimulationProblem,
