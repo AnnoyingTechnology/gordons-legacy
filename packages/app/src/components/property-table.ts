@@ -2,6 +2,7 @@ import type { SimulationProblem } from '@gordons-legacy/engine';
 import type { Load } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
 import { fieldConcerns, type Field, type FieldGroup, type NumberField } from '../editor/fields.ts';
+import { icon } from '../icons/icons.ts';
 import { displayUnit, formatNumber, parseNumber } from '../units/units.ts';
 import type { UiContext } from './context.ts';
 
@@ -70,6 +71,7 @@ export class PropertyTable extends LitElement {
         </tr>
       `;
     }
+    const { assistant } = field;
     const draft = this.drafts.get(index);
     const error = (draft === undefined ? undefined : this.validate(field, draft)) ?? this.problemFor(field);
     return html`
@@ -88,7 +90,18 @@ export class PropertyTable extends LitElement {
           />
           ${error ? html`<div class="field-error" role="alert">${error}</div>` : nothing}
         </td>
-        <td class="unit">${field.kind === 'plain' ? '' : displayUnit(field.kind, this.context.units).symbol}</td>
+        <td class="unit">
+          ${field.kind === 'plain' ? '' : displayUnit(field.kind, this.context.units).symbol}
+          ${assistant !== undefined
+            ? html`<button
+                type="button"
+                class="assistant"
+                title=${this.context.t('boreArea.title')}
+                aria-label=${this.context.t('boreArea.title')}
+                @click=${() => this.openAssistant(assistant)}
+              >${icon('calculator')}</button>`
+            : nothing}
+        </td>
       </tr>
     `;
   }
@@ -107,6 +120,10 @@ export class PropertyTable extends LitElement {
     if (value === undefined) return this.context.t('field.invalid');
     if (field.positive && !(this.toSi(field, value) > 0)) return this.context.t('field.invalid');
     return undefined;
+  }
+
+  private openAssistant(assistant: 'boreArea'): void {
+    this.dispatchEvent(new CustomEvent('assistant', { detail: assistant, bubbles: true }));
   }
 
   /** The engine's objection to this field's value, if any. */

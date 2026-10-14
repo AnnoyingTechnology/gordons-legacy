@@ -19,6 +19,8 @@ export interface NumberField {
   positive?: boolean;
   /** Where the value sits in the load, as the engine names it when it reports a problem. */
   path?: string;
+  /** An assistant that computes the value from other measurements. */
+  assistant?: 'boreArea';
 }
 
 export interface TextField {
@@ -46,7 +48,7 @@ export const FIELD_GROUPS: FieldGroup[] = [
       number({ path: 'cartridge.caseLength', label: 'field.caseLength', kind: 'length', positive: true, get: (l) => l.cartridge.caseLength, set: (l, v) => ({ ...l, cartridge: { ...l.cartridge, caseLength: v } }) }),
       number({ path: 'cartridge.overallLength', label: 'field.overallLength', kind: 'length', positive: true, get: (l) => l.cartridge.overallLength, set: (l, v) => ({ ...l, cartridge: { ...l.cartridge, overallLength: v } }) }),
       number({ path: 'cartridge.grooveDiameter', label: 'field.grooveDiameter', kind: 'length', positive: true, get: (l) => l.cartridge.grooveDiameter, set: (l, v) => ({ ...l, cartridge: { ...l.cartridge, grooveDiameter: v } }) }),
-      number({ path: 'cartridge.effectiveBoreArea', label: 'field.effectiveBoreArea', kind: 'area', positive: true, get: (l) => l.cartridge.effectiveBoreArea, set: (l, v) => ({ ...l, cartridge: { ...l.cartridge, effectiveBoreArea: v } }) }),
+      number({ path: 'cartridge.effectiveBoreArea', assistant: 'boreArea', label: 'field.effectiveBoreArea', kind: 'area', positive: true, get: (l) => l.cartridge.effectiveBoreArea, set: (l, v) => ({ ...l, cartridge: { ...l.cartridge, effectiveBoreArea: v } }) }),
       number({ path: 'cartridge.maxPressure', label: 'field.maxPressure', kind: 'pressure', positive: true, get: (l) => l.cartridge.maxPressure, set: (l, v) => ({ ...l, cartridge: { ...l.cartridge, maxPressure: v } }) }),
       number({ path: 'cartridge.sebertFactor', label: 'field.sebertFactor', kind: 'plain', decimals: 2, get: (l) => l.cartridge.sebertFactor, set: (l, v) => ({ ...l, cartridge: { ...l.cartridge, sebertFactor: v } }) }),
     ],

@@ -22,6 +22,7 @@ src/
     about-dialog.ts       dedication, safety notice and build; opens on a first visit
     units-dialog.ts       display unit of each kind of quantity
     choice-dialog.ts      pick one of several options (projectiles of a file)
+    bore-area-dialog.ts   GRT's effective-bore-area assistant
     load-editor.ts        <gl-load-editor>: inputs beside results, re-simulated on every edit
     property-table.ts     <gl-property-table>: one group of inputs (label, value, unit)
     notes-panel.ts        <gl-notes-panel>: the load's notes and pictures
@@ -33,6 +34,7 @@ src/
     context.ts            UiContext: language and units handed down to every component
   editor/fields.ts      which load values the editor shows, grouped as in GRT, and how to set them
   editor/components.ts  swapping the powder or projectile of a load
+  editor/bore-area.ts   effective bore area from the rifling (GRT's formulas)
   charts/               SVG line chart and axis ticks, no chart library
   units/units.ts        display units per kind of quantity (metric and imperial presets)
   i18n/                 message catalogs (en is the source; the compiler checks the others are complete)

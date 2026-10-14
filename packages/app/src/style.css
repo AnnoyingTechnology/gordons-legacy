@@ -850,3 +850,20 @@ button[aria-pressed='true'] {
     resize: none;
   }
 }
+
+.property-table .assistant {
+  height: 1.5rem;
+  padding: 0 0.3rem;
+  margin-left: 0.2rem;
+  vertical-align: middle;
+}
+
+.property-table .assistant .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.bore-area-dialog .note {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
