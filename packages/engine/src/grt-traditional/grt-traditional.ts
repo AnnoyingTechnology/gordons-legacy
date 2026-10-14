@@ -43,9 +43,7 @@ export const grtTraditional: Engine = {
     const warnings: SimulationWarning[] = [];
     if (peak.pressure < 2 * inputs.initialPressure) warnings.push('pressure-too-low');
     if (inputs.sebertFactor < 0) warnings.push('invalid-input');
-    if (load.barrel.jumpToLands !== undefined || !solution.supported) {
-      warnings.push('unsupported-feature');
-    }
+    if (!solution.supported) warnings.push('unsupported-feature');
 
     return {
       engine: 'grt-traditional',

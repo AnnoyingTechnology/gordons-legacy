@@ -30,6 +30,7 @@ export const es: Messages = {
   'field.sebertFactor': 'Factor de Sebert',
   'field.barrelLength': 'Longitud del cañón',
   'field.twistLength': 'Paso de estría',
+  'field.jumpToLands': 'Salto hasta las estrías',
   'field.diameter': 'Diámetro',
   'field.mass': 'Masa',
   'field.length': 'Longitud',

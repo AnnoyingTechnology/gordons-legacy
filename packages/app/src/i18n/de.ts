@@ -30,6 +30,7 @@ export const de: Messages = {
   'field.sebertFactor': 'Sebert-Faktor',
   'field.barrelLength': 'Lauflänge',
   'field.twistLength': 'Dralllänge',
+  'field.jumpToLands': 'Freiflug',
   'field.diameter': 'Durchmesser',
   'field.mass': 'Masse',
   'field.length': 'Länge',

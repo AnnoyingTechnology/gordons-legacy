@@ -29,6 +29,8 @@ export interface GrtInputs {
   caseLength: number;
   /** x_e, m. */
   barrelLength: number;
+  /** Jump to the lands, m; 0 without one. */
+  jumpToLands: number;
   /** L_tw, m; 0 when unknown, which disables rotation energy. */
   twistLength: number;
   /** p_s, bar. */
@@ -85,6 +87,7 @@ export function grtInputs(load: Load): GrtInputs {
     caseCapacity: cartridge.caseCapacity,
     caseLength: cartridge.caseLength,
     barrelLength: barrel.length,
+    jumpToLands: barrel.jumpToLands ?? 0,
     twistLength: barrel.twistLength ?? 0,
     initialPressure: projectile.shotStartPressure / PASCALS_PER_BAR,
     boreResistance: (projectile.boreResistanceAdjustment ?? 0) / PASCALS_PER_BAR,

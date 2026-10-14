@@ -5,8 +5,8 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 ## Current state
 
 - **Milestone:** M2 in progress: the GRT Traditional engine reproduces GRT to machine precision (peak
-  pressure, muzzle velocity, barrel time within 10⁻¹⁴) on all 12 fixtures and all 67 maintainer loads,
-  gas leaks included. Remaining: jump to the lands, z2 recomputation, slot leaks, derived results
+  pressure, muzzle velocity, barrel time within 10⁻¹⁴) on all 14 fixtures and all 67 maintainer loads,
+  gas leaks and jump to the lands included. Remaining: z2 recomputation, slot leaks, derived results
   (OBT, 10 %-Pmax times, recoil, efficiency).
 - **Code:** `packages/formats` imports `.grtload`, `.caliber`, `.projectile` and `.propellant` files into
   the load format (SI units), and saves and reads JSON loads with field-by-field validation; 182 tests on
@@ -22,9 +22,8 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 
 ## Next steps
 
-1. M2: remaining parts of GRT's model, from the binary into `docs/model/grt-traditional.md`: gas leaks (`fn_pLoss`, the revolver fixture),
-   jump to the lands, z2 recomputation, results (OBT, 10 %-Pmax times, recoil). Then capture
-   references for all the maintainer's loads (locally) and widen the parity tests.
+1. M2: remaining parts of GRT's model, from the binary into `docs/model/grt-traditional.md`: z2
+   recomputation, slot leaks, results (OBT, 10 %-Pmax times, recoil, efficiency).
 2. Read the Codex engine safety review (`/tmp/codex-engine-review.md` if still there; otherwise rerun it)
    and fix what it finds: input validation, non-finite results, loops that may not end.
 3. M3: per-quantity unit choices, ladder curves in the charts,
@@ -116,3 +115,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | M3: load editor in the app: tabs of open loads, property tables per group (cartridge, barrel, projectile, propellant, charge and ladder), live simulation, Open/Save (File System Access API or download), units and language in the toolbar. Chart y-axis always reaches above the highest value; labels have a background halo. |
 | 2026-10-14 | M3: the app works offline (service worker caching the build, network first for pages) and is installable (manifest, SVG icon); checked in headless Chromium by reloading offline. App README. |
 | 2026-10-14 | M3: original SVG icon set (33 icons, 24 px line style, drawn by a Sonnet subagent from each function, reviewed in light and dark); toolbar and tabs use them. |
+| 2026-10-14 | M2: jump to the lands recovered (`fn_jumpTime`, `fn_VbAdjust_gjump`): the chamber grows during a primer-driven jump time instead of the projectile moving. Matches GRT to machine precision on a jump sweep (0–5 mm) and on two new variant fixtures (`fixtures/variants/`); the editor exposes the jump. |

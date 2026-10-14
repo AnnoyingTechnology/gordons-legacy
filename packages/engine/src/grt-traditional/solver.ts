@@ -2,6 +2,7 @@ import { exponentialMean, FormFunction, vivacityAtTemperature, VivacitySmoother 
 import { CONFIG } from './config.ts';
 import { chamberVolume } from './geometry.ts';
 import type { GrtInputs } from './inputs.ts';
+import { Jump } from './jump.ts';
 import { GasLeaks } from './leaks.ts';
 import { TimeIntegrator } from './time.ts';
 
@@ -43,12 +44,14 @@ export interface GrtSolution {
 
 /**
  * The shot's state that changes during the simulation besides the projectile: the charge mass, which
- * gas leaks reduce, and everything GRT derives from it on the fly (grt-traditional.md, Setup).
+ * gas leaks reduce, the chamber volume, which the jump to the lands enlarges, and everything GRT
+ * derives from them on the fly (grt-traditional.md, Setup).
  */
 class Charge {
   mass: number;
+  /** V_b: the chamber volume behind the projectile, m³. */
+  chamber: number;
   private readonly inputs: GrtInputs;
-  private readonly chamber: number;
   readonly frictionMass: number;
 
   constructor(inputs: GrtInputs) {
@@ -138,12 +141,14 @@ export function solve(inputs: GrtInputs): GrtSolution {
   const { boreArea, heatOfExplosion, heatCapacityRatio: k, initialPressure } = inputs;
   const charge = new Charge(inputs);
   const travelToMuzzle = Math.max(0, inputs.barrelLength - (inputs.caseLength - inputs.seatingDepth));
-  const expansionAtMuzzle = travelToMuzzle * (boreArea / charge.freeVolume);
+  // ξ_E changes while the projectile crosses the jump, which enlarges the chamber.
+  let expansionAtMuzzle = travelToMuzzle * (boreArea / charge.freeVolume);
   const step = Math.max(MINIMUM_STEP, expansionAtMuzzle * STEP_FRACTION);
   const ba0 = vivacityAtTemperature(inputs);
   const formFunction = new FormFunction(inputs);
   const vivacity = new VivacitySmoother(ba0, inputs);
   const leaks = new GasLeaks(inputs);
+  const jump = new Jump(inputs, charge.chamber);
   const motion = new Motion(inputs, charge, travelToMuzzle);
   const time = new TimeIntegrator();
   const points: GrtPoint[] = [];
@@ -188,6 +193,11 @@ export function solve(inputs: GrtInputs): GrtSolution {
     motion.addLosses(losses);
     motion.advance(travel, smoothedPressure, losses.rotation, false);
     record(burntFraction, smoothedPressure);
+    const chamber = jump.chamberAt(time.last);
+    if (chamber !== undefined) {
+      charge.chamber = chamber;
+      expansionAtMuzzle = travelToMuzzle * (boreArea / charge.freeVolume);
+    }
     previousExpansion = clamped;
     expansion += step;
   }

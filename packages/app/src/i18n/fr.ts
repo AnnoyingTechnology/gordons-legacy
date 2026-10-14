@@ -30,6 +30,7 @@ export const fr: Messages = {
   'field.sebertFactor': 'Facteur de Sebert',
   'field.barrelLength': 'Longueur du canon',
   'field.twistLength': 'Pas de rayure',
+  'field.jumpToLands': "Saut jusqu'aux rayures",
   'field.diameter': 'Diamètre',
   'field.mass': 'Masse',
   'field.length': 'Longueur',

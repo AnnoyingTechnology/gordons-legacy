@@ -30,6 +30,7 @@ export const it: Messages = {
   'field.sebertFactor': 'Fattore di Sebert',
   'field.barrelLength': 'Lunghezza della canna',
   'field.twistLength': 'Passo di rigatura',
+  'field.jumpToLands': 'Salto fino alle rigature',
   'field.diameter': 'Diametro',
   'field.mass': 'Massa',
   'field.length': 'Lunghezza',

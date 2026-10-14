@@ -24,7 +24,7 @@ function value(text: string | undefined): number {
 }
 
 function fixtureLoad(source: string): Load {
-  for (const folder of ['cc0/loads', 'maintainer']) {
+  for (const folder of ['cc0/loads', 'maintainer', 'variants']) {
     try {
       const result = importGrtLoad(readFileSync(join(FIXTURES, folder, source), 'utf8'));
       if (result.ok) return result.value;

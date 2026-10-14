@@ -30,6 +30,9 @@ model in mathematical form. Each module implements a section of it:
 src/grt-traditional/
   inputs.ts           Inputs: the load's values in the units GRT computes with
   geometry.ts         Geometry: the chamber volume
+  jump.ts             Jump to the lands: the chamber enlarged during the jump
+  leaks.ts            Gas leaks
+  time.ts             Time
   burn.ts             Form function setup, temperature, vivacity smoothing
   config.ts           Configuration constants
   solver.ts           Integration: phases A and B
@@ -38,4 +41,4 @@ src/grt-traditional/
 
 `test/grt-parity.test.ts` compares the engine with results captured from GRT itself
 (`test/reference/grt`): peak pressure and muzzle velocity agree to within 10⁻¹⁴. Loads using features
-not yet modelled (gas leaks, jump to the lands) get the `unsupported-feature` warning.
+not yet modelled (slot-type gas leaks, a z2 that GRT recomputes) get the `unsupported-feature` warning.

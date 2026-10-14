@@ -55,6 +55,16 @@ export const FIELD_GROUPS: FieldGroup[] = [
       { type: 'text', label: 'field.name', get: (l) => l.barrel.name, set: (l, v) => ({ ...l, barrel: { ...l.barrel, name: v } }) },
       number({ label: 'field.barrelLength', kind: 'barrelLength', positive: true, get: (l) => l.barrel.length, set: (l, v) => ({ ...l, barrel: { ...l.barrel, length: v } }) }),
       number({ label: 'field.twistLength', kind: 'twistLength', positive: true, get: (l) => l.barrel.twistLength, set: (l, v) => ({ ...l, barrel: { ...l.barrel, twistLength: v } }) }),
+      // 0 removes the jump.
+      number({
+        label: 'field.jumpToLands',
+        kind: 'length',
+        get: (l) => l.barrel.jumpToLands,
+        set: (l, v) => {
+          const { jumpToLands: _removed, ...barrel } = l.barrel;
+          return { ...l, barrel: v > 0 ? { ...barrel, jumpToLands: v } : barrel };
+        },
+      }),
     ],
   },
   {

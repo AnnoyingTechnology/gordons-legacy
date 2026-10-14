@@ -164,6 +164,28 @@ and the point in between gets t_{n−1} = (T + t_{n−2}) / 2. Every point gets 
 change of T at the last pair step, Δt = T − T_previous, is the time step used by gas leaks. The barrel
 time is the last point's T.
 
+### Jump to the lands (confirmed)
+
+Only when the load sets a jump j > 0 (GRT: `gjumpUnlock` with `gjump`). GRT doesn't move the projectile
+over the jump; it enlarges the chamber as if the projectile were seated less deep by the distance
+covered so far, which grows in proportion to time.
+
+Setup: the time to cross the jump under the primer's pressure alone, at constant acceleration, with
+E_pr = 75.09815610370678 J (`CORE_PRIMER_ENERGY_FACTOR`) and V_b the initial chamber volume:
+
+- F = A · (E_pr / V_b), the primer's force;
+- t_j = (√j · √2 / √(F / m_p)) · 1000 ms;
+- the rate r = j / t_j (m per ms).
+
+During phase A only, after each point is added and the time T updated: with c = T · r, while c ≤ j,
+recompute V_b with the geometry above at seating depth d − c, then V₀ and ξ_E = x_eff · A / V₀. The next
+step uses them: the travel x = x_eff · ξ_c / ξ_E, the relative step, the pressure and the end of the loop
+(ξ > ξ_E) all read the current ξ_E; Δξ keeps its initial value. Once c > j, V_b stays at its last value.
+
+Consequences: a jump shorter than the distance covered by the first time step has no effect (0.1 mm on
+the .327 Federal fixture), and the chamber ends a little smaller than with the full jump, since the
+last update falls before c reaches j.
+
 ## Results (partial)
 
 - Peak pressure: the largest p̃; muzzle velocity and pressure: the last point's v and p̃.
@@ -180,5 +202,5 @@ which no load file seen so far carries.
 
 ## Not yet covered
 
-Slot-type leaks, the jump to the lands (`fn_VbAdjust_gjump`, `fn_jumpTime`), air drag, recoil,
+Slot-type leaks, air drag, recoil,
 OBT, the 10 %-of-peak times, and custom ladder steps.

@@ -14,6 +14,8 @@ export const CONFIG = {
   internalFriction: 1.511101935815519,
   /** Rotation energy of the projectile included (`CORE_ETWIST_ENABLED`). */
   rotationEnergy: true,
+  /** Primer energy, J, which GRT uses only for the time to cross the jump (`CORE_PRIMER_ENERGY_FACTOR`). */
+  primerEnergy: 75.09815610370678,
   /** Weight of the new pressure in the pressure smoothing while the powder burns. */
   pressureSmoothingBurning: 0.27,
   /** Weight of the new pressure after burnout. */

@@ -32,6 +32,7 @@ export const en = {
   'field.sebertFactor': 'Sebert factor',
   'field.barrelLength': 'Barrel length',
   'field.twistLength': 'Twist',
+  'field.jumpToLands': 'Jump to lands',
   'field.diameter': 'Diameter',
   'field.mass': 'Mass',
   'field.length': 'Length',
