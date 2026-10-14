@@ -24,8 +24,9 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 ## Next steps
 
 1. Native review of the five translations; M4 (data repository, once the maintainer agrees to create
-   it); remaining GRT tools (unit converter, parametric powder search and tolerance synthesis, which
-   need a powder database; cartridge designer).
+   it; GRT database import, approach to choose, see Open questions). Every GRT tool of M5 now exists
+   (2026-10-14): burning-rate table and powder search, tolerance synthesis, cartridge designer, unit
+   converter, OBT tool, assistants, measurements, reports.
 2. After parity (decision of 2026-10-13): validation against reality started
    (`docs/model/validation.md`, chronograph study done); next, published pressure data, then OBT, the
    energy terms and the covolume handling against the published science.
@@ -109,7 +110,14 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 - Unit and reference pressure of GRT's `Ba` (needed for M2).
 - The five UI languages. Proposed and built in: English, German, French, Spanish, Italian (Russian the
   main alternative). Translations of `packages/app/src/i18n/*.ts` need review by native reloaders.
-- Format and encryption of `GordonsReloadingTool.db` (M4).
+- Format and encryption of `GordonsReloadingTool.db` (M4): found 2026-10-14, an SQLite database encrypted
+  with SQLite's commercial encryption extension (SEE, used by Xojo): bytes 16–23 are SQLite's plain
+  header (page size 1024, 12 reserved bytes per page), the rest is ciphertext. GRT's plugin IPC has no
+  database access and its UI exports one entry at a time. Options put to the maintainer: (1) a local
+  maintainer tool reading the decrypted records from a running GRT's memory and writing GRT component
+  files (preferred: no cryptography reimplemented, nothing redistributed); (2) automating GRT's own
+  one-by-one export under Wine; (3) an in-app importer, which would reimplement SEE and ship GRT's key
+  (not recommended).
 - Licence of the maintainer's loads in `packages/formats/test/fixtures/maintainer/` (CC0 like the corpus?).
   The selected 9 mm load is the hottest one (`glock17_eng5_n340_115grain_xtp_PLUS-P`); no 9 mm file is
   named "full patate", so confirm it is the intended one.
