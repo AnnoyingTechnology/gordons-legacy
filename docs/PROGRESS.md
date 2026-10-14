@@ -24,8 +24,8 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 ## Next steps
 
 1. Native review of the five translations; M4 (data repository, once the maintainer agrees to create
-   it); remaining GRT tools (shot-group analysis, unit converter, parametric powder search and
-   tolerance synthesis, cartridge designer).
+   it); remaining GRT tools (unit converter, parametric powder search and tolerance synthesis, which
+   need a powder database; cartridge designer).
 2. After parity (decision of 2026-10-13): validation against reality started
    (`docs/model/validation.md`, chronograph study done); next, published pressure data, then OBT, the
    energy terms and the covolume handling against the published science.
@@ -166,3 +166,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | M7: no single Ba scale makes R1 match GRT's velocities (0.71–0.95 by regime); at matched velocity R1's peaks are 0.97–1.7× GRT's, most for subsonic rifle loads. Recorded as an open, safety-relevant discrepancy needing measured pressures. |
 | 2026-10-14 | M5: GRTrace (PressureTrace II) recordings import as measurement series, with each shot's measured peak; the measurements table shows the measured peak beside the simulated one. Format notes: `docs/formats/grtrace.md`. |
 | 2026-10-14 | M5: chronograph CSV import (LabRadar, MagnetoSpeed, Caldwell, ProChrono… exports): detected velocity column and unit, confirmed in a dialog, added as a measurement series. |
+| 2026-10-14 | M5: shot-group analysis: a target photo (downscaled to 1600 px), its scale from two clicked points, hits clicked at the bullet's diameter; extreme spread, mean radius, closest hits and deviations, in length, MOA and mrad; groups saved with the load. The app now warns when the browser's storage is full instead of failing. |

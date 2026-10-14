@@ -988,3 +988,112 @@ button[aria-pressed='true'] {
   color: var(--muted);
   font-size: 0.8rem;
 }
+
+.shot-groups-panel h3 {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin: 0.8rem 0 0.2rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.shot-groups {
+  list-style: none;
+  padding: 0;
+  margin: 0.3rem 0;
+  font-size: 0.9rem;
+}
+
+.shot-groups li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.shot-groups .link {
+  border: none;
+  background: none;
+  color: var(--accent);
+  padding: 0;
+  height: auto;
+  text-decoration: underline;
+}
+
+.shot-groups .remove {
+  border: none;
+  background: none;
+  color: var(--muted);
+  height: auto;
+  padding: 0 0.3rem;
+}
+
+dialog.shot-group-dialog {
+  max-width: min(72rem, 95vw);
+  width: 95vw;
+}
+
+.shot-group-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(14rem, 1fr);
+  gap: 1rem;
+}
+
+.target-photo {
+  width: 100%;
+  height: auto;
+  max-height: 70vh;
+  cursor: crosshair;
+  border: 1px solid var(--rule);
+}
+
+.target-photo .hit {
+  fill: rgb(208 59 59 / 0.35);
+  stroke: #d03b3b;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.target-photo .group-centre {
+  fill: #2a78d6;
+}
+
+.target-photo .scale-point {
+  fill: #2a78d6;
+}
+
+.target-photo .scale-line {
+  stroke: #2a78d6;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.shot-group-side label {
+  display: block;
+  margin: 0.3rem 0;
+}
+
+.shot-group-side .note {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.group-statistics {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.2rem 0.8rem;
+  font-size: 0.9rem;
+}
+
+.group-statistics dt {
+  color: var(--muted);
+}
+
+.group-statistics dd {
+  margin: 0;
+}
+
+.photo-choice {
+  display: inline-flex;
+  margin: 2rem;
+}

@@ -6,6 +6,7 @@ import { cartridgeDrawing } from './cartridge-drawing.ts';
 import type { UiContext } from './context.ts';
 import './bore-area-dialog.ts';
 import './notes-panel.ts';
+import './shot-groups-panel.ts';
 import './property-table.ts';
 import { renderProblems, renderResults, type ChartAxis } from './results-view.ts';
 
@@ -53,6 +54,7 @@ export class LoadEditor extends LitElement {
             ></gl-property-table>`,
           )}
           <gl-notes-panel .load=${this.load} .context=${this.context}></gl-notes-panel>
+          <gl-shot-groups-panel .load=${this.load} .context=${this.context}></gl-shot-groups-panel>
           <gl-bore-area-dialog
             .load=${this.load}
             .context=${this.context}

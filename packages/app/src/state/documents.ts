@@ -21,6 +21,8 @@ const STORAGE_KEY = 'gordons-legacy.documents';
 export class DocumentStore {
   documents: OpenDocument[] = [];
   activeId: number | undefined;
+  /** True when the open loads no longer fit in the browser's storage and must be saved to files. */
+  storageFull = false;
   private nextId = 1;
   private readonly listeners = new Set<() => void>();
   private readonly storage: Storage | undefined;
@@ -99,7 +101,13 @@ export class DocumentStore {
 
   private persist(): void {
     const saved = this.documents.map(({ name, load, savedText }) => ({ name, load, savedText }));
-    this.storage?.setItem(STORAGE_KEY, JSON.stringify({ documents: saved, active: this.documents.findIndex((d) => d.id === this.activeId) }));
+    try {
+      this.storage?.setItem(STORAGE_KEY, JSON.stringify({ documents: saved, active: this.documents.findIndex((d) => d.id === this.activeId) }));
+      this.storageFull = false;
+    } catch {
+      // The browser's storage is full (large pictures): the loads stay open, but only a saved file keeps them.
+      this.storageFull = true;
+    }
   }
 
   private restore(): void {

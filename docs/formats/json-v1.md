@@ -38,6 +38,7 @@ Load
 ├─ ladder        optional
 ├─ measurements  chronograph data (MeasurementSeries → MeasuredCharge → Shot)
 ├─ notes, pictures
+├─ shotGroups    optional: groups on targets (distance, hits in m, a photo by index with its scale)
 ├─ importedFrom  optional: source format, writer version, file name
 └─ unmapped      optional
 ```

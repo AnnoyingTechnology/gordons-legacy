@@ -26,6 +26,7 @@ export type QuantityKind =
   | 'time'
   | 'spinRate'
   | 'impulse'
+  | 'distance'
   | 'ballisticCoefficient';
 
 export interface DisplayUnit {
@@ -82,6 +83,8 @@ const UNITS: Record<QuantityKind, DisplayUnit[]> = {
   // SI: revolutions per second.
   spinRate: [linear('rpm', 'rpm', 1 / 60, 0)],
   impulse: [linear('N-s', 'N·s', 1, 2), linear('lbf-s', 'lbf·s', 4.4482216152605, 3)],
+  // Range to a target.
+  distance: [linear('m', 'm', 1, 0), linear('yd', 'yd', 0.9144, 0)],
   ballisticCoefficient: [linear('lb/in2', 'lb/in²', units.POUND_PER_SQUARE_INCH_MASS, 3), linear('kg/m2', 'kg/m²', 1, 1)],
 };
 
@@ -109,6 +112,7 @@ const PRESETS: Record<UnitSystem, Partial<Record<QuantityKind, string>>> = {
     velocity: 'ft/s',
     energy: 'ft-lbf',
     impulse: 'lbf-s',
+    distance: 'yd',
   },
 };
 

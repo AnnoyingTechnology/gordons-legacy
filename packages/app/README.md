@@ -28,6 +28,8 @@ src/
     cartridge-drawing.ts  side view of the loaded cartridge, from the standard's outline
     property-table.ts     <gl-property-table>: one group of inputs (label, value, unit)
     notes-panel.ts        <gl-notes-panel>: the load's notes and pictures
+    shot-groups-panel.ts  <gl-shot-groups-panel>: the load's shot groups
+    shot-group-dialog.ts  marks hits on a target photo and measures the group
     results-view.ts       the simulated shot: composes the sections below
     figures-view.ts       key figures, details, the fitted-powder notice
     charts-view.ts        pressure and velocity charts, axis switch, hover readout
@@ -50,7 +52,7 @@ src/
   state/                open documents and settings, kept in localStorage
   icons/icons.ts        original SVG icons
   measurements/         statistics of measured shots; reading chronograph CSV exports
-  analysis/             bench variations (sensitivity of the peak pressure)
+  analysis/             bench variations (sensitivity of the peak pressure); shot-group statistics
   offline.ts, dom.ts
 test/                   Vitest tests of the parts without a DOM
 ```
