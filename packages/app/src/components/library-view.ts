@@ -53,7 +53,7 @@ export class LibraryView extends LitElement {
           <span class="spacer"></span>
           <label class="button">
             ${icon('open')} ${t('library.import')}
-            <input type="file" accept=".grtload,.json" multiple hidden @change=${this.importFiles} />
+            <input type="file" accept=".grtload,.json,.propellant,.projectile" multiple hidden @change=${this.importFiles} />
           </label>
           <label class="button">
             ${icon('open')} ${t('library.importFolder')}
@@ -156,8 +156,8 @@ export class LibraryView extends LitElement {
 
   private importFiles = (event: Event) => {
     const input = event.target as HTMLInputElement;
-    // A folder brings every file in it: keep the loads.
-    const files = [...(input.files ?? [])].filter((file) => /\.(grtload|json)$/i.test(file.name));
+    // A folder brings every file in it: keep the loads and the GRT component files.
+    const files = [...(input.files ?? [])].filter((file) => /\.(grtload|json|propellant|projectile)$/i.test(file.name));
     this.fire('import-files', files);
     input.value = '';
   };

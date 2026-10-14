@@ -1,4 +1,5 @@
 import { parseLoad, type Load } from '@gordons-legacy/formats';
+import { indexedDbStore, memoryStore, type RecordStore } from './indexed-db.ts';
 
 /** A load kept in the user's library. */
 export interface LibraryEntry {
@@ -12,23 +13,11 @@ export interface LibraryEntry {
 }
 
 /** Where library entries live: the browser's IndexedDB in the app, memory in tests. */
-export interface LibraryStorage {
-  list(): Promise<LibraryEntry[]>;
-  put(entry: LibraryEntry): Promise<void>;
-  remove(id: string): Promise<void>;
-}
+export type LibraryStorage = RecordStore<LibraryEntry>;
 
 export function memoryStorage(): LibraryStorage {
-  const entries = new Map<string, LibraryEntry>();
-  return {
-    list: async () => [...entries.values()].map((entry) => structuredClone(entry)),
-    put: async (entry) => void entries.set(entry.id, structuredClone(entry)),
-    remove: async (id) => void entries.delete(id),
-  };
+  return memoryStore<LibraryEntry>();
 }
-
-const DATABASE = 'gordons-legacy';
-const STORE = 'library';
 
 /**
  * The library in IndexedDB, which holds far more than localStorage (pictures included) and survives
@@ -36,25 +25,11 @@ const STORE = 'library';
  * app requests; a backup file is the user's safeguard.
  */
 export function indexedDbStorage(factory: IDBFactory = indexedDB): LibraryStorage {
-  const database = new Promise<IDBDatabase>((resolve, reject) => {
-    const request = factory.open(DATABASE, 1);
-    request.onupgradeneeded = () => request.result.createObjectStore(STORE, { keyPath: 'id' });
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-  const run = async <T>(mode: IDBTransactionMode, action: (store: IDBObjectStore) => IDBRequest<T>): Promise<T> => {
-    const store = (await database).transaction(STORE, mode).objectStore(STORE);
-    return new Promise((resolve, reject) => {
-      const request = action(store);
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
-  };
+  const store = indexedDbStore<LibraryEntry>('library', factory);
   return {
+    ...store,
     // Entries are checked like a file being opened, so that a damaged record can't reach the engine.
-    list: async () => ((await run('readonly', (store) => store.getAll())) as LibraryEntry[]).flatMap(checked),
-    put: async (entry) => void (await run('readwrite', (store) => store.put(entry))),
-    remove: async (id) => void (await run('readwrite', (store) => store.delete(id))),
+    list: async () => (await store.list()).flatMap(checked),
   };
 }
 

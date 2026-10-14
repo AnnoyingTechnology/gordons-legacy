@@ -1,8 +1,11 @@
 import { grtTraditional } from '@gordons-legacy/engine';
-import type { Load } from '@gordons-legacy/formats';
+import type { Load, Projectile, Propellant } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
 import { icon } from '../icons/icons.ts';
 import type { Firearm } from '../state/library.ts';
+import type { ComponentEntry, ComponentLibrary } from '../state/components.ts';
+import { withProjectile, withPropellant } from '../editor/components.ts';
+import './component-picker.ts';
 import { assessLoad } from '../analysis/load-assessment.ts';
 import { FIELD_GROUPS } from '../editor/fields.ts';
 import { cartridgeDrawing } from './cartridge-drawing.ts';
@@ -23,6 +26,9 @@ export class LoadEditor extends LitElement {
     load: { attribute: false },
     context: { attribute: false },
     firearms: { attribute: false },
+    components: { attribute: false },
+    componentEntries: { attribute: false },
+    picking: { state: true },
     axis: { state: true },
     assistant: { state: true },
   };
@@ -31,6 +37,11 @@ export class LoadEditor extends LitElement {
   declare context: UiContext;
   /** The firearms of the library, whose barrel the load can take. */
   declare firearms: Firearm[];
+  /** Powders and projectiles to choose from, and their entries (passed apart to re-render on import). */
+  declare components: ComponentLibrary | undefined;
+  declare componentEntries: ComponentEntry[];
+  /** The component being chosen, if the picker is open. */
+  declare picking: 'propellant' | 'projectile' | undefined;
   declare axis: ChartAxis;
   /** The assistant open, if any. */
   declare assistant: 'boreArea' | undefined;
@@ -40,6 +51,8 @@ export class LoadEditor extends LitElement {
     this.axis = 'travel';
     this.assistant = undefined;
     this.firearms = [];
+    this.componentEntries = [];
+    this.picking = undefined;
   }
 
   private stopWatchingLayout = () => {};
@@ -68,7 +81,7 @@ export class LoadEditor extends LitElement {
       <div class="load-editor concern-${assessment?.level ?? 'none'}" @assistant=${(event: CustomEvent<'boreArea'>) => (this.assistant = event.detail)}>
         <div class="inputs">
           ${FIELD_GROUPS.map(
-            (group) => html`${group.title === 'group.barrel' ? this.renderFirearmChoice() : nothing}<gl-property-table
+            (group) => html`${group.title === 'group.barrel' ? this.renderFirearmChoice() : nothing}${this.renderComponentChoice(group.title)}<gl-property-table
               .group=${group}
               .load=${this.load}
               .context=${this.context}
@@ -77,6 +90,18 @@ export class LoadEditor extends LitElement {
           )}
           <gl-notes-panel .load=${this.load} .context=${this.context}></gl-notes-panel>
           <gl-shot-groups-panel .load=${this.load} .context=${this.context}></gl-shot-groups-panel>
+          ${this.components
+            ? html`<gl-component-picker
+                .kind=${this.picking}
+                .load=${this.load}
+                .library=${this.components}
+                .entries=${this.componentEntries}
+                .context=${this.context}
+                @choose-propellant=${(event: CustomEvent<Propellant>) => this.emit(withPropellant(this.load, event.detail))}
+                @choose-projectile=${(event: CustomEvent<Projectile>) => this.emit(withProjectile(this.load, event.detail))}
+                @close=${() => (this.picking = undefined)}
+              ></gl-component-picker>`
+            : nothing}
           <gl-bore-area-dialog
             .load=${this.load}
             .context=${this.context}
@@ -91,6 +116,20 @@ export class LoadEditor extends LitElement {
         </div>
       </div>
     `;
+  }
+
+  /** A button above the powder and projectile groups to choose another one from the component library. */
+  private renderComponentChoice(group: string) {
+    const kind = group === 'group.propellant' ? 'propellant' : group === 'group.projectile' ? 'projectile' : undefined;
+    if (!kind || !this.components) return nothing;
+    const { t } = this.context;
+    return html`<button class="component-choice" @click=${() => (this.picking = kind)}>
+      ${icon(kind)} ${t(kind === 'propellant' ? 'components.choosePowder' : 'components.chooseProjectileTitle')}…
+    </button>`;
+  }
+
+  private emit(load: Load): void {
+    this.dispatchEvent(new CustomEvent('load-change', { detail: load, bubbles: true }));
   }
 
   /** Takes a firearm's barrel from the library: length, twist, gun mass, jump and gas leaks (issue #12). */

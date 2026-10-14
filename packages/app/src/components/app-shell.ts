@@ -21,6 +21,8 @@ import './library-view.ts';
 import './load-editor.ts';
 import { firearms, Library } from '../state/library.ts';
 import { indexedDbStorage } from '../state/library-storage.ts';
+import { ComponentLibrary, type ComponentEntry } from '../state/components.ts';
+import { indexedDbStore } from '../state/indexed-db.ts';
 import './units-dialog.ts';
 
 /**
@@ -53,6 +55,7 @@ export class AppShell extends LitElement {
   declare aboutOpen: boolean;
   private readonly store = new DocumentStore(window.localStorage);
   private readonly library = new Library(indexedDbStorage());
+  private readonly components = new ComponentLibrary(indexedDbStore<ComponentEntry>('components'));
   private settings: Settings = loadSettings(window.localStorage, navigator.languages);
 
   constructor() {
@@ -67,6 +70,7 @@ export class AppShell extends LitElement {
     this.aboutOpen = window.localStorage.getItem(WELCOME_SEEN_KEY) === null;
     this.store.subscribe(() => this.requestUpdate());
     this.library.subscribe(() => this.requestUpdate());
+    this.components.subscribe(() => this.requestUpdate());
     // Ask the browser not to clear the library under storage pressure; it may still refuse.
     void navigator.storage?.persist?.();
     document.documentElement.lang = this.settings.language;
@@ -206,6 +210,8 @@ export class AppShell extends LitElement {
         .load=${active.load}
         .context=${this.context}
         .firearms=${firearms(this.library.entries)}
+        .components=${this.components}
+        .componentEntries=${this.components.entries}
         @load-change=${(event: CustomEvent<Load>) => this.store.update(active.id, event.detail)}
         @calibrated=${(event: CustomEvent<CalibratedLoad>) => this.openCalibrated(active.name, event.detail)}
       ></gl-load-editor>
@@ -222,6 +228,8 @@ export class AppShell extends LitElement {
       const extension = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
       if (extension === '.propellant' || extension === '.projectile') {
         errors.push(...this.openComponent(extension, text));
+        // Kept for later too, in the component library.
+        await this.components.importFile(file.name, text);
         continue;
       }
       if (extension === '.grtrace') {
@@ -333,10 +341,14 @@ export class AppShell extends LitElement {
     this.view = 'editor';
   }
 
+  /** Loads go to the library; powder and projectile files to the component library. */
   private async importToLibrary(files: File[]): Promise<void> {
     const read = await Promise.all(files.map(async (file) => ({ name: file.name, text: await file.text() })));
-    const failed = await this.library.importFiles(read);
-    this.openErrors = failed.map((name) => this.context.t('library.importFailed', { name }));
+    const isComponent = (name: string) => /\.(propellant|projectile)$/i.test(name);
+    const errors: string[] = [];
+    for (const file of read.filter(({ name }) => isComponent(name))) errors.push(...(await this.components.importFile(file.name, file.text)));
+    const failed = await this.library.importFiles(read.filter(({ name }) => !isComponent(name)));
+    this.openErrors = [...failed.map((name) => this.context.t('library.importFailed', { name })), ...errors];
   }
 
   private downloadBackup(): void {

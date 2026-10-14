@@ -1879,3 +1879,109 @@ dialog.shot-group-dialog {
 .temperature-scale .scale-unit {
   display: none;
 }
+
+/* Component picker (component-picker.ts) */
+
+dialog.component-picker {
+  width: min(78rem, 94vw);
+  max-width: none;
+  max-height: 88vh;
+}
+
+.picker-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.picker-head h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 1rem 0 0;
+  border: none;
+}
+
+.picker-head input[type='search'] {
+  min-width: 16rem;
+  height: 2rem;
+  box-sizing: border-box;
+  font: inherit;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--rule);
+  background: var(--panel);
+  color: var(--fg);
+}
+
+.picker-head .spacer {
+  flex: 1;
+}
+
+.picker-head .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 2rem;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0.25rem 0.8rem;
+  border: 1px solid var(--rule);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.picker-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1.2rem;
+  margin: 0.5rem 0;
+}
+
+.picker-options input[type='number'] {
+  width: 4rem;
+  font: inherit;
+}
+
+.picker-options .note {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.picker-table {
+  width: 100%;
+}
+
+.picker-table th,
+.picker-table td {
+  white-space: nowrap;
+  padding: 0.15rem 0.45rem;
+}
+
+.picker-table td.name {
+  text-align: left;
+  white-space: nowrap;
+}
+
+.picker-table th:nth-child(2),
+.picker-table td:nth-child(3) {
+  text-align: left;
+}
+
+.picker-table td:nth-child(3) {
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.picker-table button {
+  height: 1.7rem;
+  padding: 0 0.6rem;
+}
+
+.component-choice {
+  margin: 0.8rem 0 -0.4rem;
+  height: 1.9rem;
+  font-size: 0.9rem;
+}

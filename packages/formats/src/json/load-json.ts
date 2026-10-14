@@ -1,6 +1,8 @@
 import { IssueLog, type ImportResult } from '../import-issues.ts';
 import { LOAD_FORMAT, LOAD_SCHEMA_VERSION, type Load } from '../load/load.ts';
-import { LOAD_SPEC } from './load-shape.ts';
+import type { Projectile } from '../load/projectile.ts';
+import type { Propellant } from '../load/propellant.ts';
+import { LOAD_SPEC, PROJECTILE_SPEC, PROPELLANT_SPEC } from './load-shape.ts';
 import { checkValue } from './shape.ts';
 
 /** Writes a load as the JSON text saved to disk. */
@@ -39,4 +41,18 @@ export function parseLoad(text: string): ImportResult<Load> {
 
   const load = checkValue(document, LOAD_SPEC, '', log) as Load;
   return log.result(load);
+}
+
+/**
+ * Checks a powder or projectile held apart from a load (a component library), field by field as in a
+ * saved load. `value` is the parsed JSON.
+ */
+export function checkPropellant(value: unknown): ImportResult<Propellant> {
+  const log = new IssueLog();
+  return log.result(checkValue(value, PROPELLANT_SPEC, '', log) as Propellant);
+}
+
+export function checkProjectile(value: unknown): ImportResult<Projectile> {
+  const log = new IssueLog();
+  return log.result(checkValue(value, PROJECTILE_SPEC, '', log) as Projectile);
 }

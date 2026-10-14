@@ -342,6 +342,21 @@ export const en = {
   'finding.temperatureLimit.cold': "From {temperature} down: {what}.",
   'temperatureRange.withinState': "within limits",
   'temperatureRange.reference': "{temperature}: reference of published data",
+  'components.choosePowder': "Choose a powder",
+  'components.chooseProjectileTitle': "Choose a projectile",
+  'components.importFiles': "Import GRT files",
+  'components.powderNotice': "Community powders are models shared by GRT users, unverified: check each against the maker's data. A powder with similar factors is not a substitute: its charge must be worked up from published data. Changing the powder keeps the charge mass, which may be far from right for the new powder.",
+  'components.projectileNotice': "Community projectiles are shared by GRT users, unverified: check the length and mass against your own bullets. Changing the projectile keeps the overall length, so the seating depth follows the new bullet's length.",
+  'components.similarTo': "Only powders near {powder} (Brp {brp})",
+  'components.brpHelp': "GRT's combined brisance and progressivity factor: a rough ranking of burning rate, not a statement of how a powder behaves.",
+  'components.source': "Source",
+  'components.versusLoad': "vs. load",
+  'components.use': "Use",
+  'components.sameDiameter': "Only the load's diameter ({diameter})",
+  'components.none': "None. Untick the diameter filter, or import your GRT projectile files.",
+  'components.community': "community",
+  'components.yours': "yours",
+  'components.filter': "Filter: maker, name, author…",
 } as const;
 
 export type MessageKey = keyof typeof en;
