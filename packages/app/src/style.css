@@ -787,3 +787,12 @@ button[aria-pressed='true'] {
   border-color: var(--accent);
   color: var(--accent);
 }
+
+.temperatures {
+  margin: 0.6rem 0;
+}
+
+.temperatures .note {
+  color: var(--muted);
+  font-size: 0.85rem;
+}

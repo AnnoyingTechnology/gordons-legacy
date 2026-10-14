@@ -28,6 +28,7 @@ src/
     measurements-view.ts  chronograph measurements beside the simulated velocities; calibration
     obt-view.ts           OBT nodes near the load and the charge for each
     compare-view.ts       <gl-compare-view>: the open loads overlaid, with key figures
+    temperature-view.ts   the load at powder temperatures from −20 to 50 °C
     context.ts            UiContext: language and units handed down to every component
   editor/fields.ts      which load values the editor shows, grouped as in GRT, and how to set them
   editor/components.ts  swapping the powder or projectile of a load
