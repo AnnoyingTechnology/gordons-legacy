@@ -88,6 +88,10 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 - Licence of the maintainer's loads in `packages/formats/test/fixtures/maintainer/` (CC0 like the corpus?).
   The selected 9 mm load is the hottest one (`glock17_eng5_n340_115grain_xtp_PLUS-P`); no 9 mm file is
   named "full patate", so confirm it is the intended one.
+- Safety-relevant discrepancy to settle with measured pressures: at equal muzzle velocity, the research
+  engine's peaks are up to 1.7× GRT's for subsonic rifle loads (GRT smooths its pressure). Which is
+  closer to reality is unknown (docs/model/research-engine.md). Measured pressures (pressure trace,
+  or published data with pressures) would settle it.
 - Pressure validation needs published loads with measured pressures and matching components (powder
   model, exact bullet length): can the maintainer point to such data (Hodgdon/Alliant pressure data,
   pressure-trace recordings)? See `docs/model/validation.md`.
@@ -158,3 +162,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | M7 start: research-engine design (`docs/model/research-engine.md`): GRT's vivacity and form function kept (Ba read as Vieille's law, dz/dt = Ba·φ·p/p₀), with Résal's energy equation, Noble-Abel covolume, the Lagrange gradient, shot start, bore resistance, rotation and heat loss, integrated in time. Under physics review by Codex. |
 | 2026-10-14 | Codex (`gpt-6.1-sol`, xhigh) reviewed the research-engine physics: Ba as Vieille vivacity confirmed (exact for constant B); errors fixed in the design: the Lagrange closure must include the bore resistance and rotation enters through an effective mass (not a subtracted energy); an ignition term is required; GRT's initial-pressure factor kept (removing it would lower peaks); no heat-loss coefficient fitted on velocity alone; breech pressure labelled as an estimate of the measured chamber pressure. |
 | 2026-10-14 | M7: research engine R1 implemented (`packages/engine/src/research/`, tools only; adaptive Dormand-Prince integration, ~1–5 ms a shot). With GRT's powder data as is it burns much faster than GRT (peaks 1.7× higher) and is worse on the chronograph corpus (+12.2 % mean velocity error against +6.8 %): GRT's Ba is tied to GRT's vivacity averaging and pressure smoothing. Next: measure each device's share; then a transformation of powder data or R1's own powder fits. |
+| 2026-10-14 | M7: no single Ba scale makes R1 match GRT's velocities (0.71–0.95 by regime); at matched velocity R1's peaks are 0.97–1.7× GRT's, most for subsonic rifle loads. Recorded as an open, safety-relevant discrepancy needing measured pressures. |

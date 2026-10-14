@@ -52,6 +52,8 @@ No sound pressure comparison is possible with the data at hand (2026-10-14):
 
 See [research-engine.md](research-engine.md), First results: with GRT's powder data as is, R1's mean
 velocity error is +12.2 % (GRT Traditional: +6.8 %); GRT's powder data don't transfer unchanged.
+Scaled to match GRT's velocity load by load, R1 predicts peaks up to 1.7 times GRT's for subsonic
+rifle loads: an open discrepancy on pressure that only measured pressures can settle.
 
 ## Next
 

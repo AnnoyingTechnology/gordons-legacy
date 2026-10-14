@@ -119,6 +119,18 @@ GRT's powder data were fitted under GRT's own devices, which slow the effective 
 peak: the vivacity is averaged since ignition (B₁ smoothed, then the running mean S/n) and the
 pressure is smoothed (0.27 / 0.18). R1 is not a candidate for users in this form.
 
+**Matching GRT's velocity.** Scaling Ba until R1's muzzle velocity equals GRT Traditional's, load by
+load (the maintainer's 63 loads, R1 refusing the revolvers): no single factor fits. The scale is
+about 0.71–0.75 for the 9 mm loads, 0.82–0.85 for supersonic 300 BLK, 0.86–0.95 for subsonic 300 BLK,
+and three subsonic loads with a fast pistol powder (A1) can't be matched within a scale of 1.5.
+
+At the matched velocity, R1's peak pressure is 0.97–1.7 times GRT's (up to 2.1 for the three
+unmatched loads): close for pistols, highest for subsonic rifle loads with heavy bullets. GRT smooths
+its pressure (p̃ ← 0.27 p + 0.73 p̃ while burning), which lowers peaks; R1 has no such smoothing.
+**If R1's gas dynamics are the more faithful ones, GRT under-predicts peak pressure for low-pressure
+rifle loads, the unsafe direction.** Neither engine is validated on pressure, so this is a discrepancy
+to settle with measured pressures, not a conclusion; it is reported to the maintainer.
+
 Next steps, in order:
 
 1. Measure which of GRT's devices accounts for the difference (switch each into R1).
