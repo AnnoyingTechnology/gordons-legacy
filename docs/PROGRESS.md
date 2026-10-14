@@ -41,6 +41,7 @@ Maintainer issues picked up 2026-10-14 (GitHub #1–#13, all UI or features beyo
 | #4 | CIP and SAAMI maximum pressures both on the charts. | Done (values entered by the user until the data repository) |
 | #6 | Muzzle-blast sound level estimate at 1 m; physics to check with Codex. | To do |
 | #12 | Local load library (browse by cartridge, then powder/projectile, with key figures). | To do |
+| #14 | Shot groups: take a photo with the camera on phones and tablets. | Done |
 | #10 | Survey of GRT users' complaints; report on the issue for the maintainer to choose. | To do |
 
 Reverse-engineering workspace (local, never committed; procedure in `docs/model/grt-structure.md`):
@@ -189,3 +190,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | UI (#1, #3, #11): toolbar of full-height buttons (icon above label) in groups; two-line tabs with cartridge, projectile and powder badges; larger bordered inputs; notes typed straight into an empty note at the end (no "add" button; clearing a note removes it). |
 | 2026-10-14 | Load review and results hierarchy (#2, #4, #5, #7, #8, #9, #13): review panel with level, findings and cold/hot days; velocity on a speed scale with the transonic band; pressure gauge and chart lines for CIP and SAAMI maxima (new optional format field); energy and recoil cards; the case drawn filled to scale by volume. Found on the maintainer's loads: subsonic 300 BLK and .38 Special loads at 41–58 % fill hold a double charge (simulated: 351 % of the maximum for the .38 Special). |
 | 2026-10-14 | The app icon sits before the title in the toolbar (maintainer's request in chat), inlined so the single-file copy shows it. |
+| 2026-10-14 | #14: the shot-group dialog offers "Take a photo" (camera, `capture="environment"`) on touch devices, beside choosing a file. |

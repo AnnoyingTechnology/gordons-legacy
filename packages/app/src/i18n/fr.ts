@@ -140,6 +140,7 @@ export const fr: Messages = {
   'shotGroups.remove': 'Supprimer le groupement',
   'shotGroups.save': 'Garder le groupement',
   'shotGroups.choosePhoto': 'Choisir une photo de la cible',
+  'shotGroups.takePhoto': "Prendre une photo",
   'shotGroups.name': 'Nom',
   'shotGroups.distance': 'Distance',
   'shotGroups.scaleMode': "Fixer l'échelle",

@@ -95,10 +95,19 @@ export class ShotGroupDialog extends LitElement {
   }
 
   private renderPhotoChoice() {
+    // `capture` opens the camera on phones and tablets; desktop browsers ignore it and offer a file, so
+    // the camera button shows only where the pointer is a finger.
+    const touch = window.matchMedia('(pointer: coarse)').matches;
     return html`<label class="button photo-choice">
-      ${this.context.t('shotGroups.choosePhoto')}
-      <input type="file" accept="image/*" hidden @change=${this.choosePhoto} />
-    </label>`;
+        ${this.context.t('shotGroups.choosePhoto')}
+        <input type="file" accept="image/*" hidden @change=${this.choosePhoto} />
+      </label>
+      ${touch
+        ? html`<label class="button photo-choice">
+            ${this.context.t('shotGroups.takePhoto')}
+            <input type="file" accept="image/*" capture="environment" hidden @change=${this.choosePhoto} />
+          </label>`
+        : nothing}`;
   }
 
   private renderTarget(picture: Picture) {

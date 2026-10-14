@@ -140,6 +140,7 @@ export const de: Messages = {
   'shotGroups.remove': 'Trefferbild entfernen',
   'shotGroups.save': 'Trefferbild behalten',
   'shotGroups.choosePhoto': 'Foto der Scheibe wählen',
+  'shotGroups.takePhoto': "Foto aufnehmen",
   'shotGroups.name': 'Name',
   'shotGroups.distance': 'Entfernung',
   'shotGroups.scaleMode': 'Maßstab setzen',

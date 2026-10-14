@@ -140,6 +140,7 @@ export const it: Messages = {
   'shotGroups.remove': 'Rimuovi la rosata',
   'shotGroups.save': 'Tieni la rosata',
   'shotGroups.choosePhoto': 'Scegli una foto del bersaglio',
+  'shotGroups.takePhoto': "Scatta una foto",
   'shotGroups.name': 'Nome',
   'shotGroups.distance': 'Distanza',
   'shotGroups.scaleMode': 'Imposta la scala',

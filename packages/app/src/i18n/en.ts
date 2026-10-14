@@ -142,6 +142,7 @@ export const en = {
   'shotGroups.remove': 'Remove the group',
   'shotGroups.save': 'Keep the group',
   'shotGroups.choosePhoto': 'Choose a photo of the target',
+  'shotGroups.takePhoto': "Take a photo",
   'shotGroups.name': 'Name',
   'shotGroups.distance': 'Distance',
   'shotGroups.scaleMode': 'Set the scale',
