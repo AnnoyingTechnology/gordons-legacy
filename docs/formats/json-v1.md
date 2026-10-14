@@ -50,3 +50,14 @@ Load
   increments `schemaVersion`.
 - Readers accept every earlier version and upgrade it in memory; writers always write the latest.
 - Adding an optional field doesn't need a new version.
+
+## Library backup
+
+The app keeps saved loads in the browser (IndexedDB). Its backup is one JSON file:
+
+```
+{ "format": "gordons-legacy.library", "version": 1,
+  "loads": [ { "name": "…", "updatedAt": "2026-10-14T18:00:00.000Z", "load": { …a load, as above… } } ] }
+```
+
+Restoring adds every load as a new entry; nothing in the library is overwritten.

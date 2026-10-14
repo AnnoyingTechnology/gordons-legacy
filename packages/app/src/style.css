@@ -1659,3 +1659,189 @@ dialog.shot-group-dialog {
   stroke: var(--case-fill);
   stroke-width: 3px;
 }
+
+/* Library (library-view.ts) */
+
+.library-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.library-head h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 1rem 0 0;
+  border: none;
+  font-size: 1.15rem;
+}
+
+.library-head .spacer {
+  flex: 1;
+}
+
+.library-head .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 2rem;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0.25rem 0.8rem;
+  border: 1px solid var(--rule);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.library-filter {
+  min-width: 18rem;
+  height: 2rem;
+  box-sizing: border-box;
+  font: inherit;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--rule);
+  background: var(--panel);
+  color: var(--fg);
+}
+
+.library .note {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.library-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.library-table th,
+.library-table td {
+  padding: 0.3rem 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid var(--grid);
+}
+
+.library-table thead th {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 0.85rem;
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+}
+
+.library-table .number {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.library-table tr.shelf th {
+  padding-top: 1rem;
+  font-size: 1.05rem;
+  border-bottom: 2px solid var(--rule);
+}
+
+.library-table tr.firearm th {
+  padding-left: 1.2rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.library-table tr.shelf .icon,
+.library-table tr.firearm .icon {
+  width: 16px;
+  height: 16px;
+  vertical-align: -3px;
+}
+
+.library-table tr.entry td:first-child {
+  padding-left: 2rem;
+}
+
+.library-table tr.entry:hover {
+  background: var(--panel);
+}
+
+.library-table .projectile-name {
+  max-width: 16rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.library-table td.critical {
+  color: var(--critical);
+  font-weight: 600;
+}
+
+.library-table .link {
+  height: auto;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent);
+  text-align: left;
+  text-decoration: underline;
+}
+
+.library-table .remove {
+  height: 1.6rem;
+  padding: 0 0.3rem;
+  border: none;
+  background: none;
+  color: var(--muted);
+}
+
+.level-badge {
+  display: inline-block;
+  padding: 0 0.4rem;
+  font-size: 0.8rem;
+  border: 1px solid var(--rule);
+  white-space: nowrap;
+}
+
+.level-badge.note {
+  border-color: var(--accent);
+}
+
+.level-badge.caution {
+  background: var(--warn-bg);
+  color: var(--warn-fg);
+  border-color: var(--warn-border);
+}
+
+.level-badge.danger {
+  background: var(--critical);
+  color: #fff;
+  border-color: var(--critical);
+  font-weight: 600;
+}
+
+.firearm-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.8rem 0 -0.4rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.firearm-choice select {
+  flex: 1;
+  height: 1.9rem;
+  font: inherit;
+  border: 1px solid var(--rule);
+  background: var(--panel);
+  color: var(--fg);
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.library-table .nowrap {
+  white-space: nowrap;
+}

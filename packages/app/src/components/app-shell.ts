@@ -17,7 +17,10 @@ import './chronograph-dialog.ts';
 import { readChronographCsv, type ChronographCsv } from '../measurements/chronograph-csv.ts';
 import './compare-view.ts';
 import type { CalibratedLoad } from './measurements-view.ts';
+import './library-view.ts';
 import './load-editor.ts';
+import { firearms, Library } from '../state/library.ts';
+import { indexedDbStorage } from '../state/library-storage.ts';
 import './units-dialog.ts';
 
 /**
@@ -33,7 +36,7 @@ export class AppShell extends LitElement {
     unitsOpen: { state: true },
     aboutOpen: { state: true },
     projectileChoice: { state: true },
-    comparing: { state: true },
+    view: { state: true },
     chronograph: { state: true },
   };
 
@@ -42,13 +45,14 @@ export class AppShell extends LitElement {
   declare openErrors: string[];
   /** Projectiles of an opened `.projectile` file to choose from, for the active load. */
   declare projectileChoice: Projectile[] | undefined;
-  /** Whether the main area compares the open loads instead of editing the active one. */
-  declare comparing: boolean;
+  /** What the main area shows: the active load's editor, the open loads compared, or the library. */
+  declare view: 'editor' | 'compare' | 'library';
   /** A chronograph export waiting for the user to confirm its column and unit. */
   declare chronograph: { csv: ChronographCsv; fileName: string } | undefined;
   declare unitsOpen: boolean;
   declare aboutOpen: boolean;
   private readonly store = new DocumentStore(window.localStorage);
+  private readonly library = new Library(indexedDbStorage());
   private settings: Settings = loadSettings(window.localStorage, navigator.languages);
 
   constructor() {
@@ -57,11 +61,14 @@ export class AppShell extends LitElement {
     this.openErrors = [];
     this.unitsOpen = false;
     this.projectileChoice = undefined;
-    this.comparing = false;
+    this.view = 'editor';
     this.chronograph = undefined;
     // The dedication and safety notice open on a browser's first visit.
     this.aboutOpen = window.localStorage.getItem(WELCOME_SEEN_KEY) === null;
     this.store.subscribe(() => this.requestUpdate());
+    this.library.subscribe(() => this.requestUpdate());
+    // Ask the browser not to clear the library under storage pressure; it may still refuse.
+    void navigator.storage?.persist?.();
     document.documentElement.lang = this.settings.language;
   }
 
@@ -80,15 +87,19 @@ export class AppShell extends LitElement {
             ${icon('open')}<span>${t('toolbar.open')}</span>
             <input type="file" accept=".grtload,.json,.propellant,.projectile,.grtrace,.csv" multiple hidden @change=${this.openFromInput} />
           </label>
-          <button class="tool" ?disabled=${!active} @click=${() => active && this.save(active.id)}>${icon('save')}<span>${t('toolbar.save')}</span></button>
+          <button class="tool" ?disabled=${!active} title=${t('toolbar.saveHelp')} @click=${() => active && this.saveToLibrary(active.id)}>${icon('save')}<span>${t('toolbar.save')}</span></button>
+          <button class="tool" ?disabled=${!active} title=${t('toolbar.exportHelp')} @click=${() => active && this.exportFile(active.id)}>${icon('export')}<span>${t('toolbar.export')}</span></button>
           <button class="tool" ?disabled=${!active} @click=${() => window.print()}>${icon('print')}<span>${t('toolbar.print')}</span></button>
         </div>
         <div class="tool-group">
+          <button class="tool" aria-pressed=${this.view === 'library' ? 'true' : 'false'} @click=${() => this.toggleView('library')}>
+            ${icon('database')}<span>${t('toolbar.library')}</span>
+          </button>
           <button
             class="tool"
             ?disabled=${this.store.documents.length < 2}
-            aria-pressed=${this.comparing ? 'true' : 'false'}
-            @click=${() => (this.comparing = !this.comparing)}
+            aria-pressed=${this.view === 'compare' ? 'true' : 'false'}
+            @click=${() => this.toggleView('compare')}
           >${icon('compare')}<span>${t('toolbar.compare')}</span></button>
         </div>
         <span class="spacer"></span>
@@ -131,25 +142,7 @@ export class AppShell extends LitElement {
         ${this.openErrors.length > 0
           ? html`<ul class="issues">${this.openErrors.map((message) => html`<li class="error"><span class="severity">!</span> ${message}</li>`)}</ul>`
           : nothing}
-        ${this.comparing && this.store.documents.length >= 2
-          ? html`<gl-compare-view .documents=${this.store.documents} .context=${this.context}></gl-compare-view>`
-          : nothing}
-        ${active && !(this.comparing && this.store.documents.length >= 2)
-          ? html`<header class="print-header">
-              <h1>${t('app.title')}: ${active.name.replace(/\.json$/i, '')}</h1>
-              <p>${new Date().toLocaleString(this.settings.language)} · ${t('about.version')} ${__BUILD_COMMIT__.slice(0, 7)}</p>
-            </header>`
-          : nothing}
-        ${this.comparing && this.store.documents.length >= 2
-          ? nothing
-          : active
-          ? html`<gl-load-editor
-              .load=${active.load}
-              .context=${this.context}
-              @load-change=${(event: CustomEvent<Load>) => this.store.update(active.id, event.detail)}
-              @calibrated=${(event: CustomEvent<CalibratedLoad>) => this.openCalibrated(active.name, event.detail)}
-            ></gl-load-editor>`
-          : html`<p class="empty">${t('documents.empty')}</p>`}
+        ${this.renderView()}
       </main>
       <footer class="status-footer">
         <p class="warning">${t('app.development')}</p>
@@ -182,6 +175,40 @@ export class AppShell extends LitElement {
         @units-change=${(event: CustomEvent<UnitPreferences>) => this.setUnitPreferences(event.detail)}
         @close=${() => (this.unitsOpen = false)}
       ></gl-units-dialog>
+    `;
+  }
+
+  /** The main area's content for the current view. */
+  private renderView() {
+    const { t } = this.context;
+    const active = this.store.active;
+    if (this.view === 'library') {
+      return html`<gl-library-view
+        .library=${this.library}
+        .entries=${this.library.entries}
+        .context=${this.context}
+        @open-entry=${(event: CustomEvent<string>) => this.openEntry(event.detail)}
+        @import-files=${(event: CustomEvent<File[]>) => void this.importToLibrary(event.detail)}
+        @backup=${() => this.downloadBackup()}
+        @restore=${(event: CustomEvent<File>) => void this.restoreBackup(event.detail)}
+      ></gl-library-view>`;
+    }
+    if (this.view === 'compare' && this.store.documents.length >= 2) {
+      return html`<gl-compare-view .documents=${this.store.documents} .context=${this.context}></gl-compare-view>`;
+    }
+    if (!active) return html`<p class="empty">${t('documents.empty')}</p>`;
+    return html`
+      <header class="print-header">
+        <h1>${t('app.title')}: ${active.name.replace(/\.json$/i, '')}</h1>
+        <p>${new Date().toLocaleString(this.settings.language)} · ${t('about.version')} ${__BUILD_COMMIT__.slice(0, 7)}</p>
+      </header>
+      <gl-load-editor
+        .load=${active.load}
+        .context=${this.context}
+        .firearms=${firearms(this.library.entries)}
+        @load-change=${(event: CustomEvent<Load>) => this.store.update(active.id, event.detail)}
+        @calibrated=${(event: CustomEvent<CalibratedLoad>) => this.openCalibrated(active.name, event.detail)}
+      ></gl-load-editor>
     `;
   }
 
@@ -282,8 +309,48 @@ export class AppShell extends LitElement {
     void this.openFiles(event.dataTransfer?.files ?? []);
   };
 
-  /** Saves with the File System Access API where available, otherwise as a download. */
-  private async save(id: number): Promise<void> {
+  private toggleView(view: 'compare' | 'library'): void {
+    this.view = this.view === view ? 'editor' : view;
+  }
+
+  /** Saves the load in the library: no file to choose; the tab stays linked to its entry. */
+  private async saveToLibrary(id: number): Promise<void> {
+    const document = this.store.documents.find((candidate) => candidate.id === id);
+    if (!document) return;
+    const name = document.name.replace(/\.json$/i, '');
+    try {
+      const libraryId = await this.library.save(name, document.load, document.libraryId);
+      this.store.markSaved(id, document.name, libraryId);
+    } catch {
+      this.openErrors = [this.context.t('library.saveFailed')];
+    }
+  }
+
+  private openEntry(libraryId: string): void {
+    const entry = this.library.get(libraryId);
+    if (!entry) return;
+    this.store.openSaved(`${entry.name}.json`, entry.load, entry.id);
+    this.view = 'editor';
+  }
+
+  private async importToLibrary(files: File[]): Promise<void> {
+    const read = await Promise.all(files.map(async (file) => ({ name: file.name, text: await file.text() })));
+    const failed = await this.library.importFiles(read);
+    this.openErrors = failed.map((name) => this.context.t('library.importFailed', { name }));
+  }
+
+  private downloadBackup(): void {
+    const date = new Date().toISOString().slice(0, 10);
+    download(this.library.backup(), `gordons-legacy-library-${date}.json`);
+  }
+
+  private async restoreBackup(file: File): Promise<void> {
+    const { added, failed } = await this.library.restore(await file.text());
+    this.openErrors = failed > 0 ? [this.context.t('library.restoreFailed', { added: String(added), failed: String(failed) })] : [];
+  }
+
+  /** Writes the load to a file of the user's choice, or downloads it: a copy to share or archive. */
+  private async exportFile(id: number): Promise<void> {
     const document = this.store.documents.find((candidate) => candidate.id === id);
     if (!document) return;
     const text = serializeLoad(document.load);
@@ -294,19 +361,12 @@ export class AppShell extends LitElement {
         const writable = await handle.createWritable();
         await writable.write(text);
         await writable.close();
-        this.store.markSaved(id, handle.name);
       } catch {
         // Cancelled by the user.
       }
       return;
     }
-    const link = Object.assign(window.document.createElement('a'), {
-      href: URL.createObjectURL(new Blob([text], { type: 'application/json' })),
-      download: document.name,
-    });
-    link.click();
-    URL.revokeObjectURL(link.href);
-    this.store.markSaved(id, document.name);
+    download(text, document.name);
   }
 
   private setUnits(system: UnitSystem): void {
@@ -315,7 +375,7 @@ export class AppShell extends LitElement {
   }
 
   private showDocument(id: number): void {
-    this.comparing = false;
+    this.view = 'editor';
     this.store.activate(id);
   }
 
@@ -340,6 +400,16 @@ export class AppShell extends LitElement {
     saveSettings(window.localStorage, this.settings);
     this.context = createContext(this.settings.language, this.settings.units);
   }
+}
+
+/** Downloads text as a JSON file. */
+function download(text: string, name: string): void {
+  const link = Object.assign(window.document.createElement('a'), {
+    href: URL.createObjectURL(new Blob([text], { type: 'application/json' })),
+    download: name,
+  });
+  link.click();
+  URL.revokeObjectURL(link.href);
 }
 
 customElements.define('gl-app', AppShell);

@@ -43,6 +43,7 @@ src/
     measurements-view.ts  chronograph measurements beside the simulated velocities; calibration
     obt-view.ts           OBT nodes near the load and the charge for each
     compare-view.ts       <gl-compare-view>: the open loads overlaid, with key figures
+    library-view.ts       <gl-library-view>: saved loads by cartridge and firearm, import, backup
     temperature-view.ts   the load at powder temperatures from −20 to 50 °C
     temperature-fit.ts    <gl-temperature-fit>: fit tcc and tch to measured velocities
     sensitivity-view.ts   the peak pressure under ordinary bench variations
@@ -53,10 +54,11 @@ src/
   charts/               SVG line chart and axis ticks, no chart library
   units/units.ts        display units per kind of quantity (metric and imperial presets)
   i18n/                 message catalogs (en is the source; the compiler checks the others are complete)
-  state/                open documents and settings, kept in localStorage
+  state/                open documents and settings (localStorage); the library of saved loads
+                        (IndexedDB, library.ts and library-storage.ts)
   icons/icons.ts        original SVG icons
   measurements/         statistics of measured shots; reading chronograph CSV exports
-  analysis/             the load's review (docs/load-review.md); speed of sound; bench variations
+  analysis/             a load's summary for the library (load-summary.ts); the load's review (docs/load-review.md); speed of sound; bench variations
                         (sensitivity of the peak pressure); shot-group statistics
   offline.ts, dom.ts
 test/                   Vitest tests of the parts without a DOM

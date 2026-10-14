@@ -40,7 +40,7 @@ Maintainer issues picked up 2026-10-14 (GitHub #1–#13, all UI or features beyo
 | #2, #13 | One warning system with a load danger level (overpressure, compressed or low fill, …) and cold/hot climate warnings. | Done |
 | #4 | CIP and SAAMI maximum pressures both on the charts. | Done (values entered by the user until the data repository) |
 | #6 | Muzzle-blast sound level estimate at 1 m; physics to check with Codex. | To do |
-| #12 | Local load library (browse by cartridge, then powder/projectile, with key figures). | To do |
+| #12 | Local load library (browse by cartridge, then powder/projectile, with key figures). | Done (first version) |
 | #14 | Shot groups: take a photo with the camera on phones and tablets. | Done |
 | #10 | Survey of GRT users' complaints; report on the issue for the maintainer to choose. | To do |
 
@@ -96,6 +96,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | UI languages built in for English, French, German, Spanish and Italian (the proposal); translations need review by native reloaders before release. | Agent, for review |
 | 2026-10-14 | Load review (#2, #13): one list of findings on a four-step scale (no flag, note, caution, danger), never worded as safe; a dangerous load gets a striped red frame. Thresholds in `docs/load-review.md` (near maximum 90 %, double charge fits at ≤ 55 % fill, low fill < 60 %, compressed > 100/110 %, burn < 85 %, cold −5 °C and hot 40 °C days per the maintainer). | Agent, for review |
 | 2026-10-14 | CIP and SAAMI maxima (#4): optional `cartridge.standardMaxPressures` (format v1, optional field), plus the caliber definition's own standard; GRT's `method` isn't used (it says "Piezo CIP" for SAAMI values). Loads are checked against every maximum known. | Agent, for review |
+| 2026-10-14 | Library (#12): saved loads live in IndexedDB; Save goes to the library, Export writes a file. Browsed by cartridge, then firearm (= the barrel's name, which GRT users already give their gun), then powder. A firearm's barrel can be applied to a load. Backup/restore as one JSON file. No IndexedDB dependency (60-line wrapper). | Agent, for review |
 | 2026-10-14 | Speed scale fixed at 150–1,300 m/s for every load (.22 Short to .204 Ruger); transonic band Mach 0.95–1.1 at the powder temperature. | Agent, for review |
 
 ## Open questions
@@ -192,3 +193,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | The app icon sits before the title in the toolbar (maintainer's request in chat), inlined so the single-file copy shows it. |
 | 2026-10-14 | #14: the shot-group dialog offers "Take a photo" (camera, `capture="environment"`) on touch devices, beside choosing a file. |
 | 2026-10-14 | Double-charge finding reworded after the maintainer's question: it is a risk at the bench (a second charge would fit unnoticed), not a statement about his loads; a note instead of a caution when the doubled charge stays under the maximum. His nine loads at ≤ 55 % fill double to 118–375 % of the maximum in the model, 300 BLK subsonics included. |
+| 2026-10-14 | Library (#12): Save stores the load in the browser's library, Export writes a file; library view by cartridge and firearm with velocity, energy, % of maximum, review level, measured velocity and best group; import of files or a whole folder; backup and restore; "use the barrel of…" firearm chooser. All 63 of the maintainer's loads import; the one he named `borked_DANGEROUS` is the only Danger. |

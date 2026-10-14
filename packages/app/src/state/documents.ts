@@ -10,6 +10,8 @@ export interface OpenDocument {
   savedText: string;
   /** Issues found when the file was imported. */
   issues: ImportIssue[];
+  /** The library entry the load is saved in, once saved there. */
+  libraryId?: string;
 }
 
 const STORAGE_KEY = 'gordons-legacy.documents';
@@ -64,16 +66,31 @@ export class DocumentStore {
     this.changed();
   }
 
+  /** Opens a load from the library, or shows its tab when it is already open. */
+  openSaved(name: string, load: Load, libraryId: string): void {
+    const open = this.documents.find((document) => document.libraryId === libraryId);
+    if (open) {
+      this.activate(open.id);
+      return;
+    }
+    const document: OpenDocument = { id: this.nextId++, name, load, savedText: serializeLoad(load), issues: [], libraryId };
+    this.documents = [...this.documents, document];
+    this.activeId = document.id;
+    this.changed();
+  }
+
   /** Replaces a document's load (after an edit). */
   update(id: number, load: Load): void {
     this.documents = this.documents.map((document) => (document.id === id ? { ...document, load } : document));
     this.changed();
   }
 
-  /** Records that a document was saved with the given name. */
-  markSaved(id: number, name: string): void {
+  /** Records that a document was saved with the given name, in the library when `libraryId` is given. */
+  markSaved(id: number, name: string, libraryId?: string): void {
     this.documents = this.documents.map((document) =>
-      document.id === id ? { ...document, name, savedText: serializeLoad(document.load) } : document,
+      document.id === id
+        ? { ...document, name, savedText: serializeLoad(document.load), ...(libraryId === undefined ? {} : { libraryId }) }
+        : document,
     );
     this.changed();
   }
@@ -100,7 +117,7 @@ export class DocumentStore {
   }
 
   private persist(): void {
-    const saved = this.documents.map(({ name, load, savedText }) => ({ name, load, savedText }));
+    const saved = this.documents.map(({ name, load, savedText, libraryId }) => ({ name, load, savedText, libraryId }));
     try {
       this.storage?.setItem(STORAGE_KEY, JSON.stringify({ documents: saved, active: this.documents.findIndex((d) => d.id === this.activeId) }));
       this.storageFull = false;
@@ -114,10 +131,12 @@ export class DocumentStore {
     const text = this.storage?.getItem(STORAGE_KEY);
     if (!text) return;
     try {
-      const saved = JSON.parse(text) as { documents: { name: string; load: Load; savedText: string }[]; active: number };
-      for (const { name, load, savedText } of saved.documents) {
+      const saved = JSON.parse(text) as { documents: { name: string; load: Load; savedText: string; libraryId?: string }[]; active: number };
+      for (const { name, load, savedText, libraryId } of saved.documents) {
         const checked = parseLoad(JSON.stringify(load));
-        if (checked.ok) this.documents.push({ id: this.nextId++, name, load: checked.value, savedText, issues: [] });
+        if (checked.ok) {
+          this.documents.push({ id: this.nextId++, name, load: checked.value, savedText, issues: [], ...(libraryId ? { libraryId } : {}) });
+        }
       }
       this.activeId = this.documents[saved.active]?.id ?? this.documents[0]?.id;
     } catch {

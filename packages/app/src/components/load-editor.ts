@@ -1,6 +1,8 @@
 import { grtTraditional } from '@gordons-legacy/engine';
 import type { Load } from '@gordons-legacy/formats';
-import { html, LitElement } from 'lit';
+import { html, LitElement, nothing } from 'lit';
+import { icon } from '../icons/icons.ts';
+import type { Firearm } from '../state/library.ts';
 import { assessLoad } from '../analysis/load-assessment.ts';
 import { FIELD_GROUPS } from '../editor/fields.ts';
 import { cartridgeDrawing } from './cartridge-drawing.ts';
@@ -19,12 +21,15 @@ export class LoadEditor extends LitElement {
   static override properties = {
     load: { attribute: false },
     context: { attribute: false },
+    firearms: { attribute: false },
     axis: { state: true },
     assistant: { state: true },
   };
 
   declare load: Load;
   declare context: UiContext;
+  /** The firearms of the library, whose barrel the load can take. */
+  declare firearms: Firearm[];
   declare axis: ChartAxis;
   /** The assistant open, if any. */
   declare assistant: 'boreArea' | undefined;
@@ -33,6 +38,7 @@ export class LoadEditor extends LitElement {
     super();
     this.axis = 'travel';
     this.assistant = undefined;
+    this.firearms = [];
   }
 
   protected override createRenderRoot(): HTMLElement {
@@ -48,7 +54,7 @@ export class LoadEditor extends LitElement {
       <div class="load-editor concern-${assessment?.level ?? 'none'}" @assistant=${(event: CustomEvent<'boreArea'>) => (this.assistant = event.detail)}>
         <div class="inputs">
           ${FIELD_GROUPS.map(
-            (group) => html`<gl-property-table
+            (group) => html`${group.title === 'group.barrel' ? this.renderFirearmChoice() : nothing}<gl-property-table
               .group=${group}
               .load=${this.load}
               .context=${this.context}
@@ -71,6 +77,26 @@ export class LoadEditor extends LitElement {
         </div>
       </div>
     `;
+  }
+
+  /** Takes a firearm's barrel from the library: length, twist, gun mass, jump and gas leaks (issue #12). */
+  private renderFirearmChoice() {
+    const { t } = this.context;
+    if (this.firearms.length === 0) return nothing;
+    return html`<label class="firearm-choice">
+      ${icon('barrel')} ${t('firearm.use')}
+      <select
+        @change=${(event: Event) => {
+          const select = event.target as HTMLSelectElement;
+          const firearm = this.firearms[Number(select.value)];
+          select.value = '';
+          if (firearm) this.dispatchEvent(new CustomEvent('load-change', { detail: { ...this.load, barrel: firearm.barrel }, bubbles: true }));
+        }}
+      >
+        <option value="">${t('firearm.choose')}</option>
+        ${this.firearms.map((firearm, index) => html`<option value=${index}>${firearm.name}</option>`)}
+      </select>
+    </label>`;
   }
 }
 
