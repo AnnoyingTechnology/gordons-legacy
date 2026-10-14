@@ -2,6 +2,7 @@ import type { Simulation } from '@gordons-legacy/engine';
 import type { Load } from '@gordons-legacy/formats';
 import { html, nothing, type TemplateResult } from 'lit';
 import { NEAR_LIMIT_SHARE, type Assessment } from '../analysis/load-assessment.ts';
+import { muzzleBlast } from '../analysis/muzzle-blast.ts';
 import { speedOfSound } from '../analysis/speed-of-sound.ts';
 import { icon, type IconName } from '../icons/icons.ts';
 import { cartridgeDrawing } from './cartridge-drawing.ts';
@@ -10,8 +11,8 @@ import { limitName, pressureGauge, speedScale } from './gauges.ts';
 
 /**
  * The results that matter most, by rank: muzzle velocity and peak pressure first, each on its scale;
- * then energy, recoil and the other figures a reloader looks for; then the case, drawn filled to scale,
- * beside the secondary results (`details`).
+ * then energy, recoil and the muzzle blast's sound level; then the case, drawn filled to scale, beside
+ * the secondary results (`details`), barrel time and burn among them.
  */
 export function keyFigures(load: Load, shot: Simulation, assessment: Assessment, context: UiContext, details: Node): TemplateResult {
   const { t, quantity, number } = context;
@@ -21,6 +22,7 @@ export function keyFigures(load: Load, shot: Simulation, assessment: Assessment,
   const temperature = load.charge.temperature;
   const mach = shot.muzzleVelocity / speedOfSound(temperature);
   const gun = shot.recoil.gun;
+  const blast = muzzleBlast(load, shot);
   return html`
     <div class="key-figures">
       <section class="key-card primary">
@@ -45,13 +47,15 @@ export function keyFigures(load: Load, shot: Simulation, assessment: Assessment,
             velocity: quantity(gun.velocity, 'velocity', 2),
           }))
         : card('recoil', t('results.recoilImpulse'), quantity(shot.recoil.totalImpulse, 'impulse'), t('results.recoilNeedsGunMass'))}
-      ${card('chart', t('results.barrelTime'), quantity(shot.barrelTime, 'time'), shot.leadTime === undefined ? '' : `${t('results.leadTime')} ${quantity(shot.leadTime, 'time')}`)}
-      ${card(
-        'propellant',
-        t('results.burnt'),
-        `${number(shot.burntFractionAtMuzzle * 100, 1)} %`,
-        shot.burnout ? t('results.burnout', { travel: quantity(shot.burnout.travel, 'length', 1) }) : t('results.stillBurning'),
-      )}
+      ${blast
+        ? card(
+            'sound',
+            t('results.muzzleBlast'),
+            `${blast.extrapolated ? '≈ ' : ''}${number(blast.level, 0)} dB`,
+            `${t('results.muzzleBlastDetail')}; ${t(blast.extrapolated ? 'results.muzzleBlastExtrapolated' : 'results.muzzleBlastWithin')}`,
+            t('results.muzzleBlastHelp'),
+          )
+        : nothing}
       <section class="key-card fill-card">
         <h4>${icon('cartridge')} ${t('results.caseFill')}</h4>
         ${cartridgeDrawing(load, shot, context)}
@@ -61,9 +65,9 @@ export function keyFigures(load: Load, shot: Simulation, assessment: Assessment,
   `;
 }
 
-function card(name: IconName, label: string, value: string, detail: string): TemplateResult {
+function card(name: IconName, label: string, value: string, detail: string, help?: string): TemplateResult {
   return html`
-    <section class="key-card">
+    <section class="key-card" title=${help ?? nothing}>
       <h4>${icon(name)} ${label}</h4>
       <div class="key-value">${value}</div>
       ${detail ? html`<div class="key-detail">${detail}</div>` : nothing}

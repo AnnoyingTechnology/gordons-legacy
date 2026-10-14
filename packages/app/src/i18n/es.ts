@@ -330,4 +330,10 @@ export const es: Messages = {
   'firearm.use': "Arma",
   'firearm.choose': "Usar el cañón de…",
   'library.review': "Revisión",
+  'results.muzzleBlast': "Estampido en boca",
+  'results.muzzleBlastDetail': "pico estimado, a 1 m al lado de una boca desnuda, en campo libre",
+  'results.muzzleBlastHelp': "Nivel de pico sin ponderar del estampido en boca, estimado a partir de la energía que queda en los gases en la boca con el escalado de Fansler (1998), ajustado a estampidos medidos de rifles de 7,62 mm. No incluye: el chasquido supersónico de la bala, la holgura del tambor de un revólver, frenos de boca y otros dispositivos, las reflexiones. El aire se toma a la temperatura de la pólvora. Un disparo supera los 140 dB pico, el límite del ruido impulsivo en el trabajo en la legislación de la UE (Directiva 2003/10/CE): use protección auditiva.",
+  'library.blast': "Estampido",
+  'results.muzzleBlastWithin': "1,8 dB RMS en los datos de rifle del modelo",
+  'results.muzzleBlastExtrapolated': "fuera de los datos de rifle del modelo: incertidumbre desconocida",
 };

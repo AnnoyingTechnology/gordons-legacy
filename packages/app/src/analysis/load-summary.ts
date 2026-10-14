@@ -2,6 +2,7 @@ import { grtTraditional } from '@gordons-legacy/engine';
 import type { Load } from '@gordons-legacy/formats';
 import { shotStatistics } from '../measurements/statistics.ts';
 import { assessLoad, type AssessmentLevel } from './load-assessment.ts';
+import { muzzleBlast } from './muzzle-blast.ts';
 import { groupStatistics, minutesOfAngle } from './shot-group.ts';
 
 /** What the library shows of a load at a glance: simulated figures, the review's level, and what was measured. */
@@ -15,6 +16,10 @@ export interface LoadSummary {
     /** Peak over the lowest maximum known. */
     peakShare: number;
     level: AssessmentLevel;
+    /** Muzzle blast at 1 m beside the muzzle, dB peak; absent when not estimated. */
+    blastLevel?: number;
+    /** True when that estimate lies outside the model's data. */
+    blastExtrapolated?: boolean;
   };
   /** Mean of the shots measured with the load's own charge, m/s. */
   measuredVelocity?: number;
@@ -39,6 +44,8 @@ export function summarizeLoad(load: Load): LoadSummary {
       peakShare: shot.maxPressure / assessment.limits[0]!.pressure,
       level: assessment.level,
     };
+    const blast = muzzleBlast(load, shot);
+    if (blast) Object.assign(summary.simulated, { blastLevel: blast.level, blastExtrapolated: blast.extrapolated });
   }
   // Shots fired with the load's charge (within 0.1 %: values converted from grains round slightly).
   const velocities = load.measurements.flatMap((series) =>

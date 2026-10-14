@@ -332,6 +332,12 @@ export const en = {
   'firearm.use': "Firearm",
   'firearm.choose': "Use the barrel of…",
   'library.review': "Review",
+  'results.muzzleBlast': "Muzzle blast",
+  'results.muzzleBlastDetail': "estimated peak, 1 m beside a bare muzzle, free field",
+  'results.muzzleBlastHelp': "Unweighted peak level of the muzzle blast, estimated from the energy left in the powder gas at the muzzle with Fansler's blast scaling (1998), fitted on measured 7.62 mm rifle blasts. Not included: the bullet's supersonic crack, a revolver's cylinder gap, muzzle brakes and other devices, reflections. The air is taken at the powder's temperature. Gunfire is above 140 dB peak, the limit for impulse noise at work in EU law (Directive 2003/10/EC): wear hearing protection.",
+  'library.blast': "Blast",
+  'results.muzzleBlastWithin': "1.8 dB RMS in the model’s rifle data",
+  'results.muzzleBlastExtrapolated': "beyond the model’s rifle data: uncertainty unknown",
 } as const;
 
 export type MessageKey = keyof typeof en;

@@ -39,7 +39,7 @@ Maintainer issues picked up 2026-10-14 (GitHub #1–#13, all UI or features beyo
 | #11 | Tab badges: cartridge, projectile, powder. | Done |
 | #2, #13 | One warning system with a load danger level (overpressure, compressed or low fill, …) and cold/hot climate warnings. | Done |
 | #4 | CIP and SAAMI maximum pressures both on the charts. | Done (values entered by the user until the data repository) |
-| #6 | Muzzle-blast sound level estimate at 1 m; physics to check with Codex. | To do |
+| #6 | Muzzle-blast sound level estimate at 1 m; physics to check with Codex. | Done (docs/model/muzzle-blast.md); handguns are extrapolations |
 | #12 | Local load library (browse by cartridge, then powder/projectile, with key figures). | Done (first version) |
 | #14 | Shot groups: take a photo with the camera on phones and tablets. | Done |
 | #10 | Survey of GRT users' complaints; report on the issue for the maintainer to choose. | Report in docs/research/grt-user-feedback.md; waiting for the maintainer's choice |
@@ -97,6 +97,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | Load review (#2, #13): one list of findings on a four-step scale (no flag, note, caution, danger), never worded as safe; a dangerous load gets a striped red frame. Thresholds in `docs/load-review.md` (near maximum 90 %, double charge fits at ≤ 55 % fill, low fill < 60 %, compressed > 100/110 %, burn < 85 %, cold −5 °C and hot 40 °C days per the maintainer). | Agent, for review |
 | 2026-10-14 | CIP and SAAMI maxima (#4): optional `cartridge.standardMaxPressures` (format v1, optional field), plus the caliber definition's own standard; GRT's `method` isn't used (it says "Piezo CIP" for SAAMI values). Loads are checked against every maximum known. | Agent, for review |
 | 2026-10-14 | Library (#12): saved loads live in IndexedDB; Save goes to the library, Export writes a file. Browsed by cartridge, then firearm (= the barrel's name, which GRT users already give their gun), then powder. A firearm's barrel can be applied to a load. Backup/restore as one JSON file. No IndexedDB dependency (60-line wrapper). | Agent, for review |
+| 2026-10-14 | Muzzle blast (#6): Fansler's modified point-source scaling (1998, model 2pb) from the gas energy at the muzzle, 1 m at 90°, bare muzzle; flagged "≈ … uncertainty unknown" outside its 7.62 mm data (62 of the maintainer's 63 loads). The engine gains an optional `muzzleGasEnergy` result. | Agent, reviewed by Codex |
 | 2026-10-14 | Speed scale fixed at 150–1,300 m/s for every load (.22 Short to .204 Ruger); transonic band Mach 0.95–1.1 at the powder temperature. | Agent, for review |
 
 ## Open questions
@@ -197,3 +198,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | #15: the single-file copy downloads as `gordons-legacy-<build date>-<commit>.html`. |
 | 2026-10-14 | #10: survey of GRT users' complaints and of reloading inventory tools (`docs/research/grt-user-feedback.md`); proposals posted on the issue. |
 | 2026-10-14 | Pressure and velocity charts side by side from a 1,500 px window, stacked below (maintainer's request); half-width charts use their own drawing size so their text stays readable. Same in Compare. |
+| 2026-10-14 | Muzzle blast (#6): estimate of the unweighted peak level 1 m beside a bare muzzle (card with energy and recoil, library column), from Fansler's blast scaling; 140 dB hearing-protection note. Codex (`gpt-6.1-sol`, xhigh) reviewed the physics: formula confirmed (reproduces Fansler's c13p6, 168.1 dB); gas volume made consistent with the solver; uncertainty 1.75 dB RMS within the data, unknown outside (handguns flagged). Plausible against CDC/NIOSH measurements (.308 and .223 at 0.6 m: 176 dB measured, 174–175 dB estimated on similar loads). Barrel time and burn moved to the details list. |

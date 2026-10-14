@@ -68,6 +68,22 @@ function catmullRom(p0: number, p1: number, p2: number, p3: number, t: number): 
   );
 }
 
+/**
+ * Energy left in the powder gas at the muzzle, J: U = p V / (k − 1) with GRT's ideal-gas state (no
+ * covolume) on the solver's own gas volume, V = A x_eff + V_b − m_c / ρ_grain, plus the kinetic energy
+ * of the Sebert share of the charge, ½ s m_c v₀² (GRT's effective-mass approximation of the gas's
+ * motion). An approximation: the muzzle pressure is GRT's smoothed one. Not a GRT output: the muzzle
+ * blast's source energy (Fansler 1998, "available energy"; grt-traditional.md, Muzzle gas energy).
+ */
+export function muzzleGasEnergy(inputs: GrtInputs, solution: GrtSolution, muzzle: GrtPoint): number {
+  const k = inputs.heatCapacityRatio;
+  const charge = solution.finalChargeMass;
+  const volume = inputs.boreArea * solution.travelToMuzzle + solution.finalChamberVolume - charge / inputs.grainDensity;
+  const internal = (muzzle.pressure * 100000 * volume) / (k - 1);
+  const kinetic = 0.5 * inputs.sebertFactor * charge * muzzle.velocity ** 2;
+  return internal + kinetic;
+}
+
 /** GRT's recoil, SI (grt-traditional.md, Recoil). The gun's part is absent without a gun mass. */
 export interface GrtRecoil {
   projectileImpulse: number;

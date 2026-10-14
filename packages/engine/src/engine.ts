@@ -103,6 +103,12 @@ export interface Simulation {
     deviation: number;
   };
   recoil: Recoil;
+  /**
+   * Energy left in the powder gas when the projectile leaves the muzzle, J: its internal energy and the
+   * kinetic energy of the share of the charge moving with the projectile. What feeds the muzzle blast.
+   * Not a GRT output; absent from engines that don't compute it.
+   */
+  muzzleGasEnergy?: number;
   /** Where the charge finished burning, if it did before the muzzle. */
   burnout?: { travel: number; pressure: number };
   /** Distance from the breech face to the seated projectile's base, m; travel is counted from there. */

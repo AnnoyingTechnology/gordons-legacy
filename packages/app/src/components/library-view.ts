@@ -77,6 +77,7 @@ export class LibraryView extends LitElement {
                   <th class="number">${t('group.charge')}</th>
                   <th class="number">${t('results.muzzleVelocity')}</th>
                   <th class="number">${t('results.muzzleEnergy')}</th>
+                  <th class="number">${t('library.blast')}</th>
                   <th class="number">${t('library.ofMaximum')}</th>
                   <th>${t('library.review')}</th>
                   <th class="number">${t('library.measured')}</th>
@@ -86,10 +87,10 @@ export class LibraryView extends LitElement {
               </thead>
               ${shelves(shown).map(
                 (shelf) => html`<tbody>
-                  <tr class="shelf"><th colspan="11">${icon('cartridge')} ${shelf.cartridge || t('library.unnamed')}</th></tr>
+                  <tr class="shelf"><th colspan="12">${icon('cartridge')} ${shelf.cartridge || t('library.unnamed')}</th></tr>
                   ${shelf.firearms.map(
                     (group) => html`
-                      <tr class="firearm"><th colspan="11">${icon('barrel')} ${group.firearm || t('library.noFirearm')}</th></tr>
+                      <tr class="firearm"><th colspan="12">${icon('barrel')} ${group.firearm || t('library.noFirearm')}</th></tr>
                       ${group.entries.map((entry) => this.renderRow(entry))}
                     `,
                   )}
@@ -112,6 +113,9 @@ export class LibraryView extends LitElement {
       <td class="number">${quantity(load.charge.mass, 'chargeMass')}</td>
       <td class="number">${simulated ? quantity(simulated.muzzleVelocity, 'velocity') : t('results.notSimulated')}</td>
       <td class="number">${simulated ? quantity(simulated.muzzleEnergy, 'energy') : ''}</td>
+      <td class="number" title=${simulated?.blastExtrapolated ? t('results.muzzleBlastExtrapolated') : t('results.muzzleBlastDetail')}>
+        ${simulated?.blastLevel === undefined ? '' : `${simulated.blastExtrapolated ? '≈ ' : ''}${number(simulated.blastLevel, 0)} dB`}
+      </td>
       <td class="number ${simulated && simulated.peakShare > 1 ? 'critical' : ''}">
         ${simulated ? `${simulated.peakShare > 1 ? '▲ ' : ''}${number(simulated.peakShare * 100, 0)} %` : ''}
       </td>

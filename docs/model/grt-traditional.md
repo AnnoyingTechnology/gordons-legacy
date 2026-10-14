@@ -238,6 +238,15 @@ muzzle pressure in Pa, v₀ the muzzle velocity and k the heat capacity ratio:
 
 GRT also computes a drag-like term (A · k · c_w · 0.5 · (v_a − v₀)²) that it doesn't report.
 
+## Muzzle gas energy (ours, not GRT's)
+
+For the muzzle-blast estimate (docs/model/muzzle-blast.md), the energy left in the gas when the
+projectile leaves: E = p_m V / (k − 1) + ½ s m_c v₀², with V = A · x_eff + V_b − m_c / ρ_g, the gas
+volume of the solver's pressure equation. GRT's equation of state has no covolume, so p V / (k − 1) is
+the gas's internal energy in its own model; p_m is GRT's smoothed muzzle pressure, so E is an
+approximation. The kinetic term is GRT's effective-mass share (s), not an integral over the gas's
+velocity profile. Unburnt powder's chemical energy is left out.
+
 ## Optimal barrel time (confirmed)
 
 GRT's OBT works on the lead time t_L (barrel time from 10 % of peak, ms; none when the lead time is

@@ -1450,12 +1450,13 @@ dialog.shot-group-dialog {
 
 .key-figures {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 0.6rem;
   margin: 0.8rem 0;
 }
 
 .key-card {
+  grid-column: span 2;
   padding: 0.6rem 0.8rem;
   border: 1px solid var(--rule);
   background: var(--panel);
@@ -1463,12 +1464,12 @@ dialog.shot-group-dialog {
 }
 
 .key-card.primary {
-  grid-column: span 2;
+  grid-column: span 3;
 }
 
 .key-card.fill-card,
 .key-card.details-card {
-  grid-column: span 2;
+  grid-column: span 3;
 }
 
 .details-card .result-details {
@@ -1517,14 +1518,10 @@ dialog.shot-group-dialog {
 }
 
 @media (max-width: 1200px) {
-  .key-figures {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .key-card.primary,
   .key-card.fill-card,
   .key-card.details-card {
-    grid-column: span 2;
+    grid-column: span 6;
   }
 }
 

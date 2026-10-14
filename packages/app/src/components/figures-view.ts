@@ -29,6 +29,13 @@ export function renderDetails(load: Load, shot: Simulation, context: UiContext):
   // IPSC's power factor: grains times feet per second, over 1000.
   const powerFactor = (load.projectile.mass * 1000 * GRT_GRAINS_PER_GRAM * (shot.muzzleVelocity * FEET_PER_METRE)) / 1000;
   const items: Array<{ label: string; value: string; help?: string; wide?: boolean }> = [
+    { label: t('results.barrelTime'), value: quantity(shot.barrelTime, 'time') },
+    ...(shot.leadTime === undefined ? [] : [{ label: t('results.leadTime'), value: quantity(shot.leadTime, 'time') }]),
+    {
+      label: t('results.burnt'),
+      value: `${number(shot.burntFractionAtMuzzle * 100, 1)} %`,
+      help: shot.burnout ? t('results.burnout', { travel: quantity(shot.burnout.travel, 'length', 1) }) : t('results.stillBurning'),
+    },
     ...(shot.optimalBarrelTime === undefined
       ? []
       : [{ label: t('results.obt'), value: formatObt(shot.optimalBarrelTime, context), help: t('results.obtHelp'), wide: true }]),

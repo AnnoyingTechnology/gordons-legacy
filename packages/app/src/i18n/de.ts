@@ -330,4 +330,10 @@ export const de: Messages = {
   'firearm.use': "Waffe",
   'firearm.choose': "Lauf übernehmen von…",
   'library.review': "Prüfung",
+  'results.muzzleBlast': "Mündungsknall",
+  'results.muzzleBlastDetail': "geschätzte Spitze, 1 m neben einer freien Mündung, im Freifeld",
+  'results.muzzleBlastHelp': "Unbewerteter Spitzenpegel des Mündungsknalls, geschätzt aus der Energie, die an der Mündung im Pulvergas verbleibt, mit Fanslers Skalierung (1998), angepasst an gemessene Knalle von 7,62-mm-Gewehren. Nicht enthalten: der Überschallknall des Geschosses, der Trommelspalt eines Revolvers, Mündungsbremsen und andere Aufsätze, Reflexionen. Die Luft wird mit der Pulvertemperatur angenommen. Schüsse liegen über 140 dB Spitze, dem Grenzwert für Impulslärm am Arbeitsplatz im EU-Recht (Richtlinie 2003/10/EG): Gehörschutz tragen.",
+  'library.blast': "Knall",
+  'results.muzzleBlastWithin': "1,8 dB RMS in den Gewehrdaten des Modells",
+  'results.muzzleBlastExtrapolated': "außerhalb der Gewehrdaten des Modells: Unsicherheit unbekannt",
 };

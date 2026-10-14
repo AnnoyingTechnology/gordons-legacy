@@ -41,7 +41,7 @@ src/grt-traditional/
   jump.ts             Jump to the lands: the chamber enlarged during the jump
   leaks.ts            Gas leaks
   validation.ts       Inputs outside the model: refused before solving
-  results.ts          Derived results: 10 %-of-peak time, recoil, OBT
+  results.ts          Derived results: 10 %-of-peak time, recoil, OBT, gas energy at the muzzle
   obt.ts              Node times of a barrel (OBT)
   calibration.ts      The OBT tool's searches: fit to a measured velocity, charge for a node
   time.ts             Time

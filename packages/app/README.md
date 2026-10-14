@@ -58,7 +58,8 @@ src/
                         (IndexedDB, library.ts and library-storage.ts)
   icons/icons.ts        original SVG icons
   measurements/         statistics of measured shots; reading chronograph CSV exports
-  analysis/             a load's summary for the library (load-summary.ts); the load's review (docs/load-review.md); speed of sound; bench variations
+  analysis/             a load's summary for the library (load-summary.ts); muzzle blast level
+                        (docs/model/muzzle-blast.md); the load's review (docs/load-review.md); speed of sound; bench variations
                         (sensitivity of the peak pressure); shot-group statistics
   offline.ts, dom.ts
 test/                   Vitest tests of the parts without a DOM
