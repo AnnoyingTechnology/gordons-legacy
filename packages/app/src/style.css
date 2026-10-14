@@ -907,3 +907,16 @@ button[aria-pressed='true'] {
   text-align: right;
   font: inherit;
 }
+
+.sensitivity {
+  margin: 0.6rem 0;
+}
+
+.sensitivity .note {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.sensitivity tr.combined td {
+  font-weight: 600;
+}

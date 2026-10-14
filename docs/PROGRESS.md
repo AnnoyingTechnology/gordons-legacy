@@ -76,6 +76,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | Offline support with a small hand-written service worker and a 40-line Vite plugin that lists the build's files, rather than `vite-plugin-pwa` (Workbox, many dependencies). App icon drawn as original SVG. | Agent, for review |
 | 2026-10-14 | The engine refuses loads outside GRT's model (`simulate` returns `{ ok: false, problems }` with the input's path) instead of returning numbers, unlike GRT; the editor marks the fields concerned. Prompted by the Codex safety review. | Agent, for review |
 | 2026-10-14 | Own-copy packaging: a single HTML file with everything inlined, written by a 40-line Vite plugin (no dependency) and served next to the site; runs from `file://`. | Agent, for review |
+| 2026-10-14 | "Bench variations" section, beyond GRT: the peak pressure with 1 % more powder, 0.5 mm deeper seating, 2 % less case capacity, a 1 % heavier bullet, and all four together; flagged when any goes above the maximum. GRT's charge synthesis for substitute powders waits for a powder database. | Agent, for review |
 | 2026-10-14 | UI languages built in for English, French, German, Spanish and Italian (the proposal); translations need review by native reloaders before release. | Agent, for review |
 
 ## Open questions
@@ -150,3 +151,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | M5: GRT's temperature-coefficient assistant (fit tcc/tch to cold, 21 °C and hot velocities; read from `AssistPtWin`, bisection in place of GRT's search) in the powder-temperature section; tcc/tch editable; initial-pressure hint with GRT's typical values. |
 | 2026-10-14 | Projectile base editable (flat, boat-tail, hollow, semi-spherical hollow) with its tail dimensions; GRT's tail type 3 (semi-spherical hollow, from its tail assistant) is now imported and kept; GRT's model gives it no chamber correction, and neither does the engine. |
 | 2026-10-14 | Printed report shows long text values in full (names, barrel notes). |
+| 2026-10-14 | Bench variations added (`analysis/sensitivity.ts`): on the maintainer's hottest 300 BLK load (88 % of the maximum), the four variations together reach 103 %. |
