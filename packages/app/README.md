@@ -23,6 +23,7 @@ src/
     units-dialog.ts       display unit of each kind of quantity
     choice-dialog.ts      pick one of several options (projectiles of a file)
     bore-area-dialog.ts   GRT's effective-bore-area assistant
+    chronograph-dialog.ts confirms a chronograph CSV import (column, unit, charge)
     load-editor.ts        <gl-load-editor>: inputs beside results, re-simulated on every edit
     cartridge-drawing.ts  side view of the loaded cartridge, from the standard's outline
     property-table.ts     <gl-property-table>: one group of inputs (label, value, unit)
@@ -48,7 +49,7 @@ src/
   i18n/                 message catalogs (en is the source; the compiler checks the others are complete)
   state/                open documents and settings, kept in localStorage
   icons/icons.ts        original SVG icons
-  measurements/         statistics of measured shots
+  measurements/         statistics of measured shots; reading chronograph CSV exports
   analysis/             bench variations (sensitivity of the peak pressure)
   offline.ts, dom.ts
 test/                   Vitest tests of the parts without a DOM

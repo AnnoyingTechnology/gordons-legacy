@@ -1,4 +1,4 @@
-import type { Load, Projectile } from '@gordons-legacy/formats';
+import type { Load, MeasurementSeries, Projectile } from '@gordons-legacy/formats';
 import { importGrtProjectiles, importGrtPropellant, importGrtrace, serializeLoad } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
 import { LANGUAGE_NAMES, type Language } from '../i18n/i18n.ts';
@@ -10,6 +10,8 @@ import { createContext, type UiContext } from './context.ts';
 import { withProjectile, withPropellant } from '../editor/components.ts';
 import { REPOSITORY } from './about-dialog.ts';
 import './choice-dialog.ts';
+import './chronograph-dialog.ts';
+import { readChronographCsv, type ChronographCsv } from '../measurements/chronograph-csv.ts';
 import './compare-view.ts';
 import type { CalibratedLoad } from './measurements-view.ts';
 import './load-editor.ts';
@@ -29,6 +31,7 @@ export class AppShell extends LitElement {
     aboutOpen: { state: true },
     projectileChoice: { state: true },
     comparing: { state: true },
+    chronograph: { state: true },
   };
 
   declare context: UiContext;
@@ -38,6 +41,8 @@ export class AppShell extends LitElement {
   declare projectileChoice: Projectile[] | undefined;
   /** Whether the main area compares the open loads instead of editing the active one. */
   declare comparing: boolean;
+  /** A chronograph export waiting for the user to confirm its column and unit. */
+  declare chronograph: { csv: ChronographCsv; fileName: string } | undefined;
   declare unitsOpen: boolean;
   declare aboutOpen: boolean;
   private readonly store = new DocumentStore(window.localStorage);
@@ -50,6 +55,7 @@ export class AppShell extends LitElement {
     this.unitsOpen = false;
     this.projectileChoice = undefined;
     this.comparing = false;
+    this.chronograph = undefined;
     // The dedication and safety notice open on a browser's first visit.
     this.aboutOpen = window.localStorage.getItem(WELCOME_SEEN_KEY) === null;
     this.store.subscribe(() => this.requestUpdate());
@@ -68,7 +74,7 @@ export class AppShell extends LitElement {
         <h1>${t('app.title')}</h1>
         <label class="button">
           ${icon('open')} ${t('toolbar.open')}
-          <input type="file" accept=".grtload,.json,.propellant,.projectile,.grtrace" multiple hidden @change=${this.openFromInput} />
+          <input type="file" accept=".grtload,.json,.propellant,.projectile,.grtrace,.csv" multiple hidden @change=${this.openFromInput} />
         </label>
         <button ?disabled=${!active} @click=${() => active && this.save(active.id)}>${icon('save')} ${t('toolbar.save')}</button>
         <button ?disabled=${!active} @click=${() => window.print()}>${icon('print')} ${t('toolbar.print')}</button>
@@ -147,6 +153,16 @@ export class AppShell extends LitElement {
         @choose=${(event: CustomEvent<number>) => this.useProjectile(this.projectileChoice?.[event.detail])}
         @close=${() => (this.projectileChoice = undefined)}
       ></gl-choice-dialog>
+      ${active
+        ? html`<gl-chronograph-dialog
+            .csv=${this.chronograph?.csv}
+            .fileName=${this.chronograph?.fileName ?? ''}
+            .load=${active.load}
+            .context=${this.context}
+            @measurements=${(event: CustomEvent<MeasurementSeries>) => this.addMeasurements(event.detail)}
+            @close=${() => (this.chronograph = undefined)}
+          ></gl-chronograph-dialog>`
+        : nothing}
       <gl-units-dialog
         .open=${this.unitsOpen}
         .context=${this.context}
@@ -170,6 +186,10 @@ export class AppShell extends LitElement {
       }
       if (extension === '.grtrace') {
         errors.push(...this.openTrace(text));
+        continue;
+      }
+      if (extension === '.csv') {
+        errors.push(...this.openChronograph(file.name, text));
         continue;
       }
       const result = this.store.open(file.name, text);
@@ -216,6 +236,21 @@ export class AppShell extends LitElement {
     if (!result.ok) return result.issues.filter((issue) => issue.severity === 'error').map((issue) => issue.message);
     this.store.update(active.id, { ...active.load, measurements: [...active.load.measurements, result.value] });
     return [];
+  }
+
+  /** Reads a chronograph export and asks the user to confirm it; returns error messages. */
+  private openChronograph(fileName: string, text: string): string[] {
+    if (!this.store.active) return [this.context.t('components.noLoad')];
+    const csv = readChronographCsv(text);
+    if (!csv) return [this.context.t('chronograph.nothing', { file: fileName })];
+    this.chronograph = { csv, fileName };
+    return [];
+  }
+
+  private addMeasurements(series: MeasurementSeries): void {
+    const active = this.store.active;
+    if (active) this.store.update(active.id, { ...active.load, measurements: [...active.load.measurements, series] });
+    this.chronograph = undefined;
   }
 
   private useProjectile(projectile: Projectile | undefined): void {

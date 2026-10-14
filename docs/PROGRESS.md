@@ -25,7 +25,7 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 
 1. Native review of the five translations; M4 (data repository, once the maintainer agrees to create
    it); remaining GRT tools (shot-group analysis, unit converter, parametric powder search and
-   tolerance synthesis, cartridge designer, chronograph imports).
+   tolerance synthesis, cartridge designer).
 2. After parity (decision of 2026-10-13): validation against reality started
    (`docs/model/validation.md`, chronograph study done); next, published pressure data, then OBT, the
    energy terms and the covolume handling against the published science.
@@ -77,6 +77,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | The engine refuses loads outside GRT's model (`simulate` returns `{ ok: false, problems }` with the input's path) instead of returning numbers, unlike GRT; the editor marks the fields concerned. Prompted by the Codex safety review. | Agent, for review |
 | 2026-10-14 | Own-copy packaging: a single HTML file with everything inlined, written by a 40-line Vite plugin (no dependency) and served next to the site; runs from `file://`. | Agent, for review |
 | 2026-10-14 | "Bench variations" section, beyond GRT: the peak pressure with 1 % more powder, 0.5 mm deeper seating, 2 % less case capacity, a 1 % heavier bullet, and all four together; flagged when any goes above the maximum. GRT's charge synthesis for substitute powders waits for a powder database. | Agent, for review |
+| 2026-10-14 | Chronograph exports: one CSV import for any device (velocity column and unit guessed from the headers, confirmed by the user in a dialog; no unit assumed when the file states none), instead of GRT's four device-specific importers, which would need sample files to reproduce. | Agent, for review |
 | 2026-10-14 | UI languages built in for English, French, German, Spanish and Italian (the proposal); translations need review by native reloaders before release. | Agent, for review |
 
 ## Open questions
@@ -164,3 +165,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | M7: research engine R1 implemented (`packages/engine/src/research/`, tools only; adaptive Dormand-Prince integration, ~1–5 ms a shot). With GRT's powder data as is it burns much faster than GRT (peaks 1.7× higher) and is worse on the chronograph corpus (+12.2 % mean velocity error against +6.8 %): GRT's Ba is tied to GRT's vivacity averaging and pressure smoothing. Next: measure each device's share; then a transformation of powder data or R1's own powder fits. |
 | 2026-10-14 | M7: no single Ba scale makes R1 match GRT's velocities (0.71–0.95 by regime); at matched velocity R1's peaks are 0.97–1.7× GRT's, most for subsonic rifle loads. Recorded as an open, safety-relevant discrepancy needing measured pressures. |
 | 2026-10-14 | M5: GRTrace (PressureTrace II) recordings import as measurement series, with each shot's measured peak; the measurements table shows the measured peak beside the simulated one. Format notes: `docs/formats/grtrace.md`. |
+| 2026-10-14 | M5: chronograph CSV import (LabRadar, MagnetoSpeed, Caldwell, ProChrono… exports): detected velocity column and unit, confirmed in a dialog, added as a measurement series. |
