@@ -49,6 +49,7 @@ export const it: Messages = {
   'quantity.impulse': 'Impulso',
   'quantity.distance': 'Distanze',
   'quantity.ballisticCoefficient': 'Coefficiente balistico',
+  'quantity.angle': "Dimensione delle rosate",
   'quantity.time': 'Tempo',
   'quantity.spinRate': 'Rotazione',
   'quantity.specificEnergy': 'Energia specifica',
@@ -437,4 +438,8 @@ export const it: Messages = {
   'designer.saved': "Salvato nei vostri componenti.",
   'designer.apply': "Applica alla carica",
   'designer.open': "Progettista di cartucce",
+  'finding.caseCapacityTypical': "La capacità del bossolo è il valore tipico del file di calibro, probabilmente non misurato. Riempite d'acqua alcuni dei vostri bossoli sparati e pesateli: pochi punti percentuali di capacità cambiano sensibilmente la pressione (vedi variazioni al banco).",
+  'finding.caseCapacityFarFromTypical': "La capacità del bossolo differisce del {share} % dal valore tipico del file di calibro: bossoli di marche diverse differiscono di pochi punti percentuali, non tanto. Controllate il dato e la sua unità.",
+  'finding.monolithicBullet': "Palla monolitica (tutta rame o ottone), dal nome: più dura da forzare e più lunga per il suo peso delle palle incamiciate con nucleo di piombo con cui sono stati fatti la resistenza al forzamento di GRT e la maggior parte dei modelli di polvere. I produttori pubblicano dati separati per queste palle e raccomandano un salto fino alle righe (Barnes: almeno 0,050″). Usate i dati del produttore della palla.",
+  'finding.earlyBurnoutLongBarrel': "La polvere brucia del tutto nel primo {share} % della corsa, in una canna lunga. Su cariche misurate di questo tipo (polveri vivaci in 300 BLK subsonico e carabine 9 mm), il modello di GRT ha sovrastimato la velocità di circa il 15 % (dal 4 al 29 %): aspettatevi meno e adattate la polvere al vostro cronografo.",
 };

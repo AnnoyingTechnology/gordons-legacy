@@ -33,3 +33,17 @@ shared files, which this project avoids.
 
 Web-based successors to GRT are appearing (Loadscope, Ballistic Swiss Knife), so an open,
 long-lived rewrite still has a place, but not a monopoly.
+
+## Decisions (issue #10, 2026-10-14)
+
+The maintainer asked for an expert opinion. What was done, and what wasn't, and why:
+
+| Complaint | Done | Why |
+|---|---|---|
+| Default case capacities | A review note when a load's capacity is the caliber file's typical value (`V`, now mapped), a caution when it is more than 10 % away from it | 26 of the maintainer's 63 loads (every 9 mm and .45 ACP file) carry the typical value: never measured. A few percent of capacity move the pressure noticeably. |
+| Pistol cartridges in carbine barrels | A review note when the powder burns out within 20 % of the travel in a barrel sweeping ≥ 10 case capacities | The maintainer's chronograph data show it: median +15 % over-prediction there, ±7 % elsewhere. The model itself is the research engine's job (M7). |
+| Monolithic bullets | A review note when a bullet's name matches a common all-copper or brass line | Makers publish separate data and recommend a jump ([Barnes guidelines](https://www.reloadingsolutions.com/pages/barnes-bullets-loading-guidelines), [monolithic bullets](https://en.wikipedia.org/wiki/Monolithic_bullet)); projectile files rarely give the material. |
+| Incomplete imperial units | Audit: every quantity goes through the display units; group sizes gained a choice of MOA or mrad, the powder table's heat of explosion follows the unit setting | GRT's per-field units let some fields stay metric. |
+| Default powder models | Nothing new beyond the calibration, the provenance shown for each powder, and the data repository | GRT's `Qlty` field, a possible quality rating, is 0 in all 12 community powders: no rating to show. Better powder models need measured data (M7). |
+| OBT | Nothing beyond the existing "to be checked" wording | No published validation of GRT's node model was found; users' reports are mixed. Changing it needs measured groups across charges (the shot-group tool now records them). |
+| Inventory | Not done | It is a different product (stock, costs, shopping lists), and what users ask most of it, sync between bench and phone, needs a server or shared files, which this project avoids. Dedicated tools exist. |

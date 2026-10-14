@@ -43,7 +43,7 @@ Maintainer issues picked up 2026-10-14 (GitHub #1–#13, all UI or features beyo
 | #6 | Muzzle-blast sound level estimate at 1 m; physics to check with Codex. | Done (docs/model/muzzle-blast.md); handguns are extrapolations |
 | #12 | Local load library (browse by cartridge, then powder/projectile, with key figures). | Done (first version) |
 | #14 | Shot groups: take a photo with the camera on phones and tablets. | Done |
-| #10 | Survey of GRT users' complaints; report on the issue for the maintainer to choose. | Report in docs/research/grt-user-feedback.md; waiting for the maintainer's choice |
+| #10 | Survey of GRT users' complaints; report on the issue for the maintainer to choose. | Done: three review notes, units audit, decisions in docs/research/grt-user-feedback.md |
 
 Reverse-engineering workspace (local, never committed; procedure in `docs/model/grt-structure.md`):
 
@@ -216,3 +216,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | Calibers: the chamber outline and rifling of a caliber definition mapped to named SI fields (`chamberDimensions`, `rifling`; optional, format v1); the twist `c_u_` stays unmapped (community files mix inches and mm). The 48 community calibers join the component library; "Choose a cartridge…" sets name, maximum, Sebert factor, case length (L3), groove diameter (Z) and bore area (Q) as GRT does, and keeps the user's case capacity and overall length. |
 | 2026-10-14 | M5: cartridge designer (GRT's): the load's caliber definition by CIP letters (general data, case, chamber, rifling) beside a technical drawing (case solid, chamber dashed, dimensions labelled), applied to the load or saved to the user's components. With the tolerance synthesis, powder search, burning-rate table and unit converter, every GRT tool of M5 now exists. |
 | 2026-10-14 | Data repository created: <https://github.com/AnnoyingTechnology/gordons-legacy-data> (public, CC0): 453 component files (12 powders, 393 projectiles, 48 calibers) with provenance, `index.json` with SHA-256, written by `tools/data/export-repository.ts`. Release workflow: a version tag publishes a GitHub Release with the single-file copy and a zip of the site. |
+| 2026-10-14 | #10 closed on the maintainer's call for an expert opinion: review notes for a typical (unmeasured) or implausible case capacity (GRT `V` mapped as `typicalCaseCapacity`), monolithic bullets by name, and early burnout in a long barrel (median +15 % velocity over-prediction in the maintainer's data); group sizes in MOA or mrad; inventory declined with reasons. |

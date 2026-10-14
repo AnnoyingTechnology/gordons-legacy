@@ -51,6 +51,7 @@ export const en = {
   'quantity.impulse': 'Impulse',
   'quantity.distance': 'Distances',
   'quantity.ballisticCoefficient': 'Ballistic coefficient',
+  'quantity.angle': "Group sizes",
   'quantity.time': 'Time',
   'quantity.spinRate': 'Spin',
   'quantity.specificEnergy': 'Specific energy',
@@ -439,6 +440,10 @@ export const en = {
   'designer.saved': "Saved to your components.",
   'designer.apply': "Apply to the load",
   'designer.open': "Cartridge designer",
+  'finding.caseCapacityTypical': "Case capacity is the caliber file's typical value, probably not measured. Fill a few of your fired cases with water and weigh them: a few percent of capacity changes the pressure noticeably (see bench variations).",
+  'finding.caseCapacityFarFromTypical': "Case capacity differs from the caliber file's typical value by {share} %: cases of different makes differ by a few percent, not this much. Check the entry and its unit.",
+  'finding.monolithicBullet': "Monolithic bullet (all copper or brass), by its name: harder to engrave and longer for its weight than the jacketed lead-core bullets GRT's bore resistance and most powder fits were made with. Bullet makers publish separate data for these bullets and recommend a jump to the lands (Barnes: start at least 0.050″ off). Use the bullet maker's data.",
+  'finding.earlyBurnoutLongBarrel': "The powder burns out in the first {share} % of the travel, in a long barrel. In measured loads like this (fast powders in 300 BLK subsonic and 9 mm carbine loads), GRT's model over-predicted the velocity by about 15 % (4 to 29 %): expect less, and fit the powder to your chronograph.",
 } as const;
 
 export type MessageKey = keyof typeof en;

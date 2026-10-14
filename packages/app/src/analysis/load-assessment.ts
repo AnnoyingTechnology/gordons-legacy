@@ -47,6 +47,14 @@ export type FindingCode =
   | 'lowPressure'
   /** The muzzle velocity is in the transonic band. */
   | 'transonic'
+  /** The case capacity is the caliber file's typical value, probably not measured. */
+  | 'caseCapacityTypical'
+  /** The case capacity is far from the caliber file's typical value: a wrong entry or unit? */
+  | 'caseCapacityFarFromTypical'
+  /** The bullet looks monolithic (all copper or brass) by its name. */
+  | 'monolithicBullet'
+  /** The powder burns out early in a long barrel, where the model over-predicted measured velocities. */
+  | 'earlyBurnoutLongBarrel'
   /**
    * Past a powder temperature, colder or hotter than the load's, the load leaves its limits in the
    * simulation (analysis/temperature-range.ts): `side`, `temperature` and `temperatureState` say how.
@@ -80,6 +88,8 @@ export interface Finding {
   temperature?: number;
   /** Muzzle velocity concerned, m/s. */
   velocity?: number;
+  /** A relative difference, or a share of the barrel's travel. */
+  share?: number;
 }
 
 export interface Assessment {
@@ -104,6 +114,25 @@ export const DOUBLE_CHARGE_FILL = 0.55;
 export const LOW_FILL = 0.6;
 /** Above this case fill, the compression is heavy (the model refuses loads above 1.2, as GRT does). */
 export const HEAVY_COMPRESSION_FILL = 1.1;
+/** Within this of the caliber file's typical capacity, the load's capacity is taken as not measured. */
+export const TYPICAL_CAPACITY_MATCH = 0.003;
+/** Beyond this difference from the typical capacity, the entry is suspicious (cases of different makes differ by a few percent). */
+export const FAR_FROM_TYPICAL_CAPACITY = 0.1;
+/**
+ * Early burnout in a long barrel: the charge burns out within this share of the travel, and the barrel
+ * sweeps at least `LONG_EXPANSION` times the case's capacity. In the maintainer's chronograph data
+ * (docs/model/validation.md), such loads (fast powders in 300 BLK subsonic and 9 mm carbine loads) were
+ * over-predicted by +4 to +29 % (median +15 %), the others by about ±7 %.
+ */
+export const EARLY_BURNOUT_SHARE = 0.2;
+export const LONG_EXPANSION = 10;
+/**
+ * Common monolithic (all-copper or brass) bullet lines, recognised by name: projectile files rarely say
+ * what a bullet is made of.
+ */
+const MONOLITHIC_NAMES =
+  /\b(TSX|TTSX|LRX|TAC-?X|XPB|GMX|CX|Monoflex|E-?Tip|Naturalis|Hammer|Cutting Edge|Raptor|Lehigh|Peregrine|Powerhead|Ecostrike|Trophy Copper|Copper Impact|GS Custom|Bulldozer|Flatline|Monolithic|all[- ]copper|solid copper)\b/i;
+
 /** Below this share of the lowest maximum, the pressure is low for the powder to burn evenly. */
 export const LOW_PRESSURE_SHARE = 0.35;
 
@@ -142,6 +171,21 @@ export function assessLoad(load: Load, shot: Simulation): Assessment {
   else if (fill > 1) findings.push({ code: 'compressed', level: 'note', fill });
   if (fill < LOW_FILL) findings.push({ code: 'lowFill', level: 'note', fill });
   if (shot.burntFractionAtMuzzle < INCOMPLETE_BURN) findings.push({ code: 'incompleteBurn', level: 'note', burnt: shot.burntFractionAtMuzzle });
+
+  const typical = load.cartridge.definition?.typicalCaseCapacity;
+  if (typical !== undefined) {
+    const difference = load.cartridge.caseCapacity / typical - 1;
+    if (Math.abs(difference) <= TYPICAL_CAPACITY_MATCH) findings.push({ code: 'caseCapacityTypical', level: 'note' });
+    else if (Math.abs(difference) > FAR_FROM_TYPICAL_CAPACITY) findings.push({ code: 'caseCapacityFarFromTypical', level: 'caution', share: difference });
+  }
+  if (MONOLITHIC_NAMES.test(`${load.projectile.name} ${load.projectile.product} ${load.projectile.material ?? ''}`)) {
+    findings.push({ code: 'monolithicBullet', level: 'note' });
+  }
+  const travel = shot.curve.travel[shot.curve.travel.length - 1]! - shot.curve.travel[0]!;
+  const expansion = (load.cartridge.effectiveBoreArea * travel) / load.cartridge.caseCapacity;
+  if (shot.burnout && travel > 0 && (shot.burnout.travel - shot.curve.travel[0]!) / travel <= EARLY_BURNOUT_SHARE && expansion >= LONG_EXPANSION) {
+    findings.push({ code: 'earlyBurnoutLongBarrel', level: 'note', share: (shot.burnout.travel - shot.curve.travel[0]!) / travel });
+  }
 
   const temperature = load.charge.temperature;
   const regime = speedRegime(shot.muzzleVelocity, temperature);

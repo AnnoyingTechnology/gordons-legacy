@@ -49,6 +49,7 @@ export const es: Messages = {
   'quantity.impulse': 'Impulso',
   'quantity.distance': 'Distancias',
   'quantity.ballisticCoefficient': 'Coeficiente balístico',
+  'quantity.angle': "Tamaño de agrupaciones",
   'quantity.time': 'Tiempo',
   'quantity.spinRate': 'Rotación',
   'quantity.specificEnergy': 'Energía específica',
@@ -437,4 +438,8 @@ export const es: Messages = {
   'designer.saved': "Guardado en sus componentes.",
   'designer.apply': "Aplicar a la carga",
   'designer.open': "Diseñador de cartuchos",
+  'finding.caseCapacityTypical': "La capacidad de vaina es el valor típico del archivo de calibre, probablemente no medido. Llene de agua algunas de sus vainas disparadas y péselas: unos pocos por ciento de capacidad cambian notablemente la presión (vea las variaciones en el banco).",
+  'finding.caseCapacityFarFromTypical': "La capacidad de vaina difiere en {share} % del valor típico del archivo de calibre: vainas de distintas marcas difieren unos pocos por ciento, no tanto. Compruebe el dato y su unidad.",
+  'finding.monolithicBullet': "Bala monolítica (toda de cobre o latón), por su nombre: más difícil de forzar y más larga para su peso que las balas encamisadas de núcleo de plomo con las que se hicieron la resistencia al forzamiento de GRT y la mayoría de los modelos de pólvora. Los fabricantes publican datos aparte para estas balas y recomiendan un salto hasta las estrías (Barnes: al menos 0,050″). Use los datos del fabricante de la bala.",
+  'finding.earlyBurnoutLongBarrel': "La pólvora se quema por completo en el primer {share} % del recorrido, en un cañón largo. En cargas medidas de este tipo (pólvoras rápidas en 300 BLK subsónico y carabinas 9 mm), el modelo de GRT sobreestimó la velocidad en torno a un 15 % (4 a 29 %): espere menos y ajuste la pólvora a su cronógrafo.",
 };

@@ -112,6 +112,6 @@ describe('summarizeLoad', () => {
   test('takes the smallest group, in minutes of angle', () => {
     // Two hits 29.1 mm apart at 100 m: 1 MOA.
     const grouped: Load = { ...blackout, shotGroups: [{ title: '', distance: 100, hits: [{ x: 0, y: 0 }, { x: 0.02909, y: 0 }], note: '' }] };
-    expect(summarizeLoad(grouped).bestGroup?.minutesOfAngle).toBeCloseTo(1, 2);
+    expect(summarizeLoad(grouped).bestGroup!.angle * (180 / Math.PI) * 60).toBeCloseTo(1, 2);
   });
 });

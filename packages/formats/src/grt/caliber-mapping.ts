@@ -1,5 +1,6 @@
 import type { CaliberDefinition, CaseDimensions, ChamberDimensions, Rifling } from '../load/cartridge.ts';
 import { optionalProperty } from '../optional-property.ts';
+import { CUBIC_CENTIMETRE, GRAIN, GRAM } from '../units.ts';
 import { readComponentInfo } from './component-info-mapping.ts';
 import type { GrtFields } from './grt-fields.ts';
 
@@ -18,6 +19,7 @@ export function readCaliberDefinition(fields: GrtFields): CaliberDefinition {
     revisionDate: fields.text('ciprevdate'),
     specificationUrl: fields.text('cippdf'),
     maxPressure: fields.quantity('Pmax', 'pressure', 'bar'),
+    ...optionalProperty('typicalCaseCapacity', grainsOfWater(fields.optionalNumber('V'))),
     sebertFactor: fields.number('sebert'),
     ...optionalProperty('caseDimensions', readCaseDimensions(fields)),
     ...optionalProperty('chamberDimensions', readChamberDimensions(fields)),
@@ -93,4 +95,12 @@ function readRifling(fields: GrtFields): Rifling | undefined {
     grooves: fields.optionalNumber('c_N') ?? 0,
     grooveWidth: length('c_b_'),
   };
+}
+
+/**
+ * A capacity in grains of water as a volume, m³: water taken as 1 g/cm³, as GRT does for case capacity.
+ * Undefined for 0 or nothing (not given).
+ */
+function grainsOfWater(grains: number | undefined): number | undefined {
+  return grains !== undefined && grains > 0 ? ((grains * GRAIN) / GRAM) * CUBIC_CENTIMETRE : undefined;
 }

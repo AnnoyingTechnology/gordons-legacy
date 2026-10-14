@@ -139,7 +139,7 @@ export class ComponentPicker extends LitElement {
               <th>Ba</th>
               <th>a0</th>
               <th>z1</th>
-              <th>Qex (kJ/kg)</th>
+              <th>${t('field.heatOfExplosion')} (${displayUnit('specificEnergy', this.context.units).symbol})</th>
             </tr>
           </thead>
           <tbody>
@@ -155,7 +155,7 @@ export class ComponentPicker extends LitElement {
                 <td>${number(entry.value.burnModel.vivacity, 3)}</td>
                 <td>${number(entry.value.burnModel.a0, 3)}</td>
                 <td>${number(entry.value.burnModel.z1, 3)}</td>
-                <td>${number(entry.value.heatOfExplosion / 1000, 0)}</td>
+                <td>${number(displayUnit('specificEnergy', this.context.units).fromSi(entry.value.heatOfExplosion), 0)}</td>
               </tr>`,
             )}
           </tbody>

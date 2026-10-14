@@ -72,6 +72,7 @@ const caliberDefinition = {
   revisionDate: 'string',
   specificationUrl: 'string',
   maxPressure: 'nonNegative',
+  typicalCaseCapacity: { optional: 'positive' },
   sebertFactor: 'nonNegative',
   caseDimensions: { optional: { object: caseDimensions } },
   chamberDimensions: { optional: { object: chamberDimensions } },

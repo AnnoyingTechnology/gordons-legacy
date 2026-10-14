@@ -1,6 +1,6 @@
 import type { Load } from '@gordons-legacy/formats';
 import { html, LitElement } from 'lit';
-import { groupStatistics, minutesOfAngle } from '../analysis/shot-group.ts';
+import { groupStatistics } from '../analysis/shot-group.ts';
 import type { UiContext } from './context.ts';
 import './shot-group-dialog.ts';
 
@@ -39,7 +39,7 @@ export class ShotGroupsPanel extends LitElement {
               <button type="button" class="link" @click=${() => (this.editing = index)}>${group.title || t('shotGroups.newTitle')}</button>
               ${statistics
                 ? html`${statistics.count} · ${quantity(statistics.extremeSpread, 'length')} ·
-                    ${number(minutesOfAngle(statistics.extremeSpread, group.distance), 2)} MOA @ ${quantity(group.distance, 'distance')}`
+                    ${quantity(Math.atan2(statistics.extremeSpread, group.distance), 'angle')} @ ${quantity(group.distance, 'distance')}`
                 : ''}
               <button type="button" class="remove" aria-label=${t('shotGroups.remove')} @click=${() => this.removeGroup(index)}>×</button>
             </li>`;

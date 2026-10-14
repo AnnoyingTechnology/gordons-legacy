@@ -49,6 +49,7 @@ export const de: Messages = {
   'quantity.impulse': 'Impuls',
   'quantity.distance': 'Entfernungen',
   'quantity.ballisticCoefficient': 'Ballistischer Koeffizient',
+  'quantity.angle': "Streukreise",
   'quantity.time': 'Zeit',
   'quantity.spinRate': 'Drehzahl',
   'quantity.specificEnergy': 'Spezifische Energie',
@@ -437,4 +438,8 @@ export const de: Messages = {
   'designer.saved': "In Ihren Komponenten gespeichert.",
   'designer.apply': "Auf die Ladung anwenden",
   'designer.open': "Patronen-Designer",
+  'finding.caseCapacityTypical': "Das Hülsenvolumen ist der typische Wert der Kaliberdatei, vermutlich nicht gemessen. Füllen Sie einige Ihrer abgeschossenen Hülsen mit Wasser und wiegen Sie sie: Wenige Prozent Volumen ändern den Druck deutlich (siehe Abweichungen am Ladetisch).",
+  'finding.caseCapacityFarFromTypical': "Das Hülsenvolumen weicht um {share} % vom typischen Wert der Kaliberdatei ab: Hülsen verschiedener Hersteller unterscheiden sich um wenige Prozent, nicht so viel. Eingabe und Einheit prüfen.",
+  'finding.monolithicBullet': "Monolithisches Geschoss (Vollkupfer oder Messing), laut Name: schwerer einzupressen und länger für sein Gewicht als die Mantelgeschosse mit Bleikern, mit denen GRTs Einpresswiderstand und die meisten Pulvermodelle erstellt wurden. Geschosshersteller veröffentlichen eigene Daten für diese Geschosse und empfehlen einen Sprung zu den Feldern (Barnes: mindestens 0,050″). Die Daten des Geschossherstellers verwenden.",
+  'finding.earlyBurnoutLongBarrel': "Das Pulver ist in den ersten {share} % des Weges abgebrannt, in einem langen Lauf. Bei gemessenen Ladungen dieser Art (schnelle Pulver in 300 BLK Unterschall und 9-mm-Karabinern) hat GRTs Modell die Geschwindigkeit um etwa 15 % (4 bis 29 %) überschätzt: mit weniger rechnen und das Pulver an Ihren Chronographen anpassen.",
 };

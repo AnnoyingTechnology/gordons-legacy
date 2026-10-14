@@ -3,7 +3,7 @@ import type { Load } from '@gordons-legacy/formats';
 import { shotStatistics } from '../measurements/statistics.ts';
 import { assessLoad, type AssessmentLevel } from './load-assessment.ts';
 import { muzzleBlast } from './muzzle-blast.ts';
-import { groupStatistics, minutesOfAngle } from './shot-group.ts';
+import { groupStatistics } from './shot-group.ts';
 
 /** What the library shows of a load at a glance: simulated figures, the review's level, and what was measured. */
 export interface LoadSummary {
@@ -23,8 +23,8 @@ export interface LoadSummary {
   };
   /** Mean of the shots measured with the load's own charge, m/s. */
   measuredVelocity?: number;
-  /** The smallest extreme spread of the load's shot groups, as an angle in minutes of angle. */
-  bestGroup?: { minutesOfAngle: number; shots: number };
+  /** The smallest extreme spread of the load's shot groups, as an angle seen from the muzzle, rad. */
+  bestGroup?: { angle: number; shots: number };
 }
 
 const cache = new WeakMap<Load, LoadSummary>();
@@ -63,8 +63,8 @@ export function summarizeLoad(load: Load): LoadSummary {
   for (const group of load.shotGroups ?? []) {
     const statistics = groupStatistics(group.hits);
     if (!statistics || !(group.distance > 0)) continue;
-    const angle = minutesOfAngle(statistics.extremeSpread, group.distance);
-    if (!summary.bestGroup || angle < summary.bestGroup.minutesOfAngle) summary.bestGroup = { minutesOfAngle: angle, shots: statistics.count };
+    const angle = Math.atan2(statistics.extremeSpread, group.distance);
+    if (!summary.bestGroup || angle < summary.bestGroup.angle) summary.bestGroup = { angle, shots: statistics.count };
   }
   cache.set(load, summary);
   return summary;

@@ -6,8 +6,9 @@ import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-const target = process.argv[2];
-if (!target) throw new Error('usage: export-repository.ts <repository folder>');
+const argument = process.argv[2];
+if (!argument) throw new Error('usage: export-repository.ts <repository folder>');
+const target: string = argument;
 const snapshot = JSON.parse(readFileSync(join(import.meta.dirname, '../../packages/app/src/data/community-components.json'), 'utf8')) as {
   source: string;
   commit: string;

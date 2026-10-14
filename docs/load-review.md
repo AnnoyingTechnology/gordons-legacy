@@ -31,6 +31,10 @@ drilled case, SAAMI with a conformal transducer), so their values don't convert 
 | Low fill | note | case fill < 60 %: position-sensitive ignition, spread |
 | Incomplete burn | note | < 85 % burnt at the muzzle |
 | Low pressure | note | peak < 35 % of the lowest maximum |
+| Case capacity typical | note | the load's capacity is within 0.3 % of the caliber file's typical value (GRT `V`): probably not measured |
+| Case capacity far from typical | caution | more than 10 % from the typical value: brass makes differ by a few percent; a wrong entry or unit? |
+| Monolithic bullet | note | the bullet's name matches a common all-copper or brass line (Barnes TSX/TTSX/LRX, Hornady GMX/CX, Nosler E-Tip, Lapua Naturalis, Hammer, Cutting Edge, Lehigh, Peregrine, Sako Powerhead…): harder to engrave, longer for its weight; makers publish separate data and recommend a jump (Barnes: at least 0.050″) |
+| Early burnout, long barrel | note | burnout within 20 % of the travel and a barrel sweeping ≥ 10 case capacities: where the model over-predicted measured velocities by a median 15 % (validation.md) |
 | Transonic | note | muzzle velocity between Mach 0.95 and 1.1 at the powder temperature |
 | Temperature limit | note | past a powder temperature (colder or hotter than the load's), the peak exceeds the lowest maximum, the speed regime changes, the powder stops burning out, or the model can't simulate |
 

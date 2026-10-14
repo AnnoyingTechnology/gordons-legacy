@@ -29,6 +29,15 @@ Findings:
 - Velocity alone says nothing about pressure accuracy. Pressure needs published pressure data or
   pressure-trace recordings (next step).
 
+Where the over-prediction lies (2026-10-14, the 32 uncalibrated charges): it concentrates on loads whose
+powder burns out early in a long barrel. With burnout in the first 20 % of the travel and a barrel that
+sweeps 10 or more times the case's capacity (fast powders in the 300 BLK subsonic loads of a 16″ barrel
+and the 9 mm loads of an 8″ carbine), 15 charges were over-predicted by +4 to +29 %, median +15 %; the
+Glock's 9 mm loads with the same powder (burnout at 34 %, expansion 7) stay within ±7 %. This matches
+GRT users' reports of pistol cartridges in carbine barrels (docs/research/grt-user-feedback.md). The
+review notes such loads (`earlyBurnoutLongBarrel`, docs/load-review.md). Two slow-powder subsonic loads
+at 22–24 % of the maximum were over-predicted by +32 and +42 %: too few to make a rule.
+
 Caveats: chronographs read a few metres from the muzzle (a little below the muzzle velocity); some
 measurements were taken in another gun than the load's barrel (see each charge's note); several
 strings have one to three shots; calibrated copies and their originals share measurements, so the

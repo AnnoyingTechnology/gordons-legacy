@@ -49,6 +49,7 @@ export const fr: Messages = {
   'quantity.impulse': 'Impulsion',
   'quantity.distance': 'Distances',
   'quantity.ballisticCoefficient': 'Coefficient balistique',
+  'quantity.angle': "Taille des groupements",
   'quantity.time': 'Temps',
   'quantity.spinRate': 'Rotation',
   'quantity.specificEnergy': 'Énergie massique',
@@ -437,4 +438,8 @@ export const fr: Messages = {
   'designer.saved': "Enregistré dans vos composants.",
   'designer.apply': "Appliquer au chargement",
   'designer.open': "Concepteur de cartouche",
+  'finding.caseCapacityTypical': "La capacité d'étui est la valeur typique du fichier de calibre, probablement non mesurée. Remplissez d'eau quelques-uns de vos étuis tirés et pesez-les : quelques pour cent de capacité changent sensiblement la pression (voir les écarts d'atelier).",
+  'finding.caseCapacityFarFromTypical': "La capacité d'étui s'écarte de {share} % de la valeur typique du fichier de calibre : des étuis de marques différentes diffèrent de quelques pour cent, pas autant. Vérifiez la saisie et son unité.",
+  'finding.monolithicBullet': "Balle monolithique (tout cuivre ou laiton), d'après son nom : plus dure à forcer et plus longue pour son poids que les balles chemisées à noyau de plomb avec lesquelles ont été établis la résistance au forcement de GRT et la plupart des modèles de poudre. Les fabricants publient des données distinctes pour ces balles et recommandent un saut jusqu'aux rayures (Barnes : au moins 0,050″). Utilisez les données du fabricant de la balle.",
+  'finding.earlyBurnoutLongBarrel': "La poudre est entièrement brûlée dans les {share} premiers pour cent du parcours, dans un canon long. Sur des chargements mesurés de ce type (poudres vives en 300 BLK subsonique et en carabine 9 mm), le modèle de GRT a surestimé la vitesse d'environ 15 % (4 à 29 %) : attendez-vous à moins, et ajustez la poudre sur votre chronographe.",
 };

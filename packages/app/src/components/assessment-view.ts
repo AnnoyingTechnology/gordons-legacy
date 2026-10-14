@@ -58,6 +58,7 @@ export function findingMessage(finding: Finding, context: UiContext): string {
     ...(finding.burnt === undefined ? {} : { burnt: number(finding.burnt * 100, 0) }),
     ...(finding.velocity === undefined ? {} : { velocity: quantity(finding.velocity, 'velocity') }),
     ...(finding.temperature === undefined ? {} : { temperature: quantity(finding.temperature, 'temperature', 0) }),
+    ...(finding.share === undefined ? {} : { share: `${finding.share > 0 ? '+' : finding.share < 0 ? '−' : ''}${number(Math.abs(finding.share) * 100, 0)}` }),
   };
   if (finding.code === 'transonic' && finding.temperature !== undefined) {
     const sound = speedOfSound(finding.temperature);

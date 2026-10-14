@@ -3,6 +3,7 @@ import { grtTraditional } from '@gordons-legacy/engine';
 import { importGrtLoad, units, type Load } from '@gordons-legacy/formats';
 import { describe, expect, test } from 'vitest';
 import { assessLoad, pressureLimits } from '../src/analysis/load-assessment.ts';
+import { communityComponents } from '../src/state/components.ts';
 
 function fixture(path: string): Load {
   const result = importGrtLoad(readFileSync(new URL(`../../formats/test/fixtures/${path}`, import.meta.url), 'utf8'));
@@ -98,4 +99,40 @@ test('a double charge that stays under the maximum is only noted', () => {
   const finding = assess(light).findings.find((candidate) => candidate.code === 'doubleChargeFits');
   expect(finding?.pressure).toBeLessThan(special.cartridge.maxPressure);
   expect(finding?.level).toBe('note');
+});
+
+describe('notes from GRT users’ complaints (issue #10)', () => {
+  const plusP = fixture('maintainer/glock17_eng5_n340_115grain_xtp_PLUS-P.grtload');
+
+  test("a case capacity equal to the caliber file's typical value is noted as probably not measured", () => {
+    // 0.903 cm³ against V = 13.90 gr of water (0.901 cm³).
+    expect(codes(plusP)).toContain('caseCapacityTypical');
+    // The maintainer measured his 300 BLK cases: 1.513 cm³ against 1.581 typical.
+    expect(codes(blackout)).not.toContain('caseCapacityTypical');
+  });
+
+  test('a capacity 20 % off the typical value is a caution: a wrong entry or unit?', () => {
+    const wrong = { ...blackout, cartridge: { ...blackout.cartridge, caseCapacity: blackout.cartridge.caseCapacity * 1.25 } };
+    expect(assess(wrong).findings.find((finding) => finding.code === 'caseCapacityFarFromTypical')).toMatchObject({ level: 'caution' });
+  });
+
+  test('a monolithic bullet is recognised by its name', () => {
+    const copper = { ...blackout, projectile: { ...blackout.projectile, name: 'Barnes, TTSX 110gr' } };
+    expect(codes(copper)).toContain('monolithicBullet');
+    expect(codes(blackout)).not.toContain('monolithicBullet');
+  });
+
+  test('a fast powder burning out early in a long barrel is noted', () => {
+    const redDot = communityComponents().find((entry) => entry.kind === 'propellant' && entry.value.product.includes('Red Dot'))!;
+    // The 16-inch barrel of the maintainer's subsonic loads: it sweeps 12 times the case's capacity.
+    const fast = {
+      ...blackout,
+      barrel: { ...blackout.barrel, length: 0.419 },
+      propellant: redDot.value as Load['propellant'],
+      charge: { ...blackout.charge, mass: 0.00035 },
+    };
+    const finding = assess(fast).findings.find((candidate) => candidate.code === 'earlyBurnoutLongBarrel');
+    expect(finding?.share).toBeLessThan(0.2);
+    expect(codes(blackout)).not.toContain('earlyBurnoutLongBarrel');
+  });
 });

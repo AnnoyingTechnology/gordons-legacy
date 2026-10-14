@@ -47,7 +47,8 @@ test('a caliber file maps the standard and the cartridge outline, and keeps the 
   expect(caliber.caseDimensions?.caseLength).toBeCloseTo(0.03785, 12);
   expect(caliber.caseDimensions?.maximumOverallLength).toBeCloseTo(0.0574, 12);
   expect(caliber.caseDimensions?.shoulderDiameter).toBeCloseTo(0.01092, 12);
-  expect(caliber.unmapped).toMatchObject({ c_alpha: '60.00', V: '33.80' });
+  expect(caliber.unmapped).toMatchObject({ c_alpha: '60.00' });
+  expect(caliber.typicalCaseCapacity).toBeCloseTo(33.8 * 0.06479891 * 1e-6, 12);
 });
 
 test('a projectile file gives masses in grains', () => {

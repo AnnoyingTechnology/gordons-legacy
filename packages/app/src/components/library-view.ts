@@ -123,7 +123,7 @@ export class LibraryView extends LitElement {
       </td>
       <td>${simulated ? html`<span class="level-badge ${simulated.level}">${t(`assessment.level.${simulated.level}`)}</span>` : ''}</td>
       <td class="number">${summary?.measuredVelocity === undefined ? '' : quantity(summary.measuredVelocity, 'velocity')}</td>
-      <td class="number">${summary?.bestGroup ? `${number(summary.bestGroup.minutesOfAngle, 2)} MOA` : ''}</td>
+      <td class="number">${summary?.bestGroup ? quantity(summary.bestGroup.angle, 'angle') : ''}</td>
       <td>
         <button class="remove" aria-label=${t('library.remove', { name: entry.name })} title=${t('library.remove', { name: entry.name })}
           @click=${() => this.removeEntry(entry)}>${icon('close')}</button>

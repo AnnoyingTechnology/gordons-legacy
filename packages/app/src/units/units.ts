@@ -27,7 +27,9 @@ export type QuantityKind =
   | 'spinRate'
   | 'impulse'
   | 'distance'
-  | 'ballisticCoefficient';
+  | 'ballisticCoefficient'
+  /** Angles seen from the muzzle: group sizes. SI: radians. */
+  | 'angle';
 
 export interface DisplayUnit {
   /** Stable identifier, saved in preferences. */
@@ -86,6 +88,8 @@ const UNITS: Record<QuantityKind, DisplayUnit[]> = {
   // Range to a target.
   distance: [linear('m', 'm', 1, 0), linear('yd', 'yd', 0.9144, 0)],
   ballisticCoefficient: [linear('lb/in2', 'lb/in²', units.POUND_PER_SQUARE_INCH_MASS, 3), linear('kg/m2', 'kg/m²', 1, 1)],
+  // Minutes of angle (1/60 degree) and milliradians.
+  angle: [linear('MOA', 'MOA', Math.PI / (180 * 60), 2), linear('mrad', 'mrad', 1e-3, 2)],
 };
 
 /** The kinds a user can choose a unit for: those with more than one. */

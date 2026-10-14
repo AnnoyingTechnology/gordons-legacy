@@ -169,6 +169,12 @@ export interface CaliberDefinition {
   specificationUrl: string;
   /** Maximum mean pressure from the standard, Pa. GRT `Pmax`. */
   maxPressure: number;
+  /**
+   * Typical water capacity of a fired case, m³, as the definition's author gives it. GRT `V`, in grains of
+   * water (the 48 community files: .308 Win. 54 to 57, .327 Federal 19, 6 mm ARC 34 to 35). A reference
+   * to compare a load's measured capacity with, not a measurement.
+   */
+  typicalCaseCapacity?: number;
   /** Default Sebert factor for the caliber; see `Cartridge.sebertFactor`. GRT `sebert`. */
   sebertFactor: number;
   /** The cartridge's outline as the standard dimensions it, when given. */

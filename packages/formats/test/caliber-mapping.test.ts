@@ -26,3 +26,10 @@ describe('caliber rifling and chamber', () => {
     expect(result.value.unmapped?.c_u_).toBe('16.00');
   });
 });
+
+test("a caliber's V is its typical case capacity in grains of water", () => {
+  const result = importGrtLoad(readFixture('maintainer/300_blackout_Hornady_110gr_vmax_full_patate.grtload'));
+  if (!result.ok) throw new Error('import');
+  // V = 24.40 gr of water: 1.581 cm³. The maintainer measured his cases at 1.513 cm³.
+  expect(result.value.cartridge.definition?.typicalCaseCapacity).toBeCloseTo(24.4 * 0.06479891 * 1e-6, 12);
+});
