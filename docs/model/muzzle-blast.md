@@ -1,6 +1,6 @@
 # Muzzle blast sound level
 
-An estimate of the peak sound pressure level of the muzzle blast beside an unsuppressed gun (issue #6),
+An estimate of the peak sound pressure level of the muzzle blast beside a bare muzzle (issue #6),
 shown with the results and in the library. Code: `packages/app/src/analysis/muzzle-blast.ts`; source
 energy: `muzzleGasEnergy` in `packages/engine/src/grt-traditional/results.ts`.
 
@@ -37,6 +37,28 @@ integral over the gas's velocity profile (½ ∫u² dm; s = 1/3 for a uniform ga
 profile). Unburnt powder's chemical energy is left out: whether it adds to the peak depends on how fast
 it burns outside the muzzle.
 
+## Ground echo
+
+A shooter is never in free field. The app shows the level 1 m beside the muzzle with the muzzle 20 cm
+above rigid ground (prone on a bipod, the maintainer's choice), the listener at the muzzle's height. The
+ground's echo comes from the muzzle's image under the ground: range r₂ = √(r² + 4h²), its own angle from
+the line of fire, delay (r₂ − r)/a₀, peak from the same fit times a reflection factor R (1 for rigid
+ground). Each wave is given an assumed Friedlander shape p(t) = P (1 − t/τ) e^(−t/τ) that matches the
+peak fit and Fansler's impulse fit (eqs 27–30, I a₀ / (λᵢ′ p₀) = 0.0146 (λᵢ′ / r)^bᵢ, bᵢ = 0.954 −
+0.585 sin(θ/2), λᵢ′ = β (1 + 0.444 sin(θ/2) / δ) λ), so τ = e I / P. The total peak is the larger of the
+direct peak and the direct wave at the echo's arrival plus R times the echo's peak.
+
+Prone over rigid ground the echo adds +2.0 dB (.308, 20″), +1.5 dB (300 BLK, 10″), +1.0 dB (9 mm
+pistol); at a bench (1.1 m) or standing (1.5 m) it arrives after the positive phase and leaves the peak
+unchanged (it still adds to the exposure). A muzzle at ground level gives the image limit, +6.02 dB.
+
+Limits (Codex review, 2026-10-14): the waveform is assumed, since Fansler leaves the duration
+unpredicted; near the muzzle the reflection of these weak shocks may not be linear (the .308's nominal
+reflection point sees about 12 kPa at a 22° grazing angle, where Mach stems are possible); R = 1 is an
+ideal rigid-ground scenario, not a strict upper bound, and grass or soil need an impedance model rather
+than one factor. The combined level is an unvalidated approximation with more uncertainty than the peak
+fit's 1.75 dB.
+
 ## Checks
 
 | Case | Model | Measured |
@@ -56,6 +78,7 @@ flagged as unvalidated extrapolation, and the label made explicit (bare muzzle, 
 
 - Fitted on rifle barrels: pistols and revolvers (4–5″, larger bores, 90–110 calibers at 1 m) are an
   extrapolation in barrel length and bore. A revolver's cylinder gap adds its own blast, not modelled.
-- Not included: the bullet's ballistic crack (supersonic), the action, reflections from the ground or
-  walls, suppressors and muzzle devices (brakes raise the level beside and behind the gun).
+- Not included: the bullet's ballistic crack (supersonic), the action, reflections other than the
+  ground's (walls, roofs, benches), suppressors and muzzle devices (brakes raise the level beside and
+  behind the gun).
 - Unburnt powder burning outside the muzzle (flash) adds energy that E leaves out.
