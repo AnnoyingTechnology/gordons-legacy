@@ -34,9 +34,9 @@ Maintainer issues picked up 2026-10-14 (GitHub #1–#13, all UI or features beyo
 
 | Issue | Plan | State |
 |---|---|---|
-| #1, #3 | Full-height toolbar buttons, bigger tabs and inputs; notes typed in place, no "add note" button. | To do |
+| #1, #3 | Full-height toolbar buttons, bigger tabs and inputs; notes typed in place, no "add note" button. | Done |
 | #5, #7, #8, #9 | Results hierarchy: large key cards (velocity, energy, recoil, sound), fill and pressure as gauges, velocity on a speed scale with the transonic band. | To do |
-| #11 | Tab badges: cartridge, projectile, powder. | To do |
+| #11 | Tab badges: cartridge, projectile, powder. | Done |
 | #2, #13 | One warning system with a load danger level (overpressure, compressed or low fill, …) and cold/hot climate warnings. | To do |
 | #4 | CIP and SAAMI maximum pressures both on the charts. | To do |
 | #6 | Muzzle-blast sound level estimate at 1 m; physics to check with Codex. | To do |
@@ -183,3 +183,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | M5: shot-group analysis: a target photo (downscaled to 1600 px), its scale from two clicked points, hits clicked at the bullet's diameter; extreme spread, mean radius, closest hits and deviations, in length, MOA and mrad; groups saved with the load. The app now warns when the browser's storage is full instead of failing. |
 | 2026-10-14 | M7: the covolume explains most of R1's gap to GRT (median peak ratio 1.75 → 1.12, velocity 1.08 → 0.975 without it); the vivacity averaging hardly matters. R1 without covolume beats GRT Traditional on the chronograph corpus (same 47 charges: mean +4.1 % vs +8.0 %, RMS 11.1 % vs 13.5 %, p90 16.6 % vs 26.9 %); its peaks are a median 12 % above GRT's, unvalidated. |
 | 2026-10-14 | `AGENTS.md`: check GitHub issues regularly; the maintainer's issues and comments count as chat requests. Issues #1–#13 triaged (Next steps). |
+| 2026-10-14 | UI (#1, #3, #11): toolbar of full-height buttons (icon above label) in groups; two-line tabs with cartridge, projectile and powder badges; larger bordered inputs; notes typed straight into an empty note at the end (no "add" button; clearing a note removes it). |

@@ -36,11 +36,12 @@ export class NotesPanel extends LitElement {
               <input
                 class="note-title"
                 aria-label=${t('notes.noteTitle')}
+                placeholder=${t('notes.noteTitle')}
                 .value=${note.title}
                 @change=${(event: Event) => this.edit(index, { title: (event.target as HTMLInputElement).value })}
               />
               <textarea
-                rows="4"
+                rows="3"
                 aria-label=${note.title || t('notes.title')}
                 .value=${note.text}
                 @change=${(event: Event) => this.edit(index, { text: (event.target as HTMLTextAreaElement).value })}
@@ -48,7 +49,15 @@ export class NotesPanel extends LitElement {
             </div>
           `,
         )}
-        <button type="button" @click=${this.add}>${t('notes.add')}</button>
+        <div class="note new-note">
+          <textarea
+            rows="2"
+            aria-label=${t('notes.placeholder')}
+            placeholder=${t('notes.placeholder')}
+            .value=${''}
+            @change=${this.add}
+          ></textarea>
+        </div>
         ${pictures.length > 0
           ? html`<div class="pictures">
               ${pictures.map(
@@ -63,13 +72,21 @@ export class NotesPanel extends LitElement {
     `;
   }
 
+  /** Applies an edit; a note whose title and text are both cleared is removed. */
   private edit(index: number, change: Partial<Note>): void {
-    const notes = this.load.notes.map((note, position) => (position === index ? { ...note, ...change } : note));
+    const notes = this.load.notes
+      .map((note, position) => (position === index ? { ...note, ...change } : note))
+      .filter((note, position) => position !== index || note.title.trim() !== '' || note.text.trim() !== '');
     this.emit({ ...this.load, notes });
   }
 
-  private add = () => {
-    const note: Note = { title: this.context.t('notes.newTitle'), text: '', showInReport: true, isReportTemplate: false };
+  /** Typing in the empty note at the end makes it a note of the load: no "add" button to press first. */
+  private add = (event: Event) => {
+    const textarea = event.target as HTMLTextAreaElement;
+    const text = textarea.value;
+    textarea.value = '';
+    if (text.trim() === '') return;
+    const note: Note = { title: '', text, showInReport: true, isReportTemplate: false };
     this.emit({ ...this.load, notes: [...this.load.notes, note] });
   };
 

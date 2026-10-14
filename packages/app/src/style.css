@@ -442,32 +442,78 @@ code {
 
 .toolbar {
   display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  padding: 0.5rem 1rem;
+  align-items: stretch;
+  gap: 0;
+  padding: 0 0.5rem;
+  min-height: 3.6rem;
   border-bottom: 1px solid var(--rule);
   background: var(--panel);
 }
 
 .toolbar h1 {
+  align-self: center;
   font-size: 1.05rem;
-  margin: 0 1rem 0 0;
+  margin: 0 1rem 0 0.5rem;
 }
 
 .toolbar .spacer {
   flex: 1;
 }
 
-.toolbar label {
+/* Toolbar buttons fill the bar's height: icon above label, as in desktop engineering tools. */
+.tool-group {
+  display: flex;
+  align-items: stretch;
+  padding: 0 0.3rem;
+  border-left: 1px solid var(--rule);
+}
+
+.tool-group:first-of-type {
+  border-left: none;
+}
+
+.toolbar .tool {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  height: auto;
+  min-width: 4.2rem;
+  padding: 0.3rem 0.7rem;
+  border: none;
+  background: none;
+  color: var(--fg);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.toolbar .tool .icon {
+  width: 22px;
+  height: 22px;
+}
+
+.toolbar .tool:hover:not(:disabled) {
+  background: var(--grid);
+}
+
+.toolbar .tool[aria-pressed='true'] {
+  background: var(--grid);
+  box-shadow: inset 0 -3px 0 var(--accent);
+}
+
+.toolbar .tool-select {
+  cursor: default;
   color: var(--muted);
 }
 
-.toolbar select {
-  margin-left: 0.3rem;
+.toolbar .tool-select select {
+  font: inherit;
+  color: var(--fg);
+  padding: 0.15rem 0.2rem;
 }
 
-button,
-.toolbar .button {
+button {
   display: inline-flex;
   align-items: center;
   height: 2rem;
@@ -490,14 +536,18 @@ button:disabled {
 
 .tabs {
   display: flex;
-  gap: 0.2rem;
-  padding: 0.4rem 1rem 0;
+  gap: 0.25rem;
+  padding: 0.5rem 1rem 0;
   border-bottom: 1px solid var(--rule);
   overflow-x: auto;
 }
 
 .tab {
   display: flex;
+  align-items: stretch;
+  flex: 0 1 auto;
+  min-width: 12rem;
+  max-width: 32rem;
   border: 1px solid var(--rule);
   border-bottom: none;
   background: var(--bg);
@@ -505,16 +555,82 @@ button:disabled {
 
 .tab.active {
   background: var(--panel);
-  box-shadow: inset 0 2px 0 var(--accent);
+  box-shadow: inset 0 3px 0 var(--accent);
 }
 
 .tab button {
   border: none;
   background: none;
-  padding: 0.3rem 0.6rem;
+  height: auto;
+}
+
+.tab .tab-name {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  min-width: 0;
+  padding: 0.45rem 0.4rem 0.45rem 0.8rem;
+  text-align: left;
+}
+
+.tab-title {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.tab:not(.active) .tab-title {
+  color: var(--muted);
+}
+
+.tab .unsaved {
+  color: var(--accent);
+}
+
+.badges {
+  display: flex;
+  gap: 0.3rem;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  flex: none;
+  max-width: 10rem;
+  padding: 0 0.35rem 0 0.2rem;
+  border: 1px solid var(--rule);
+  border-radius: 0.2rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+  background: var(--bg);
+}
+
+/* The projectile's name is the longest: it gives way first when the tab is narrow. */
+.badge-projectile {
+  flex: 0 1 auto;
+  min-width: 3rem;
+  max-width: 14rem;
+}
+
+.badge span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.badge .icon {
+  width: 13px;
+  height: 13px;
 }
 
 .tab-close {
+  align-self: center;
+  padding: 0.3rem 0.5rem;
   color: var(--muted);
 }
 
@@ -575,7 +691,7 @@ main {
 }
 
 .property-table th {
-  width: 11.5rem;
+  width: 11rem;
   text-align: left;
   font-weight: 400;
   color: var(--muted);
@@ -584,7 +700,7 @@ main {
 }
 
 .property-table td {
-  padding: 0.1rem 0;
+  padding: 0.15rem 0;
 }
 
 .property-table input {
@@ -593,8 +709,21 @@ main {
   font: inherit;
   font-variant-numeric: tabular-nums;
   text-align: right;
-  padding: 0.1rem 0.3rem;
-  border: 1px solid transparent;
+  height: 2rem;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--rule);
+  border-radius: 0.2rem;
+  background: var(--panel);
+  color: var(--fg);
+}
+
+.property-table select {
+  width: 100%;
+  height: 2rem;
+  font: inherit;
+  padding: 0.2rem 0.3rem;
+  border: 1px solid var(--rule);
+  border-radius: 0.2rem;
   background: var(--panel);
   color: var(--fg);
 }
@@ -604,7 +733,7 @@ main {
 }
 
 .property-table input:hover {
-  border-color: var(--rule);
+  border-color: var(--muted);
 }
 
 .property-table input:focus {
@@ -614,6 +743,7 @@ main {
 
 .property-table input[readonly] {
   background: transparent;
+  border-color: transparent;
 }
 
 .property-table .unit {
@@ -829,6 +959,16 @@ button[aria-pressed='true'] {
 
 .notes-panel .note-title {
   font-weight: 600;
+}
+
+.notes-panel textarea {
+  min-height: 3.2rem;
+  resize: vertical;
+  field-sizing: content;
+}
+
+.notes-panel .new-note textarea {
+  border-style: dashed;
 }
 
 .notes-panel textarea,

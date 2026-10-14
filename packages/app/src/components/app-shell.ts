@@ -7,6 +7,7 @@ import { DocumentStore } from '../state/documents.ts';
 import { loadSettings, saveSettings, type Settings } from '../state/settings.ts';
 import { presetPreferences, type UnitPreferences, type UnitSystem } from '../units/units.ts';
 import { createContext, type UiContext } from './context.ts';
+import { loadBadges } from './load-badges.ts';
 import { withProjectile, withPropellant } from '../editor/components.ts';
 import { REPOSITORY } from './about-dialog.ts';
 import './choice-dialog.ts';
@@ -72,47 +73,56 @@ export class AppShell extends LitElement {
     return html`
       <header class="toolbar">
         <h1>${t('app.title')}</h1>
-        <label class="button">
-          ${icon('open')} ${t('toolbar.open')}
-          <input type="file" accept=".grtload,.json,.propellant,.projectile,.grtrace,.csv" multiple hidden @change=${this.openFromInput} />
-        </label>
-        <button ?disabled=${!active} @click=${() => active && this.save(active.id)}>${icon('save')} ${t('toolbar.save')}</button>
-        <button ?disabled=${!active} @click=${() => window.print()}>${icon('print')} ${t('toolbar.print')}</button>
-        <button
-          ?disabled=${this.store.documents.length < 2}
-          aria-pressed=${this.comparing ? 'true' : 'false'}
-          @click=${() => (this.comparing = !this.comparing)}
-        >${icon('compare')} ${t('toolbar.compare')}</button>
+        <div class="tool-group">
+          <label class="tool">
+            ${icon('open')}<span>${t('toolbar.open')}</span>
+            <input type="file" accept=".grtload,.json,.propellant,.projectile,.grtrace,.csv" multiple hidden @change=${this.openFromInput} />
+          </label>
+          <button class="tool" ?disabled=${!active} @click=${() => active && this.save(active.id)}>${icon('save')}<span>${t('toolbar.save')}</span></button>
+          <button class="tool" ?disabled=${!active} @click=${() => window.print()}>${icon('print')}<span>${t('toolbar.print')}</span></button>
+        </div>
+        <div class="tool-group">
+          <button
+            class="tool"
+            ?disabled=${this.store.documents.length < 2}
+            aria-pressed=${this.comparing ? 'true' : 'false'}
+            @click=${() => (this.comparing = !this.comparing)}
+          >${icon('compare')}<span>${t('toolbar.compare')}</span></button>
+        </div>
         <span class="spacer"></span>
-        <label>
-          ${t('toolbar.units')}
-          <select @change=${(event: Event) => this.setUnits((event.target as HTMLSelectElement).value as UnitSystem)}>
-            <option value="metric" ?selected=${this.settings.unitSystem === 'metric'}>${t('units.metric')}</option>
-            <option value="imperial" ?selected=${this.settings.unitSystem === 'imperial'}>${t('units.imperial')}</option>
-          </select>
-        </label>
-        <button @click=${() => (this.unitsOpen = true)}>${icon('units')} ${t('units.customize')}</button>
-        <button @click=${() => (this.aboutOpen = true)}>${icon('info')} ${t('toolbar.about')}</button>
-        <label>
-          ${t('toolbar.language')}
-          <select @change=${(event: Event) => this.setLanguage((event.target as HTMLSelectElement).value as Language)}>
-            ${Object.entries(LANGUAGE_NAMES).map(
-              ([code, name]) => html`<option value=${code} ?selected=${code === this.settings.language}>${name}</option>`,
-            )}
-          </select>
-        </label>
+        <div class="tool-group">
+          <label class="tool tool-select">
+            <span>${t('toolbar.units')}</span>
+            <select @change=${(event: Event) => this.setUnits((event.target as HTMLSelectElement).value as UnitSystem)}>
+              <option value="metric" ?selected=${this.settings.unitSystem === 'metric'}>${t('units.metric')}</option>
+              <option value="imperial" ?selected=${this.settings.unitSystem === 'imperial'}>${t('units.imperial')}</option>
+            </select>
+          </label>
+          <button class="tool" @click=${() => (this.unitsOpen = true)}>${icon('units')}<span>${t('units.customize')}</span></button>
+          <label class="tool tool-select">
+            <span>${t('toolbar.language')}</span>
+            <select @change=${(event: Event) => this.setLanguage((event.target as HTMLSelectElement).value as Language)}>
+              ${Object.entries(LANGUAGE_NAMES).map(
+                ([code, name]) => html`<option value=${code} ?selected=${code === this.settings.language}>${name}</option>`,
+              )}
+            </select>
+          </label>
+          <button class="tool" @click=${() => (this.aboutOpen = true)}>${icon('info')}<span>${t('toolbar.about')}</span></button>
+        </div>
       </header>
       <nav class="tabs" role="tablist">
-        ${this.store.documents.map(
-          (document) => html`
+        ${this.store.documents.map((document) => {
+          const dirty = this.store.isDirty(document);
+          return html`
             <div class="tab ${document.id === active?.id ? 'active' : ''}" role="tab" aria-selected=${document.id === active?.id}>
-              <button class="tab-name" @click=${() => this.showDocument(document.id)}>
-                ${document.name}${this.store.isDirty(document) ? html` <span title=${t('documents.unsaved')}>•</span>` : nothing}
+              <button class="tab-name" title=${document.name} @click=${() => this.showDocument(document.id)}>
+                <span class="tab-title">${document.name.replace(/\.json$/i, '')}${dirty ? html`<span class="unsaved" title=${t('documents.unsaved')}> •</span>` : nothing}</span>
+                ${loadBadges(document.load, this.context)}
               </button>
               <button class="tab-close" aria-label=${t('documents.close', { name: document.name })} @click=${() => this.store.close(document.id)}>${icon('close')}</button>
             </div>
-          `,
-        )}
+          `;
+        })}
       </nav>
       <main @dragover=${(event: DragEvent) => event.preventDefault()} @drop=${this.openFromDrop}>
         ${this.store.storageFull ? html`<p class="warning">${t('documents.storageFull')}</p>` : nothing}
