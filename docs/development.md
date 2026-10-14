@@ -11,6 +11,11 @@
 | `npm run build` | Build the app into `packages/app/dist`. |
 
 CI runs `typecheck`, `test` and `build` on every push, and deploys the app to GitHub Pages from `main`.
+Pushing a version tag (`git tag v2026.10.14 && git push --tags`) publishes a GitHub Release with the
+single-file copy and a zip of the site (`.github/workflows/release.yml`).
+
+The data repository's files are written by `node tools/data/export-repository.ts <clone of
+gordons-legacy-data>` from the community snapshot, which `node tools/data/build-community.ts` builds.
 
 ## Pitfalls
 

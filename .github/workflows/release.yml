@@ -1,0 +1,36 @@
+name: Release
+
+# On a version tag (v2026.10.14, v1.0.0…): build, then publish a GitHub Release with the single-file copy
+# of the app and a zip of the whole site, for users who want to own a copy (docs/PLAN.md, M6).
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - name: Package
+        run: |
+          mkdir release
+          cp packages/app/dist/gordons-legacy.html "release/gordons-legacy-${GITHUB_REF_NAME}.html"
+          (cd packages/app/dist && zip -qr "../../../release/gordons-legacy-site-${GITHUB_REF_NAME}.zip" .)
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" release/* \
+            --title "Gordon's Legacy $GITHUB_REF_NAME" \
+            --notes "Your own copy of Gordon's Legacy at $GITHUB_REF_NAME: open the .html file in a browser, from disk, with no install and no network; or serve the site zip. This software simulates; it does not produce load data. Check every charge against the powder or bullet maker's published data."
