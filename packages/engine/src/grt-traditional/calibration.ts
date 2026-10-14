@@ -51,13 +51,18 @@ export function calibrateToVelocity(load: Load, muzzleVelocity: number): Calibra
   let limited = false;
   const velocity = (simulation: Simulation) => roundTo(simulation.muzzleVelocity, 1);
   const withinLimits = () => {
-    const within = Math.abs(1 - k0 / k) < MAXIMUM_CHANGE && Math.abs(1 - ba0 / ba) < MAXIMUM_CHANGE && simulations < MAXIMUM_SIMULATIONS;
-    if (!within) limited = true;
-    return within;
+    if (simulations >= MAXIMUM_SIMULATIONS) limited = true;
+    return !limited;
   };
+  // GRT checks its ±4.5 % bound on the current values, so its last step can cross it; here a step that
+  // would cross it is not taken.
   const step = (direction: 1 | -1, factor: number): boolean => {
     const nextK = k + direction * k0 * factor;
     const nextBa = ba + direction * ba0 * factor;
+    if (!(Math.abs(1 - k0 / nextK) < MAXIMUM_CHANGE && Math.abs(1 - ba0 / nextBa) < MAXIMUM_CHANGE)) {
+      limited = true;
+      return false;
+    }
     const next = evaluate(withPowder(nextK, nextBa));
     simulations++;
     if (!next || next.tenPercentPeakTime === undefined) {

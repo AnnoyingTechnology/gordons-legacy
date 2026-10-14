@@ -17,7 +17,7 @@ export {
 export { ladderChargeMasses } from './load/ladder.ts';
 export type { MeasuredCharge, MeasurementSeries, Shot } from './load/measurement.ts';
 export type { Projectile, ProjectileBase } from './load/projectile.ts';
-export type { GrtBurnModel, Propellant } from './load/propellant.ts';
+export type { GrtBurnModel, Propellant, PropellantCalibration } from './load/propellant.ts';
 
 export type { ImportIssue, ImportResult, IssueSeverity } from './import-issues.ts';
 export { parseLoad, serializeLoad } from './json/load-json.ts';

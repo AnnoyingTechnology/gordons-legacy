@@ -31,7 +31,8 @@ Load
 │  └─ definition the standard's definition (CaliberDefinition), optional
 ├─ barrel        the gun (Barrel), with gasLeaks
 ├─ projectile    (Projectile)
-├─ propellant    the powder model (Propellant), with burnModel
+├─ propellant    the powder model (Propellant), with burnModel, and calibration when the model
+│                was fitted to a measured velocity (target, result, pressures before and after)
 ├─ charge        mass and temperature
 ├─ ladder        optional
 ├─ measurements  chronograph data (MeasurementSeries → MeasuredCharge → Shot)

@@ -263,9 +263,11 @@ searches over full simulations:
   the charge (more powder shortens the lead time) while the lead time hasn't crossed the target and
   the result is valid; on overshoot, step back once.
 
-Gordon's Legacy (`calibration.ts`) follows these searches. It differs on purpose in one place: a
+Gordon's Legacy (`calibration.ts`) follows these searches. It differs on purpose in two places: a
 charge step that loses the lead time is not taken, and the finer steps continue, where GRT's search
-would stop. The charge search counts as reached when one more 0.01-grain step would cross the target.
+would stop; and a k/Ba step that would cross the ±4.5 % bound is not taken (GRT checks the bound before
+stepping, so its last step can cross it). The charge search counts as reached when one more 0.01-grain
+step would cross the target.
 
 ## Inputs outside the model (Gordon's Legacy)
 

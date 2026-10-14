@@ -5,7 +5,7 @@ import type { Charge, ImportOrigin, Ladder, Load, Note, Picture } from '../load/
 import { LOAD_FORMAT, LOAD_SCHEMA_VERSION } from '../load/load.ts';
 import type { MeasuredCharge, MeasurementSeries, Shot } from '../load/measurement.ts';
 import type { Projectile, ProjectileBase } from '../load/projectile.ts';
-import type { GrtBurnModel, Propellant } from '../load/propellant.ts';
+import type { GrtBurnModel, Propellant, PropellantCalibration } from '../load/propellant.ts';
 import type { FieldSpec, ShapeOf } from './shape.ts';
 
 /*
@@ -122,6 +122,18 @@ const grtBurnModel = {
   hotTemperatureCoefficient: 'number',
 } satisfies ShapeOf<GrtBurnModel>;
 
+const propellantCalibration = {
+  targetVelocity: 'positive',
+  achievedVelocity: 'positive',
+  reached: 'boolean',
+  chargeMass: 'positive',
+  originalHeatCapacityRatio: 'positive',
+  originalVivacity: 'positive',
+  peakPressureBefore: 'positive',
+  peakPressureAfter: 'positive',
+  date: 'string',
+} satisfies ShapeOf<PropellantCalibration>;
+
 const propellant = {
   maker: 'string',
   product: 'string',
@@ -132,6 +144,7 @@ const propellant = {
   grainDensity: 'positive',
   bulkDensity: 'positive',
   burnModel: { variants: { field: 'kind', shapes: { grt: grtBurnModel } } },
+  calibration: { optional: { object: propellantCalibration } },
   info: { optional: { object: componentInfo } },
   unmapped,
 } satisfies ShapeOf<Propellant>;

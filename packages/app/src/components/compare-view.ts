@@ -149,7 +149,10 @@ export class CompareView extends LitElement {
           ${compared.map(({ name, load, simulation, color }) => {
             const share = simulation.maxPressure / load.cartridge.maxPressure;
             return html`<tr>
-              <td class="name"><span class="swatch" style="border-top-color: ${color}"></span> ${name}</td>
+              <td class="name">
+                <span class="swatch" style="border-top-color: ${color}"></span> ${name}
+                ${load.propellant.calibration ? html`<span class="severity">(${t('compare.fitted')})</span>` : nothing}
+              </td>
               <td>${quantity(load.charge.mass, 'chargeMass')}</td>
               <td>${quantity(simulation.maxPressure, 'pressure')}</td>
               <td class=${share > 1 ? 'critical' : ''}>${share > 1 ? '▲ ' : ''}${number(share * 100, 0)} %</td>
@@ -160,6 +163,9 @@ export class CompareView extends LitElement {
           })}
         </tbody>
       </table>
+      ${compared.some(({ load }) => load.propellant.calibration)
+        ? html`<p class="warning">${t('compare.fittedNote')}</p>`
+        : nothing}
     `;
   }
 }

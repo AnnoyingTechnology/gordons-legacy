@@ -26,6 +26,11 @@ export interface Propellant {
   bulkDensity: number;
   /** How the powder burns. */
   burnModel: GrtBurnModel;
+  /**
+   * Set when the model was fitted to a measured velocity (GRT's OBT-tool calibration). A velocity fit
+   * says nothing about pressure; applications must say so wherever they show this load's results.
+   */
+  calibration?: PropellantCalibration;
   /** Provenance, for component files. */
   info?: ComponentInfo;
   /** Source values without a field in this format, kept verbatim by name. */
@@ -59,4 +64,25 @@ export interface GrtBurnModel {
    * default. GRT `tch`.
    */
   hotTemperatureCoefficient: number;
+}
+
+/** How a powder model was fitted to a measured muzzle velocity, kept with the model it changed. */
+export interface PropellantCalibration {
+  /** The measured velocity the fit aimed at, m/s. */
+  targetVelocity: number;
+  /** The simulated velocity after the fit, m/s. */
+  achievedVelocity: number;
+  /** False when the fit stopped at a limit before reaching the target. */
+  reached: boolean;
+  /** The charge the velocity was measured with, kg. */
+  chargeMass: number;
+  /** The heat capacity ratio before the fit. */
+  originalHeatCapacityRatio: number;
+  /** The vivacity before the fit. */
+  originalVivacity: number;
+  /** Simulated peak pressure with the measured charge, before and after the fit, Pa. */
+  peakPressureBefore: number;
+  peakPressureAfter: number;
+  /** When the fit was made, ISO 8601. */
+  date: string;
 }

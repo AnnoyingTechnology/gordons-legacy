@@ -34,7 +34,9 @@ describe('calibrateToVelocity', () => {
   it('stops at GRT\'s 4.5 % bound when the velocity is out of reach', () => {
     const calibration = calibrateToVelocity(load(), 600)!;
     expect(calibration.reached).toBe(false);
-    expect(calibration.load.propellant.burnModel.vivacity / load().propellant.burnModel.vivacity).toBeLessThan(1.05);
+    // Never past the bound, even by the last step.
+    expect(calibration.load.propellant.burnModel.vivacity / load().propellant.burnModel.vivacity).toBeLessThan(1.045);
+    expect(calibration.load.propellant.heatCapacityRatio / load().propellant.heatCapacityRatio).toBeLessThan(1.045);
   });
 });
 

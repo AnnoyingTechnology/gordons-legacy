@@ -18,8 +18,10 @@ export type ChartAxis = 'travel' | 'time';
 export function renderResults(load: Load, shot: Simulation, context: UiContext, axis: ChartAxis, onAxis: (axis: ChartAxis) => void): HTMLElement {
   const { t } = context;
   const container = element('section', { class: 'simulation' }, [element('h3', {}, [t('results.title')])]);
+  container.append(element('p', { class: 'warning' }, [t('safety.simulated')]));
+  const fit = load.propellant.calibration;
+  if (fit) container.append(renderFitNotice(fit, context));
   container.append(
-    element('p', { class: 'warning' }, [t('safety.simulated')]),
     renderFigures(load, shot, context),
     renderDetails(load, shot, context),
   );
@@ -73,6 +75,22 @@ export function renderProblems(problems: SimulationProblem[], context: UiContext
         ` ${field ? `${t(field.label)}: ${message}` : message}`,
       ]);
     })),
+  ]);
+}
+
+/** Says, wherever a fitted load's results show, that a velocity fit doesn't validate its pressure. */
+function renderFitNotice(fit: NonNullable<Load['propellant']['calibration']>, context: UiContext): HTMLElement {
+  const { t, quantity } = context;
+  const text = t('calibration.banner', {
+    target: quantity(fit.targetVelocity, 'velocity'),
+    charge: quantity(fit.chargeMass, 'chargeMass'),
+    achieved: quantity(fit.achievedVelocity, 'velocity'),
+    before: quantity(fit.peakPressureBefore, 'pressure'),
+    after: quantity(fit.peakPressureAfter, 'pressure'),
+  });
+  return element('p', { class: 'warning fit-notice' }, [
+    text,
+    ...(fit.reached ? [] : [' ', element('strong', {}, [t('calibration.notReached')])]),
   ]);
 }
 
@@ -303,6 +321,7 @@ function renderLadder(load: Load, ladder: LadderShot[], context: UiContext): HTM
   const head = [t('field.chargeMass'), t('results.peakPressure'), '%', t('results.muzzleVelocity'), t('results.barrelTime'), ''];
   return element('section', { class: 'ladder' }, [
     element('h4', {}, [t('results.ladder')]),
+    element('p', { class: 'warning' }, [t('safety.simulated')]),
     element('table', { class: 'data-table' }, [
       element('thead', {}, [element('tr', {}, head.map((label) => element('th', {}, [label])))]),
       element('tbody', {}, rows),

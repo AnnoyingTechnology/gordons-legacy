@@ -199,7 +199,8 @@ export class AppShell extends LitElement {
       return;
     }
     const base = name.replace(/\.json$/i, '');
-    this.store.openNew(`${base} ${t('measurements.calibratedSuffix', { velocity })}.json`, calibration.load);
+    const suffix = calibration.reached ? t('measurements.calibratedSuffix', { velocity }) : t('measurements.fitNotReachedSuffix', { velocity });
+    this.store.openNew(`${base} ${suffix}.json`, calibration.load);
     this.openErrors = calibration.reached ? [] : [t('measurements.calibrationLimited', { velocity })];
   }
 

@@ -27,6 +27,30 @@ describe('saving and reading back', () => {
     expect(result.ok && result.value).toEqual(load);
   });
 
+  test('a powder fitted to a measured velocity keeps its fit record', () => {
+    const load = importedLoad('cc0/loads/327_Federal_Magnum_by_dpeppe01_2022.12.12.grtload');
+    const fitted: Load = {
+      ...load,
+      propellant: {
+        ...load.propellant,
+        calibration: {
+          targetVelocity: 400,
+          achievedVelocity: 400.02,
+          reached: true,
+          chargeMass: 0.000388793,
+          originalHeatCapacityRatio: 1.2338,
+          originalVivacity: 3.2778,
+          peakPressureBefore: 196.15e6,
+          peakPressureAfter: 188.2e6,
+          date: '2026-10-14T05:00:00.000Z',
+        },
+      },
+    };
+    const result = parseLoad(serializeLoad(fitted));
+    expect(issues(result)).toEqual([]);
+    expect(result.ok && result.value.propellant.calibration).toEqual(fitted.propellant.calibration);
+  });
+
   test('saved files are indented and end with a newline', () => {
     const text = serializeLoad(importedLoad('cc0/loads/327_Federal_Magnum_by_dpeppe01_2022.12.12.grtload'));
     expect(text.startsWith('{\n  "format": "gordons-legacy.load",\n  "schemaVersion": 1,')).toBe(true);
