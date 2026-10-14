@@ -13,6 +13,7 @@ export {
   type Load,
   type Note,
   type Picture,
+  type ShotGroup,
 } from './load/load.ts';
 export { ladderChargeMasses } from './load/ladder.ts';
 export type { MeasuredCharge, MeasurementSeries, Shot } from './load/measurement.ts';

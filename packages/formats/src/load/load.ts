@@ -25,10 +25,24 @@ export interface Load {
   measurements: MeasurementSeries[];
   notes: Note[];
   pictures: Picture[];
+  /** Groups shot on targets, with their hits. */
+  shotGroups?: ShotGroup[];
   /** Where the load was imported from, when it was. */
   importedFrom?: ImportOrigin;
   /** Source values without a field in this format, kept verbatim by their path in the source. */
   unmapped?: Record<string, string>;
+}
+
+/** A group of hits on a target, measured on a photo of the target or entered by hand. */
+export interface ShotGroup {
+  title: string;
+  /** Distance from the muzzle to the target, m. */
+  distance: number;
+  /** The hits' centres, m, in the target's plane: x to the right, y down, from the photo's top-left. */
+  hits: Array<{ x: number; y: number }>;
+  /** The target's photo, by its index in the load's pictures, and its scale. */
+  picture?: { index: number; metresPerPixel: number };
+  note: string;
 }
 
 /** The powder charge. */

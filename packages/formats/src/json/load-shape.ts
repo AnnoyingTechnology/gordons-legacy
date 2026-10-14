@@ -1,7 +1,7 @@
 import type { Barrel, GasLeak } from '../load/barrel.ts';
 import type { CaliberDefinition, Cartridge, CaseDimensions } from '../load/cartridge.ts';
 import type { ComponentInfo } from '../load/component-info.ts';
-import type { Charge, ImportOrigin, Ladder, Load, Note, Picture } from '../load/load.ts';
+import type { Charge, ImportOrigin, Ladder, Load, Note, Picture, ShotGroup } from '../load/load.ts';
 import { LOAD_FORMAT, LOAD_SCHEMA_VERSION } from '../load/load.ts';
 import type { MeasuredCharge, MeasurementSeries, Shot } from '../load/measurement.ts';
 import type { Projectile, ProjectileBase } from '../load/projectile.ts';
@@ -210,6 +210,14 @@ const picture = {
   data: 'string',
 } satisfies ShapeOf<Picture>;
 
+const shotGroup = {
+  title: 'string',
+  distance: 'positive',
+  hits: { arrayOf: { object: { x: 'number', y: 'number' } } },
+  picture: { optional: { object: { index: 'integer', metresPerPixel: 'positive' } } },
+  note: 'string',
+} satisfies ShapeOf<ShotGroup>;
+
 const importOrigin = {
   format: 'string',
   writerVersion: optionalString,
@@ -229,6 +237,7 @@ const load = {
   measurements: { arrayOf: { object: measurementSeries } },
   notes: { arrayOf: { object: note } },
   pictures: { arrayOf: { object: picture } },
+  shotGroups: { optional: { arrayOf: { object: shotGroup } } },
   importedFrom: { optional: { object: importOrigin } },
   unmapped,
 } satisfies ShapeOf<Load>;
