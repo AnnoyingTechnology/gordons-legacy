@@ -23,8 +23,9 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 
 ## Next steps
 
-1. M3 polish: long text values are clipped in the printed report; native review of the five
-   translations; then M4 (data repository, once the maintainer agrees to create it).
+1. Native review of the five translations; M4 (data repository, once the maintainer agrees to create
+   it); remaining GRT tools (shot-group analysis, unit converter, parametric powder search and
+   tolerance synthesis, cartridge designer, chronograph imports).
 2. After parity (decision of 2026-10-13): validation against reality started
    (`docs/model/validation.md`, chronograph study done); next, published pressure data, then OBT, the
    energy terms and the covolume handling against the published science.
@@ -148,3 +149,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | GRT's start conditions mirrored as refusals (seated base ahead of the breech, ξ_E < 300, p_s < 0.6 p_abs); the p_abs limit matches GRT's `pMaxStart` in its memory snapshot. No real load is affected. |
 | 2026-10-14 | M5: GRT's temperature-coefficient assistant (fit tcc/tch to cold, 21 °C and hot velocities; read from `AssistPtWin`, bisection in place of GRT's search) in the powder-temperature section; tcc/tch editable; initial-pressure hint with GRT's typical values. |
 | 2026-10-14 | Projectile base editable (flat, boat-tail, hollow, semi-spherical hollow) with its tail dimensions; GRT's tail type 3 (semi-spherical hollow, from its tail assistant) is now imported and kept; GRT's model gives it no chamber correction, and neither does the engine. |
+| 2026-10-14 | Printed report shows long text values in full (names, barrel notes). |

@@ -716,6 +716,19 @@ main {
     display: block !important;
   }
 
+  /* Text values in full: an input would clip a long name. */
+  .property-table input[type='text']:has(+ .print-value) {
+    display: none;
+  }
+
+  .property-table .print-value {
+    display: inline !important;
+  }
+
+  .help-mark {
+    display: none;
+  }
+
   .load-editor {
     display: block;
   }
@@ -751,7 +764,8 @@ main {
   }
 }
 
-.print-header {
+.print-header,
+.print-value {
   display: none;
 }
 

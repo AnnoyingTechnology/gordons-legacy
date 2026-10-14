@@ -83,6 +83,7 @@ export class PropertyTable extends LitElement {
               ?readonly=${field.set === undefined}
               @change=${(event: Event) => field.set && this.emit(field.set(this.load, (event.target as HTMLInputElement).value))}
             />
+            <span class="print-value">${field.get(this.load)}</span>
           </td>
         </tr>
       `;
