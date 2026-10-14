@@ -42,7 +42,7 @@ Maintainer issues picked up 2026-10-14 (GitHub #1–#13, all UI or features beyo
 | #6 | Muzzle-blast sound level estimate at 1 m; physics to check with Codex. | To do |
 | #12 | Local load library (browse by cartridge, then powder/projectile, with key figures). | Done (first version) |
 | #14 | Shot groups: take a photo with the camera on phones and tablets. | Done |
-| #10 | Survey of GRT users' complaints; report on the issue for the maintainer to choose. | To do |
+| #10 | Survey of GRT users' complaints; report on the issue for the maintainer to choose. | Report in docs/research/grt-user-feedback.md; waiting for the maintainer's choice |
 
 Reverse-engineering workspace (local, never committed; procedure in `docs/model/grt-structure.md`):
 
@@ -195,3 +195,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | Double-charge finding reworded after the maintainer's question: it is a risk at the bench (a second charge would fit unnoticed), not a statement about his loads; a note instead of a caution when the doubled charge stays under the maximum. His nine loads at ≤ 55 % fill double to 118–375 % of the maximum in the model, 300 BLK subsonics included. |
 | 2026-10-14 | Library (#12): Save stores the load in the browser's library, Export writes a file; library view by cartridge and firearm with velocity, energy, % of maximum, review level, measured velocity and best group; import of files or a whole folder; backup and restore; "use the barrel of…" firearm chooser. All 63 of the maintainer's loads import; the one he named `borked_DANGEROUS` is the only Danger. |
 | 2026-10-14 | #15: the single-file copy downloads as `gordons-legacy-<build date>-<commit>.html`. |
+| 2026-10-14 | #10: survey of GRT users' complaints and of reloading inventory tools (`docs/research/grt-user-feedback.md`); proposals posted on the issue. |
