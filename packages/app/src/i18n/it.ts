@@ -129,6 +129,7 @@ export const it: Messages = {
   'boreArea.grooves': 'Numero di righe',
   'boreArea.current': 'attuale',
   'boreArea.use': 'Usa questa sezione',
+  'help.shotStartPressure': 'Pressione alla quale il proiettile inizia a muoversi. Valori tipici di GRT: pistola e revolver, palle incamiciate 80–150 bar, piombo standard 50–80 bar, piombo tenero 20–50 bar; carabina, palle incamiciate 250 bar.',
   'results.spinRate': 'Rotazione alla volata',
   'results.powerFactor': 'Fattore di potenza (IPSC)',
   'results.recoilImpulse': 'Impulso di rinculo',

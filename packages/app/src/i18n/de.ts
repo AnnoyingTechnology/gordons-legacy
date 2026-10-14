@@ -129,6 +129,7 @@ export const de: Messages = {
   'boreArea.grooves': 'Anzahl der Züge',
   'boreArea.current': 'bisher',
   'boreArea.use': 'Diesen Querschnitt übernehmen',
+  'help.shotStartPressure': 'Druck, bei dem sich das Geschoss zu bewegen beginnt. Typische Werte von GRT: Pistole und Revolver, Mantelgeschosse 80–150 bar, Standard-Blei 50–80 bar, weiches Blei 20–50 bar; Gewehr, Mantelgeschosse 250 bar.',
   'results.spinRate': 'Drehzahl an der Mündung',
   'results.powerFactor': 'Power-Faktor (IPSC)',
   'results.recoilImpulse': 'Rückstoßimpuls',

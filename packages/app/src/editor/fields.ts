@@ -21,6 +21,8 @@ export interface NumberField {
   path?: string;
   /** An assistant that computes the value from other measurements. */
   assistant?: 'boreArea';
+  /** A hint shown with the field: typical values, or what to measure. */
+  help?: MessageKey;
 }
 
 export interface TextField {
@@ -98,7 +100,7 @@ export const FIELD_GROUPS: FieldGroup[] = [
         get: (l) => seatingDepth(l),
         set: (l, v) => ({ ...l, cartridge: { ...l.cartridge, overallLength: l.cartridge.caseLength + l.projectile.length - v } }),
       }),
-      number({ path: 'projectile.shotStartPressure', label: 'field.shotStartPressure', kind: 'pressure', positive: true, get: (l) => l.projectile.shotStartPressure, set: (l, v) => ({ ...l, projectile: { ...l.projectile, shotStartPressure: v } }) }),
+      number({ path: 'projectile.shotStartPressure', help: 'help.shotStartPressure', label: 'field.shotStartPressure', kind: 'pressure', positive: true, get: (l) => l.projectile.shotStartPressure, set: (l, v) => ({ ...l, projectile: { ...l.projectile, shotStartPressure: v } }) }),
     ],
   },
   {

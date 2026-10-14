@@ -129,6 +129,7 @@ export const es: Messages = {
   'boreArea.grooves': 'Número de estrías',
   'boreArea.current': 'ahora',
   'boreArea.use': 'Usar esta sección',
+  'help.shotStartPressure': 'Presión a la que el proyectil empieza a moverse. Valores típicos de GRT: pistola y revólver, balas encamisadas 80–150 bar, plomo estándar 50–80 bar, plomo blando 20–50 bar; rifle, balas encamisadas 250 bar.',
   'results.spinRate': 'Rotación en boca',
   'results.powerFactor': 'Factor de potencia (IPSC)',
   'results.recoilImpulse': 'Impulso de retroceso',

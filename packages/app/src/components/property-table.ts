@@ -76,9 +76,12 @@ export class PropertyTable extends LitElement {
     const error = (draft === undefined ? undefined : this.validate(field, draft)) ?? this.problemFor(field);
     return html`
       <tr class=${error ? 'invalid' : ''}>
-        <th><label for=${id}>${t(field.label)}</label></th>
+        <th title=${field.help ? t(field.help) : nothing}>
+          <label for=${id}>${t(field.label)}</label>${field.help ? html`<span class="help-mark" aria-hidden="true"> ?</span>` : nothing}
+        </th>
         <td>
           <input
+            title=${field.help ? t(field.help) : nothing}
             id=${id}
             type="text"
             inputmode="decimal"

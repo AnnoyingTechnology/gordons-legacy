@@ -129,6 +129,7 @@ export const fr: Messages = {
   'boreArea.grooves': 'Nombre de rayures',
   'boreArea.current': 'actuellement',
   'boreArea.use': 'Utiliser cette section',
+  'help.shotStartPressure': 'Pression à laquelle le projectile commence à bouger. Valeurs typiques de GRT : pistolet et revolver, balles chemisées 80–150 bar, plomb standard 50–80 bar, plomb tendre 20–50 bar ; carabine, balles chemisées 250 bar.',
   'results.spinRate': 'Rotation à la bouche',
   'results.powerFactor': 'Facteur de puissance (IPSC)',
   'results.recoilImpulse': 'Impulsion de recul',

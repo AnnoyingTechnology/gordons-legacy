@@ -131,6 +131,7 @@ export const en = {
   'boreArea.grooves': 'Number of grooves',
   'boreArea.current': 'now',
   'boreArea.use': 'Use this area',
+  'help.shotStartPressure': "Pressure at which the projectile starts to move. GRT's typical values: pistol and revolver, jacketed bullets 80–150 bar, standard lead 50–80 bar, soft lead 20–50 bar; rifle, jacketed bullets 250 bar.",
   'results.spinRate': 'Spin at muzzle',
   'results.powerFactor': 'Power factor (IPSC)',
   'results.recoilImpulse': 'Recoil impulse',

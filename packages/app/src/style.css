@@ -867,3 +867,9 @@ button[aria-pressed='true'] {
   color: var(--muted);
   font-size: 0.85rem;
 }
+
+.property-table .help-mark {
+  color: var(--accent);
+  cursor: help;
+  font-size: 0.8em;
+}
