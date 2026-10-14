@@ -103,6 +103,10 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | Fixed cold and hot days replaced by a −50 to 50 °C powder-temperature scale showing where the load stays within limits (hatched outside: red above the maximum, amber for a speed-regime or burn change), ticks every 10 °C, 20 °C marked; the review notes where the load leaves its limits (notes, not cautions). | Julien |
 | 2026-10-14 | Component library: the CC0 community powders (12) and projectiles (393) bundled as a generated SI snapshot (`tools/data/build-community.ts`, 21 kB gzipped), marked "community, unverified" with author and date, until the data repository exists; the user's own `.propellant`/`.projectile` files kept in IndexedDB. Needs maintainer review as a data change. | Agent, for review |
 | 2026-10-14 | Tolerance synthesis returns simulated matches (sampled, every filter checked at every sample and at the displayed ends), not a single charge; defaults are named arbitrary filters (peak 35–85 %, fill 60–100 %); "Inspect simulation" opens a candidate with nothing measured. Shipped after three Codex safety reviews. | Agent, reviewed by Codex |
+| 2026-10-14 | The maintainer's committed loads are CC0, like the community corpus; the 9 mm reference is `glock17_eng5_n340_115grain_xtp_PLUS-P`. | Julien |
+| 2026-10-14 | Create the data repository `gordons-legacy-data` (public, CC0) now. The bundled community snapshot is approved (just data). | Julien |
+| 2026-10-14 | Attach the single-file copy and a zip of the site to each tagged GitHub Release. | Julien |
+| 2026-10-14 | GRT database import as a one-shot local maintainer tool reading the records from a running GRT; output stays on the maintainer's machine. | Julien |
 | 2026-10-14 | Speed scale fixed at 150–1,300 m/s for every load (.22 Short to .204 Ruger); transonic band Mach 0.95–1.1 at the powder temperature. | Agent, for review |
 
 ## Open questions
@@ -118,9 +122,6 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
   files (preferred: no cryptography reimplemented, nothing redistributed); (2) automating GRT's own
   one-by-one export under Wine; (3) an in-app importer, which would reimplement SEE and ship GRT's key
   (not recommended).
-- Licence of the maintainer's loads in `packages/formats/test/fixtures/maintainer/` (CC0 like the corpus?).
-  The selected 9 mm load is the hottest one (`glock17_eng5_n340_115grain_xtp_PLUS-P`); no 9 mm file is
-  named "full patate", so confirm it is the intended one.
 - Safety-relevant discrepancy to settle with measured pressures: at equal muzzle velocity, the research
   engine's peaks are up to 1.7× GRT's for subsonic rifle loads (GRT smooths its pressure). Which is
   closer to reality is unknown (docs/model/research-engine.md). Measured pressures (pressure trace,
@@ -128,11 +129,6 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 - Pressure validation needs published loads with measured pressures and matching components (powder
   model, exact bullet length): can the maintainer point to such data (Hodgdon/Alliant pressure data,
   pressure-trace recordings)? See `docs/model/validation.md`.
-- The data repository `gordons-legacy-data` (CC0, PLAN.md Data) doesn't exist yet: create it on
-  GitHub? The community corpus is small (12 powders, 48 projectiles, 49 calibers).
-- Lightweight packaging for users who want to own a copy (M6). Done so far: every build writes a
-  single self-contained HTML file (`gordons-legacy.html`, ~156 kB) that runs from disk, linked from the
-  About dialog on the Pages site. To decide: also attach it (and a zip of the site) to GitHub Releases?
 
 ## Log
 
