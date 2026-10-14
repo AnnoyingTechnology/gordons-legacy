@@ -1,5 +1,6 @@
 import type { Load } from '@gordons-legacy/formats';
 import type { Simulation } from '../engine.ts';
+import { DEFAULT_COLD_COEFFICIENT, DEFAULT_HOT_COEFFICIENT } from './burn.ts';
 import { grtTraditional } from './grt-traditional.ts';
 
 /**
@@ -132,4 +133,91 @@ function evaluate(load: Load): Simulation | undefined {
 function roundTo(value: number, decimals: number): number {
   const scale = 10 ** decimals;
   return Math.round(value * scale) / scale;
+}
+
+/** A muzzle velocity measured at a powder temperature, m/s and K. */
+export interface TemperatureMeasurement {
+  temperature: number;
+  velocity: number;
+}
+
+export interface TemperatureCoefficients {
+  /** The fitted cold coefficient (GRT `tcc`); undefined when no value matches the measurement. */
+  cold?: number;
+  /** The fitted hot coefficient (GRT `tch`). */
+  hot?: number;
+}
+
+/** Bisection bounds for a coefficient: GRT's defaults are −0.0214 and 0.0381. */
+const COEFFICIENT_RANGE = 2;
+/** 21 °C, the temperature powder models refer to, K. */
+const REFERENCE_TEMPERATURE = 294.15;
+const BISECTIONS = 60;
+
+/**
+ * Fits the powder's temperature coefficients to velocities measured with the load's charge at a cold,
+ * a normal (21 °C) and a hot powder temperature, as GRT's assistant does: the simulation is first offset
+ * to the normal measurement, then each coefficient is chosen so that the simulated velocity at its
+ * temperature matches the measured one plus that offset (grt-traditional.md, Temperature assistant).
+ */
+export function fitTemperatureCoefficients(
+  load: Load,
+  normal: TemperatureMeasurement,
+  cold: TemperatureMeasurement | undefined,
+  hot: TemperatureMeasurement | undefined,
+): TemperatureCoefficients | undefined {
+  const atNormal = evaluate({ ...load, charge: { ...load.charge, temperature: normal.temperature } });
+  if (!atNormal) return undefined;
+  const offset = atNormal.muzzleVelocity - normal.velocity;
+  // The coefficients the model actually uses: a powder with both at 0 gets GRT's defaults.
+  const { coldTemperatureCoefficient, hotTemperatureCoefficient } = load.propellant.burnModel;
+  const usesDefaults = coldTemperatureCoefficient === 0 && hotTemperatureCoefficient === 0;
+  const base = {
+    coldTemperatureCoefficient: usesDefaults ? DEFAULT_COLD_COEFFICIENT : coldTemperatureCoefficient,
+    hotTemperatureCoefficient: usesDefaults ? DEFAULT_HOT_COEFFICIENT : hotTemperatureCoefficient,
+  };
+  const fit = (measurement: TemperatureMeasurement, side: 'cold' | 'hot'): number | undefined => {
+    const target = measurement.velocity + offset;
+    const velocityWith = (coefficient: number) => {
+      // Both at 0 would switch GRT to its defaults: a 0 tried here, beside a 0 on the other side, is
+      // replaced by the smallest coefficient there is, which changes the velocity by nothing measurable.
+      const other = side === 'cold' ? base.hotTemperatureCoefficient : base.coldTemperatureCoefficient;
+      const tried = coefficient === 0 && other === 0 ? Number.MIN_VALUE : coefficient;
+      const burnModel = {
+        ...load.propellant.burnModel,
+        ...base,
+        ...(side === 'cold' ? { coldTemperatureCoefficient: tried } : { hotTemperatureCoefficient: tried }),
+      };
+      const simulation = evaluate({
+        ...load,
+        propellant: { ...load.propellant, burnModel },
+        charge: { ...load.charge, temperature: measurement.temperature },
+      });
+      return simulation?.muzzleVelocity;
+    };
+    // Velocity rises with either coefficient (the vivacity does), so bisection finds the match.
+    let low = -COEFFICIENT_RANGE;
+    let high = COEFFICIENT_RANGE;
+    const lowVelocity = velocityWith(low) ?? 0;
+    const highVelocity = velocityWith(high) ?? Infinity;
+    if (!(lowVelocity <= target && target <= highVelocity)) return undefined;
+    for (let step = 0; step < BISECTIONS; step++) {
+      const middle = (low + high) / 2;
+      const velocity = velocityWith(middle);
+      if (velocity === undefined || velocity < target) low = middle;
+      else high = middle;
+    }
+    return (low + high) / 2;
+  };
+  const result: TemperatureCoefficients = {};
+  // A coefficient acts only on its side of 21 °C.
+  if (cold && cold.temperature < REFERENCE_TEMPERATURE) {
+    const coefficient = fit(cold, 'cold');
+    if (coefficient !== undefined) result.cold = coefficient;
+  }
+  if (hot && hot.temperature > REFERENCE_TEMPERATURE) {
+    const coefficient = fit(hot, 'hot');
+    if (coefficient !== undefined) result.hot = coefficient;
+  }
+  return result;
 }

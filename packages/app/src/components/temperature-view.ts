@@ -2,6 +2,8 @@ import { grtTraditional } from '@gordons-legacy/engine';
 import type { Load } from '@gordons-legacy/formats';
 import { element } from '../dom.ts';
 import type { UiContext } from './context.ts';
+import './temperature-fit.ts';
+import type { TemperatureFit } from './temperature-fit.ts';
 
 /** Powder temperatures shown, °C: from a cold winter day to a cartridge left in the sun. */
 const TEMPERATURES = [-20, 0, 21, 35, 50];
@@ -49,5 +51,13 @@ export function renderTemperatures(load: Load, context: UiContext): HTMLElement 
       element('thead', {}, [element('tr', {}, head.map((label) => element('th', {}, [label])))]),
       element('tbody', {}, rows),
     ]),
+    fitForm(load, context),
   ]);
+}
+
+function fitForm(load: Load, context: UiContext): HTMLElement {
+  const form = document.createElement('gl-temperature-fit') as TemperatureFit;
+  form.load = load;
+  form.context = context;
+  return form;
 }

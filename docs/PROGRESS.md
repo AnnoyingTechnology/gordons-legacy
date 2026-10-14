@@ -146,3 +146,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | M5: GRT's effective-bore-area assistant read from the binary (three bore profiles) and added beside the field, in a dialog (`docs/model/grt-assistants.md`). |
 | 2026-10-14 | Case fill (GRT's Füllgrad, (m_c/ρ_bulk)/V_b) in the results, "compressed" above 100 %; loads above 120 % are refused, as GRT refuses them (`PropellantChargeTooHigh`, read from `computeMain`). |
 | 2026-10-14 | GRT's start conditions mirrored as refusals (seated base ahead of the breech, ξ_E < 300, p_s < 0.6 p_abs); the p_abs limit matches GRT's `pMaxStart` in its memory snapshot. No real load is affected. |
+| 2026-10-14 | M5: GRT's temperature-coefficient assistant (fit tcc/tch to cold, 21 °C and hot velocities; read from `AssistPtWin`, bisection in place of GRT's search) in the powder-temperature section; tcc/tch editable; initial-pressure hint with GRT's typical values. |

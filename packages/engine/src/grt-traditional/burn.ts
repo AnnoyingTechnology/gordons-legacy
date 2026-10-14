@@ -7,8 +7,8 @@ const REFERENCE_TEMPERATURE = 21;
 const COLD_SPAN = 41;
 const HOT_SPAN = 39;
 /** Coefficients GRT uses when a powder has none (both 0). */
-const DEFAULT_COLD_COEFFICIENT = -0.0214;
-const DEFAULT_HOT_COEFFICIENT = 0.0381;
+export const DEFAULT_COLD_COEFFICIENT = -0.0214;
+export const DEFAULT_HOT_COEFFICIENT = 0.0381;
 
 /** Vivacity Ba₀ at the powder's temperature (grt-traditional.md, Vivacity at the powder temperature). */
 export function vivacityAtTemperature(inputs: GrtInputs): number {

@@ -11,5 +11,13 @@ export type {
   SimulationWarning,
 } from './engine.ts';
 export { grtTraditional } from './grt-traditional/grt-traditional.ts';
-export { calibrateToVelocity, chargeForLeadTime, type Calibration } from './grt-traditional/calibration.ts';
+export {
+  calibrateToVelocity,
+  chargeForLeadTime,
+  fitTemperatureCoefficients,
+  type Calibration,
+  type TemperatureCoefficients,
+  type TemperatureMeasurement,
+} from './grt-traditional/calibration.ts';
 export { obtNodeTimes } from './grt-traditional/obt.ts';
+export { DEFAULT_COLD_COEFFICIENT, DEFAULT_HOT_COEFFICIENT } from './grt-traditional/burn.ts';

@@ -873,3 +873,23 @@ button[aria-pressed='true'] {
   cursor: help;
   font-size: 0.8em;
 }
+
+.temperature-fit {
+  margin-top: 0.6rem;
+}
+
+.temperature-fit h5 {
+  margin: 0.4rem 0;
+  font-size: 0.9rem;
+}
+
+.temperature-fit .note {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.temperature-fit input {
+  width: 6rem;
+  text-align: right;
+  font: inherit;
+}

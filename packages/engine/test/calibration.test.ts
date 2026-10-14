@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { importGrtLoad, type Load } from '@gordons-legacy/formats';
 import { describe, expect, it } from 'vitest';
-import { calibrateToVelocity, chargeForLeadTime, grtTraditional } from '../src/index.ts';
+import { calibrateToVelocity, chargeForLeadTime, fitTemperatureCoefficients, grtTraditional } from '../src/index.ts';
 
 const FIXTURE = join(import.meta.dirname, '../../formats/test/fixtures/cc0/loads/327_Federal_Magnum_by_dpeppe01_2022.12.12.grtload');
 
@@ -60,5 +60,21 @@ describe('chargeForLeadTime', () => {
     expect(calibration.reached).toBe(true);
     expect(calibration.load.charge.mass).toBeLessThan(load().charge.mass);
     expect(calibration.simulation.leadTime! * 1000).toBeCloseTo(0.4923, 3);
+  });
+});
+
+describe('fitTemperatureCoefficients', () => {
+  it('recovers the coefficients that produced the measured velocities', () => {
+    // Velocities "measured" with a powder whose coefficients are −0.05 and 0.06, 3 m/s above the model.
+    const truth = { ...load(), propellant: { ...load().propellant, burnModel: { ...load().propellant.burnModel, coldTemperatureCoefficient: -0.05, hotTemperatureCoefficient: 0.06 } } };
+    const measured = (celsius: number) => ({ temperature: celsius + 273.15, velocity: simulate({ ...truth, charge: { ...truth.charge, temperature: celsius + 273.15 } }).muzzleVelocity + 3 });
+    const fitted = fitTemperatureCoefficients(load(), measured(21), measured(-10), measured(50))!;
+    expect(fitted.cold).toBeCloseTo(-0.05, 6);
+    expect(fitted.hot).toBeCloseTo(0.06, 6);
+  });
+
+  it('ignores a "cold" measurement that is not below 21 °C', () => {
+    const at = (celsius: number, velocity: number) => ({ temperature: celsius + 273.15, velocity });
+    expect(fitTemperatureCoefficients(load(), at(21, 410), at(25, 400), undefined)).toEqual({});
   });
 });
