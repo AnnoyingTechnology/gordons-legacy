@@ -51,6 +51,9 @@ src/grt-traditional/
   grt-traditional.ts  the Engine: results and warnings
 ```
 
+`src/numerics/ode.ts` is an adaptive Dormand-Prince 5(4) integrator with events, for the research
+engine (docs/model/research-engine.md).
+
 `test/grt-parity.test.ts` compares the engine with results captured from GRT itself
 (`test/reference/grt`): peak pressure, muzzle velocity and barrel time agree to within 10⁻¹⁴, and the
 whole curve to the references' 10 printed digits. `test/validation.test.ts` checks that loads outside
