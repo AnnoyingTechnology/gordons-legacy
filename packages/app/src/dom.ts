@@ -13,12 +13,3 @@ export function element<Tag extends keyof HTMLElementTagNameMap>(
   created.append(...children);
   return created;
 }
-
-export function link(href: string, text: string): HTMLAnchorElement {
-  return element('a', { href }, [text]);
-}
-
-/** Fills a `<dl>` with term/description pairs. */
-export function fillDefinitionList(list: HTMLDListElement, rows: [term: string, description: Child][]): void {
-  list.replaceChildren(...rows.flatMap(([term, description]) => [element('dt', {}, [term]), element('dd', {}, [description])]));
-}

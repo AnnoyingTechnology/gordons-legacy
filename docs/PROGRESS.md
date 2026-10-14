@@ -23,7 +23,7 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 
 ## Next steps
 
-1. M3: About dialog, a load-file
+1. M3: a load-file
    comparison view (several loads overlaid), printing/PDF report.
 2. After parity (decision of 2026-10-13): check OBT, the energy terms and the covolume handling against
    the published science; record findings in `docs/model/`.
@@ -124,3 +124,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | M2 done: OBT recovered (`InnerBallistikOBT`: node times d + n c + L (b + n a) ms with odd/even coefficient sets, half nodes, nearest to the lead time). Matches GRT's OBT and node on all 50 references that have one. Every result GRT reports is now reproduced. |
 | 2026-10-14 | M3: ladder charges drawn behind the load's own curves (fainter for smaller charges), with a legend; the ladder is simulated once for charts and table. Result details reorganised. |
 | 2026-10-14 | M3: a Units dialog chooses the display unit of each kind of quantity, on top of the metric/imperial presets; saved with the settings. |
+| 2026-10-14 | M3: About dialog (dedication, safety notice, build, licence) in the five languages, opening on a first visit and from the toolbar; the page footer moved into the app and is translated. |

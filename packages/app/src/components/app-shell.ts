@@ -7,6 +7,7 @@ import { DocumentStore } from '../state/documents.ts';
 import { loadSettings, saveSettings, type Settings } from '../state/settings.ts';
 import { presetPreferences, type UnitPreferences, type UnitSystem } from '../units/units.ts';
 import { createContext, type UiContext } from './context.ts';
+import { REPOSITORY } from './about-dialog.ts';
 import './load-editor.ts';
 import './units-dialog.ts';
 
@@ -14,16 +15,20 @@ import './units-dialog.ts';
  * The application: toolbar, one tab per open load, and the active load's editor. Owns the document
  * store and the settings, and hands a UI context (language, units) down to the editor.
  */
+const WELCOME_SEEN_KEY = 'gordons-legacy.welcome-seen';
+
 export class AppShell extends LitElement {
   static override properties = {
     context: { state: true },
     openErrors: { state: true },
     unitsOpen: { state: true },
+    aboutOpen: { state: true },
   };
 
   declare context: UiContext;
   declare openErrors: ImportIssue[];
   declare unitsOpen: boolean;
+  declare aboutOpen: boolean;
   private readonly store = new DocumentStore(window.localStorage);
   private settings: Settings = loadSettings(window.localStorage, navigator.languages);
 
@@ -32,6 +37,8 @@ export class AppShell extends LitElement {
     this.context = createContext(this.settings.language, this.settings.units);
     this.openErrors = [];
     this.unitsOpen = false;
+    // The dedication and safety notice open on a browser's first visit.
+    this.aboutOpen = window.localStorage.getItem(WELCOME_SEEN_KEY) === null;
     this.store.subscribe(() => this.requestUpdate());
     document.documentElement.lang = this.settings.language;
   }
@@ -60,6 +67,7 @@ export class AppShell extends LitElement {
           </select>
         </label>
         <button @click=${() => (this.unitsOpen = true)}>${icon('units')} ${t('units.customize')}</button>
+        <button @click=${() => (this.aboutOpen = true)}>${icon('info')} ${t('toolbar.about')}</button>
         <label>
           ${t('toolbar.language')}
           <select @change=${(event: Event) => this.setLanguage((event.target as HTMLSelectElement).value as Language)}>
@@ -93,6 +101,14 @@ export class AppShell extends LitElement {
             ></gl-load-editor>`
           : html`<p class="empty">${t('documents.empty')}</p>`}
       </main>
+      <footer class="status-footer">
+        <p class="warning">${t('app.development')}</p>
+        <p>
+          ${t('about.version')} <a href="${REPOSITORY}/commit/${__BUILD_COMMIT__}">${__BUILD_COMMIT__.slice(0, 7)}</a>,
+          ${__BUILD_DATE__}
+        </p>
+      </footer>
+      <gl-about-dialog .open=${this.aboutOpen} .context=${this.context} @close=${this.closeAbout}></gl-about-dialog>
       <gl-units-dialog
         .open=${this.unitsOpen}
         .context=${this.context}
@@ -153,6 +169,11 @@ export class AppShell extends LitElement {
     this.settings = { ...this.settings, unitSystem: system, units: presetPreferences(system) };
     this.applySettings();
   }
+
+  private closeAbout = () => {
+    this.aboutOpen = false;
+    window.localStorage.setItem(WELCOME_SEEN_KEY, '1');
+  };
 
   /** Units chosen one kind at a time; the preset shown stays the one they started from. */
   private setUnitPreferences(units: UnitPreferences): void {

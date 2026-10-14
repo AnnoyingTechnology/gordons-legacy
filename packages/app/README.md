@@ -9,7 +9,7 @@ published data from the powder or bullet maker.
 ## Layout
 
 ```
-index.html              page shell: <gl-app>, status footer, first-visit dedication dialog
+index.html              page shell: <gl-app>
 vite.config.ts          build: build info constants, offline plugin
 build/offline.ts        Vite plugin that writes service-worker.js with the build's file list
 offline/                service worker template (plain JavaScript, served as is)
@@ -17,7 +17,9 @@ public/                 copied to the build unchanged: manifest, icon
 src/
   main.ts               entry point
   components/           Lit elements and render functions
-    app-shell.ts          <gl-app>: toolbar, tabs, drag and drop, open and save
+    app-shell.ts          <gl-app>: toolbar, tabs, drag and drop, open and save, footer
+    about-dialog.ts       dedication, safety notice and build; opens on a first visit
+    units-dialog.ts       display unit of each kind of quantity
     load-editor.ts        <gl-load-editor>: inputs beside results, re-simulated on every edit
     property-table.ts     <gl-property-table>: one group of inputs (label, value, unit)
     results-view.ts       key figures, charts, curve table, ladder
@@ -27,7 +29,8 @@ src/
   units/units.ts        display units per kind of quantity (metric and imperial presets)
   i18n/                 message catalogs (en is the source; the compiler checks the others are complete)
   state/                open documents and settings, kept in localStorage
-  offline.ts, status.ts, welcome.ts, dom.ts
+  icons/icons.ts        original SVG icons
+  offline.ts, dom.ts
 test/                   Vitest tests of the parts without a DOM
 ```
 

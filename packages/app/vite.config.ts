@@ -11,12 +11,11 @@ function commit(): string {
   }
 }
 
-// The milestone line of the handoff record, without its Markdown markup.
+// The milestone of the handoff record: the lead of its bullet, up to the first colon ("M2 done, M3 in progress").
 function milestone(): string {
   const progress = readFileSync(new URL('../../docs/PROGRESS.md', import.meta.url), 'utf8');
-  // The bullet may continue on indented lines.
-  const bullet = /^- \*\*Milestone:\*\* (.+(?:\n {2}.+)*)/m.exec(progress)?.[1] ?? 'unknown';
-  return bullet.replace(/\n\s+/g, ' ').replace(/[*`]/g, '');
+  const bullet = /^- \*\*Milestone:\*\* ([^:\n]+)/m.exec(progress)?.[1] ?? 'unknown';
+  return bullet.replace(/[*`]/g, '').trim();
 }
 
 export default defineConfig({
