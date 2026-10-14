@@ -27,7 +27,12 @@ src/
     cartridge-drawing.ts  side view of the loaded cartridge, from the standard's outline
     property-table.ts     <gl-property-table>: one group of inputs (label, value, unit)
     notes-panel.ts        <gl-notes-panel>: the load's notes and pictures
-    results-view.ts       key figures, charts, curve table, ladder
+    results-view.ts       the simulated shot: composes the sections below
+    figures-view.ts       key figures, details, the fitted-powder notice
+    charts-view.ts        pressure and velocity charts, axis switch, hover readout
+    curve-table.ts        the curve as a table
+    ladder-view.ts        the ladder: simulations, legend, table
+    problems-view.ts      why a load can't be simulated
     measurements-view.ts  chronograph measurements beside the simulated velocities; calibration
     obt-view.ts           OBT nodes near the load and the charge for each
     compare-view.ts       <gl-compare-view>: the open loads overlaid, with key figures
