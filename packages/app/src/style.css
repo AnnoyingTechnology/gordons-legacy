@@ -229,6 +229,10 @@ code {
   border-bottom: 1px solid var(--rule);
 }
 
+.result-details > div.wide {
+  grid-column: span 2;
+}
+
 .result-details dt,
 .result-details dd {
   margin: 0;
@@ -308,6 +312,39 @@ code {
   stroke-width: 2;
   stroke-linejoin: round;
   stroke-linecap: round;
+}
+
+.line-chart .series.background {
+  stroke-width: 1.25;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 1rem;
+  list-style: none;
+  padding: 0;
+  margin: 0.2rem 0 0.8rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.chart-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.chart-legend .main {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.chart-legend .swatch {
+  display: inline-block;
+  width: 1.2rem;
+  height: 0;
+  border-top: 2px solid var(--fg);
 }
 
 .line-chart .limit {

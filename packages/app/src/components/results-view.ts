@@ -1,4 +1,4 @@
-import { grtTraditional, type Simulation, type SimulationProblem } from '@gordons-legacy/engine';
+import { grtTraditional, type Simulation, type SimulationProblem, type SimulationResult } from '@gordons-legacy/engine';
 import { ladderChargeMasses, type Load } from '@gordons-legacy/formats';
 import { LineChart } from '../charts/line-chart.ts';
 import { element } from '../dom.ts';
@@ -27,9 +27,28 @@ export function renderResults(load: Load, shot: Simulation, context: UiContext, 
       )),
     );
   }
-  container.append(renderAxisSwitch(axis, onAxis, context), ...renderCharts(load, shot, axis, context), renderTable(shot, context));
-  if (load.ladder !== undefined) container.append(renderLadder(load, context));
+  const ladder = simulateLadder(load);
+  container.append(renderAxisSwitch(axis, onAxis, context), ...renderCharts(shot, ladder, axis, context, load));
+  if (ladder.length > 1) container.append(renderLegend(ladder, context));
+  container.append(renderTable(shot, context));
+  if (ladder.length > 1) container.append(renderLadder(load, ladder, context));
   return container;
+}
+
+/** One charge of a ladder and its simulation; the first is the load's own charge. */
+interface LadderShot {
+  mass: number;
+  result: SimulationResult;
+}
+
+function simulateLadder(load: Load): LadderShot[] {
+  if (load.ladder === undefined) return [];
+  return ladderChargeMasses(load).map((mass) => ({ mass, result: grtTraditional.simulate({ ...load, charge: { ...load.charge, mass } }) }));
+}
+
+/** Opacity of a ladder's reduced charges in the charts: the further from the load's charge, the fainter. */
+function ladderOpacity(index: number, count: number): number {
+  return 0.55 - (0.35 * (index - 1)) / Math.max(1, count - 2);
 }
 
 /** Why the load can't be simulated: one line per problem, naming the field when the editor shows it. */
@@ -83,7 +102,7 @@ function renderDetails(load: Load, shot: Simulation, context: UiContext): HTMLEl
   const { t, quantity, number } = context;
   // IPSC's power factor: grains times feet per second, over 1000.
   const powerFactor = (load.projectile.mass * 1000 * GRT_GRAINS_PER_GRAM * (shot.muzzleVelocity * FEET_PER_METRE)) / 1000;
-  const items: Array<{ label: string; value: string; help?: string }> = [
+  const items: Array<{ label: string; value: string; help?: string; wide?: boolean }> = [
     { label: t('results.muzzleEnergy'), value: quantity(shot.muzzleEnergy, 'energy') },
     { label: t('results.efficiency'), value: `${number(shot.efficiency * 100, 1)} %` },
     ...(shot.leadTime === undefined
@@ -91,7 +110,7 @@ function renderDetails(load: Load, shot: Simulation, context: UiContext): HTMLEl
       : [{ label: t('results.leadTime'), value: quantity(shot.leadTime, 'time'), help: t('results.leadTimeHelp') }]),
     ...(shot.optimalBarrelTime === undefined
       ? []
-      : [{ label: t('results.obt'), value: formatObt(shot.optimalBarrelTime, context), help: t('results.obtHelp') }]),
+      : [{ label: t('results.obt'), value: formatObt(shot.optimalBarrelTime, context), help: t('results.obtHelp'), wide: true }]),
     ...(shot.muzzleSpinRate === undefined ? [] : [{ label: t('results.spinRate'), value: quantity(shot.muzzleSpinRate, 'spinRate') }]),
     { label: t('results.powerFactor'), value: number(powerFactor, 1) },
     { label: t('results.recoilImpulse'), value: quantity(shot.recoil.totalImpulse, 'impulse') },
@@ -103,8 +122,11 @@ function renderDetails(load: Load, shot: Simulation, context: UiContext): HTMLEl
           { label: t('results.recoilVelocity'), value: quantity(shot.recoil.gun.velocity, 'velocity', 2) },
         ]),
   ];
-  return element('dl', { class: 'result-details' }, items.map(({ label, value, help }) =>
-    element('div', help ? { title: help } : {}, [element('dt', {}, [label]), element('dd', {}, [value])]),
+  return element('dl', { class: 'result-details' }, items.map(({ label, value, help, wide }) =>
+    element('div', { ...(help ? { title: help } : {}), ...(wide ? { class: 'wide' } : {}) }, [
+      element('dt', {}, [label]),
+      element('dd', {}, [value]),
+    ]),
   ));
 }
 
@@ -130,11 +152,17 @@ function renderAxisSwitch(current: ChartAxis, onAxis: (axis: ChartAxis) => void,
   ]);
 }
 
-function renderCharts(load: Load, shot: Simulation, axis: ChartAxis, context: UiContext): Element[] {
+function renderCharts(shot: Simulation, ladder: LadderShot[], axis: ChartAxis, context: UiContext, load: Load): Element[] {
   const { t, quantity, number } = context;
   const { curve } = shot;
   const xUnit = displayUnit(axis === 'travel' ? 'length' : 'time', context.units);
-  const x = Float64Array.from(axis === 'travel' ? curve.travel : curve.time, xUnit.fromSi);
+  const xOf = (simulation: Simulation) =>
+    Float64Array.from(axis === 'travel' ? simulation.curve.travel : simulation.curve.time, xUnit.fromSi);
+  const x = xOf(shot);
+  // The ladder's reduced charges, behind the load's own curve.
+  const reduced = ladder.slice(1).flatMap((entry, index) =>
+    entry.result.ok ? [{ simulation: entry.result.simulation, opacity: ladderOpacity(index + 1, ladder.length) }] : [],
+  );
   const xLabel = `${axis === 'travel' ? t('results.travelAxis') : t('results.timeAxis')} (${xUnit.symbol})`;
   const pressureUnit = displayUnit('pressure', context.units);
   const velocityUnit = displayUnit('velocity', context.units);
@@ -155,6 +183,11 @@ function renderCharts(load: Load, shot: Simulation, axis: ChartAxis, context: Ui
     limit: { value: pressureUnit.fromSi(load.cartridge.maxPressure), label: t('results.maximum', { value: quantity(load.cartridge.maxPressure, 'pressure') }) },
     markers: peakIndex >= 0 ? [{ index: peakIndex, label: quantity(shot.maxPressure, 'pressure') }] : [],
     events,
+    background: reduced.map(({ simulation, opacity }) => ({
+      x: xOf(simulation),
+      y: Float64Array.from(simulation.curve.pressure, pressureUnit.fromSi),
+      opacity,
+    })),
   });
   const velocity = new LineChart({
     title: t('results.velocity'),
@@ -167,6 +200,11 @@ function renderCharts(load: Load, shot: Simulation, axis: ChartAxis, context: Ui
     formatY: (value) => number(value, 0),
     markers: [{ index: curve.velocity.length - 1, label: quantity(shot.muzzleVelocity, 'velocity') }],
     events,
+    background: reduced.map(({ simulation, opacity }) => ({
+      x: xOf(simulation),
+      y: Float64Array.from(simulation.curve.velocity, velocityUnit.fromSi),
+      opacity,
+    })),
   });
 
   const readout = element('div', { class: 'readout', 'aria-live': 'polite' }, [t('results.hover')]);
@@ -219,11 +257,19 @@ function renderTable(shot: Simulation, context: UiContext): HTMLElement {
   ]);
 }
 
+/** The charts' key: the load's charge, then the ladder's fainter reduced charges. */
+function renderLegend(ladder: LadderShot[], context: UiContext): HTMLElement {
+  return element('ul', { class: 'chart-legend', 'aria-label': context.t('results.ladder') }, ladder.map(({ mass }, index) => {
+    const swatch = element('span', { class: 'swatch' });
+    swatch.style.opacity = String(index === 0 ? 1 : ladderOpacity(index, ladder.length));
+    return element('li', index === 0 ? { class: 'main' } : {}, [swatch, context.quantity(mass, 'chargeMass')]);
+  }));
+}
+
 /** One row per charge of the load's ladder, heaviest first. */
-function renderLadder(load: Load, context: UiContext): HTMLElement {
+function renderLadder(load: Load, ladder: LadderShot[], context: UiContext): HTMLElement {
   const { t, quantity, number } = context;
-  const rows = ladderChargeMasses(load).map((mass) => {
-    const result = grtTraditional.simulate({ ...load, charge: { ...load.charge, mass } });
+  const rows = ladder.map(({ mass, result }) => {
     if (!result.ok) {
       const cells = [quantity(mass, 'chargeMass'), t('results.notSimulated'), '', '', '', ''];
       return element('tr', {}, cells.map((cell) => element('td', {}, [cell])));

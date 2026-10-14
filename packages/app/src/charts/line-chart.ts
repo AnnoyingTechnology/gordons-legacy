@@ -1,8 +1,9 @@
 import { niceTicks } from './ticks.ts';
 
 /**
- * A single-series SVG line chart with a crosshair, a limit line, labelled points and labelled events.
- * Sized by its container; drawn in a fixed coordinate system scaled with `viewBox`.
+ * An SVG line chart of one main series, with a crosshair, a limit line, labelled points and labelled
+ * events, and optionally fainter curves behind it for comparison. Sized by its container; drawn in a
+ * fixed coordinate system scaled with `viewBox`.
  */
 export interface LineChartOptions {
   title: string;
@@ -18,8 +19,10 @@ export interface LineChartOptions {
   limit?: { value: number; label: string };
   /** Points labelled directly, by index. */
   markers?: { index: number; label: string }[];
-  /** Vertical hairlines at x values, labelled at the top. */
+  /** Vertical hairlines at x values, labelled at the bottom. */
   events?: { x: number; label: string }[];
+  /** Curves drawn thinner behind the main one, in its colour at the given opacity (0 to 1). */
+  background?: { x: ArrayLike<number>; y: ArrayLike<number>; opacity: number }[];
 }
 
 const WIDTH = 720;
@@ -39,10 +42,10 @@ export class LineChart {
 
   constructor(options: LineChartOptions) {
     this.options = options;
-    const { x, y } = options;
-    this.xMin = x[0] ?? 0;
-    this.xMax = x[x.length - 1] ?? 1;
-    let yMax = Math.max(...Array.from(y), options.limit?.value ?? 0);
+    const all = [options, ...(options.background ?? [])];
+    this.xMin = Math.min(...all.map((series) => series.x[0] ?? 0));
+    this.xMax = Math.max(...all.map((series) => series.x[series.x.length - 1] ?? 1));
+    let yMax = Math.max(...all.flatMap((series) => Array.from(series.y)), options.limit?.value ?? 0);
     // Headroom above the highest value, so that labels above points stay inside the plot.
     const yTicks = niceTicks(0, yMax * 1.15);
     yMax = yTicks[yTicks.length - 1]!;
@@ -56,7 +59,12 @@ export class LineChart {
     this.drawAxes(yTicks, niceTicks(this.xMin, this.xMax, 8).filter((tick) => tick >= this.xMin && tick <= this.xMax));
     this.drawLimit();
     this.drawEvents();
-    this.element.append(svg('path', { d: this.linePath(), class: 'series', stroke: options.color }));
+    for (const series of options.background ?? []) {
+      this.element.append(
+        svg('path', { d: this.linePath(series.x, series.y), class: 'series background', stroke: options.color, 'stroke-opacity': series.opacity }),
+      );
+    }
+    this.element.append(svg('path', { d: this.linePath(options.x, options.y), class: 'series', stroke: options.color }));
     this.drawMarkers();
 
     this.crosshair = svg('line', { y1: MARGIN.top, y2: HEIGHT - MARGIN.bottom, class: 'crosshair', visibility: 'hidden' });
@@ -87,8 +95,7 @@ export class LineChart {
     this.dot.setAttribute('cy', String(this.yScale(this.options.y[index]!)));
   }
 
-  private linePath(): string {
-    const { x, y } = this.options;
+  private linePath(x: ArrayLike<number>, y: ArrayLike<number>): string {
     let path = '';
     for (let index = 0; index < x.length; index++) {
       path += `${index === 0 ? 'M' : 'L'}${this.xScale(x[index]!).toFixed(1)},${this.yScale(y[index]!).toFixed(1)}`;

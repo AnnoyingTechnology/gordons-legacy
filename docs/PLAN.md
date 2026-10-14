@@ -58,8 +58,8 @@ native code is needed.
 - Static site on GitHub Pages, deployed by CI on every push to `main`; the same build installs as an
   offline app from Chromium-based browsers.
 - File System Access API where available; upload/download fallback elsewhere (Firefox, Safari).
-- Few dependencies, pinned, so the build still works years from now. Proposed: Vite, uPlot for charts,
-  Vitest. UI components with Lit 3 (decided 2026-10-14).
+- Few dependencies, pinned, so the build still works years from now. Vite,
+  Vitest. UI components with Lit 3 (decided 2026-10-14); charts in plain SVG, no chart library.
 
 ## UI
 
