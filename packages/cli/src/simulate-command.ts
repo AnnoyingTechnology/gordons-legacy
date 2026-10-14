@@ -29,6 +29,11 @@ export function formatSummary(load: Load, shot: Simulation): string {
   ];
   if (shot.leadTime !== undefined) lines.push(`Lead time (BLT)  ${(shot.leadTime * 1000).toFixed(4)} ms from 10 % of peak`);
   if (shot.muzzleSpinRate !== undefined) lines.push(`Spin at muzzle   ${(shot.muzzleSpinRate * 60).toFixed(0)} rpm`);
+  if (shot.optimalBarrelTime) {
+    const { node, time, deviation } = shot.optimalBarrelTime;
+    const name = `#${Math.trunc(node)}${node % 1 !== 0 ? ' ½' : ''}`;
+    lines.push(`Nearest OBT node ${name} at ${(time * 1000).toFixed(4)} ms (lead time ${(-deviation * 100).toFixed(1)} % longer)`);
+  }
   lines.push(`Recoil impulse   ${shot.recoil.totalImpulse.toFixed(2)} N·s`);
   if (shot.recoil.gun) {
     lines.push(`Recoil           ${shot.recoil.gun.energy.toFixed(1)} J free recoil energy, ${shot.recoil.gun.velocity.toFixed(2)} m/s`);

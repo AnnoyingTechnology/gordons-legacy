@@ -76,6 +76,18 @@ export interface Simulation {
   tenPercentPeakTime?: number;
   /** Barrel time counted from `tenPercentPeakTime` (GRT's "bullet lead time", BLT), s. */
   leadTime?: number;
+  /**
+   * The barrel-harmonics node whose optimal barrel time is nearest the lead time (GRT's OBT); absent
+   * without a lead time. A model still to be checked against published measurements.
+   */
+  optimalBarrelTime?: {
+    /** Node number; halves are half nodes. */
+    node: number;
+    /** The node's optimal barrel time, s. */
+    time: number;
+    /** 1 − lead time / optimal barrel time. */
+    deviation: number;
+  };
   recoil: Recoil;
   /** Where the charge finished burning, if it did before the muzzle. */
   burnout?: { travel: number; pressure: number };

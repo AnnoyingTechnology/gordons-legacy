@@ -61,6 +61,8 @@ export const es: Messages = {
   'results.efficiency': 'Rendimiento',
   'results.leadTime': 'Tiempo de avance (BLT)',
   'results.leadTimeHelp': 'Tiempo en el cañón contado desde que la presión alcanza el 10 % de su pico',
+  'results.obt': 'Nodo OBT más cercano',
+  'results.obtHelp': 'Tiempo óptimo en el cañón del nodo de armónicos más cercano, según el modelo de GRT; el porcentaje indica cuánto más largo es el tiempo de avance. Confírmelo con sus propias agrupaciones.',
   'results.spinRate': 'Rotación en boca',
   'results.powerFactor': 'Factor de potencia (IPSC)',
   'results.recoilImpulse': 'Impulso de retroceso',

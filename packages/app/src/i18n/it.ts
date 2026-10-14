@@ -61,6 +61,8 @@ export const it: Messages = {
   'results.efficiency': 'Rendimento',
   'results.leadTime': 'Tempo di avanzamento (BLT)',
   'results.leadTimeHelp': 'Tempo in canna contato da quando la pressione raggiunge il 10 % del picco',
+  'results.obt': 'Nodo OBT più vicino',
+  'results.obtHelp': 'Tempo ottimale in canna del nodo armonico più vicino, secondo il modello di GRT; la percentuale indica di quanto il tempo di avanzamento è più lungo. Da confermare con le proprie rosate.',
   'results.spinRate': 'Rotazione alla volata',
   'results.powerFactor': 'Fattore di potenza (IPSC)',
   'results.recoilImpulse': 'Impulso di rinculo',

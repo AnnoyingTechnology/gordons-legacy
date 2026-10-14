@@ -110,3 +110,39 @@ export function recoil(inputs: GrtInputs, solution: GrtSolution, muzzle: GrtPoin
   }
   return result;
 }
+
+/**
+ * GRT's barrel-time coefficients for nodes whose integer part is even, then odd: a node n's optimal
+ * barrel time is d + n·c + L·(b + n·a) ms, L the barrel length in inches. GRT doesn't document their
+ * origin.
+ */
+const EVEN_NODE = { a: 0.00440803571, b: 0.0268380952, c: -0.002401881, d: 0.0439015873 };
+const ODD_NODE = { a: 0.00442642857, b: 0.0284942857, c: -0.00318785714, d: 0.0291180952 };
+const METRES_PER_INCH = 0.0254;
+
+/** The barrel-harmonics node whose optimal barrel time (OBT) is nearest the load's lead time. */
+export interface GrtOptimalBarrelTime {
+  /** Node number, from −6 to 25, in halves when half nodes are searched. */
+  node: number;
+  /** The node's optimal barrel time, ms. */
+  time: number;
+  /** 1 − lead time / OBT. */
+  deviation: number;
+}
+
+/**
+ * GRT's OBT search: every node from −6 to 25 (by halves with `halfNodes`), keeping the one whose
+ * deviation 1 − leadTime / OBT is smallest in size, and below 1. `leadTime` in ms, `barrelLength` in m.
+ */
+export function optimalBarrelTime(leadTime: number, barrelLength: number, halfNodes: boolean): GrtOptimalBarrelTime | undefined {
+  if (!(leadTime > 0 && barrelLength > 0)) return undefined;
+  const inches = barrelLength / METRES_PER_INCH;
+  let best: GrtOptimalBarrelTime | undefined;
+  for (let node = -6; !(25 < node); node += halfNodes ? 0.5 : 1) {
+    const { a, b, c, d } = Math.trunc(node) % 2 !== 0 ? ODD_NODE : EVEN_NODE;
+    const time = d + node * c + inches * (b + node * a);
+    const deviation = 1 - leadTime / time;
+    if (Math.abs(deviation) < Math.abs(best?.deviation ?? 1)) best = { node, time, deviation };
+  }
+  return best;
+}

@@ -61,6 +61,8 @@ export const fr: Messages = {
   'results.efficiency': 'Rendement',
   'results.leadTime': 'Temps de parcours (BLT)',
   'results.leadTimeHelp': 'Temps dans le canon compté depuis que la pression atteint 10 % de son pic',
+  'results.obt': 'Nœud OBT le plus proche',
+  'results.obtHelp': "Temps de canon optimal du nœud d'harmoniques le plus proche, selon le modèle de GRT ; le pourcentage indique de combien le temps de parcours est plus long. À confirmer par vos propres groupements.",
   'results.spinRate': 'Rotation à la bouche',
   'results.powerFactor': 'Facteur de puissance (IPSC)',
   'results.recoilImpulse': 'Impulsion de recul',

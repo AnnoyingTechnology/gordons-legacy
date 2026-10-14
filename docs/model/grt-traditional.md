@@ -235,6 +235,19 @@ muzzle pressure in Pa, v₀ the muzzle velocity and k the heat capacity ratio:
 
 GRT also computes a drag-like term (A · k · c_w · 0.5 · (v_a − v₀)²) that it doesn't report.
 
+## Optimal barrel time (confirmed)
+
+GRT's OBT works on the lead time t_L (barrel time from 10 % of peak, ms; none when the lead time is
+absent) and the barrel length L in inches (x_e / 0.0254). For each node n from −6 to 25, by halves when
+the half-nodes preference is on (it was in every capture):
+
+OBT_n = d + n c + L (b + n a) ms,
+
+with (a, b, c, d) = (0.00440803571, 0.0268380952, −0.002401881, 0.0439015873) when trunc(n) is even and
+(0.00442642857, 0.0284942857, −0.00318785714, 0.0291180952) when it is odd. The node kept is the one
+with the smallest |1 − t_L / OBT_n|, if below 1; GRT shows it as "#15" or "#15 ½". GRT doesn't say where
+the coefficients come from; to be checked against the published OBT work (Chris Long) after parity.
+
 ## Inputs outside the model (Gordon's Legacy)
 
 GRT simulated almost any input and showed plausible numbers even where its equations are undefined.
@@ -259,5 +272,5 @@ which no load file seen so far carries.
 
 ## Not yet covered
 
-Air drag beyond the leak term (`fn_gDrag`), recoil,
-OBT, the 10 %-of-peak times, and custom ladder steps.
+Air drag beyond the leak term (`fn_gDrag`), the drag-like recoil term GRT computes but doesn't report,
+and custom ladder steps.

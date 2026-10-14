@@ -63,6 +63,8 @@ export const en = {
   'results.efficiency': 'Efficiency',
   'results.leadTime': 'Lead time (BLT)',
   'results.leadTimeHelp': 'Barrel time counted from when the pressure reaches 10 % of its peak',
+  'results.obt': 'Nearest OBT node',
+  'results.obtHelp': "Optimal barrel time of the nearest barrel-harmonics node, by GRT's model; the percentage is how much longer the lead time is. Confirm with your own groups.",
   'results.spinRate': 'Spin at muzzle',
   'results.powerFactor': 'Power factor (IPSC)',
   'results.recoilImpulse': 'Recoil impulse',

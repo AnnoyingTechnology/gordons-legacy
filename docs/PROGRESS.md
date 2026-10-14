@@ -4,10 +4,11 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 
 ## Current state
 
-- **Milestone:** M2 in progress: the GRT Traditional engine reproduces GRT to machine precision (peak
+- **Milestone:** M2 done, M3 in progress: the GRT Traditional engine reproduces GRT to machine precision (peak
   pressure, muzzle velocity, barrel time within 10⁻¹⁴) on all 19 fixtures and all 67 maintainer loads,
   every gas-leak type, jump to the lands and z2 recomputation included, with muzzle energy,
-  efficiency, spin, the 10 %-of-peak lead time (BLT) and recoil. Remaining: OBT.
+  efficiency, spin, the 10 %-of-peak lead time (BLT), recoil and OBT: every result GRT reports. M2 is
+  complete; M3 (the app) is in progress.
 - **Code:** `packages/formats` imports `.grtload`, `.caliber`, `.projectile` and `.propellant` files into
   the load format (SI units), and saves and reads JSON loads with field-by-field validation; 182 tests on
   the CC0 corpus and five of the maintainer's loads. Imports are checked against the same specification as
@@ -22,11 +23,10 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 
 ## Next steps
 
-1. M2: GRT's OBT (`compute_OBT` 0x2f007dc; the `InnerBallistikOBT` class with A, B, C, D, L, Count,
-   half nodes around 0x2f9d000–0x2fa0100), from the binary into `docs/model/grt-traditional.md`; all
-   captures hold GRT's `OptimalBarrelTime` and node to compare.
-2. M3: per-quantity unit choices, ladder curves in the charts,
-   About dialog.
+1. M3: per-quantity unit choices, ladder curves in the charts, About dialog, a load-file
+   comparison view (several loads overlaid), printing/PDF report.
+2. After parity (decision of 2026-10-13): check OBT, the energy terms and the covolume handling against
+   the published science; record findings in `docs/model/`.
 
 Reverse-engineering workspace (local, never committed; procedure in `docs/model/grt-structure.md`):
 
@@ -121,3 +121,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | M2: slot leaks recovered (`ComputeArea`: the uncovered arc w · 2r · acos(1 − h/r)); round holes, square holes and slots now each have a variant fixture matching GRT to machine precision. GRT's type names: cylinder gap, round hole, square hole, slot. The `unsupported-feature` warning is gone: every input the engine accepts is modelled. |
 | 2026-10-14 | M2: derived results recovered and shown in the app and CLI: muzzle energy, efficiency, spin, IPSC/MIP power factors, and the 10 %-of-peak time with the lead time (BLT), which GRT finds on a Catmull-Rom resampling of the rising curve (with its quirks). Match GRT to 10⁻¹² on all fixtures and maintainer loads. |
 | 2026-10-14 | M2: recoil recovered (`InnerBallistikRecoil`): impulses of projectile, charge and muzzle gas, gas exit velocity, and with a gun mass the free recoil energy, velocity, acceleration and force. Matches GRT's displayed values on every reference; shown in the app (with a gun-mass field) and the CLI. |
+| 2026-10-14 | M2 done: OBT recovered (`InnerBallistikOBT`: node times d + n c + L (b + n a) ms with odd/even coefficient sets, half nodes, nearest to the lead time). Matches GRT's OBT and node on all 50 references that have one. Every result GRT reports is now reproduced. |

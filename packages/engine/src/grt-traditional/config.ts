@@ -16,6 +16,8 @@ export const CONFIG = {
   rotationEnergy: true,
   /** Primer energy, J, which GRT uses only for the time to cross the jump (`CORE_PRIMER_ENERGY_FACTOR`). */
   primerEnergy: 75.09815610370678,
+  /** The OBT search includes half nodes (a GRT preference; on in the reference captures). */
+  obtHalfNodes: true,
   /** Weight of the new pressure in the pressure smoothing while the powder burns. */
   pressureSmoothingBurning: 0.27,
   /** Weight of the new pressure after burnout. */

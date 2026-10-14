@@ -61,6 +61,8 @@ export const de: Messages = {
   'results.efficiency': 'Wirkungsgrad',
   'results.leadTime': 'Vorlaufzeit (BLT)',
   'results.leadTimeHelp': 'Laufzeit, gezählt ab dem Erreichen von 10 % des Spitzendrucks',
+  'results.obt': 'Nächster OBT-Knoten',
+  'results.obtHelp': 'Optimale Laufzeit des nächsten Schwingungsknotens nach dem Modell von GRT; der Prozentwert gibt an, um wie viel die Vorlaufzeit länger ist. Mit eigenen Streukreisen bestätigen.',
   'results.spinRate': 'Drehzahl an der Mündung',
   'results.powerFactor': 'Power-Faktor (IPSC)',
   'results.recoilImpulse': 'Rückstoßimpuls',

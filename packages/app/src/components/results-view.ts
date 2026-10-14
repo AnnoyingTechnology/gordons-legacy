@@ -89,6 +89,9 @@ function renderDetails(load: Load, shot: Simulation, context: UiContext): HTMLEl
     ...(shot.leadTime === undefined
       ? []
       : [{ label: t('results.leadTime'), value: quantity(shot.leadTime, 'time'), help: t('results.leadTimeHelp') }]),
+    ...(shot.optimalBarrelTime === undefined
+      ? []
+      : [{ label: t('results.obt'), value: formatObt(shot.optimalBarrelTime, context), help: t('results.obtHelp') }]),
     ...(shot.muzzleSpinRate === undefined ? [] : [{ label: t('results.spinRate'), value: quantity(shot.muzzleSpinRate, 'spinRate') }]),
     { label: t('results.powerFactor'), value: number(powerFactor, 1) },
     { label: t('results.recoilImpulse'), value: quantity(shot.recoil.totalImpulse, 'impulse') },
@@ -103,6 +106,14 @@ function renderDetails(load: Load, shot: Simulation, context: UiContext): HTMLEl
   return element('dl', { class: 'result-details' }, items.map(({ label, value, help }) =>
     element('div', help ? { title: help } : {}, [element('dt', {}, [label]), element('dd', {}, [value])]),
   ));
+}
+
+/** `#15 ½ · 0.465 ms (+0.8 %)`: the node, its time, and how much longer the lead time is. */
+function formatObt(obt: NonNullable<Simulation['optimalBarrelTime']>, context: UiContext): string {
+  const whole = Math.trunc(obt.node);
+  const node = `#${whole}${obt.node !== whole ? ' ½' : ''}`;
+  const offset = -obt.deviation * 100;
+  return `${node} · ${context.quantity(obt.time, 'time')} (${offset >= 0 ? '+' : '−'}${context.number(Math.abs(offset), 1)} %)`;
 }
 
 function renderAxisSwitch(current: ChartAxis, onAxis: (axis: ChartAxis) => void, context: UiContext): HTMLElement {

@@ -75,6 +75,13 @@ describe.each(references.map((reference) => [reference.source, reference] as con
     expect(recoil.gun?.velocity ?? 0).toBeCloseTo(value(results['RecoilVelocity']), 2);
     expect(recoil.gun?.acceleration ?? 0).toBeCloseTo(value(results['RecoilAcceleration']), 2);
     expect((recoil.gun?.force ?? 0) / 1000).toBeCloseTo(value(results['RecoilForce']), 3);
+    if (results['OptimalBarrelTime'] === '') {
+      expect(simulation.optimalBarrelTime).toBeUndefined();
+    } else {
+      const obt = simulation.optimalBarrelTime!;
+      expect(relativeError(obt.time * 1000, value(results['OptimalBarrelTime']))).toBeLessThan(SCALAR_TOLERANCE);
+      expect(`#${Math.trunc(obt.node)}${obt.node % 1 !== 0 ? ' ½' : ''}`).toBe(results['OptimalBarrelTimeNode']);
+    }
     // GRT leaves the lead time empty, and the 10 % time at 0, when the initial pressure is above 10 % of the peak.
     if (results['BulletLeadTime10Pmax'] === '') {
       expect(simulation.leadTime).toBeUndefined();

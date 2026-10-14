@@ -59,7 +59,7 @@ native code is needed.
   offline app from Chromium-based browsers.
 - File System Access API where available; upload/download fallback elsewhere (Firefox, Safari).
 - Few dependencies, pinned, so the build still works years from now. Proposed: Vite, uPlot for charts,
-  Vitest. UI framework (Lit or none) to be decided in M3.
+  Vitest. UI components with Lit 3 (decided 2026-10-14).
 
 ## UI
 
@@ -122,7 +122,7 @@ Intake:
 | M0 | Repository, plan, licence. |
 | M1 | Formats: JSON schema v1, `.grtload` import with round-trip tests, GRT component-file import. |
 | M2 | Engine and CLI: reproduce GRT on the reference corpus. |
-| M3 | UI: load editor, main diagram and results in GRT's layout; offline install; English, French, German. |
+| M3 | UI: load editor, main diagram and results in GRT's layout; offline install; English, French, German, Spanish, Italian. |
 | M4 | Data: data repository, intake checks, auto-download, GRT database import. |
 | M5 | Parity: ladders, OBT, measurements and chronograph import, parametric powder search, tolerance synthesis, cartridge designer, reports. |
 | M6 | Release on GitHub Pages; packages for users who want to own a copy (proposed: a self-contained HTML file and a zip of the site attached to each GitHub Release); announce to the GRT community (Discord, wiederladeforum.de, French Reloading Team). |
