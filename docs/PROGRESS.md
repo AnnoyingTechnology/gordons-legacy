@@ -27,7 +27,7 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
    references for all the maintainer's loads (locally) and widen the parity tests.
 2. Read the Codex engine safety review (`/tmp/codex-engine-review.md` if still there; otherwise rerun it)
    and fix what it finds: input validation, non-finite results, loops that may not end.
-3. M3: original SVG icons (Sonnet), per-quantity unit choices, ladder curves in the charts,
+3. M3: per-quantity unit choices, ladder curves in the charts,
    About dialog.
 
 Reverse-engineering workspace (local, never committed; procedure in `docs/model/grt-structure.md`):
@@ -115,3 +115,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | M3: display units (per kind, metric/imperial presets) and i18n (5 catalogs, type-checked completeness) for the app; Lit added. |
 | 2026-10-14 | M3: load editor in the app: tabs of open loads, property tables per group (cartridge, barrel, projectile, propellant, charge and ladder), live simulation, Open/Save (File System Access API or download), units and language in the toolbar. Chart y-axis always reaches above the highest value; labels have a background halo. |
 | 2026-10-14 | M3: the app works offline (service worker caching the build, network first for pages) and is installable (manifest, SVG icon); checked in headless Chromium by reloading offline. App README. |
+| 2026-10-14 | M3: original SVG icon set (33 icons, 24 px line style, drawn by a Sonnet subagent from each function, reviewed in light and dark); toolbar and tabs use them. |

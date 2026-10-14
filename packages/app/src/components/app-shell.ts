@@ -2,6 +2,7 @@ import type { ImportIssue, Load } from '@gordons-legacy/formats';
 import { serializeLoad } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
 import { LANGUAGE_NAMES, type Language } from '../i18n/i18n.ts';
+import { icon } from '../icons/icons.ts';
 import { DocumentStore } from '../state/documents.ts';
 import { loadSettings, saveSettings, type Settings } from '../state/settings.ts';
 import { presetPreferences, type UnitSystem } from '../units/units.ts';
@@ -42,10 +43,10 @@ export class AppShell extends LitElement {
       <header class="toolbar">
         <h1>${t('app.title')}</h1>
         <label class="button">
-          ${t('toolbar.open')}
+          ${icon('open')} ${t('toolbar.open')}
           <input type="file" accept=".grtload,.json" multiple hidden @change=${this.openFromInput} />
         </label>
-        <button ?disabled=${!active} @click=${() => active && this.save(active.id)}>${t('toolbar.save')}</button>
+        <button ?disabled=${!active} @click=${() => active && this.save(active.id)}>${icon('save')} ${t('toolbar.save')}</button>
         <span class="spacer"></span>
         <label>
           ${t('toolbar.units')}
@@ -70,7 +71,7 @@ export class AppShell extends LitElement {
               <button class="tab-name" @click=${() => this.store.activate(document.id)}>
                 ${document.name}${this.store.isDirty(document) ? html` <span title=${t('documents.unsaved')}>•</span>` : nothing}
               </button>
-              <button class="tab-close" aria-label=${t('documents.close', { name: document.name })} @click=${() => this.store.close(document.id)}>×</button>
+              <button class="tab-close" aria-label=${t('documents.close', { name: document.name })} @click=${() => this.store.close(document.id)}>${icon('close')}</button>
             </div>
           `,
         )}

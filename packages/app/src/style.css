@@ -381,6 +381,7 @@ button,
   margin: 0;
   box-sizing: border-box;
   font: inherit;
+  gap: 0.4rem;
   line-height: 1.4;
   padding: 0.25rem 0.8rem;
   border: 1px solid var(--rule);
@@ -422,6 +423,15 @@ button:disabled {
 
 .tab-close {
   color: var(--muted);
+}
+
+.tab-close .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.icon {
+  flex: none;
 }
 
 main {
