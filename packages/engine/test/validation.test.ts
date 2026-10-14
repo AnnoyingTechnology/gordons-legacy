@@ -52,6 +52,9 @@ describe('input validation', () => {
     ],
     ['a charge filling the chamber exactly', (l) => ({ ...l, charge: { ...l.charge, mass: 0.0016405442731485778 } }), 'charge-exceeds-case', 'charge.mass'],
     ['a charge larger than the chamber', (l) => ({ ...l, charge: { ...l.charge, mass: 0.002 } }), 'charge-exceeds-case', 'charge.mass'],
+    // 0.00145 kg of powder poured at its bulk density fills more than 120 % of this chamber but less
+    // than its solid volume does.
+    ['a charge compressed beyond GRT\'s 120 % fill', (l) => ({ ...l, charge: { ...l.charge, mass: 0.00145 } }), 'charge-too-compressed', 'charge.mass'],
     ['a barrel shorter than the seated projectile', (l) => ({ ...l, barrel: { ...l.barrel, length: 0.01 } }), 'barrel-too-short', 'barrel.length'],
     [
       'a gas leak of negative type',

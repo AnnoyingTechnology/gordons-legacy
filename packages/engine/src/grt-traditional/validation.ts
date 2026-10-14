@@ -3,6 +3,14 @@ import { FormFunction, vivacityAtTemperature } from './burn.ts';
 import { chamberVolume } from './geometry.ts';
 import type { GrtInputs } from './inputs.ts';
 
+/** GRT's limit on the case fill: more than 120 % is a compressed charge outside the model. */
+const MAXIMUM_CASE_FILL = 1.2;
+
+/** The charge's poured volume over the chamber volume, as GRT computes it (`Lv`). */
+export function caseFill(inputs: GrtInputs, chamber: number): number {
+  return inputs.chargeMass / inputs.bulkDensity / chamber;
+}
+
 /** Inputs that must be finite and above zero, with their place in the load. */
 const POSITIVE: ReadonlyArray<readonly [keyof GrtInputs, string]> = [
   ['projectileMass', 'projectile.mass'],
@@ -16,6 +24,7 @@ const POSITIVE: ReadonlyArray<readonly [keyof GrtInputs, string]> = [
   ['barrelLength', 'barrel.length'],
   ['heatOfExplosion', 'propellant.heatOfExplosion'],
   ['grainDensity', 'propellant.grainDensity'],
+  ['bulkDensity', 'propellant.bulkDensity'],
   ['vivacity', 'propellant.burnModel.vivacity'],
   ['z1', 'propellant.burnModel.z1'],
 ];
@@ -71,6 +80,8 @@ export function validateInputs(inputs: GrtInputs): SimulationProblem[] {
   if (!(vivacityAtTemperature(inputs) > 0)) problems.push({ code: 'vivacity-not-positive', path: 'charge.temperature' });
   const chamber = chamberVolume(inputs.caseCapacity, inputs.projectileDiameter, inputs.seatingDepth, inputs.base);
   if (!(chamber - inputs.chargeMass / inputs.grainDensity > 0)) problems.push({ code: 'charge-exceeds-case', path: 'charge.mass' });
+  // GRT refuses a charge whose poured volume is more than 120 % of the chamber (`PropellantChargeTooHigh`).
+  else if (caseFill(inputs, chamber) > MAXIMUM_CASE_FILL) problems.push({ code: 'charge-too-compressed', path: 'charge.mass' });
   if (!(inputs.barrelLength - (inputs.caseLength - inputs.seatingDepth) > 0)) {
     problems.push({ code: 'barrel-too-short', path: 'barrel.length' });
   }

@@ -37,6 +37,8 @@ export type SimulationProblemCode =
   | 'vivacity-not-positive'
   /** The charge's solid volume fills the chamber or more. */
   | 'charge-exceeds-case'
+  /** The poured charge is more than 120 % of the chamber: too compressed for the model (GRT's limit). */
+  | 'charge-too-compressed'
   /** The seated projectile's base is at or beyond the muzzle. */
   | 'barrel-too-short'
   /** A gas leak has a type the engine doesn't know. */
@@ -64,6 +66,8 @@ export interface Simulation {
   burntFractionAtMuzzle: number;
   /** Kinetic energy of the projectile at the muzzle (translation only), J. */
   muzzleEnergy: number;
+  /** The poured charge's volume over the chamber's, 0 to 1.2; above 1 the charge is compressed. */
+  caseFill: number;
   /** Muzzle energy over the charge's chemical energy, 0 to 1. */
   efficiency: number;
   /** Projectile spin at the muzzle, revolutions per second; absent when the twist is unknown. */

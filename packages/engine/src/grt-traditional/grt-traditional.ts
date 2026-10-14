@@ -4,7 +4,8 @@ import { grtInputs } from './inputs.ts';
 import { CONFIG } from './config.ts';
 import { optimalBarrelTime, recoil, tenPercentPeakTime } from './results.ts';
 import { solve } from './solver.ts';
-import { validateInputs } from './validation.ts';
+import { chamberVolume } from './geometry.ts';
+import { caseFill, validateInputs } from './validation.ts';
 
 const PASCALS_PER_BAR = 1e5;
 const SECONDS_PER_MILLISECOND = 1e-3;
@@ -67,6 +68,7 @@ export const grtTraditional: Engine = {
       muzzlePressure: muzzle.pressure * PASCALS_PER_BAR,
       barrelTime: muzzle.time * SECONDS_PER_MILLISECOND,
       burntFractionAtMuzzle: solution.finalBurntFraction,
+      caseFill: caseFill(inputs, chamberVolume(inputs.caseCapacity, inputs.projectileDiameter, inputs.seatingDepth, inputs.base)),
       muzzleEnergy,
       efficiency: muzzleEnergy / (inputs.heatOfExplosion * inputs.chargeMass * 1000),
       ...(inputs.twistLength > 0 ? { muzzleSpinRate: muzzle.velocity / inputs.twistLength } : {}),

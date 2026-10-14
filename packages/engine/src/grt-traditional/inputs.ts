@@ -43,6 +43,8 @@ export interface GrtInputs {
   heatCapacityRatio: number;
   /** ρ_g, kg/m³. */
   grainDensity: number;
+  /** ρ_bulk, the poured powder's density, kg/m³; used only for the case fill. */
+  bulkDensity: number;
   vivacity: number;
   a0: number;
   a1: number;
@@ -94,6 +96,7 @@ export function grtInputs(load: Load): GrtInputs {
     heatOfExplosion: propellant.heatOfExplosion / JOULES_PER_KILOJOULE,
     heatCapacityRatio: propellant.heatCapacityRatio,
     grainDensity: propellant.grainDensity,
+    bulkDensity: propellant.bulkDensity,
     vivacity: propellant.burnModel.vivacity,
     a0: propellant.burnModel.a0,
     a1: propellant.burnModel.a1,

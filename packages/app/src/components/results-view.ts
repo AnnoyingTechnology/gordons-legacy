@@ -133,6 +133,10 @@ function renderDetails(load: Load, shot: Simulation, context: UiContext): HTMLEl
   // IPSC's power factor: grains times feet per second, over 1000.
   const powerFactor = (load.projectile.mass * 1000 * GRT_GRAINS_PER_GRAM * (shot.muzzleVelocity * FEET_PER_METRE)) / 1000;
   const items: Array<{ label: string; value: string; help?: string; wide?: boolean }> = [
+    {
+      label: t('results.caseFill'),
+      value: `${number(shot.caseFill * 100, 1)} %${shot.caseFill > 1 ? ` (${t('results.compressed')})` : ''}`,
+    },
     { label: t('results.muzzleEnergy'), value: quantity(shot.muzzleEnergy, 'energy') },
     { label: t('results.efficiency'), value: `${number(shot.efficiency * 100, 1)} %` },
     ...(shot.leadTime === undefined

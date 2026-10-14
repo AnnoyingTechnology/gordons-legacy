@@ -203,6 +203,8 @@ last update falls before c reaches j.
 ## Results (partial)
 
 - Peak pressure: the largest p̃; muzzle velocity and pressure: the last point's v and p̃.
+- Case fill L_v = (m_c / ρ_bulk) / V_b (GRT `Lv`, its "Füllgrad"), with the initial V_b; above 1 the
+  charge is compressed.
 - Muzzle energy E = v² · m_p · 0.5 (translation only); efficiency E / (Q · m_c · 1000), with the
   load's charge (before leaks).
 - Spin at the muzzle: v / L_tw revolutions per second (GRT shows 60 v / L_tw rpm).
@@ -279,6 +281,8 @@ Gordon's Legacy refuses such loads with a typed problem instead of numbers (`val
 - k ≤ 1; a form function that isn't defined (1 + a0·z1 ≤ 0, or a z_b above 100 needed, which real
   powders, at 1.07 to 1.86, are far from); a vivacity at the powder's temperature of 0 or less;
 - a free volume V₀ of 0 or less (the charge doesn't fit), or x_eff of 0 or less (barrel too short);
+- a case fill L_v = (m_c / ρ_bulk) / V_b above 1.2 (GRT's own limit, `PropellantChargeTooHigh`: GRT
+  doesn't simulate such a load either);
 - gas leaks of negative or non-integer type, of zero width, or with a negative height.
 
 As a safety net, a result with any non-finite value, or a solver that runs past 100 000 steps (valid
