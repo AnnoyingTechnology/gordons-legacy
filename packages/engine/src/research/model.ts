@@ -5,9 +5,31 @@ import type { GrtInputs } from '../grt-traditional/inputs.ts';
 
 /**
  * The research engine's equations (docs/model/research-engine.md, State and equations), in SI. The
- * state vector is [z, x, v, W_r]: burnt fraction, projectile travel (m), velocity (m/s) and the work
- * done against the bore resistance (J).
+ * state vector is [z, x, v, W_r, S]: burnt fraction, projectile travel (m), velocity (m/s), the work
+ * done against the bore resistance (J), and S = ∫ B dx, the travel-weighted sum of the vivacity, for
+ * the averaging option.
  */
+
+/** Switches for experiments (research-engine.md, First results); the defaults are the design's. */
+export interface ResearchOptions {
+  /**
+   * Burn with the vivacity averaged over the travel since shot start, B̄ = S / x, as GRT's running mean
+   * (taken per step on its uniform travel grid) does, instead of the instantaneous Ba·φ(z).
+   */
+  vivacityAveraging: boolean;
+  /** Include the gas's covolume (Noble-Abel); off reproduces GRT's ideal-gas free volume. */
+  covolume: boolean;
+}
+
+/**
+ * Off by default: GRT's powder data were fitted with its ideal-gas volume, and with the covolume they
+ * burn far too fast (research-engine.md, First results). Physically the covolume belongs; it comes
+ * back with powder data fitted for it.
+ */
+export const DEFAULT_RESEARCH_OPTIONS: ResearchOptions = { vivacityAveraging: false, covolume: false };
+
+/** Below this travel, the averaged vivacity is not yet defined and the instantaneous one is used, m. */
+const AVERAGING_START = 1e-6;
 
 /** One technical atmosphere, Pa: the reference of GRT's vivacity. */
 const TECHNICAL_ATMOSPHERE = 98066.5;
@@ -52,9 +74,12 @@ export class ResearchModel {
   private readonly formFunction: FormFunction;
   private readonly engravingTravel: number;
 
-  constructor(inputs: GrtInputs, covolume: number) {
+  readonly options: ResearchOptions;
+
+  constructor(inputs: GrtInputs, covolume: number, options: ResearchOptions = DEFAULT_RESEARCH_OPTIONS) {
     this.inputs = inputs;
-    this.covolume = covolume;
+    this.options = options;
+    this.covolume = options.covolume ? covolume : 0;
     const radius = inputs.projectileDiameter / 2;
     const spin = inputs.twistLength > 0 ? (2 * Math.PI) / inputs.twistLength : 0;
     // A solid cylinder's moment of inertia, m r² / 2 (design, item 2).
@@ -94,10 +119,14 @@ export class ResearchModel {
     return { mean, base, breech, resistance };
   }
 
-  /** dz/dt at the mean pressure (design, item 1). */
-  burnRate(z: number, meanPressure: number): number {
+  /** B = Ba(T)·φ(z), the instantaneous vivacity, s⁻¹ per technical atmosphere. */
+  vivacityAt(z: number): number {
+    return this.vivacity * this.formFunction.at(z);
+  }
+
+  /** dz/dt at the mean pressure with vivacity `b` (design, item 1). */
+  burnRate(z: number, meanPressure: number, b: number): number {
     if (z >= 1 || !(meanPressure > 0)) return 0;
-    const b = this.vivacity * this.formFunction.at(z);
     const { shotshell, initialPressure } = this.inputs;
     // GRT's initial-pressure factor, with p_s in bar as GRT writes it.
     const factor = shotshell ? 1 : b * CONFIG.vivacityInitialPressureFactor * initialPressure + 1;
@@ -112,7 +141,11 @@ export class ResearchModel {
       const x = y[1]!;
       const v = y[2]!;
       const pressures = this.pressures(z, x, v, y[3]!, moving);
-      dy[0] = this.burnRate(z, pressures.mean);
+      // φ(z) is undefined past burnout, where the vivacity no longer matters.
+      const instantaneous = z < 1 ? this.vivacityAt(z) : 0;
+      const b = this.options.vivacityAveraging && x > AVERAGING_START ? y[4]! / x : instantaneous;
+      dy[0] = this.burnRate(z, pressures.mean, b);
+      dy[4] = moving ? instantaneous * Math.max(0, v) : 0;
       if (!moving) {
         dy[1] = 0;
         dy[2] = 0;

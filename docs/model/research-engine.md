@@ -131,12 +131,39 @@ its pressure (p̃ ← 0.27 p + 0.73 p̃ while burning), which lowers peaks; R1 h
 rifle loads, the unsafe direction.** Neither engine is validated on pressure, so this is a discrepancy
 to settle with measured pressures, not a conclusion; it is reported to the maintainer.
 
+**What accounts for the difference (same day).** Each of GRT's devices switched into R1, over the
+maintainer's 58 loads R1 simulates (medians of R1 / GRT):
+
+| R1 variant | Muzzle velocity | Peak pressure |
+|---|---|---|
+| As designed (Noble-Abel covolume) | 1.080 | 1.75 |
+| With GRT's running mean of the vivacity | 1.078 | 1.75 |
+| Without covolume (GRT's ideal-gas volume) | 0.975 | 1.12 |
+
+The vivacity averaging hardly matters; the covolume accounts for most of the gap. GRT ignores the
+covolume (grt-observations.md), so its users fitted Ba to an ideal-gas model; at small-arms loading
+densities the covolume of the burnt charge (about 1 cm³/g) is a large part of the free volume, and the
+same Ba then burns far too fast in a Noble-Abel model. The remaining 12 % of peak pressure comes from
+GRT's other choices (its closed-form expansion, its pressure smoothing, the Sebert mass).
+
+Against the chronograph corpus, on the 47 charges both engines simulate:
+
+| Engine | Mean error | RMS | 90th percentile |
+|---|---|---|---|
+| GRT Traditional | +8.0 % | 13.5 % | 26.9 % |
+| R1 without covolume | +4.1 % | 11.1 % | 16.6 % |
+
+R1 is now set **without covolume by default**, to stay consistent with the powder data it uses; the
+covolume returns once powders are fitted for it. On velocity it does better than GRT Traditional, most
+of all on the subsonic loads; its peaks are a median 12 % above GRT's. Which peaks are closer to reality
+is unknown until measured pressures are available, so R1 stays out of the application.
+
 Next steps, in order:
 
-1. Measure which of GRT's devices accounts for the difference (switch each into R1).
-2. Decide how to carry powder data across: a documented transformation from GRT's Ba to a Vieille
-   vivacity for R1, or R1's own powder parameters fitted to closed-vessel or published data.
-3. Pressure data (validation.md): without it, neither engine's pressure can be judged.
+1. Pressure data (validation.md): with it, decide between the engines' peaks.
+2. Powder data fitted for R1 with its covolume (closed-vessel or published charge-velocity-pressure
+   data), so that the physics and the data agree.
+3. The engraving and friction parameters (provisional) against published data.
 
 ## Open questions
 

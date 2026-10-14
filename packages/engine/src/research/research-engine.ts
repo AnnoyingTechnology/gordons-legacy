@@ -5,7 +5,7 @@ import { grtInputs } from '../grt-traditional/inputs.ts';
 import { optimalBarrelTime, recoil } from '../grt-traditional/results.ts';
 import { caseFill, validateInputs } from '../grt-traditional/validation.ts';
 import { integrate, type OdeOptions } from '../numerics/ode.ts';
-import { ResearchModel } from './model.ts';
+import { DEFAULT_RESEARCH_OPTIONS, ResearchModel, type ResearchOptions } from './model.ts';
 
 /** Points of the resampled curve, as GRT Traditional's grid. */
 const CURVE_POINTS = 2000;
@@ -37,41 +37,44 @@ interface Sample {
 export const researchEngine: Engine = {
   id: 'research-1',
   name: 'Research R1 (not validated)',
-  simulate(load: Load): SimulationResult {
-    const inputs = grtInputs(load);
-    const problems = validateInputs(inputs);
-    if (problems.length > 0) return { ok: false, problems };
-    if (inputs.gasLeaks.length > 0 || inputs.jumpToLands > 0) {
-      return { ok: false, problems: [{ code: 'not-modelled', path: inputs.gasLeaks.length > 0 ? 'barrel.gasLeaks' : 'barrel.jumpToLands' }] };
-    }
-    const model = new ResearchModel(inputs, load.propellant.covolume);
-    const startPressure = inputs.initialPressure * 1e5;
-    const samples: Sample[] = [];
-    const record = (moving: boolean) => (t: number, y: Float64Array) => {
-      samples.push({ t, z: y[0]!, x: y[1]!, v: y[2]!, pressure: model.pressures(y[0]!, y[1]!, y[2]!, y[3]!, moving).breech });
-    };
-
-    // Phase 1: the projectile held while the pressure rises to the initial pressure.
-    let state: Float64Array = new Float64Array(4);
-    let t = 0;
-    record(false)(0, state);
-    if (model.pressures(0, 0, 0, 0, false).base < startPressure) {
-      const held = integrate(model.derivative(false), 0, state, TIME_LIMIT, ODE, (_, y) => model.pressures(y[0]!, 0, 0, 0, false).base - startPressure, record(false));
-      if (!held.eventReached) return { ok: false, problems: [{ code: 'initial-pressure-too-high', path: 'projectile.shotStartPressure' }] };
-      state = held.y;
-      t = held.t;
-    }
-    const shotStart = t;
-
-    // Phase 2: the projectile moves to the muzzle.
-    const travel = model.travelToMuzzle;
-    const moving = integrate(model.derivative(true), t, state, t + TIME_LIMIT, ODE, (_, y) => y[1]! - travel, record(true));
-    if (!moving.completed) return { ok: false, problems: [{ code: 'numerical-failure' }] };
-    if (!moving.eventReached) return { ok: false, problems: [{ code: 'projectile-stops', path: 'charge.mass' }] };
-
-    return { ok: true, simulation: results(load, model, samples, shotStart) };
-  },
+  simulate: (load: Load) => simulateResearch(load, DEFAULT_RESEARCH_OPTIONS),
 };
+
+/** R1 with experiment switches (model.ts, ResearchOptions). */
+export function simulateResearch(load: Load, options: ResearchOptions): SimulationResult {
+  const inputs = grtInputs(load);
+  const problems = validateInputs(inputs);
+  if (problems.length > 0) return { ok: false, problems };
+  if (inputs.gasLeaks.length > 0 || inputs.jumpToLands > 0) {
+    return { ok: false, problems: [{ code: 'not-modelled', path: inputs.gasLeaks.length > 0 ? 'barrel.gasLeaks' : 'barrel.jumpToLands' }] };
+  }
+  const model = new ResearchModel(inputs, load.propellant.covolume, options);
+  const startPressure = inputs.initialPressure * 1e5;
+  const samples: Sample[] = [];
+  const record = (moving: boolean) => (t: number, y: Float64Array) => {
+    samples.push({ t, z: y[0]!, x: y[1]!, v: y[2]!, pressure: model.pressures(y[0]!, y[1]!, y[2]!, y[3]!, moving).breech });
+  };
+
+  // Phase 1: the projectile held while the pressure rises to the initial pressure.
+  let state: Float64Array = new Float64Array(5);
+  let t = 0;
+  record(false)(0, state);
+  if (model.pressures(0, 0, 0, 0, false).base < startPressure) {
+    const held = integrate(model.derivative(false), 0, state, TIME_LIMIT, ODE, (_, y) => model.pressures(y[0]!, 0, 0, 0, false).base - startPressure, record(false));
+    if (!held.eventReached) return { ok: false, problems: [{ code: 'initial-pressure-too-high', path: 'projectile.shotStartPressure' }] };
+    state = held.y;
+    t = held.t;
+  }
+  const shotStart = t;
+
+  // Phase 2: the projectile moves to the muzzle.
+  const travel = model.travelToMuzzle;
+  const moving = integrate(model.derivative(true), t, state, t + TIME_LIMIT, ODE, (_, y) => y[1]! - travel, record(true));
+  if (!moving.completed) return { ok: false, problems: [{ code: 'numerical-failure' }] };
+  if (!moving.eventReached) return { ok: false, problems: [{ code: 'projectile-stops', path: 'charge.mass' }] };
+
+  return { ok: true, simulation: results(load, model, samples, shotStart) };
+}
 
 function results(load: Load, model: ResearchModel, samples: Sample[], shotStart: number): Simulation {
   const { inputs } = model;

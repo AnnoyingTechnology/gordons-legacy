@@ -21,4 +21,5 @@ export {
 } from './grt-traditional/calibration.ts';
 export { obtNodeTimes } from './grt-traditional/obt.ts';
 export { DEFAULT_COLD_COEFFICIENT, DEFAULT_HOT_COEFFICIENT } from './grt-traditional/burn.ts';
-export { researchEngine } from './research/research-engine.ts';
+export { researchEngine, simulateResearch } from './research/research-engine.ts';
+export type { ResearchOptions } from './research/model.ts';
