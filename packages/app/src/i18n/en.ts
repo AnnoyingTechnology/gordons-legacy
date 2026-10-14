@@ -26,6 +26,8 @@ export const en = {
   'about.version': 'Build',
   'about.status': 'Status',
   'about.licence': 'Licence',
+  'about.copy': 'Your own copy',
+  'about.copyHelp': 'the whole application in one file; open it in a browser, from disk, with no install and no network.',
   'about.source': 'source code',
   'about.continue': 'Continue',
   'units.metric': 'Metric',

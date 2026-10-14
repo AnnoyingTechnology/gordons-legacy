@@ -24,6 +24,8 @@ export const de: Messages = {
   'about.version': 'Build',
   'about.status': 'Stand',
   'about.licence': 'Lizenz',
+  'about.copy': 'Eigene Kopie',
+  'about.copyHelp': 'die ganze Anwendung in einer Datei; im Browser von der Festplatte öffnen, ohne Installation und ohne Netz.',
   'about.source': 'Quellcode',
   'about.continue': 'Weiter',
   'units.metric': 'Metrisch',

@@ -24,6 +24,8 @@ export const it: Messages = {
   'about.version': 'Versione',
   'about.status': 'Stato',
   'about.licence': 'Licenza',
+  'about.copy': 'La vostra copia',
+  'about.copyHelp': "l'intera applicazione in un solo file; apritelo in un browser, dal disco, senza installazione né rete.",
   'about.source': 'codice sorgente',
   'about.continue': 'Continua',
   'units.metric': 'Metriche',

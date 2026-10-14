@@ -2,6 +2,7 @@ import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { defineConfig } from 'vite';
 import { offline } from './build/offline.ts';
+import { standalone } from './build/standalone.ts';
 
 function commit(): string {
   try {
@@ -20,7 +21,7 @@ function milestone(): string {
 
 export default defineConfig({
   base: './',
-  plugins: [offline()],
+  plugins: [standalone(), offline()],
   define: {
     __BUILD_COMMIT__: JSON.stringify(commit()),
     __BUILD_DATE__: JSON.stringify(new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC'),

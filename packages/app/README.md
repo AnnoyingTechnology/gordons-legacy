@@ -12,6 +12,7 @@ published data from the powder or bullet maker.
 index.html              page shell: <gl-app>
 vite.config.ts          build: build info constants, offline plugin
 build/offline.ts        Vite plugin that writes service-worker.js with the build's file list
+build/standalone.ts     Vite plugin that also writes gordons-legacy.html, the app in one file
 offline/                service worker template (plain JavaScript, served as is)
 public/                 copied to the build unchanged: manifest, icon
 src/
@@ -56,3 +57,9 @@ test/                   Vitest tests of the parts without a DOM
 `build/offline.ts` emits `service-worker.js`, which caches every file of the build under a name derived
 from their contents. Pages come from the network when online (so a new version shows up) and from the
 cache otherwise; hashed assets always come from the cache. The development server has no worker.
+
+## Single-file copy
+
+`build/standalone.ts` writes `gordons-legacy.html` next to `index.html`: the application with its script
+and styles inlined, which runs when opened from disk (`file://`), with no server, install or network.
+The site links to it from the About dialog. It has no service worker and no manifest.

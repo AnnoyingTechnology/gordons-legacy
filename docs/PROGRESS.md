@@ -74,6 +74,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | Display units chosen per kind of quantity, with metric and imperial presets (GRT allowed a unit per field); case capacity shown as water mass (1 cm³ = 1 g H₂O), grains of water in imperial. | Agent, for review |
 | 2026-10-14 | Offline support with a small hand-written service worker and a 40-line Vite plugin that lists the build's files, rather than `vite-plugin-pwa` (Workbox, many dependencies). App icon drawn as original SVG. | Agent, for review |
 | 2026-10-14 | The engine refuses loads outside GRT's model (`simulate` returns `{ ok: false, problems }` with the input's path) instead of returning numbers, unlike GRT; the editor marks the fields concerned. Prompted by the Codex safety review. | Agent, for review |
+| 2026-10-14 | Own-copy packaging: a single HTML file with everything inlined, written by a 40-line Vite plugin (no dependency) and served next to the site; runs from `file://`. | Agent, for review |
 | 2026-10-14 | UI languages built in for English, French, German, Spanish and Italian (the proposal); translations need review by native reloaders before release. | Agent, for review |
 
 ## Open questions
@@ -90,8 +91,9 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
   pressure-trace recordings)? See `docs/model/validation.md`.
 - The data repository `gordons-legacy-data` (CC0, PLAN.md Data) doesn't exist yet: create it on
   GitHub? The community corpus is small (12 powders, 48 projectiles, 49 calibers).
-- Lightweight packaging for users who want to own a copy (M6). Proposed: attach to each GitHub Release a
-  single self-contained HTML file that runs from disk with no server, plus a zip of the static site.
+- Lightweight packaging for users who want to own a copy (M6). Done so far: every build writes a
+  single self-contained HTML file (`gordons-legacy.html`, ~156 kB) that runs from disk, linked from the
+  About dialog on the Pages site. To decide: also attach it (and a zip of the site) to GitHub Releases?
 
 ## Log
 
@@ -137,3 +139,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | Validation: GRT Traditional against 51 chronograph-measured charges of the maintainer's loads (`tools/validation/chronograph.ts`, `docs/model/validation.md`): uncalibrated files over-predict velocity by ~10 % on average (up to 40 % for subsonic rifle loads); calibrated copies are within ~1 %. |
 | 2026-10-14 | M3: Print button and print stylesheet: the active load's inputs and simulation as a report (A4, light theme, safety notice kept); "Save as PDF" from the browser's print dialog replaces GRT's PDF export. |
 | 2026-10-14 | M3: Compare view: up to eight open loads overlaid (pressure and velocity against travel or time), one colour each from the validated categorical palette, with a legend and a table of key figures (above-maximum flagged). |
+| 2026-10-14 | M6 start: the single-file copy (`gordons-legacy.html`) is built with the site and linked from the About dialog; checked from `file://` in headless Chromium. |

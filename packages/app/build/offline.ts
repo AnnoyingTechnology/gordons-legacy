@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Plugin } from 'vite';
+import { STANDALONE_FILE } from './standalone.ts';
 
 const TEMPLATE = new URL('../offline/service-worker.js', import.meta.url);
 
@@ -23,7 +24,9 @@ export function offline(): Plugin {
       // Contents by file name, to name the cache after them: any change makes a new copy.
       const contents = new Map<string, string | Uint8Array>();
       for (const [name, output] of Object.entries(bundle)) {
-        if (!name.endsWith('.map')) contents.set(name, output.type === 'chunk' ? output.code : output.source);
+        // The single-file copy is for downloading, not for the site's own offline use.
+        if (name.endsWith('.map') || name === STANDALONE_FILE) continue;
+        contents.set(name, output.type === 'chunk' ? output.code : output.source);
       }
       for (const name of publicDir ? readdirSync(publicDir, { recursive: true, encoding: 'utf8' }) : []) {
         const path = join(publicDir, name);

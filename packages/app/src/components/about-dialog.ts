@@ -44,6 +44,8 @@ export class AboutDialog extends LitElement {
           <dd><a href="${REPOSITORY}/commit/${__BUILD_COMMIT__}">${__BUILD_COMMIT__.slice(0, 7)}</a>, ${__BUILD_DATE__}</dd>
           <dt>${t('about.status')}</dt>
           <dd>${__MILESTONE__} <a href="${REPOSITORY}/blob/main/docs/PROGRESS.md">PROGRESS.md</a></dd>
+          <dt>${t('about.copy')}</dt>
+          <dd><a href="./gordons-legacy.html" download>gordons-legacy.html</a>: ${t('about.copyHelp')}</dd>
           <dt>${t('about.licence')}</dt>
           <dd><a href="${REPOSITORY}/blob/main/LICENSE">GPL-3.0</a>, <a href=${REPOSITORY}>${t('about.source')}</a></dd>
         </dl>
