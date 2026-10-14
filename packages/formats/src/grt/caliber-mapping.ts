@@ -34,7 +34,7 @@ const CASE_DIMENSION_NAMES: Record<keyof CaseDimensions, string> = {
   neckStart: 'L2',
   maximumOverallLength: 'L6',
   rimDiameter: 'R1',
-  rimThickness: 'Emin',
+  rimThickness: 'R',
   bodyBaseDistance: 'E',
   bodyBaseDiameter: 'P1',
   shoulderDiameter: 'P2',

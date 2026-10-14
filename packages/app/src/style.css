@@ -12,6 +12,8 @@
   --series-velocity: #eb6834;
   --critical: #d03b3b;
   --grid: #e4e6e9;
+  --case-fill: #e8dcc0;
+  --projectile-fill: #c9a27a;
   /* Categorical palette for comparing loads (validated reference palette, fixed order). */
   --compare-1: #2a78d6;
   --compare-2: #eb6834;
@@ -43,6 +45,8 @@
     --series-pressure: #3987e5;
     --series-velocity: #d95926;
     --grid: #2b2f34;
+    --case-fill: #5a5240;
+    --projectile-fill: #7a5c40;
     --compare-1: #3987e5;
     --compare-2: #d95926;
     --compare-3: #199e70;
@@ -919,4 +923,68 @@ button[aria-pressed='true'] {
 
 .sensitivity tr.combined td {
   font-weight: 600;
+}
+
+.cartridge-drawing {
+  margin: 0.4rem 0 0.6rem;
+}
+
+.cartridge-drawing svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.cartridge-drawing .case {
+  fill: var(--case-fill);
+  stroke: var(--fg);
+  stroke-width: 0.8;
+  stroke-linejoin: round;
+}
+
+.cartridge-drawing .projectile {
+  fill: var(--projectile-fill);
+  stroke: var(--fg);
+  stroke-width: 0.8;
+  stroke-linejoin: round;
+}
+
+/* The part seated in the case, seen through it. */
+.cartridge-drawing .projectile.seated {
+  fill: none;
+  stroke-dasharray: 2 2;
+}
+
+.cartridge-drawing .powder {
+  fill: url(#powder);
+}
+
+.cartridge-drawing .powder-hatch {
+  stroke: var(--muted);
+  stroke-width: 1;
+}
+
+.cartridge-drawing .axis-line {
+  stroke: var(--muted);
+  stroke-width: 0.5;
+  stroke-dasharray: 6 2 1 2;
+}
+
+.cartridge-drawing .dimension {
+  stroke: var(--muted);
+  stroke-width: 0.6;
+}
+
+.cartridge-drawing .arrowhead {
+  fill: var(--muted);
+}
+
+.cartridge-drawing .dimension-label {
+  fill: var(--fg);
+  font-size: 8.5px;
+}
+
+.cartridge-drawing figcaption {
+  color: var(--muted);
+  font-size: 0.8rem;
 }

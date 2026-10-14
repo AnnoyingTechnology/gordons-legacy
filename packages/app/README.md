@@ -24,6 +24,7 @@ src/
     choice-dialog.ts      pick one of several options (projectiles of a file)
     bore-area-dialog.ts   GRT's effective-bore-area assistant
     load-editor.ts        <gl-load-editor>: inputs beside results, re-simulated on every edit
+    cartridge-drawing.ts  side view of the loaded cartridge, from the standard's outline
     property-table.ts     <gl-property-table>: one group of inputs (label, value, unit)
     notes-panel.ts        <gl-notes-panel>: the load's notes and pictures
     results-view.ts       key figures, charts, curve table, ladder

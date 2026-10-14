@@ -36,7 +36,7 @@ export interface Cartridge {
 }
 
 /**
- * The cartridge's outline as a standard's drawing gives it (CIP table I, maximum cartridge), m. Distances
+ * The cartridge's outline as a standard's drawing gives it (CIP tables I to IV, maximum cartridge), m. Distances
  * are from the case head. GRT keeps these with the caliber definition, under the drawing's own letters.
  * A dimension the source doesn't give is 0, as in GRT.
  */
@@ -51,9 +51,9 @@ export interface CaseDimensions {
   maximumOverallLength: number;
   /** R1: rim diameter. */
   rimDiameter: number;
-  /** e min: rim thickness. */
+  /** R: rim thickness. */
   rimThickness: number;
-  /** E: where the body diameter P1 is measured. */
+  /** E: where the body diameter P1 is measured, past the extractor groove; 0 for rimmed cases. */
   bodyBaseDistance: number;
   /** P1: body diameter at E. */
   bodyBaseDiameter: number;
