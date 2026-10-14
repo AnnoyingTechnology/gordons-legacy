@@ -126,11 +126,17 @@ Initially everything is 0, except B₁ = B = Ba₀.
 The point records x, p̃, v, z, the projectile energy m_p v² / 2, and the propellant energy z · Q · m_c ·
 1000.
 
-### Gas leaks (confirmed for cylinder gaps)
+### Gas leaks (confirmed for every type)
 
 Each opening of the gun is placed on the projectile's travel: it starts at s = position − (L_case − d)
-and is uncovered over its width w. Its area, with r = D_g / 2: cylinder gap 2 π r w; round hole
-π (w/2)², or the ellipse π (w/2)(h/2) with a height h; rectangular hole w h (slots: open).
+and is uncovered over its width w. Its area, with r = D_g / 2, by GRT's type code:
+
+- 0, cylinder gap: 2 π r w;
+- 1, round hole: π (w/2)², or the ellipse π (w/2)(h/2) when w and h are both above 0;
+- 2, square hole: w h (GRT reports an error when h ≤ 0);
+- 3, slot cut into the bore to a depth h: the uncovered arc times the width, w · 2 r · acos(1 − h/r),
+  when 0 < h ≤ r; else 0 and an error;
+- other types: no area (Gordon's Legacy refuses them, and the error cases above).
 
 At each step, with Δt the time step (the last increase of T, in s) and p the step's pressure (bar):
 
@@ -225,5 +231,5 @@ which no load file seen so far carries.
 
 ## Not yet covered
 
-Slot-type leaks, air drag, recoil,
+Air drag beyond the leak term (`fn_gDrag`), recoil,
 OBT, the 10 %-of-peak times, and custom ladder steps.

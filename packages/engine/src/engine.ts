@@ -41,6 +41,8 @@ export type SimulationProblemCode =
   | 'barrel-too-short'
   /** A gas leak has a type the engine doesn't know. */
   | 'unknown-gas-leak'
+  /** A gas leak's height doesn't suit its type: a square hole needs one, a slot one up to the bore radius. */
+  | 'gas-leak-out-of-range'
   /** The computation produced a value that is not a finite number. */
   | 'numerical-failure';
 
@@ -88,6 +90,4 @@ export interface SimulationCurve {
 
 export type SimulationWarning =
   /** The peak pressure stays below twice the initial pressure: the load hardly starts. */
-  | 'pressure-too-low'
-  /** The load uses a feature the engine doesn't model yet; results ignore it. */
-  | 'unsupported-feature';
+  'pressure-too-low';

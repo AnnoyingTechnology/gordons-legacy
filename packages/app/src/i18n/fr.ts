@@ -73,7 +73,6 @@ export const fr: Messages = {
   'results.notSimulated': 'non simulée',
   'results.aboveMaximum': 'au-dessus du maximum',
   'warning.pressure-too-low': 'La pression dépasse à peine la pression initiale : GRT considère ce résultat comme invalide.',
-  'warning.unsupported-feature': 'La charge utilise une fonction que ce moteur ne modélise pas encore ; les résultats l’ignorent.',
   'results.cannotSimulate': 'Cette charge ne peut pas être simulée : certaines valeurs sont hors du modèle.',
   'problem.not-a-number': 'valeur manquante ou non numérique',
   'problem.not-positive': 'doit être supérieur à zéro',
@@ -84,5 +83,6 @@ export const fr: Messages = {
   'problem.charge-exceeds-case': 'la poudre ne tient pas : son volume solide remplit la chambre',
   'problem.barrel-too-short': 'le canon est trop court : le projectile serti est déjà à la bouche',
   'problem.unknown-gas-leak': 'type de fuite de gaz inconnu',
+  'problem.gas-leak-out-of-range': 'cette hauteur ne convient pas au type de fuite : un trou carré en demande une, une fente au plus le rayon du canon',
   'problem.numerical-failure': 'le calcul a échoué ; merci de signaler cette charge',
 };

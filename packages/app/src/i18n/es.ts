@@ -73,7 +73,6 @@ export const es: Messages = {
   'results.notSimulated': 'no simulada',
   'results.aboveMaximum': 'por encima del máximo',
   'warning.pressure-too-low': 'La presión apenas supera la presión inicial: GRT considera este resultado no válido.',
-  'warning.unsupported-feature': 'La carga usa una función que este motor aún no modela; los resultados la ignoran.',
   'results.cannotSimulate': 'Esta carga no se puede simular: algunos valores están fuera del modelo.',
   'problem.not-a-number': 'falta o no es un número',
   'problem.not-positive': 'debe ser mayor que cero',
@@ -84,5 +83,6 @@ export const es: Messages = {
   'problem.charge-exceeds-case': 'la pólvora no cabe: su volumen sólido llena la recámara',
   'problem.barrel-too-short': 'el cañón es demasiado corto: el proyectil engarzado ya está en la boca',
   'problem.unknown-gas-leak': 'tipo de fuga de gas desconocido',
+  'problem.gas-leak-out-of-range': 'esta altura no corresponde al tipo de fuga: un agujero cuadrado necesita una, una ranura como máximo el radio del ánima',
   'problem.numerical-failure': 'el cálculo ha fallado; por favor, informe de esta carga',
 };

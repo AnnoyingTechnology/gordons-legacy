@@ -90,9 +90,14 @@ function checkBase(inputs: GrtInputs, problems: SimulationProblem[]): void {
 function checkLeaks(inputs: GrtInputs, problems: SimulationProblem[]): void {
   inputs.gasLeaks.forEach((leak, index) => {
     const path = `barrel.gasLeaks.${index}`;
-    // GRT's types are codes from 0 up (leaks.ts); types the engine doesn't model get a warning instead.
-    if (!Number.isInteger(leak.type) || leak.type < 0) {
+    // GRT's types: 0 cylinder gap, 1 round hole, 2 square hole, 3 slot. It gives others no area.
+    if (!Number.isInteger(leak.type) || leak.type < 0 || leak.type > 3) {
       problems.push({ code: 'unknown-gas-leak', path: `${path}.type` });
+    }
+    // GRT reports these as errors and leaves the opening closed.
+    const radius = inputs.grooveDiameter / 2;
+    if ((leak.type === 2 && !(leak.height > 0)) || (leak.type === 3 && !(leak.height > 0 && leak.height <= radius))) {
+      problems.push({ code: 'gas-leak-out-of-range', path: `${path}.height` });
     }
     if (!Number.isFinite(leak.position)) problems.push({ code: 'not-a-number', path: `${path}.position` });
     // The width spreads the opening along the travel, and divides.

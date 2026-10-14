@@ -73,7 +73,6 @@ export const de: Messages = {
   'results.notSimulated': 'nicht simuliert',
   'results.aboveMaximum': 'über dem Maximum',
   'warning.pressure-too-low': 'Der Druck steigt kaum über den Anfangsdruck: GRT betrachtet dieses Ergebnis als ungültig.',
-  'warning.unsupported-feature': 'Die Ladung nutzt eine Funktion, die dieses Modell noch nicht abbildet; die Ergebnisse berücksichtigen sie nicht.',
   'results.cannotSimulate': 'Diese Ladung kann nicht simuliert werden: Einige Eingaben liegen außerhalb des Modells.',
   'problem.not-a-number': 'fehlt oder ist keine Zahl',
   'problem.not-positive': 'muss größer als null sein',
@@ -84,5 +83,6 @@ export const de: Messages = {
   'problem.charge-exceeds-case': 'das Pulver passt nicht hinein: sein Feststoffvolumen füllt den Verbrennungsraum',
   'problem.barrel-too-short': 'der Lauf ist zu kurz: das gesetzte Geschoss ist bereits an der Mündung',
   'problem.unknown-gas-leak': 'unbekannter Gasverlusttyp',
+  'problem.gas-leak-out-of-range': 'diese Höhe passt nicht zum Verlusttyp: Ein quadratisches Loch braucht eine, ein Schlitz höchstens den Laufradius',
   'problem.numerical-failure': 'die Berechnung ist fehlgeschlagen; bitte melden Sie diese Ladung',
 };

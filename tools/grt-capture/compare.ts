@@ -5,7 +5,7 @@
  *     node compare.ts --references <directory> <file.grtload>...
  *
  * Prints, per load, the relative error of the peak pressure and the muzzle velocity, and the engine's
- * warnings. Exits with 1 when a supported load differs from GRT by more than 1e-12.
+ * warnings. Exits with 1 when a load is refused or differs from GRT by more than 1e-12.
  */
 import { readFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
@@ -50,14 +50,13 @@ function main(): void {
     const shot = result.simulation;
     const pressureError = relativeError(shot.maxPressure / 1e5, Number.parseFloat(reference.results['MaxPressure'] ?? ''));
     const velocityError = relativeError(shot.muzzleVelocity, Number.parseFloat(reference.results['MuzzleVelocity'] ?? ''));
-    const supported = !shot.warnings.includes('unsupported-feature');
-    const ok = !supported || (pressureError < TOLERANCE && velocityError < TOLERANCE);
+    const ok = pressureError < TOLERANCE && velocityError < TOLERANCE;
     if (!ok) failures++;
     console.log(
       `${ok ? '  ' : '✗ '}${name.padEnd(70)} Pmax ${pressureError.toExponential(1).padStart(8)}  v0 ${velocityError.toExponential(1).padStart(8)}  ${shot.warnings.join(', ')}`,
     );
   }
-  console.log(failures === 0 ? 'All supported loads match GRT.' : `${failures} supported loads differ from GRT.`);
+  console.log(failures === 0 ? 'All loads match GRT.' : `${failures} loads differ from GRT.`);
   process.exit(failures === 0 ? 0 : 1);
 }
 

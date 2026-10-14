@@ -53,16 +53,15 @@ describe.each(references.map((reference) => [reference.source, reference] as con
   const result = grtTraditional.simulate(load);
   if (!result.ok) throw new Error(`${reference.source}: ${JSON.stringify(result.problems)}`);
   const { simulation } = result;
-  const unsupported = simulation.warnings.includes('unsupported-feature');
 
-  test.skipIf(unsupported)('peak pressure, muzzle velocity and muzzle pressure match GRT', () => {
+  test('peak pressure, muzzle velocity and muzzle pressure match GRT', () => {
     expect(relativeError(simulation.maxPressure / 1e5, value(reference.results['MaxPressure']))).toBeLessThan(SCALAR_TOLERANCE);
     expect(relativeError(simulation.muzzleVelocity, value(reference.results['MuzzleVelocity']))).toBeLessThan(SCALAR_TOLERANCE);
     expect(relativeError(simulation.muzzlePressure / 1e5, value(reference.results['MuzzlePressure']))).toBeLessThan(SCALAR_TOLERANCE);
     expect(relativeError(simulation.barrelTime * 1000, value(reference.results['MuzzleTime']))).toBeLessThan(SCALAR_TOLERANCE);
   });
 
-  test.skipIf(unsupported)('the whole curve matches GRT', () => {
+  test('the whole curve matches GRT', () => {
     const { curve } = reference;
     expect(simulation.curve.pressure.length).toBe(curve.pressure_bar.length);
     let worst = 0;

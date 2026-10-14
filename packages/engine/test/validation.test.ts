@@ -65,6 +65,24 @@ describe('input validation', () => {
       'not-positive',
       'barrel.gasLeaks.0.width',
     ],
+    [
+      'a gas leak of a type GRT gives no area',
+      (l) => ({ ...l, barrel: { ...l.barrel, gasLeaks: [{ name: '', description: '', type: 4, position: 0.04, width: 0.001, height: 0 }] } }),
+      'unknown-gas-leak',
+      'barrel.gasLeaks.0.type',
+    ],
+    [
+      'a slot deeper than the bore radius',
+      (l) => ({ ...l, barrel: { ...l.barrel, gasLeaks: [{ name: '', description: '', type: 3, position: 0.04, width: 0.005, height: 0.01 }] } }),
+      'gas-leak-out-of-range',
+      'barrel.gasLeaks.0.height',
+    ],
+    [
+      'a square hole without a height',
+      (l) => ({ ...l, barrel: { ...l.barrel, gasLeaks: [{ name: '', description: '', type: 2, position: 0.04, width: 0.004, height: 0 }] } }),
+      'gas-leak-out-of-range',
+      'barrel.gasLeaks.0.height',
+    ],
   ])('refuses %s', (_, change, code, path) => {
     expect(problemsOf(change)).toContainEqual({ code, path });
   });

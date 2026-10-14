@@ -73,9 +73,13 @@ function leakArea(leak: GrtLeak, radius: number): number {
       return leak.width > 0 && leak.height > 0
         ? (leak.height / 2) * (leak.width / 2) * Math.PI
         : (leak.width / 2) ** 2 * Math.PI;
-    case 2: // rectangular hole
+    case 2: // square hole
       return leak.height * leak.width;
-    default: // slots (3) are not reproduced yet; the engine flags them
+    case 3: // slot cut into the bore to a depth h: the uncovered arc 2 r acos(1 − h/r), times the width
+      return leak.height > 0 && !(radius < leak.height)
+        ? leak.width * Math.acos(1 - leak.height / radius) * 2 * radius
+        : 0;
+    default: // GRT gives other types no area; validation refuses them
       return 0;
   }
 }

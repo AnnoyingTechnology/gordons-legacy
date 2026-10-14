@@ -75,7 +75,6 @@ export const en = {
   'results.notSimulated': 'not simulated',
   'results.aboveMaximum': 'above the maximum',
   'warning.pressure-too-low': 'The pressure hardly rises above the initial pressure: GRT considers this result invalid.',
-  'warning.unsupported-feature': 'The load uses a feature this engine does not model yet; the results ignore it.',
   'results.cannotSimulate': 'This load cannot be simulated: some inputs are outside the model.',
   'problem.not-a-number': 'missing or not a number',
   'problem.not-positive': 'must be above zero',
@@ -86,6 +85,7 @@ export const en = {
   'problem.charge-exceeds-case': 'the powder does not fit: its solid volume fills the chamber',
   'problem.barrel-too-short': 'the barrel is too short: the seated projectile is already at the muzzle',
   'problem.unknown-gas-leak': 'unknown gas leak type',
+  'problem.gas-leak-out-of-range': "this height doesn't suit the leak type: a square hole needs one, a slot one no deeper than the bore radius",
   'problem.numerical-failure': 'the computation failed; please report this load',
 } as const;
 

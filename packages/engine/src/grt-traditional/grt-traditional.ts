@@ -50,7 +50,6 @@ export const grtTraditional: Engine = {
 
     const warnings: SimulationWarning[] = [];
     if (peak.pressure < 2 * inputs.initialPressure) warnings.push('pressure-too-low');
-    if (!solution.supported) warnings.push('unsupported-feature');
 
     const simulation = {
       engine: 'grt-traditional',

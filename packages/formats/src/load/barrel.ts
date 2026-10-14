@@ -22,7 +22,7 @@ export interface Barrel {
  * GRT `leakage` entry. Only revolver cylinder gaps have been seen so far.
  */
 export interface GasLeak {
-  /** GRT's leak type code: 0 cylinder gap, 1 round hole, 2 rectangular hole; 3 and up are not yet known. */
+  /** GRT's leak type code: 0 cylinder gap, 1 round hole, 2 square hole, 3 slot. */
   type: number;
   name: string;
   description: string;

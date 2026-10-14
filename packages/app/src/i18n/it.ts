@@ -73,7 +73,6 @@ export const it: Messages = {
   'results.notSimulated': 'non simulata',
   'results.aboveMaximum': 'sopra il massimo',
   'warning.pressure-too-low': 'La pressione supera appena quella iniziale: GRT considera questo risultato non valido.',
-  'warning.unsupported-feature': 'La carica usa una funzione che questo motore non modella ancora; i risultati la ignorano.',
   'results.cannotSimulate': 'Questa carica non può essere simulata: alcuni valori sono fuori dal modello.',
   'problem.not-a-number': 'mancante o non numerico',
   'problem.not-positive': 'deve essere maggiore di zero',
@@ -84,5 +83,6 @@ export const it: Messages = {
   'problem.charge-exceeds-case': 'la polvere non entra: il suo volume solido riempie la camera',
   'problem.barrel-too-short': 'la canna è troppo corta: il proiettile inserito è già alla volata',
   'problem.unknown-gas-leak': 'tipo di perdita di gas sconosciuto',
+  'problem.gas-leak-out-of-range': 'questa altezza non è adatta al tipo di perdita: un foro quadrato ne richiede una, una fessura al massimo il raggio della canna',
   'problem.numerical-failure': 'il calcolo non è riuscito; si prega di segnalare questa carica',
 };
