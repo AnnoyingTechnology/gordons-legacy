@@ -1,6 +1,12 @@
 import { html, LitElement } from 'lit';
 import type { UiContext } from './context.ts';
 
+/**
+ * The single-file copy is served as `gordons-legacy.html`, but downloads under a name that says which
+ * build it is (#15), so that copies kept side by side can be told apart: `gordons-legacy-2026-10-14-5d652b2.html`.
+ */
+const STANDALONE_DOWNLOAD_NAME = `gordons-legacy-${__BUILD_DATE__.slice(0, 10)}-${__BUILD_COMMIT__.slice(0, 7)}.html`;
+
 export const REPOSITORY = 'https://github.com/AnnoyingTechnology/gordons-legacy';
 
 /**
@@ -45,7 +51,7 @@ export class AboutDialog extends LitElement {
           <dt>${t('about.status')}</dt>
           <dd>${__MILESTONE__} <a href="${REPOSITORY}/blob/main/docs/PROGRESS.md">PROGRESS.md</a></dd>
           <dt>${t('about.copy')}</dt>
-          <dd><a href="./gordons-legacy.html" download>gordons-legacy.html</a>: ${t('about.copyHelp')}</dd>
+          <dd><a href="./gordons-legacy.html" download=${STANDALONE_DOWNLOAD_NAME}>${STANDALONE_DOWNLOAD_NAME}</a>: ${t('about.copyHelp')}</dd>
           <dt>${t('about.licence')}</dt>
           <dd><a href="${REPOSITORY}/blob/main/LICENSE">GPL-3.0</a>, <a href=${REPOSITORY}>${t('about.source')}</a></dd>
         </dl>
