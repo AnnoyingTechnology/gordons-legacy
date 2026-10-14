@@ -116,6 +116,19 @@ export class ComponentLibrary {
     return [];
   }
 
+  /** Keeps a caliber made or edited in the cartridge designer as one of the user's components. */
+  async addCaliber(definition: CaliberDefinition): Promise<void> {
+    const entry: ComponentEntry = {
+      id: crypto.randomUUID(),
+      kind: 'caliber',
+      source: { origin: 'user', file: '', author: '', date: new Date().toISOString().slice(0, 10) },
+      value: definition,
+    };
+    await this.store.put(entry);
+    this.entries = [...this.entries, entry];
+    this.changed();
+  }
+
   /** Removes one of the user's components (the community's stay). */
   async remove(id: string): Promise<void> {
     const entry = this.entries.find((candidate) => candidate.id === id);

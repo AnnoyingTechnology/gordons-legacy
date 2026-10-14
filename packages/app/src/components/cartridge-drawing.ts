@@ -1,6 +1,7 @@
 import type { Simulation } from '@gordons-legacy/engine';
 import { seatingDepth, type Load } from '@gordons-legacy/formats';
 import { html, svg, type SVGTemplateResult } from 'lit';
+import { caseOutline as standardOutline, type CaseOutline, type Station } from '../drawing/outlines.ts';
 import type { UiContext } from './context.ts';
 
 /** Drawing size in SVG units; the cartridge is scaled to fit. */
@@ -10,8 +11,6 @@ const MARGIN = 10;
 /** Room under the cartridge for the dimension lines. */
 const DIMENSIONS_HEIGHT = 40;
 
-/** A point of an outline: distance from the case head and radius, m. */
-type Station = [x: number, radius: number];
 
 /**
  * A side view of the cartridge as loaded: the case (from the standard's outline when the load has one,
@@ -82,7 +81,7 @@ export function cartridgeDrawing(load: Load, shot: Simulation | undefined, conte
  * The powder inside the case, drawn to scale by volume: it fills the case's inside, from the head towards
  * the projectile's base, until it holds `fill` of the inside's volume. A compressed charge fills it all.
  */
-function powderOutline(outlineOfCase: CaseOutline, baseAt: number, fill: number): Station[] | undefined {
+function powderOutline(outlineOfCase: CaseOutlineWithSource, baseAt: number, fill: number): Station[] | undefined {
   const from = outlineOfCase.insideFrom;
   if (!(baseAt > from)) return undefined;
   const slices = 200;
@@ -108,7 +107,7 @@ function powderOutline(outlineOfCase: CaseOutline, baseAt: number, fill: number)
 }
 
 /** The case's inside radius at a distance from the head: the outline less a wall, m. */
-function insideRadius(outlineOfCase: CaseOutline, position: number): number {
+function insideRadius(outlineOfCase: CaseOutlineWithSource, position: number): number {
   const { stations } = outlineOfCase;
   for (let index = 1; index < stations.length; index++) {
     const [x0, r0] = stations[index - 1]!;
@@ -121,45 +120,22 @@ function insideRadius(outlineOfCase: CaseOutline, position: number): number {
   return Math.max(0, stations[stations.length - 1]![1] - WALL);
 }
 
-/** The case's outline, at the load's case length, and the radius inside it for the powder. */
-interface CaseOutline {
-  stations: Station[];
-  /** Where the inside starts, m: past the head. */
-  insideFrom: number;
-  /** True when the outline comes from the caliber's standard. */
+/** The case's outline at the load's case length, and whether it comes from the caliber's standard. */
+interface CaseOutlineWithSource extends CaseOutline {
   fromStandard: boolean;
 }
 
 /** An approximate wall, enough to draw the powder inside the case. */
 const WALL = 0.0005;
 
-function caseOutline(load: Load): CaseOutline {
+function caseOutline(load: Load): CaseOutlineWithSource {
   const { caseLength } = load.cartridge;
   const dimensions = load.cartridge.definition?.caseDimensions;
   if (!dimensions || !(dimensions.bodyBaseDiameter > 0)) {
     const radius = (load.projectile.diameter * 1.25) / 2;
     return { stations: [[0, radius], [caseLength, radius]], insideFrom: radius * 0.6, fromStandard: false };
   }
-  const { rimDiameter, rimThickness, bodyBaseDistance, bodyBaseDiameter, shoulderStart, shoulderDiameter, neckStart, neckDiameter, mouthDiameter } =
-    dimensions;
-  const body = bodyBaseDiameter / 2;
-  const rim = rimDiameter / 2 || body;
-  const rimEnd = rimThickness || caseLength * 0.04;
-  const stations: Station[] = [[0, rim], [rimEnd, rim]];
-  // A rimless case has an extractor groove up to E, drawn as a plain step; a rimmed one goes straight
-  // from the rim to the body.
-  const bodyFrom = bodyBaseDistance > rimEnd ? bodyBaseDistance : rimEnd;
-  if (bodyBaseDistance > rimEnd) stations.push([rimEnd, body * 0.85], [bodyBaseDistance, body * 0.85]);
-  stations.push([bodyFrom, body]);
-  const bottleneck = shoulderStart > bodyBaseDistance && neckStart >= shoulderStart && shoulderDiameter > 0;
-  if (bottleneck) {
-    stations.push([shoulderStart, shoulderDiameter / 2], [neckStart, (neckDiameter || mouthDiameter) / 2]);
-    stations.push([Math.max(neckStart, caseLength), (mouthDiameter || neckDiameter) / 2]);
-  } else {
-    // A straight or tapered case, from the body to the mouth.
-    stations.push([caseLength, (mouthDiameter || neckDiameter || bodyBaseDiameter) / 2]);
-  }
-  return { stations, insideFrom: bodyFrom, fromStandard: true };
+  return { ...standardOutline(dimensions, caseLength), fromStandard: true };
 }
 
 /** The projectile's outline from base to tip; the ogive is drawn as a tangent arc. */

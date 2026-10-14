@@ -6,6 +6,7 @@ import type { Firearm } from '../state/library.ts';
 import type { ComponentEntry, ComponentLibrary } from '../state/components.ts';
 import { withCaliber, withProjectile, withPropellant } from '../editor/components.ts';
 import './charge-synthesis-view.ts';
+import './cartridge-designer.ts';
 import './component-picker.ts';
 import { assessLoad } from '../analysis/load-assessment.ts';
 import { FIELD_GROUPS } from '../editor/fields.ts';
@@ -30,6 +31,7 @@ export class LoadEditor extends LitElement {
     components: { attribute: false },
     componentEntries: { attribute: false },
     picking: { state: true },
+    designing: { state: true },
     axis: { state: true },
     assistant: { state: true },
   };
@@ -43,6 +45,8 @@ export class LoadEditor extends LitElement {
   declare componentEntries: ComponentEntry[];
   /** The component being chosen, if the picker is open. */
   declare picking: 'propellant' | 'projectile' | 'caliber' | undefined;
+  /** Whether the cartridge designer is open. */
+  declare designing: boolean;
   declare axis: ChartAxis;
   /** The assistant open, if any. */
   declare assistant: 'boreArea' | undefined;
@@ -54,6 +58,7 @@ export class LoadEditor extends LitElement {
     this.firearms = [];
     this.componentEntries = [];
     this.picking = undefined;
+    this.designing = false;
   }
 
   private stopWatchingLayout = () => {};
@@ -104,6 +109,17 @@ export class LoadEditor extends LitElement {
                 @close=${() => (this.picking = undefined)}
               ></gl-component-picker>`
             : nothing}
+          <gl-cartridge-designer
+            .open=${this.designing}
+            .load=${this.load}
+            .context=${this.context}
+            @apply-caliber=${(event: CustomEvent<CaliberDefinition>) => {
+              this.emit(withCaliber(this.load, event.detail));
+              this.designing = false;
+            }}
+            @save-caliber=${(event: CustomEvent<CaliberDefinition>) => void this.components?.addCaliber(event.detail)}
+            @close=${() => (this.designing = false)}
+          ></gl-cartridge-designer>
           <gl-bore-area-dialog
             .load=${this.load}
             .context=${this.context}
@@ -130,9 +146,14 @@ export class LoadEditor extends LitElement {
     if (!kind || !this.components) return nothing;
     const { t } = this.context;
     const label = { propellant: 'components.choosePowder', projectile: 'components.chooseProjectileTitle', caliber: 'components.chooseCaliber' } as const;
-    return html`<button class="component-choice" @click=${() => (this.picking = kind)}>
+    const choose = html`<button class="component-choice" @click=${() => (this.picking = kind)}>
       ${icon(kind === 'caliber' ? 'cartridge' : kind)} ${t(label[kind])}…
     </button>`;
+    if (kind !== 'caliber') return choose;
+    return html`<div class="component-choices">
+      ${choose}
+      <button class="component-choice" @click=${() => (this.designing = true)}>${icon('calculator')} ${t('designer.open')}…</button>
+    </div>`;
   }
 
   private emit(load: Load): void {

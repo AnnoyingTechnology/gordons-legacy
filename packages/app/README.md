@@ -50,6 +50,8 @@ src/
     charge-synthesis-view.ts <gl-charge-synthesis>: GRT's tolerance synthesis, simulated matches of
                           other powders (docs/model/charge-synthesis.md)
     converter-dialog.ts   <gl-converter-dialog>: GRT's unit-of-measure calculator, a floating window
+    cartridge-designer.ts <gl-cartridge-designer>: GRT's cartridge designer (caliber definition and
+                          technical drawing)
     temperature-view.ts   the load at powder temperatures from −20 to 50 °C
     temperature-fit.ts    <gl-temperature-fit>: fit tcc and tch to measured velocities
     sensitivity-view.ts   the peak pressure under ordinary bench variations
@@ -59,6 +61,7 @@ src/
   editor/bore-area.ts   effective bore area from the rifling (GRT's formulas)
   editor/synthesis-candidate.ts  the load opened from a synthesis match (nothing measured)
   charts/               SVG line chart and axis ticks, no chart library
+  drawing/              case and chamber outlines; the designer's technical drawing
   units/units.ts        display units per kind of quantity (metric and imperial presets)
   units/conversions.ts  the unit converter's units
   i18n/                 message catalogs (en is the source; the compiler checks the others are complete)
