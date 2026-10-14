@@ -121,7 +121,13 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
   maintainer tool reading the decrypted records from a running GRT's memory and writing GRT component
   files (preferred: no cryptography reimplemented, nothing redistributed); (2) automating GRT's own
   one-by-one export under Wine; (3) an in-app importer, which would reimplement SEE and ship GRT's key
-  (not recommended).
+  (not recommended). Maintainer chose option 1 (2026-10-14). Findings: GRT's database windows allow
+  single selection only and grey out Export for GRT's own entries (user entries only), so GUI export is
+  out. A memory snapshot of GRT with its powder window open holds SQLite's decrypted page cache (the
+  schema page shows tables caliber, projectile, propellant, gun, image, status), so the records can be
+  read with SQLite's public file format, no cryptography. The agent's next step (parsing those pages) was
+  blocked by its client's permission policy; it needs the maintainer's explicit permission rule, or
+  the maintainer runs it. The snapshot is local: `~/.cache/gordons-legacy/db-export/powders.bin`.
 - Safety-relevant discrepancy to settle with measured pressures: at equal muzzle velocity, the research
   engine's peaks are up to 1.7× GRT's for subsonic rifle loads (GRT smooths its pressure). Which is
   closer to reality is unknown (docs/model/research-engine.md). Measured pressures (pressure trace,
