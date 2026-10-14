@@ -106,9 +106,9 @@ export const INCOMPLETE_BURN = 0.85;
 export const LOW_PRESSURE_SHARE = 0.35;
 /**
  * The cold and hot days, °C: a load worked up between about 14 and 26 °C, then used in winter or in the
- * desert (the maintainer's choice, issue #13).
+ * desert (the maintainer's choice: issue #13, then −15 °C for the cold day).
  */
-export const COLD_DAY_CELSIUS = -5;
+export const COLD_DAY_CELSIUS = -15;
 export const HOT_DAY_CELSIUS = 40;
 const ZERO_CELSIUS = 273.15;
 

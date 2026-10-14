@@ -98,6 +98,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | CIP and SAAMI maxima (#4): optional `cartridge.standardMaxPressures` (format v1, optional field), plus the caliber definition's own standard; GRT's `method` isn't used (it says "Piezo CIP" for SAAMI values). Loads are checked against every maximum known. | Agent, for review |
 | 2026-10-14 | Library (#12): saved loads live in IndexedDB; Save goes to the library, Export writes a file. Browsed by cartridge, then firearm (= the barrel's name, which GRT users already give their gun), then powder. A firearm's barrel can be applied to a load. Backup/restore as one JSON file. No IndexedDB dependency (60-line wrapper). | Agent, for review |
 | 2026-10-14 | Muzzle blast (#6): Fansler's modified point-source scaling (1998, model 2pb) from the gas energy at the muzzle, 1 m at 90°, bare muzzle; flagged "≈ … uncertainty unknown" outside its 7.62 mm data (62 of the maintainer's 63 loads). The engine gains an optional `muzzleGasEnergy` result. | Agent, reviewed by Codex |
+| 2026-10-14 | Cold day of the load review at −15 °C instead of −5 °C. | Julien |
 | 2026-10-14 | Speed scale fixed at 150–1,300 m/s for every load (.22 Short to .204 Ruger); transonic band Mach 0.95–1.1 at the powder temperature. | Agent, for review |
 
 ## Open questions
@@ -199,3 +200,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | #10: survey of GRT users' complaints and of reloading inventory tools (`docs/research/grt-user-feedback.md`); proposals posted on the issue. |
 | 2026-10-14 | Pressure and velocity charts side by side from a 1,500 px window, stacked below (maintainer's request); half-width charts use their own drawing size so their text stays readable. Same in Compare. |
 | 2026-10-14 | Muzzle blast (#6): estimate of the unweighted peak level 1 m beside a bare muzzle (card with energy and recoil, library column), from Fansler's blast scaling; 140 dB hearing-protection note. Codex (`gpt-6.1-sol`, xhigh) reviewed the physics: formula confirmed (reproduces Fansler's c13p6, 168.1 dB); gas volume made consistent with the solver; uncertainty 1.75 dB RMS within the data, unknown outside (handguns flagged). Plausible against CDC/NIOSH measurements (.308 and .223 at 0.6 m: 176 dB measured, 174–175 dB estimated on similar loads). Barrel time and burn moved to the details list. |
+| 2026-10-14 | Cold day of the review moved to −15 °C (maintainer's request in chat). |

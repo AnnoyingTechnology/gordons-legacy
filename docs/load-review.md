@@ -33,9 +33,9 @@ drilled case, SAAMI with a conformal transducer), so their values don't convert 
 | Low pressure | note | peak < 35 % of the lowest maximum |
 | Transonic | note | muzzle velocity between Mach 0.95 and 1.1 at the powder temperature |
 | Hot day | caution / note | powder at 40 °C: above the lowest maximum (caution); a subsonic load leaves the subsonic range (note) |
-| Cold day | note | powder at −5 °C: a supersonic load drops out of the supersonic range; burn falls below 85 % |
+| Cold day | note | powder at −15 °C: a supersonic load drops out of the supersonic range; burn falls below 85 % |
 
-The cold and hot days (−5 °C and 40 °C) are the maintainer's choice (issue #13): a load worked up
+The cold and hot days (−15 °C and 40 °C) are the maintainer's choice (issue #13; cold moved from −5 °C to −15 °C on 2026-10-14): a load worked up
 between about 14 and 26 °C, used in winter or in the desert. Climate findings are not a verdict: a load
 for one season, or for accuracy in steady conditions, need not pass both.
 
