@@ -45,7 +45,9 @@ export class PropertyTable extends LitElement {
         <h3>${t(this.group.title)}</h3>
         <table class="property-table">
           <tbody>
-            ${this.group.fields.map((field, index) => this.renderRow(field, index))}
+            ${this.group.fields.map((field, index) =>
+              field.type === 'number' && field.visible && !field.visible(this.load) ? nothing : this.renderRow(field, index),
+            )}
           </tbody>
         </table>
       </section>
@@ -55,6 +57,20 @@ export class PropertyTable extends LitElement {
   private renderRow(field: Field, index: number) {
     const { t } = this.context;
     const id = `field-${this.group.title}-${index}`;
+    if (field.type === 'choice') {
+      return html`
+        <tr>
+          <th><label for=${id}>${t(field.label)}</label></th>
+          <td colspan="2">
+            <select id=${id} @change=${(event: Event) => this.emit(field.set(this.load, (event.target as HTMLSelectElement).value))}>
+              ${field.options.map(
+                (option) => html`<option value=${option.value} ?selected=${option.value === field.get(this.load)}>${t(option.label)}</option>`,
+              )}
+            </select>
+          </td>
+        </tr>
+      `;
+    }
     if (field.type === 'text') {
       return html`
         <tr>

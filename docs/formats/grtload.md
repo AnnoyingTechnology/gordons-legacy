@@ -64,7 +64,7 @@ Units as observed. Meanings marked (inferred) come from GRT's manual or context,
 | projectile | `g1bc`, `g7bc` | | Ballistic coefficients |
 | projectile | `gfriction`, `gfrictionUnlock` | bar | Bullet resistance, relative to GRT's default (0 = default, may be negative; manual p. 33); the flag only unlocks the editor field |
 | projectile | `gpressure` | bar | Initial pressure: the gas pressure at which the projectile starts to move (manual p. 33) |
-| projectile | `gTailType` | | Base type: 0 flat, 1 hollow base, 2 boat-tail (order of the manual) |
+| projectile | `gTailType` | | Base type: 0 flat, 1 hollow base, 2 boat-tail, 3 semi-spherical hollow base (GRT's tail assistant) |
 | projectile | `gtailh`, `gTailDiaA`, `gTailDiaB` | mm | Cone length (or cavity depth) and its two end diameters, in either order |
 | projectile | `gUBCS` | | Universal Bullet Classification Scheme code; no effect on simulation |
 | projectile | `mode` | | `0`, or `userfile` for user-defined projectiles |

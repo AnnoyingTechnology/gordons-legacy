@@ -76,13 +76,13 @@ const barrel = {
 
 const flatBase = { shape: { literal: 'flat' } } satisfies ShapeOf<Extract<ProjectileBase, { shape: 'flat' }>>;
 
-function shapedBase(shape: 'hollow' | 'boattail') {
+function shapedBase(shape: 'hollow' | 'boattail' | 'hollow-round') {
   return {
     shape: { literal: shape },
     length: 'nonNegative',
     diameterA: 'nonNegative',
     diameterB: 'nonNegative',
-  } satisfies ShapeOf<Extract<ProjectileBase, { shape: 'hollow' | 'boattail' }>>;
+  } satisfies ShapeOf<Extract<ProjectileBase, { shape: 'hollow' | 'boattail' | 'hollow-round' }>>;
 }
 
 const projectile = {
@@ -97,7 +97,12 @@ const projectile = {
   base: {
     variants: {
       field: 'shape',
-      shapes: { flat: flatBase, hollow: shapedBase('hollow'), boattail: shapedBase('boattail') },
+      shapes: {
+        flat: flatBase,
+        hollow: shapedBase('hollow'),
+        boattail: shapedBase('boattail'),
+        'hollow-round': shapedBase('hollow-round'),
+      },
     },
   },
   shotStartPressure: 'nonNegative',

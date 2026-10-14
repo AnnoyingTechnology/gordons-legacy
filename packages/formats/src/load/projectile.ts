@@ -53,13 +53,15 @@ export interface Projectile {
 }
 
 /**
- * Shape of the projectile's base. A hollow base adds volume to the combustion chamber; a boat-tail takes
- * some away. GRT `gTailType` (0 flat, 1 hollow, 2 boat-tail), `gtailh`, `gTailDiaA`, `gTailDiaB`.
+ * Shape of the projectile's base. A hollow base or a boat-tail leaves the combustion chamber more volume
+ * than a flat base seated as deep. GRT `gTailType` (0 flat, 1 hollow, 2 boat-tail, 3 semi-spherical
+ * hollow), `gtailh`, `gTailDiaA`, `gTailDiaB`.
  */
 export type ProjectileBase =
   | { shape: 'flat' }
   | {
-      shape: 'hollow' | 'boattail';
+      /** `hollow-round` is GRT's semi-spherical hollow base, which its model treats as flat. */
+      shape: 'hollow' | 'boattail' | 'hollow-round';
       /** Length of the boat-tail cone, or depth of the cavity, m. */
       length: number;
       /** One end diameter of the cone or cavity, m. The two diameters may be given in either order. */

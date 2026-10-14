@@ -76,6 +76,7 @@ Working in cm³ and mm as GRT does, with r = D_p / 2 in mm and d in mm:
 
 - intrusion I = π r² d (mm³);
 - hollow base (length h, end diameters a and b, in mm): I −= (π h / 3)(a²/4 + ab/4 + b²/4);
+- semi-spherical hollow base (GRT tail type 3): no correction, as for a flat base;
 - boat-tail: I −= π r² h − (π h / 3)(a²/4 + ab/4 + b²/4) when the frustum volume (π h / 3)(…) is
   positive and smaller than the cylinder π r² h, else nothing (so a boat-tail without diameters counts
   as a flat base; open: tails longer than the seating depth);

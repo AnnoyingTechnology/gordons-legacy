@@ -1,4 +1,4 @@
-import { seatingDepth, type Load } from '@gordons-legacy/formats';
+import { seatingDepth, type Load, type ProjectileBase } from '@gordons-legacy/formats';
 import type { MessageKey } from '../i18n/i18n.ts';
 import type { QuantityKind } from '../units/units.ts';
 
@@ -23,6 +23,17 @@ export interface NumberField {
   assistant?: 'boreArea';
   /** A hint shown with the field: typical values, or what to measure. */
   help?: MessageKey;
+  /** Shown only when this holds (for example, a boat-tail's length only for a boat-tail). */
+  visible?: (load: Load) => boolean;
+}
+
+/** One of a fixed set of values, chosen from a list. */
+export interface ChoiceField {
+  type: 'choice';
+  label: MessageKey;
+  options: Array<{ value: string; label: MessageKey }>;
+  get: (load: Load) => string;
+  set: (load: Load, value: string) => Load;
 }
 
 export interface TextField {
@@ -32,7 +43,7 @@ export interface TextField {
   set?: (load: Load, value: string) => Load;
 }
 
-export type Field = NumberField | TextField;
+export type Field = NumberField | TextField | ChoiceField;
 
 export interface FieldGroup {
   title: MessageKey;
@@ -40,6 +51,13 @@ export interface FieldGroup {
 }
 
 const number = (field: Omit<NumberField, 'type'>): NumberField => ({ type: 'number', ...field });
+
+const BASE_SHAPES: ProjectileBase['shape'][] = ['flat', 'boattail', 'hollow', 'hollow-round'];
+const BASE_DIMENSIONS = [
+  ['length', 'field.baseLength'],
+  ['diameterA', 'field.baseDiameterA'],
+  ['diameterB', 'field.baseDiameterB'],
+] as const;
 
 export const FIELD_GROUPS: FieldGroup[] = [
   {
@@ -92,6 +110,23 @@ export const FIELD_GROUPS: FieldGroup[] = [
       number({ path: 'projectile.mass', label: 'field.mass', kind: 'projectileMass', positive: true, get: (l) => l.projectile.mass, set: (l, v) => ({ ...l, projectile: { ...l.projectile, mass: v } }) }),
       number({ path: 'projectile.diameter', label: 'field.diameter', kind: 'length', positive: true, get: (l) => l.projectile.diameter, set: (l, v) => ({ ...l, projectile: { ...l.projectile, diameter: v } }) }),
       number({ path: 'projectile.length', label: 'field.length', kind: 'length', positive: true, get: (l) => l.projectile.length, set: (l, v) => ({ ...l, projectile: { ...l.projectile, length: v } }) }),
+      {
+        type: 'choice',
+        label: 'field.base',
+        options: BASE_SHAPES.map((shape) => ({ value: shape, label: `base.${shape}` as const })),
+        get: (l) => l.projectile.base.shape,
+        set: (l, v) => withBase(l, v as ProjectileBase['shape']),
+      },
+      ...BASE_DIMENSIONS.map(([key, label]) =>
+        number({
+          path: `projectile.base.${key}`,
+          label,
+          kind: 'length',
+          visible: (l) => l.projectile.base.shape !== 'flat',
+          get: (l) => (l.projectile.base.shape === 'flat' ? undefined : l.projectile.base[key]),
+          set: (l, v) => (l.projectile.base.shape === 'flat' ? l : { ...l, projectile: { ...l.projectile, base: { ...l.projectile.base, [key]: v } } }),
+        }),
+      ),
       // The seating depth isn't stored: setting it moves the overall length, as in GRT.
       number({
         path: 'cartridge.overallLength',
@@ -153,6 +188,15 @@ export function fieldAt(path: string | undefined): NumberField | undefined {
     for (const field of group.fields) if (field.type === 'number' && field.path === path) return field;
   }
   return undefined;
+}
+
+/** The load with another base shape, keeping the dimensions when there were some. */
+function withBase(load: Load, shape: ProjectileBase['shape']): Load {
+  const current = load.projectile.base;
+  const dimensions = current.shape === 'flat' ? { length: 0, diameterA: 0, diameterB: 0 } : current;
+  const base: ProjectileBase =
+    shape === 'flat' ? { shape } : { shape, length: dimensions.length, diameterA: dimensions.diameterA, diameterB: dimensions.diameterB };
+  return { ...load, projectile: { ...load.projectile, base } };
 }
 
 function withBurnModel(load: Load, change: Partial<Load['propellant']['burnModel']>): Load {

@@ -22,7 +22,8 @@ export function chamberVolume(
  * around a boat-tail inside the case.
  */
 function baseCorrection(radiusSquared: number, base: ProjectileBase): number {
-  if (base.shape === 'flat') return 0;
+  // GRT gives the semi-spherical hollow base no correction, like a flat base.
+  if (base.shape === 'flat' || base.shape === 'hollow-round') return 0;
   const tailLength = base.length * 1000; // mm
   const a = (base.diameterA * 1000) / 2;
   const b = (base.diameterB * 1000) / 2;

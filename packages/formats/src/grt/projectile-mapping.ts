@@ -67,8 +67,8 @@ interface BaseFieldNames {
   diameterB: string;
 }
 
-/** GRT's base type codes 0, 1 and 2, in the order its manual lists them. */
-const BASE_SHAPES = ['flat', 'hollow', 'boattail'] as const;
+/** GRT's base type codes 0 to 3 (its projectile-tail assistant lists them in this order). */
+const BASE_SHAPES = ['flat', 'hollow', 'boattail', 'hollow-round'] as const;
 
 function readBase(fields: GrtFields, names: BaseFieldNames): ProjectileBase {
   const code = fields.number(names.type);

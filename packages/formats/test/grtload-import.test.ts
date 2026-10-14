@@ -208,3 +208,13 @@ describe('invalid input', () => {
     expect(load.unmapped).toEqual({ 'gun/newSetting': '42 units' });
   });
 });
+
+test("GRT's semi-spherical hollow base (type 3) keeps its dimensions", () => {
+  const text = readFixture('cc0/loads/327_Federal_Magnum_by_dpeppe01_2022.12.12.grtload')
+    .replace('name="gTailType" value="0"', 'name="gTailType" value="3"')
+    .replace('name="gtailh" value="0"', 'name="gtailh" value="2"')
+    .replace('name="gTailDiaA" value="0"', 'name="gTailDiaA" value="5"');
+  const result = importGrtLoad(text);
+  expect(issueCodes(result)).not.toContain('unknown-code');
+  expect(expectImported(result).projectile.base).toEqual({ shape: 'hollow-round', length: 0.002, diameterA: 0.005, diameterB: 0 });
+});
