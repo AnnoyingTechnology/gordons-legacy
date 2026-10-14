@@ -30,6 +30,19 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
    (`docs/model/validation.md`, chronograph study done); next, published pressure data, then OBT, the
    energy terms and the covolume handling against the published science.
 
+Maintainer issues picked up 2026-10-14 (GitHub #1–#13, all UI or features beyond GRT). Order:
+
+| Issue | Plan | State |
+|---|---|---|
+| #1, #3 | Full-height toolbar buttons, bigger tabs and inputs; notes typed in place, no "add note" button. | To do |
+| #5, #7, #8, #9 | Results hierarchy: large key cards (velocity, energy, recoil, sound), fill and pressure as gauges, velocity on a speed scale with the transonic band. | To do |
+| #11 | Tab badges: cartridge, projectile, powder. | To do |
+| #2, #13 | One warning system with a load danger level (overpressure, compressed or low fill, …) and cold/hot climate warnings. | To do |
+| #4 | CIP and SAAMI maximum pressures both on the charts. | To do |
+| #6 | Muzzle-blast sound level estimate at 1 m; physics to check with Codex. | To do |
+| #12 | Local load library (browse by cartridge, then powder/projectile, with key figures). | To do |
+| #10 | Survey of GRT users' complaints; report on the issue for the maintainer to choose. | To do |
+
 Reverse-engineering workspace (local, never committed; procedure in `docs/model/grt-structure.md`):
 
 - `~/.cache/gordons-legacy/grt-dump/`: GRT's program image dumped from memory (base 0x02770000).
@@ -169,3 +182,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | M5: chronograph CSV import (LabRadar, MagnetoSpeed, Caldwell, ProChrono… exports): detected velocity column and unit, confirmed in a dialog, added as a measurement series. |
 | 2026-10-14 | M5: shot-group analysis: a target photo (downscaled to 1600 px), its scale from two clicked points, hits clicked at the bullet's diameter; extreme spread, mean radius, closest hits and deviations, in length, MOA and mrad; groups saved with the load. The app now warns when the browser's storage is full instead of failing. |
 | 2026-10-14 | M7: the covolume explains most of R1's gap to GRT (median peak ratio 1.75 → 1.12, velocity 1.08 → 0.975 without it); the vivacity averaging hardly matters. R1 without covolume beats GRT Traditional on the chronograph corpus (same 47 charges: mean +4.1 % vs +8.0 %, RMS 11.1 % vs 13.5 %, p90 16.6 % vs 26.9 %); its peaks are a median 12 % above GRT's, unvalidated. |
+| 2026-10-14 | `AGENTS.md`: check GitHub issues regularly; the maintainer's issues and comments count as chat requests. Issues #1–#13 triaged (Next steps). |
