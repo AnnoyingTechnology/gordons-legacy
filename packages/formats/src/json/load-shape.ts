@@ -1,5 +1,5 @@
 import type { Barrel, GasLeak } from '../load/barrel.ts';
-import type { CaliberDefinition, Cartridge } from '../load/cartridge.ts';
+import type { CaliberDefinition, Cartridge, CaseDimensions } from '../load/cartridge.ts';
 import type { ComponentInfo } from '../load/component-info.ts';
 import type { Charge, ImportOrigin, Ladder, Load, Note, Picture } from '../load/load.ts';
 import { LOAD_FORMAT, LOAD_SCHEMA_VERSION } from '../load/load.ts';
@@ -27,6 +27,21 @@ const componentInfo = {
   modifiedOn: 'string',
 } satisfies ShapeOf<ComponentInfo>;
 
+const caseDimensions = {
+  caseLength: 'nonNegative',
+  shoulderStart: 'nonNegative',
+  neckStart: 'nonNegative',
+  maximumOverallLength: 'nonNegative',
+  rimDiameter: 'nonNegative',
+  rimThickness: 'nonNegative',
+  bodyBaseDistance: 'nonNegative',
+  bodyBaseDiameter: 'nonNegative',
+  shoulderDiameter: 'nonNegative',
+  neckDiameter: 'nonNegative',
+  mouthDiameter: 'nonNegative',
+  projectileDiameter: 'nonNegative',
+} satisfies ShapeOf<CaseDimensions>;
+
 const caliberDefinition = {
   name: 'string',
   alternativeNames: 'string',
@@ -38,6 +53,7 @@ const caliberDefinition = {
   specificationUrl: 'string',
   maxPressure: 'nonNegative',
   sebertFactor: 'nonNegative',
+  caseDimensions: { optional: { object: caseDimensions } },
   info: { object: componentInfo },
   unmapped,
 } satisfies ShapeOf<CaliberDefinition>;

@@ -28,7 +28,8 @@ field there documents its meaning, unit and GRT counterpart. This page gives the
 Load
 ├─ format, schemaVersion, title
 ├─ cartridge     caliber values as loaded (Cartridge)
-│  └─ definition the standard's definition (CaliberDefinition), optional
+│  └─ definition the standard's definition (CaliberDefinition), optional, with the cartridge's
+│                outline (caseDimensions: CIP table I letters, mapped to names, in m)
 ├─ barrel        the gun (Barrel), with gasLeaks
 ├─ projectile    (Projectile)
 ├─ propellant    the powder model (Propellant), with burnModel, and calibration when the model

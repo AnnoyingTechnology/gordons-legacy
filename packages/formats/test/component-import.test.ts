@@ -32,7 +32,7 @@ describe('every fixture component file imports without errors or warnings', () =
   });
 });
 
-test('a caliber file maps the standard and keeps the drawing verbatim', () => {
+test('a caliber file maps the standard and the cartridge outline, and keeps the rest of the drawing', () => {
   const caliber = expectImported(importGrtCaliber(readFixture('cc0/calibers/6_mm_ARC_by_Gordon_2020.09.06.caliber')));
   expect(caliber).toMatchObject({
     name: '6 mm ARC',
@@ -44,7 +44,10 @@ test('a caliber file maps the standard and keeps the drawing verbatim', () => {
     info: { origin: 'cip-bobp.org', createdBy: 'GRT', createdOn: '2020-09-06' },
   });
   expect(caliber.maxPressure).toBeCloseTo(3585.27e5, 3);
-  expect(caliber.unmapped).toMatchObject({ L6: '57.40', c_alpha: '60.00', V: '33.80' });
+  expect(caliber.caseDimensions?.caseLength).toBeCloseTo(0.03785, 12);
+  expect(caliber.caseDimensions?.maximumOverallLength).toBeCloseTo(0.0574, 12);
+  expect(caliber.caseDimensions?.shoulderDiameter).toBeCloseTo(0.01092, 12);
+  expect(caliber.unmapped).toMatchObject({ c_alpha: '60.00', V: '33.80' });
 });
 
 test('a projectile file gives masses in grains', () => {

@@ -43,7 +43,7 @@ describe('a .327 Federal Magnum load from the community corpus', () => {
     expect(load.cartridge.maxPressure).toBeCloseTo(3102.6407819255319e5, 3);
   });
 
-  test('keeps the caliber definition, with the drawing verbatim', () => {
+  test('keeps the caliber definition, with the cartridge outline and the rest of the drawing', () => {
     const definition = load.cartridge.definition!;
     expect(definition.name).toBe('.327 Fed Magnum');
     expect(definition.caseType).toBe('4 pistol/revolver');
@@ -51,7 +51,9 @@ describe('a .327 Federal Magnum load from the community corpus', () => {
       'https://bobp.cip-bobp.org/uploads/tdcc/tab-iv/tabivcal-en-page41.pdf',
     );
     expect(definition.maxPressure).toBeCloseTo(3102.64e5, 3);
-    expect(definition.unmapped).toMatchObject({ L3: '30.48', L6: '37.34', beta: '35.00' });
+    expect(definition.caseDimensions?.caseLength).toBeCloseTo(0.03048, 12);
+    expect(definition.caseDimensions?.maximumOverallLength).toBeCloseTo(0.03734, 12);
+    expect(definition.unmapped).toMatchObject({ beta: '35.00' });
   });
 
   test('converts the projectile, with the BC in kg/m²', () => {

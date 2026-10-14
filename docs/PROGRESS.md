@@ -153,3 +153,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | Printed report shows long text values in full (names, barrel notes). |
 | 2026-10-14 | Bench variations added (`analysis/sensitivity.ts`): on the maintainer's hottest 300 BLK load (88 % of the maximum), the four variations together reach 103 %. |
 | 2026-10-14 | Fix: setting one ladder field on a load without a ladder did nothing; the other now defaults (5 charges, or a step of 1 % of the charge). |
+| 2026-10-14 | Format: the caliber definition's cartridge outline (CIP L1, L2, L3, L6, R1, e min, E, P1, P2, H1, H2, G1) mapped to named SI fields (`caseDimensions`); the chamber and other drawing values stay in `unmapped`. |

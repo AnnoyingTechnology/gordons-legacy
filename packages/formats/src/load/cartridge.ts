@@ -36,12 +36,44 @@ export interface Cartridge {
 }
 
 /**
+ * The cartridge's outline as a standard's drawing gives it (CIP table I, maximum cartridge), m. Distances
+ * are from the case head. GRT keeps these with the caliber definition, under the drawing's own letters.
+ * A dimension the source doesn't give is 0, as in GRT.
+ */
+export interface CaseDimensions {
+  /** L3: length of the case. */
+  caseLength: number;
+  /** L1: where the shoulder starts. */
+  shoulderStart: number;
+  /** L2: where the neck starts. */
+  neckStart: number;
+  /** L6: the longest cartridge allowed. */
+  maximumOverallLength: number;
+  /** R1: rim diameter. */
+  rimDiameter: number;
+  /** e min: rim thickness. */
+  rimThickness: number;
+  /** E: where the body diameter P1 is measured. */
+  bodyBaseDistance: number;
+  /** P1: body diameter at E. */
+  bodyBaseDiameter: number;
+  /** P2: body diameter where the shoulder starts. */
+  shoulderDiameter: number;
+  /** H1: neck diameter where the neck starts. */
+  neckDiameter: number;
+  /** H2: neck diameter at the mouth. */
+  mouthDiameter: number;
+  /** G1: projectile diameter at the mouth. */
+  projectileDiameter: number;
+}
+
+/**
  * A caliber as defined by a standards body (CIP, SAAMI) or by a wildcat's author. Corresponds to GRT's
  * `.caliber` files and the `caliberfile` section of a load.
  *
- * GRT also stores the dimensioned drawing of the case and chamber (`L1`, `R1`, `P1`, `c_L3`…). Their
- * meanings aren't all known yet, so importers keep them verbatim in `unmapped` until the cartridge
- * designer (milestone M5) needs them.
+ * GRT also stores the dimensioned drawing of the case and chamber (`L1`, `R1`, `P1`, `c_L3`…). The
+ * cartridge's outline is mapped to `caseDimensions`; the rest (chamber, extractor groove, angles) stays
+ * verbatim in `unmapped`.
  */
 export interface CaliberDefinition {
   /** Official name, for example `6 mm ARC`. GRT `cipname`. */
@@ -64,6 +96,8 @@ export interface CaliberDefinition {
   maxPressure: number;
   /** Default Sebert factor for the caliber; see `Cartridge.sebertFactor`. GRT `sebert`. */
   sebertFactor: number;
+  /** The cartridge's outline as the standard dimensions it, when given. */
+  caseDimensions?: CaseDimensions;
   info: ComponentInfo;
   /** Source values without a field in this format, kept verbatim by name. */
   unmapped?: Record<string, string>;
