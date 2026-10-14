@@ -152,3 +152,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | Projectile base editable (flat, boat-tail, hollow, semi-spherical hollow) with its tail dimensions; GRT's tail type 3 (semi-spherical hollow, from its tail assistant) is now imported and kept; GRT's model gives it no chamber correction, and neither does the engine. |
 | 2026-10-14 | Printed report shows long text values in full (names, barrel notes). |
 | 2026-10-14 | Bench variations added (`analysis/sensitivity.ts`): on the maintainer's hottest 300 BLK load (88 % of the maximum), the four variations together reach 103 %. |
+| 2026-10-14 | Fix: setting one ladder field on a load without a ladder did nothing; the other now defaults (5 charges, or a step of 1 % of the charge). |

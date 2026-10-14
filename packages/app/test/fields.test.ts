@@ -49,3 +49,12 @@ test('a boat-tail gets editable tail dimensions; back to flat, it loses them', (
   expect(parseLoad(serializeLoad(boattail)).ok).toBe(true);
   expect(base.set(boattail, 'flat').projectile.base).toEqual({ shape: 'flat' });
 });
+
+test('either ladder field alone makes a ladder, the other taking a default', () => {
+  const noLadder: Load = { ...load };
+  delete (noLadder as { ladder?: unknown }).ladder;
+  const charges = numberFields.find((field) => field.label === 'field.ladderSteps')!;
+  const step = numberFields.find((field) => field.label === 'field.ladderStep')!;
+  expect(charges.set(noLadder, 4).ladder).toEqual({ steps: 4, massStep: noLadder.charge.mass * 0.01 });
+  expect(step.set(noLadder, 0.00002).ladder).toEqual({ steps: 5, massStep: 0.00002 });
+});

@@ -164,13 +164,14 @@ export const FIELD_GROUPS: FieldGroup[] = [
         kind: 'plain',
         decimals: 0,
         get: (l) => l.ladder?.steps ?? 1,
-        set: (l, v) => withLadder(l, Math.round(v), l.ladder?.massStep ?? 0),
+        // Without a ladder yet, the step defaults to 1 % of the charge, so that this field alone makes one.
+        set: (l, v) => withLadder(l, Math.round(v), l.ladder?.massStep ?? l.charge.mass * DEFAULT_LADDER_STEP),
       }),
       number({
         label: 'field.ladderStep',
         kind: 'chargeMass',
         get: (l) => l.ladder?.massStep ?? 0,
-        set: (l, v) => withLadder(l, l.ladder?.steps ?? 1, v),
+        set: (l, v) => withLadder(l, l.ladder?.steps ?? DEFAULT_LADDER_CHARGES, v),
       }),
     ],
   },
@@ -202,6 +203,10 @@ function withBase(load: Load, shape: ProjectileBase['shape']): Load {
 function withBurnModel(load: Load, change: Partial<Load['propellant']['burnModel']>): Load {
   return { ...load, propellant: { ...load.propellant, burnModel: { ...load.propellant.burnModel, ...change } } };
 }
+
+/** Defaults when one ladder field is set before the other: 5 charges, each 1 % of the charge apart. */
+const DEFAULT_LADDER_CHARGES = 5;
+const DEFAULT_LADDER_STEP = 0.01;
 
 /** A ladder with fewer than two charges, or no step, is no ladder. */
 function withLadder(load: Load, steps: number, massStep: number): Load {
