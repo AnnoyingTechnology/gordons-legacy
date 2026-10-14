@@ -1,6 +1,6 @@
 # Research engine (M7): design
 
-Status: **design, under review**. Nothing here is implemented or shown to users yet. Per the plan, the
+Status: **design, reviewed** (physics review by Codex, 2026-10-14, applied). Nothing here is implemented or shown to users yet. Per the plan, the
 research engine ships only when its measured error is no worse than GRT Traditional's on the
 validation corpus ([validation.md](validation.md)).
 
@@ -30,54 +30,73 @@ interior ballistic model with global parameters).
 
 ## State and equations
 
-State: time t, burnt fraction z, projectile travel x, projectile velocity v, cumulative work terms.
+Revised after a physics review (Codex, 2026-10-14; see PROGRESS.md): the gradient closure now
+includes the bore resistance, rotation enters through an effective mass, and the ignition is explicit.
 
-1. **Burning (Vieille's law with GRT's vivacity).** GRT's closed form implies, through the momentum
-   balance, dz/dt = Ba(T) · φ(z) · p / p₀ with p₀ = 98 066.5 Pa (Ba per second per technical
-   atmosphere). The research engine uses this law directly, with the space-mean pressure p, and
-   without GRT's vivacity smoothing (α₁, α_B) or its initial-pressure factor F_Ba, which are numerical
-   devices of the closed form. Burning stops at z = 1.
+State: time t, burnt fraction z, projectile travel x, projectile velocity v, resistance work W_r.
 
-2. **Energy (Résal's equation with Noble-Abel covolume).** With the free volume
-   V(z, x) = V_b + A x − m_c (1 − z) / ρ_g − η z m_c,
-   p V = (k − 1) [ z m_c Q − ½ m_p v² − ½ (m_c / 3) v² − W_r − E_rot − E_h ],
-   where Q is the heat of explosion (J/kg, at constant volume), η the covolume, W_r the work against
-   bore resistance, E_rot the projectile's rotational energy and E_h the heat lost to the walls. The
-   ½ (m_c/3) v² term is the gas's kinetic energy under the Lagrange assumption (C&J §2.6).
+1. **Burning (Vieille's law with GRT's vivacity).** For a constant vivacity B, GRT's closed form
+   (v_θ = 2 Q m_c B θ / (A p₀), z = m B v_θ / (A p₀), and the momentum balance m v_θ dv_θ/dx = A p_θ)
+   gives exactly dz/dt = B p / p₀, with p₀ = 98 066.5 Pa: Ba is a vivacity in s⁻¹ per technical
+   atmosphere, as GRT's own closed-vessel definition of vivacity also says. GRT varies and averages B,
+   so this is a justified reading, not an exact equivalent. The engine uses
+   dz/dt = Ba(T) · φ(z) · F_ps · p̄ / p₀, with the space-mean pressure p̄ (the standard lumped choice),
+   GRT's initial-pressure factor F_ps = 1 + Ba · F_Ba · p_s (p_s in bar; a switch, on by default:
+   removing it would slow the burn and lower the peak), and without GRT's smoothing of B. Burning stops
+   at z = 1. Vieille's law with exponent 1 is itself a model choice; erosive burning and grain fracture
+   are not represented.
 
-3. **Pressure gradient (Lagrange).** Base pressure p_b = p / (1 + m_c / (3 m_p)); breech pressure
-   p_r = p_b (1 + m_c / (2 m_p)) (C&J §2.6, Corner ch. 4). The reported chamber pressure is the breech
-   pressure, the closest to where CIP and SAAMI transducers sit; the space-mean and base pressures are
-   kept on the curve.
+2. **Effective mass.** With the twist fixed, the projectile's rotation adds inertia:
+   M = m_p + I (2π / L_tw)², with I = m_p r² / 2 for a solid cylinder (open: better estimates for
+   jacketed bullets). Rotation is then inside M and is not subtracted again.
 
-4. **Motion.** m_p dv/dt = A (p_b − p_f(x)), dx/dt = v. Shot start: the projectile stays at x = 0
-   until A p_b exceeds A p_s (the load's initial pressure). The resistance p_f(x) models engraving and
-   friction: p_s while the bearing surface engraves (over a travel equal to the bearing length,
-   approximated from the projectile's length), then a lower friction pressure, by default a fixed
-   fraction of p_s (to be set from the validation, and compared with published friction data).
+3. **Motion and gradient (Lagrange, with resistance).** M dv/dt = A (p_b − p_f), dx/dt = v, with the
+   resistance pressure p_f(x). The Lagrange closure with resistance (C&J eqs. 3.70–3.71; AEP-4367 ch. 1):
+   p̄ = p_b + m_c (dv/dt) / (3A) and p_r = p_b + m_c (dv/dt) / (2A), hence
+   p_b = (p̄ + (m_c / 3M) p_f) / (1 + m_c / 3M) and p_r = p_b + (m_c / 2M)(p_b − p_f).
+   While the projectile is restrained (before shot start), p_b = p_r = p̄.
 
-5. **Rotation.** E_rot = ½ I ω² with ω = 2π v / L_tw and I = 0.5 m_p r² (a solid cylinder; open:
-   better estimates of I for jacketed bullets).
+4. **Energy (Résal with Noble-Abel).** Free volume V = V_b + A x − m_c (1 − z) / ρ_g − η z m_c, with V_b
+   the chamber behind the seated projectile and ρ_g the grain density. Then
+   p̄ V = (k − 1) [ z m_c Q + E_ign − ½ (M + m_c/3) v² − W_r − E_h ], dW_r/dt = A p_f v.
+   The m_c v²/6 term is the kinetic energy of gas and unburnt grains moving with a velocity rising
+   linearly from breech to base (the Lagrange assumption); it is consistent with, not a double count of,
+   the gradient in 3, which expresses the momentum balance.
 
-6. **Heat loss.** E_h from a convective model on the wetted area (chamber walls plus bore behind the
-   projectile), with a heat-transfer coefficient from the Nordheim correlation (C&J §3.5), or, in a
-   first version, a global loss coefficient fitted on the validation corpus (STANAG 4367 style).
+5. **Ignition.** At t = 0 the primer's gas holds the energy E_ign in the free volume, which starts the
+   burn (with z = 0 and no igniter, p̄ = ż = 0 and nothing happens). First version: GRT's primer energy,
+   75.098 J (the only place GRT uses it is the jump time), as internal energy of a gas with the powder
+   gas's k; the primer gas's mass and covolume are neglected (open: include them).
 
-7. **Leaks, jump to the lands.** Not in the first version; loads with gas leaks or a jump are
-   refused by this engine until modelled.
+6. **Shot start and resistance.** The projectile stays at x = 0 until A p_b exceeds A p_s (the load's
+   initial pressure). Then p_f(x) = p_s while the bearing surface engraves (over a travel taken from
+   the projectile's length), then a friction pressure, by default a fixed fraction of p_s, to be set
+   from published friction data, not fitted to velocity.
 
-Integration: an embedded Runge-Kutta method (Dormand-Prince 5(4)) with relative tolerance 1e-8 on
-(z, x, v, energies), events at shot start, burnout and muzzle exit. The curve is resampled on the
-same uniform travel grid as GRT Traditional (2000 points) so that both engines' results compare
-point by point.
+7. **Heat loss.** Not in the first version (E_h = 0). A convective model, dE_h/dt = h A_w (T_g − T_w),
+   needs the gas temperature, which Q and k alone don't give (it needs c_v or the flame temperature).
+   A loss coefficient must never be fitted on velocity alone: losses lower the predicted pressure, so
+   they are fitted and checked against pressure and velocity together.
+
+8. **Leaks, jump to the lands.** Not in the first version; this engine refuses such loads.
+
+**Reported pressure.** CIP and SAAMI transducers sit at a cartridge-specific place (near the case
+mouth or shoulder), not at the breech and not at a space mean. The engine reports the breech pressure
+p_r as its labelled chamber-pressure estimate, and keeps p̄, p_b and p_r on the curve. GRT's Pmax is an
+empirical single pressure (max p̃); the comparison between engines states which pressure it uses.
+
+Integration: the Dormand-Prince 5(4) integrator (`packages/engine/src/numerics/ode.ts`), relative
+tolerance 1e-8, with events at shot start, burnout and muzzle exit. The curve is resampled on GRT
+Traditional's uniform travel grid (2000 points) so that the engines compare point by point.
 
 ## Validation plan
 
-1. Unit tests: closed-form limits (constant-pressure ballistic case, isentropic expansion after
-   burnout), energy conservation to the integrator's tolerance with every loss switched off.
+1. Unit tests: closed-form limits (isentropic expansion after burnout, a restrained projectile as a
+   closed vessel), and energy conservation to the integrator's tolerance.
 2. The chronograph corpus (`tools/validation/chronograph.ts`) for both engines, uncalibrated: mean
    error, RMS and 90th percentile, per regime (subsonic rifle, pistol, revolver, supersonic rifle).
-3. Published pressure data, when available (validation.md, Pressure).
+3. Published pressure data, when available (validation.md, Pressure). Velocity agreement alone never
+   qualifies the engine: a model can match velocities with pressures that are too low.
 4. Each switchable term on and off, to show what it contributes.
 
 The engine is shown to users only when 2 and 3 show it no worse than GRT Traditional; until then it
