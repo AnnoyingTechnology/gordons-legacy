@@ -8,6 +8,7 @@ export const es: Messages = {
     'Valores simulados, no datos de recarga. Compruebe cada carga con los datos publicados por el fabricante de la pólvora o del proyectil, empiece bajo y suba poco a poco.',
   'toolbar.open': 'Abrir',
   'toolbar.save': 'Guardar',
+  'toolbar.print': 'Imprimir',
   'toolbar.units': 'Unidades',
   'toolbar.language': 'Idioma',
   'components.noLoad': 'Abra primero una carga: los archivos de pólvora y de proyectil sustituyen un componente de la carga abierta.',

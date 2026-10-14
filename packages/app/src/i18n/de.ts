@@ -8,6 +8,7 @@ export const de: Messages = {
     'Simulierte Werte, keine Ladedaten. Prüfen Sie jede Ladung anhand der veröffentlichten Daten des Pulver- oder Geschossherstellers, beginnen Sie niedrig und tasten Sie sich heran.',
   'toolbar.open': 'Öffnen',
   'toolbar.save': 'Speichern',
+  'toolbar.print': 'Drucken',
   'toolbar.units': 'Einheiten',
   'toolbar.language': 'Sprache',
   'components.noLoad': 'Öffnen Sie zuerst eine Ladung: Pulver- und Geschossdateien ersetzen eine Komponente der geöffneten Ladung.',

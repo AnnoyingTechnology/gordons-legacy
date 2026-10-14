@@ -66,6 +66,7 @@ export class AppShell extends LitElement {
           <input type="file" accept=".grtload,.json,.propellant,.projectile" multiple hidden @change=${this.openFromInput} />
         </label>
         <button ?disabled=${!active} @click=${() => active && this.save(active.id)}>${icon('save')} ${t('toolbar.save')}</button>
+        <button ?disabled=${!active} @click=${() => window.print()}>${icon('print')} ${t('toolbar.print')}</button>
         <span class="spacer"></span>
         <label>
           ${t('toolbar.units')}
@@ -100,6 +101,12 @@ export class AppShell extends LitElement {
       <main @dragover=${(event: DragEvent) => event.preventDefault()} @drop=${this.openFromDrop}>
         ${this.openErrors.length > 0
           ? html`<ul class="issues">${this.openErrors.map((message) => html`<li class="error"><span class="severity">!</span> ${message}</li>`)}</ul>`
+          : nothing}
+        ${active
+          ? html`<header class="print-header">
+              <h1>${t('app.title')}: ${active.name.replace(/\.json$/i, '')}</h1>
+              <p>${new Date().toLocaleString(this.settings.language)} · ${t('about.version')} ${__BUILD_COMMIT__.slice(0, 7)}</p>
+            </header>`
           : nothing}
         ${active
           ? html`<gl-load-editor

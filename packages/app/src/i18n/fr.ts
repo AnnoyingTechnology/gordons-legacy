@@ -8,6 +8,7 @@ export const fr: Messages = {
     'Valeurs simulées, pas des données de chargement. Vérifiez chaque charge avec les données publiées par le fabricant de la poudre ou du projectile, commencez bas et montez progressivement.',
   'toolbar.open': 'Ouvrir',
   'toolbar.save': 'Enregistrer',
+  'toolbar.print': 'Imprimer',
   'toolbar.units': 'Unités',
   'toolbar.language': 'Langue',
   'components.noLoad': "Ouvrez d'abord un chargement : les fichiers de poudre et de projectile remplacent un composant du chargement ouvert.",

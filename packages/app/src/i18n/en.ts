@@ -10,6 +10,7 @@ export const en = {
     'Simulated values, not load data. Check every charge against published data from the powder or bullet maker, start low and work up.',
   'toolbar.open': 'Open',
   'toolbar.save': 'Save',
+  'toolbar.print': 'Print',
   'toolbar.units': 'Units',
   'toolbar.language': 'Language',
   'components.noLoad': 'Open a load first: powder and projectile files replace a component of the open load.',

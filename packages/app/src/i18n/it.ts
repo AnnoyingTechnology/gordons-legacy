@@ -8,6 +8,7 @@ export const it: Messages = {
     'Valori simulati, non dati di ricarica. Verificare ogni carica con i dati pubblicati dal produttore della polvere o della palla, partire basso e salire gradualmente.',
   'toolbar.open': 'Apri',
   'toolbar.save': 'Salva',
+  'toolbar.print': 'Stampa',
   'toolbar.units': 'Unità',
   'toolbar.language': 'Lingua',
   'components.noLoad': 'Aprite prima una ricarica: i file di polvere e di proiettile sostituiscono un componente della ricarica aperta.',

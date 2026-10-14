@@ -663,3 +663,76 @@ main {
 .obt-nodes tr.current td {
   font-weight: 600;
 }
+
+/* Printed report: the load's inputs and its simulation, in the light theme, without the controls. */
+@media print {
+  :root {
+    --fg: #000;
+    --muted: #444;
+    --bg: #fff;
+    --rule: #bbb;
+    --warn-fg: #000;
+    --warn-bg: #fff;
+    --panel: #fff;
+    --series-pressure: #2a78d6;
+    --series-velocity: #eb6834;
+    --grid: #ddd;
+    font-size: 10pt;
+  }
+
+  .toolbar,
+  .tabs,
+  .status-footer,
+  .axis-switch,
+  .readout,
+  .curve-table,
+  .issues,
+  button,
+  gl-units-dialog,
+  gl-about-dialog,
+  gl-choice-dialog {
+    display: none !important;
+  }
+
+  .print-header {
+    display: block !important;
+  }
+
+  .load-editor {
+    display: block;
+  }
+
+  .load-editor .inputs {
+    columns: 2;
+    column-gap: 2rem;
+  }
+
+  .property-group {
+    break-inside: avoid;
+  }
+
+  .property-table input {
+    border: none;
+    background: none;
+    padding: 0;
+  }
+
+  .warning {
+    border: 1px solid #000;
+  }
+
+  .line-chart,
+  .ladder,
+  .measurements,
+  .obt-nodes {
+    break-inside: avoid;
+  }
+
+  details:not([open]) {
+    display: none;
+  }
+}
+
+.print-header {
+  display: none;
+}
