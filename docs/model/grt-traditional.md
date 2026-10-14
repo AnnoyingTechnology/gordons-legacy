@@ -53,7 +53,14 @@ mass disabled.
 z1 is capped at 0.99. The degressive branch's scale z_b is not read from the file: GRT starts from
 z_b = 0 and adds 0.0001 until φ_d(z1) ≥ φ_p(z1), so that the form function is continuous at z1 to
 within 0.0001 (z_b stays 0 when z1 ≤ 0). The repeated additions, with their rounding, are part of the
-result. When z2 is not in (z1, 0.99], GRT recomputes it (open; the engine flags such powders).
+result.
+
+When z2 is not in (z1, 0.99] (z1 already capped), GRT replaces it (confirmed by two variant fixtures):
+
+z2 = z1 + min(0.99, max(0, 0.792 (1 − z1) − z1^0.8 / 10)),
+
+rounded to 4 decimals: GRT formats it as `#.0000` and reads the text back. This runs at every
+simulation, after z_b, and doesn't change the file.
 
 ### Vivacity at the powder temperature (confirmed)
 

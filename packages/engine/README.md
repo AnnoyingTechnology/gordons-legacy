@@ -49,4 +49,4 @@ src/grt-traditional/
 
 `test/grt-parity.test.ts` compares the engine with results captured from GRT itself
 (`test/reference/grt`): peak pressure and muzzle velocity agree to within 10⁻¹⁴. Loads using features
-not yet modelled (slot-type gas leaks, a z2 that GRT recomputes) get the `unsupported-feature` warning.
+not yet modelled (slot-type gas leaks) get the `unsupported-feature` warning.

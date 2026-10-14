@@ -43,7 +43,7 @@ export interface GrtSolution {
   finalBurntFraction: number;
   /** Distance from the breech face to the seated projectile's base, m. */
   seatedBasePosition: number;
-  /** False when the powder's z2 needs GRT's recomputation, which isn't reproduced yet. */
+  /** False when the load has gas leaks of a type the engine doesn't model (slots). */
   supported: boolean;
   /** False when the solver stopped at its step limit before the muzzle. */
   completed: boolean;
@@ -244,7 +244,7 @@ export function solve(inputs: GrtInputs): GrtSolution {
     burnoutIndex,
     finalBurntFraction,
     seatedBasePosition: inputs.caseLength - inputs.seatingDepth,
-    supported: formFunction.hasUsableZ2 && inputs.gasLeaks.every((leak) => leak.type <= 2),
+    supported: inputs.gasLeaks.every((leak) => leak.type <= 2),
     completed: points.length < MAXIMUM_STEPS,
   };
 }

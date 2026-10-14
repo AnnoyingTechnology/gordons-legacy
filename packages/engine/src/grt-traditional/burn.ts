@@ -39,8 +39,9 @@ const SCALE_STEP = 0.0001;
 const MAXIMUM_SCALE = 100;
 
 /**
- * The powder's form function φ(z), set up as GRT does: z1 capped, and the degressive branch scaled by
- * zb so that it continues the progressive branch at z1 (grt-traditional.md, Form function).
+ * The powder's form function φ(z), set up as GRT does: z1 capped, z2 replaced when out of range, and the
+ * degressive branch scaled by zb so that it continues the progressive branch at z1 (grt-traditional.md,
+ * Form function setup).
  */
 export class FormFunction {
   private readonly a0: number;
@@ -52,7 +53,7 @@ export class FormFunction {
   constructor(inputs: GrtInputs) {
     this.a0 = inputs.a0;
     this.z1 = Math.min(MAXIMUM_Z1, inputs.z1);
-    this.z2 = inputs.z2;
+    this.z2 = this.z1 < inputs.z2 && !(inputs.z2 > MAXIMUM_Z1) ? inputs.z2 : defaultZ2(this.z1);
     this.degressiveExponent = inputs.a1 < 0.1 || inputs.a1 > 0.9 ? DEFAULT_DEGRESSIVE_EXPONENT : inputs.a1;
     this.scale = this.searchScale();
   }
@@ -64,11 +65,6 @@ export class FormFunction {
   get isDefined(): boolean {
     const target = this.progressive(this.z1);
     return this.z1 > 0 && target > 0 && Number.isFinite(target) && this.degressive(this.z1) >= target;
-  }
-
-  /** True when z2 lies where GRT uses it as given, above z1 and at most 0.99. */
-  get hasUsableZ2(): boolean {
-    return this.z1 < this.z2 && !(this.z2 > MAXIMUM_Z1);
   }
 
   at(z: number): number {
@@ -97,6 +93,15 @@ export class FormFunction {
     while (this.degressive(this.z1, scale) < target && scale <= MAXIMUM_SCALE) scale += SCALE_STEP;
     return scale;
   }
+}
+
+/**
+ * GRT's z2 for powders whose own isn't in (z1, 0.99]: z1 + min(0.99, max(0, 0.792 (1 − z1) − z1^0.8 / 10)),
+ * rounded to 4 decimals (GRT formats it as "#.0000" and reads it back).
+ */
+function defaultZ2(z1: number): number {
+  const z2 = Math.min(MAXIMUM_Z1, Math.max(0, 0.792 * (1 - z1) - (1 * z1) ** 0.8 / 10)) + z1;
+  return Number(z2.toFixed(4));
 }
 
 /**
