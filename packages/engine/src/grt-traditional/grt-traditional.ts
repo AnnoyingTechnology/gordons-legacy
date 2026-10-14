@@ -1,7 +1,8 @@
 import type { Load } from '@gordons-legacy/formats';
-import type { Engine, Simulation, SimulationWarning } from '../engine.ts';
+import type { Engine, SimulationResult, SimulationWarning } from '../engine.ts';
 import { grtInputs } from './inputs.ts';
 import { solve } from './solver.ts';
+import { validateInputs } from './validation.ts';
 
 const PASCALS_PER_BAR = 1e5;
 const SECONDS_PER_MILLISECOND = 1e-3;
@@ -13,8 +14,10 @@ const SECONDS_PER_MILLISECOND = 1e-3;
 export const grtTraditional: Engine = {
   id: 'grt-traditional',
   name: 'GRT Traditional',
-  simulate(load: Load): Simulation {
+  simulate(load: Load): SimulationResult {
     const inputs = grtInputs(load);
+    const problems = validateInputs(inputs);
+    if (problems.length > 0) return { ok: false, problems };
     const solution = solve(inputs);
     const { points } = solution;
     const count = points.length;
@@ -36,16 +39,20 @@ export const grtTraditional: Engine = {
       curve.time[index] = point.time * SECONDS_PER_MILLISECOND;
       if (point.pressure > points[peakIndex]!.pressure) peakIndex = index;
     });
+    // A safety net: valid inputs are expected to give a complete curve of finite numbers.
+    const finite = Object.values(curve).every((values) => values.every(Number.isFinite));
+    if (!solution.completed || count === 0 || !finite || !Number.isFinite(solution.finalBurntFraction)) {
+      return { ok: false, problems: [{ code: 'numerical-failure' }] };
+    }
     const muzzle = points[count - 1]!;
     const peak = points[peakIndex]!;
     const burnout = solution.burnoutIndex < count ? points[solution.burnoutIndex - 1] : undefined;
 
     const warnings: SimulationWarning[] = [];
     if (peak.pressure < 2 * inputs.initialPressure) warnings.push('pressure-too-low');
-    if (inputs.sebertFactor < 0) warnings.push('invalid-input');
     if (!solution.supported) warnings.push('unsupported-feature');
 
-    return {
+    const simulation = {
       engine: 'grt-traditional',
       maxPressure: peak.pressure * PASCALS_PER_BAR,
       maxPressureTravel: peak.travel,
@@ -58,5 +65,6 @@ export const grtTraditional: Engine = {
       curve,
       warnings,
     };
+    return { ok: true, simulation };
   },
 };

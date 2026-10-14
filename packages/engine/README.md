@@ -11,14 +11,21 @@ the powder or bullet maker.
 | Export | Purpose |
 |---|---|
 | `Engine` | The interface every engine implements: `simulate(load)`. |
-| `Simulation`, `SimulationCurve`, `SimulationWarning` | What an engine returns, in SI units. |
+| `SimulationResult` | `{ ok: true, simulation }`, or `{ ok: false, problems }` for loads outside the model. |
+| `Simulation`, `SimulationCurve`, `SimulationWarning` | The simulated shot, in SI units. |
+| `SimulationProblem`, `SimulationProblemCode` | Why a load can't be simulated, with the input's path in the load. |
 | `grtTraditional` | The engine that reproduces Gordon's Reloading Tool 2021.2030. |
 
 ```ts
 import { grtTraditional } from '@gordons-legacy/engine';
 
-const shot = grtTraditional.simulate(load);
-console.log(shot.maxPressure / 1e5, 'bar', shot.muzzleVelocity, 'm/s', shot.warnings);
+const result = grtTraditional.simulate(load);
+if (result.ok) {
+  const shot = result.simulation;
+  console.log(shot.maxPressure / 1e5, 'bar', shot.muzzleVelocity, 'm/s', shot.warnings);
+} else {
+  console.log(result.problems); // e.g. [{ code: 'charge-exceeds-case', path: 'charge.mass' }]
+}
 ```
 
 ## GRT Traditional
@@ -32,6 +39,7 @@ src/grt-traditional/
   geometry.ts         Geometry: the chamber volume
   jump.ts             Jump to the lands: the chamber enlarged during the jump
   leaks.ts            Gas leaks
+  validation.ts       Inputs outside the model: refused before solving
   time.ts             Time
   burn.ts             Form function setup, temperature, vivacity smoothing
   config.ts           Configuration constants

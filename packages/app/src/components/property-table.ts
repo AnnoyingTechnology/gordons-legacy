@@ -1,6 +1,7 @@
+import type { SimulationProblem } from '@gordons-legacy/engine';
 import type { Load } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
-import type { Field, FieldGroup, NumberField } from '../editor/fields.ts';
+import { fieldConcerns, type Field, type FieldGroup, type NumberField } from '../editor/fields.ts';
 import { displayUnit, formatNumber, parseNumber } from '../units/units.ts';
 import type { UiContext } from './context.ts';
 
@@ -13,18 +14,22 @@ export class PropertyTable extends LitElement {
     group: { attribute: false },
     load: { attribute: false },
     context: { attribute: false },
+    problems: { attribute: false },
     drafts: { state: true },
   };
 
   declare group: FieldGroup;
   declare load: Load;
   declare context: UiContext;
+  /** Why the engine can't simulate the load; the fields concerned are marked. */
+  declare problems: SimulationProblem[];
   /** Text being typed, by field index, kept until the field loses focus. */
   declare drafts: Map<number, string>;
 
   constructor() {
     super();
     this.drafts = new Map();
+    this.problems = [];
   }
 
   // Light DOM, so that the application's style sheet applies.
@@ -66,7 +71,7 @@ export class PropertyTable extends LitElement {
       `;
     }
     const draft = this.drafts.get(index);
-    const error = draft === undefined ? undefined : this.validate(field, draft);
+    const error = (draft === undefined ? undefined : this.validate(field, draft)) ?? this.problemFor(field);
     return html`
       <tr class=${error ? 'invalid' : ''}>
         <th><label for=${id}>${t(field.label)}</label></th>
@@ -102,6 +107,12 @@ export class PropertyTable extends LitElement {
     if (value === undefined) return this.context.t('field.invalid');
     if (field.positive && !(this.toSi(field, value) > 0)) return this.context.t('field.invalid');
     return undefined;
+  }
+
+  /** The engine's objection to this field's value, if any. */
+  private problemFor(field: NumberField): string | undefined {
+    const problem = this.problems.find((candidate) => fieldConcerns(field, candidate.path));
+    return problem && this.context.t(`problem.${problem.code}`);
   }
 
   private toSi(field: NumberField, value: number): number {

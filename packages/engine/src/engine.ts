@@ -9,8 +9,40 @@ export interface Engine {
   readonly id: string;
   /** Name shown to users. */
   readonly name: string;
-  simulate(load: Load): Simulation;
+  /** Simulates the load, or says why it can't: no numbers are returned for inputs outside the model. */
+  simulate(load: Load): SimulationResult;
 }
+
+export type SimulationResult = { ok: true; simulation: Simulation } | { ok: false; problems: SimulationProblem[] };
+
+/** Why a load can't be simulated. */
+export interface SimulationProblem {
+  code: SimulationProblemCode;
+  /** The input concerned, as a dotted path in the load (`charge.mass`), when there is one. */
+  path?: string;
+}
+
+export type SimulationProblemCode =
+  /** A value is missing, infinite or not a number. */
+  | 'not-a-number'
+  /** A value must be above zero. */
+  | 'not-positive'
+  /** A value must not be below zero. */
+  | 'negative'
+  /** The heat capacity ratio k must be above 1. */
+  | 'heat-capacity-ratio-too-low'
+  /** The powder's burn coefficients don't define a form function. */
+  | 'burn-model-undefined'
+  /** The temperature correction makes the vivacity zero or negative. */
+  | 'vivacity-not-positive'
+  /** The charge's solid volume fills the chamber or more. */
+  | 'charge-exceeds-case'
+  /** The seated projectile's base is at or beyond the muzzle. */
+  | 'barrel-too-short'
+  /** A gas leak has a type the engine doesn't know. */
+  | 'unknown-gas-leak'
+  /** The computation produced a value that is not a finite number. */
+  | 'numerical-failure';
 
 /** The simulated shot. Quantities in SI units. */
 export interface Simulation {
@@ -57,7 +89,5 @@ export interface SimulationCurve {
 export type SimulationWarning =
   /** The peak pressure stays below twice the initial pressure: the load hardly starts. */
   | 'pressure-too-low'
-  /** Inputs outside the model's validity (for example a negative Sebert factor). */
-  | 'invalid-input'
   /** The load uses a feature the engine doesn't model yet; results ignore it. */
   | 'unsupported-feature';

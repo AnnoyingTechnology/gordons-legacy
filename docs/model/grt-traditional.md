@@ -69,8 +69,9 @@ Working in cm³ and mm as GRT does, with r = D_p / 2 in mm and d in mm:
 
 - intrusion I = π r² d (mm³);
 - hollow base (length h, end diameters a and b, in mm): I −= (π h / 3)(a²/4 + ab/4 + b²/4);
-- boat-tail: I −= π r² h − (π h / 3)(a²/4 + ab/4 + b²/4) when that is positive (open: tails longer than
-  the seating depth);
+- boat-tail: I −= π r² h − (π h / 3)(a²/4 + ab/4 + b²/4) when the frustum volume (π h / 3)(…) is
+  positive and smaller than the cylinder π r² h, else nothing (so a boat-tail without diameters counts
+  as a flat base; open: tails longer than the seating depth);
 - V_b = 0.9975 · (V_case[cm³] − I / 1000) / 10⁶ (m³).
 
 Then:
@@ -192,6 +193,21 @@ last update falls before c reaches j.
 - Burnout: the index of the last phase A point; z at the muzzle: min(1, z) at burnout.
 - Validity: the result is invalid when the peak pressure is below 2 p_s, the Sebert factor is negative,
   or the propellant is invalid.
+
+## Inputs outside the model (Gordon's Legacy)
+
+GRT simulated almost any input and showed plausible numbers even where its equations are undefined.
+Gordon's Legacy refuses such loads with a typed problem instead of numbers (`validation.ts`):
+
+- not finite: any input; not above zero: masses, diameters, lengths, case capacity, bore area, heat of
+  explosion, grain density, vivacity, z1; negative: Sebert factor, initial pressure, twist, jump;
+- k ≤ 1; a form function that isn't defined (1 + a0·z1 ≤ 0, or a z_b above 100 needed, which real
+  powders, at 1.07 to 1.86, are far from); a vivacity at the powder's temperature of 0 or less;
+- a free volume V₀ of 0 or less (the charge doesn't fit), or x_eff of 0 or less (barrel too short);
+- gas leaks of negative or non-integer type, of zero width, or with a negative height.
+
+As a safety net, a result with any non-finite value, or a solver that runs past 100 000 steps (valid
+inputs need about 2000), is refused too. No load file seen so far is refused.
 
 ## Ladder (read)
 

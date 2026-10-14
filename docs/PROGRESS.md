@@ -24,9 +24,7 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 
 1. M2: remaining parts of GRT's model, from the binary into `docs/model/grt-traditional.md`: z2
    recomputation, slot leaks, results (OBT, 10 %-Pmax times, recoil, efficiency).
-2. Read the Codex engine safety review (`/tmp/codex-engine-review.md` if still there; otherwise rerun it)
-   and fix what it finds: input validation, non-finite results, loops that may not end.
-3. M3: per-quantity unit choices, ladder curves in the charts,
+2. M3: per-quantity unit choices, ladder curves in the charts,
    About dialog.
 
 Reverse-engineering workspace (local, never committed; procedure in `docs/model/grt-structure.md`):
@@ -73,6 +71,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | UI components with Lit 3.3.3 (pinned; standard web components, small, readable templates, keeps input focus on re-render); no decorators (plain `static properties`). | Agent, for review |
 | 2026-10-14 | Display units chosen per kind of quantity, with metric and imperial presets (GRT allowed a unit per field); case capacity shown as water mass (1 cm³ = 1 g H₂O), grains of water in imperial. | Agent, for review |
 | 2026-10-14 | Offline support with a small hand-written service worker and a 40-line Vite plugin that lists the build's files, rather than `vite-plugin-pwa` (Workbox, many dependencies). App icon drawn as original SVG. | Agent, for review |
+| 2026-10-14 | The engine refuses loads outside GRT's model (`simulate` returns `{ ok: false, problems }` with the input's path) instead of returning numbers, unlike GRT; the editor marks the fields concerned. Prompted by the Codex safety review. | Agent, for review |
 | 2026-10-14 | UI languages built in for English, French, German, Spanish and Italian (the proposal); translations need review by native reloaders before release. | Agent, for review |
 
 ## Open questions
@@ -116,3 +115,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | M3: the app works offline (service worker caching the build, network first for pages) and is installable (manifest, SVG icon); checked in headless Chromium by reloading offline. App README. |
 | 2026-10-14 | M3: original SVG icon set (33 icons, 24 px line style, drawn by a Sonnet subagent from each function, reviewed in light and dark); toolbar and tabs use them. |
 | 2026-10-14 | M2: jump to the lands recovered (`fn_jumpTime`, `fn_VbAdjust_gjump`): the chamber grows during a primer-driven jump time instead of the projectile moving. Matches GRT to machine precision on a jump sweep (0–5 mm) and on two new variant fixtures (`fixtures/variants/`); the editor exposes the jump. |
+| 2026-10-14 | Codex (`gpt-6.1-sol`, xhigh) reviewed the engine's edge cases: negative or NaN inputs gave plausible numbers without warnings, a zero free volume or NaN capacity hung the solver, the zb search was unbounded for tiny a0, unknown leak types were ignored. Fixed: input validation (`validation.ts`), a bounded zb search, a step cap and a finite-result check, with one regression test per case. Its boat-tail finding was a wording error in the spec (GRT's code has the same condition); spec fixed. |

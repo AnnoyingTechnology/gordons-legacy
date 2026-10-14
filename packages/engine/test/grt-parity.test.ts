@@ -50,7 +50,9 @@ function relativeError(actual: number, expected: number): number {
 
 describe.each(references.map((reference) => [reference.source, reference] as const))('%s', (_, reference) => {
   const load = fixtureLoad(reference.source);
-  const simulation = grtTraditional.simulate(load);
+  const result = grtTraditional.simulate(load);
+  if (!result.ok) throw new Error(`${reference.source}: ${JSON.stringify(result.problems)}`);
+  const { simulation } = result;
   const unsupported = simulation.warnings.includes('unsupported-feature');
 
   test.skipIf(unsupported)('peak pressure, muzzle velocity and muzzle pressure match GRT', () => {

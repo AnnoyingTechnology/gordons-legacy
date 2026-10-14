@@ -17,6 +17,11 @@ const PI_SQUARED = 9.869604401089358;
 /** Steps over the barrel: Δξ = ξ_E / 2000, but never below 0.001. */
 const STEP_FRACTION = 0.005 / 10;
 const MINIMUM_STEP = 0.001;
+/**
+ * Steps after which the solver gives up. Valid inputs need at most about 2001 (Δξ ≥ ξ_E / 2000); this
+ * only guards against a loop that wouldn't end.
+ */
+const MAXIMUM_STEPS = 100_000;
 /** Weight of the new acceleration after burnout while gas leaks. */
 const LEAKING_ACCELERATION_SMOOTHING = 0.05;
 
@@ -40,6 +45,8 @@ export interface GrtSolution {
   seatedBasePosition: number;
   /** False when the powder's z2 needs GRT's recomputation, which isn't reproduced yet. */
   supported: boolean;
+  /** False when the solver stopped at its step limit before the muzzle. */
+  completed: boolean;
 }
 
 /**
@@ -171,7 +178,7 @@ export function solve(inputs: GrtInputs): GrtSolution {
   let theta = 0;
 
   // Phase A: while the powder burns.
-  while (!(expansionAtMuzzle < expansion || burntFraction > 1)) {
+  while (!(expansionAtMuzzle < expansion || burntFraction > 1) && points.length < MAXIMUM_STEPS) {
     const relativeStep = (expansion - previousExpansion) / expansionAtMuzzle;
     const timeStep = time.lastIncrement / 1000;
     const clamped = Math.min(expansion, expansionAtMuzzle);
@@ -207,7 +214,7 @@ export function solve(inputs: GrtInputs): GrtSolution {
   // Phase B: adiabatic expansion after burnout. GRT keeps the last burnt fraction (possibly a little
   // above 1) for the gas lost through leaks.
   const thetaAtBurnout = theta;
-  while (!(expansionAtMuzzle < expansion)) {
+  while (!(expansionAtMuzzle < expansion) && points.length < MAXIMUM_STEPS) {
     const relativeStep = (expansion - previousExpansion) / expansionAtMuzzle;
     const timeStep = time.lastIncrement / 1000;
     const clamped = Math.min(expansion, expansionAtMuzzle);
@@ -238,5 +245,6 @@ export function solve(inputs: GrtInputs): GrtSolution {
     finalBurntFraction,
     seatedBasePosition: inputs.caseLength - inputs.seatingDepth,
     supported: formFunction.hasUsableZ2 && inputs.gasLeaks.every((leak) => leak.type <= 2),
+    completed: points.length < MAXIMUM_STEPS,
   };
 }

@@ -1,7 +1,8 @@
-import { grtTraditional, type Simulation } from '@gordons-legacy/engine';
+import { grtTraditional, type Simulation, type SimulationProblem } from '@gordons-legacy/engine';
 import { ladderChargeMasses, type Load } from '@gordons-legacy/formats';
 import { LineChart } from '../charts/line-chart.ts';
 import { element } from '../dom.ts';
+import { fieldAt } from '../editor/fields.ts';
 import { displayUnit } from '../units/units.ts';
 import type { UiContext } from './context.ts';
 
@@ -25,6 +26,23 @@ export function renderResults(load: Load, shot: Simulation, context: UiContext, 
   container.append(renderAxisSwitch(axis, onAxis, context), ...renderCharts(load, shot, axis, context), renderTable(shot, context));
   if (load.ladder !== undefined) container.append(renderLadder(load, context));
   return container;
+}
+
+/** Why the load can't be simulated: one line per problem, naming the field when the editor shows it. */
+export function renderProblems(problems: SimulationProblem[], context: UiContext): HTMLElement {
+  const { t } = context;
+  return element('section', { class: 'simulation' }, [
+    element('h3', {}, [t('results.title')]),
+    element('p', { class: 'error' }, [t('results.cannotSimulate')]),
+    element('ul', { class: 'issues' }, problems.map((problem) => {
+      const field = fieldAt(problem.path);
+      const message = t(`problem.${problem.code}`);
+      return element('li', { class: 'error' }, [
+        element('span', { class: 'severity' }, ['!']),
+        ` ${field ? `${t(field.label)}: ${message}` : message}`,
+      ]);
+    })),
+  ]);
 }
 
 function renderFigures(load: Load, shot: Simulation, context: UiContext): HTMLElement {
@@ -159,7 +177,12 @@ function renderTable(shot: Simulation, context: UiContext): HTMLElement {
 function renderLadder(load: Load, context: UiContext): HTMLElement {
   const { t, quantity, number } = context;
   const rows = ladderChargeMasses(load).map((mass) => {
-    const shot = grtTraditional.simulate({ ...load, charge: { ...load.charge, mass } });
+    const result = grtTraditional.simulate({ ...load, charge: { ...load.charge, mass } });
+    if (!result.ok) {
+      const cells = [quantity(mass, 'chargeMass'), t('results.notSimulated'), '', '', '', ''];
+      return element('tr', {}, cells.map((cell) => element('td', {}, [cell])));
+    }
+    const shot = result.simulation;
     const share = shot.maxPressure / load.cartridge.maxPressure;
     const note = share > 1 ? [element('span', { class: 'severity error' }, [t('results.aboveMaximum')])] : [];
     return element('tr', {}, [

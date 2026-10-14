@@ -160,7 +160,7 @@ code {
 
 .issues .severity {
   display: inline-block;
-  min-width: 3.5rem;
+  min-width: 1.2rem;
   font-weight: 600;
 }
 

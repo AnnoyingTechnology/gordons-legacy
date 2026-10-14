@@ -39,7 +39,12 @@ export function simulateCommand(args: string[]): { output: string; exitCode: num
   if (!result.ok) {
     return { output: result.issues.map((issue) => `${issue.severity}: ${issue.message}`).join('\n'), exitCode: 1 };
   }
-  const shot = grtTraditional.simulate(result.value);
+  const simulated = grtTraditional.simulate(result.value);
+  if (!simulated.ok) {
+    const problems = simulated.problems.map((problem) => `error: ${problem.code}${problem.path ? ` (${problem.path})` : ''}`);
+    return { output: ['This load cannot be simulated:', ...problems].join('\n'), exitCode: 1 };
+  }
+  const shot = simulated.simulation;
   if (json) {
     const curve = Object.fromEntries(Object.entries(shot.curve).map(([name, values]) => [name, Array.from(values as Float64Array)]));
     return { output: JSON.stringify({ notice: SAFETY_NOTICE, ...shot, curve }, null, 2), exitCode: 0 };

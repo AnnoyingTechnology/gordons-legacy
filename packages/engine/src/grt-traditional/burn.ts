@@ -32,6 +32,11 @@ const DEFAULT_DEGRESSIVE_EXPONENT = 0.3051;
 const MAXIMUM_Z1 = 0.99;
 /** Resolution of GRT's search for the degressive scale zb. */
 const SCALE_STEP = 0.0001;
+/**
+ * Largest zb searched for (10⁶ steps). Real powders need 1.07 to 1.86; a larger zb means burn
+ * coefficients outside the model, for which GRT's search would run for hours.
+ */
+const MAXIMUM_SCALE = 100;
 
 /**
  * The powder's form function φ(z), set up as GRT does: z1 capped, and the degressive branch scaled by
@@ -50,6 +55,15 @@ export class FormFunction {
     this.z2 = inputs.z2;
     this.degressiveExponent = inputs.a1 < 0.1 || inputs.a1 > 0.9 ? DEFAULT_DEGRESSIVE_EXPONENT : inputs.a1;
     this.scale = this.searchScale();
+  }
+
+  /**
+   * True when the form function is defined: the progressive branch is positive up to z1 and a scale
+   * zb within reach joins the degressive branch to it.
+   */
+  get isDefined(): boolean {
+    const target = this.progressive(this.z1);
+    return this.z1 > 0 && target > 0 && Number.isFinite(target) && this.degressive(this.z1) >= target;
   }
 
   /** True when z2 lies where GRT uses it as given, above z1 and at most 0.99. */
@@ -80,7 +94,7 @@ export class FormFunction {
     if (!(this.z1 > 0)) return scale;
     const target = this.progressive(this.z1);
     if (!(target > 0)) return scale;
-    while (this.degressive(this.z1, scale) < target) scale += SCALE_STEP;
+    while (this.degressive(this.z1, scale) < target && scale <= MAXIMUM_SCALE) scale += SCALE_STEP;
     return scale;
   }
 }

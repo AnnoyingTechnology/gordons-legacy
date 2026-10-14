@@ -41,7 +41,13 @@ function main(): void {
       console.log(`${name}: import failed`);
       continue;
     }
-    const shot = grtTraditional.simulate(imported.value);
+    const result = grtTraditional.simulate(imported.value);
+    if (!result.ok) {
+      failures++;
+      console.log(`✗ ${name}: refused (${result.problems.map((problem) => problem.code).join(', ')})`);
+      continue;
+    }
+    const shot = result.simulation;
     const pressureError = relativeError(shot.maxPressure / 1e5, Number.parseFloat(reference.results['MaxPressure'] ?? ''));
     const velocityError = relativeError(shot.muzzleVelocity, Number.parseFloat(reference.results['MuzzleVelocity'] ?? ''));
     const supported = !shot.warnings.includes('unsupported-feature');

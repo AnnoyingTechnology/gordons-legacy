@@ -4,7 +4,7 @@ import { html, LitElement } from 'lit';
 import { FIELD_GROUPS } from '../editor/fields.ts';
 import type { UiContext } from './context.ts';
 import './property-table.ts';
-import { renderResults, type ChartAxis } from './results-view.ts';
+import { renderProblems, renderResults, type ChartAxis } from './results-view.ts';
 
 /**
  * One load: its inputs, grouped as in GRT, beside the simulated shot, which follows every edit.
@@ -31,15 +31,25 @@ export class LoadEditor extends LitElement {
   }
 
   protected override render() {
-    const shot = grtTraditional.simulate(this.load);
+    const result = grtTraditional.simulate(this.load);
+    const problems = result.ok ? [] : result.problems;
     return html`
       <div class="load-editor">
         <div class="inputs">
           ${FIELD_GROUPS.map(
-            (group) => html`<gl-property-table .group=${group} .load=${this.load} .context=${this.context}></gl-property-table>`,
+            (group) => html`<gl-property-table
+              .group=${group}
+              .load=${this.load}
+              .context=${this.context}
+              .problems=${problems}
+            ></gl-property-table>`,
           )}
         </div>
-        <div class="results">${renderResults(this.load, shot, this.context, this.axis, (axis) => (this.axis = axis))}</div>
+        <div class="results">
+          ${result.ok
+            ? renderResults(this.load, result.simulation, this.context, this.axis, (axis) => (this.axis = axis))
+            : renderProblems(result.problems, this.context)}
+        </div>
       </div>
     `;
   }

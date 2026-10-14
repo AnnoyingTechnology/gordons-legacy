@@ -1,3 +1,6 @@
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { expect, test } from 'vitest';
 import { simulateCommand } from '../src/simulate-command.ts';
@@ -23,4 +26,14 @@ test('prints the full simulation as JSON', () => {
 
 test('explains its usage', () => {
   expect(simulateCommand([]).exitCode).toBe(2);
+});
+
+test('refuses a load outside the model, naming the input', () => {
+  // A charge too large to fit in the .327's case.
+  const text = readFileSync(FIXTURE, 'utf8').replace(/(name="mc" value=")[^"]*"/, '$130"');
+  const path = join(mkdtempSync(join(tmpdir(), 'gl-cli-')), 'overfilled.grtload');
+  writeFileSync(path, text);
+  const { output, exitCode } = simulateCommand([path]);
+  expect(exitCode).toBe(1);
+  expect(output).toContain('charge-exceeds-case (charge.mass)');
 });

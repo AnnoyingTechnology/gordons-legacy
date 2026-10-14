@@ -72,10 +72,21 @@ export const en = {
   'results.burnoutLabel': 'burnout',
   'results.table': 'Curve as a table',
   'results.ladder': 'Ladder',
+  'results.notSimulated': 'not simulated',
   'results.aboveMaximum': 'above the maximum',
   'warning.pressure-too-low': 'The pressure hardly rises above the initial pressure: GRT considers this result invalid.',
-  'warning.invalid-input': 'Some inputs are outside the model (for example a negative Sebert factor).',
   'warning.unsupported-feature': 'The load uses a feature this engine does not model yet; the results ignore it.',
+  'results.cannotSimulate': 'This load cannot be simulated: some inputs are outside the model.',
+  'problem.not-a-number': 'missing or not a number',
+  'problem.not-positive': 'must be above zero',
+  'problem.negative': 'must not be negative',
+  'problem.heat-capacity-ratio-too-low': 'the heat capacity ratio must be above 1',
+  'problem.burn-model-undefined': 'these burn coefficients (a0, z1, a1) do not define a burn rate',
+  'problem.vivacity-not-positive': 'at this temperature, the temperature coefficients make the vivacity zero or negative',
+  'problem.charge-exceeds-case': 'the powder does not fit: its solid volume fills the chamber',
+  'problem.barrel-too-short': 'the barrel is too short: the seated projectile is already at the muzzle',
+  'problem.unknown-gas-leak': 'unknown gas leak type',
+  'problem.numerical-failure': 'the computation failed; please report this load',
 } as const;
 
 export type MessageKey = keyof typeof en;
