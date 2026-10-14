@@ -3,32 +3,18 @@ import { TRANSONIC_BAND, speedOfSound } from '../analysis/speed-of-sound.ts';
 import type { Assessment, AssessmentLevel, Finding } from '../analysis/load-assessment.ts';
 import { icon } from '../icons/icons.ts';
 import type { UiContext } from './context.ts';
-import { limitName } from './gauges.ts';
+import { limitName, temperatureScale } from './gauges.ts';
 
 const LEVELS: AssessmentLevel[] = ['none', 'note', 'caution', 'danger'];
 
 /**
  * The review of the load (analysis/load-assessment.ts): its level on a four-step scale, each finding in
- * words, and the cold and hot days. The level never says "safe": no flag only means the simulation found
+ * words, and the powder temperatures where the load stays within limits (analysis/temperature-range.ts). The level never says "safe": no flag only means the simulation found
  * nothing to point out.
  */
-export function assessmentView(assessment: Assessment, context: UiContext): TemplateResult {
-  const { t, quantity } = context;
-  const general = assessment.findings.filter((finding) => finding.climate === undefined);
-  const climate = (day: 'cold' | 'hot') => assessment.findings.filter((finding) => finding.climate === day);
-  const day = (name: 'cold' | 'hot') => {
-    const findings = climate(name);
-    return html`
-      <div class="climate-day ${findings.length > 0 ? findings[0]!.level : 'none'}">
-        ${icon(name)}
-        <span class="climate-name">${t(`climate.${name}`, { temperature: quantity(assessment.climate[name], 'temperature', 0) })}</span>
-        ${findings.length === 0
-          ? html`<span class="climate-clear">${t('climate.noFlag')}</span>`
-          : html`<ul>${findings.map((finding) => html`<li>${findingMessage(finding, context)}</li>`)}</ul>`}
-      </div>
-    `;
-  };
-  const allWeather = climate('cold').length === 0 && climate('hot').length === 0;
+export function assessmentView(assessment: Assessment, ownTemperature: number, context: UiContext): TemplateResult {
+  const { t } = context;
+  const general = assessment.findings;
   return html`
     <section class="assessment level-${assessment.level}" aria-labelledby="assessment-title">
       <div class="assessment-head">
@@ -47,17 +33,14 @@ export function assessmentView(assessment: Assessment, context: UiContext): Temp
             ${general.map(
               (finding) => html`<li class=${finding.level}>
                 <span class="finding-level">${finding.level === 'note' ? '•' : '▲'} ${t(`assessment.level.${finding.level}`)}</span>
-                <span>${findingMessage(finding, context)}</span>
+                <span>${finding.side ? html`${icon(finding.side)} ` : nothing}${findingMessage(finding, context)}</span>
               </li>`,
             )}
           </ul>`}
       <div class="climate">
-        <div class="climate-days">${day('cold')} ${day('hot')}</div>
-        <p class="note">
-          ${allWeather
-            ? t('climate.allWeather', { cold: quantity(assessment.climate.cold, 'temperature', 0), hot: quantity(assessment.climate.hot, 'temperature', 0) })
-            : t('climate.help')}
-        </p>
+        <h5>${icon('temperature')} ${t('temperatureRange.title')}</h5>
+        ${temperatureScale(assessment.temperatures, ownTemperature, context)}
+        <p class="note">${t('climate.help')}</p>
       </div>
     </section>
   `;
@@ -80,6 +63,12 @@ export function findingMessage(finding: Finding, context: UiContext): string {
     const sound = speedOfSound(finding.temperature);
     values.from = quantity(TRANSONIC_BAND.from * sound, 'velocity');
     values.to = quantity(TRANSONIC_BAND.to * sound, 'velocity');
+  }
+  if (finding.code === 'temperatureLimit') {
+    return t(`finding.temperatureLimit.${finding.side ?? 'hot'}`, {
+      temperature: values.temperature ?? '',
+      what: t(`temperatureRange.${finding.temperatureState ?? 'notSimulated'}`),
+    });
   }
   if (finding.code === 'doubleChargeFits' && finding.pressure === undefined) return t('finding.doubleChargeFitsNotSimulated', values);
   return t(`finding.${finding.code}`, values);

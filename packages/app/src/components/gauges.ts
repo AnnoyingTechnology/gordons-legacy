@@ -2,13 +2,14 @@ import { html, nothing } from 'lit';
 import { styleMap } from 'lit/directives/style-map.js';
 import type { PressureLimit } from '../analysis/load-assessment.ts';
 import { speedOfSound, TRANSONIC_BAND } from '../analysis/speed-of-sound.ts';
+import { withinSpan, type TemperatureSpan } from '../analysis/temperature-range.ts';
 import { niceTicks } from '../charts/ticks.ts';
 import { displayUnit } from '../units/units.ts';
 import type { UiContext } from './context.ts';
 
 /**
  * Horizontal scales that place a result among its references: the muzzle velocity against the speed of
- * sound, the peak pressure against the maxima. Plain HTML positioned in percent, so that text stays
+ * sound, the peak pressure against the maxima, the powder temperatures where the load stays within limits. Plain HTML positioned in percent, so that text stays
  * crisp at any width.
  */
 
@@ -86,4 +87,60 @@ export function pressureGauge(peak: number, limits: PressureLimit[], nearShare: 
 /** `CIP Pmax`, `SAAMI MAP` or `maximum`. */
 export function limitName(limit: PressureLimit, context: UiContext): string {
   return context.t(`limit.${limit.source}`);
+}
+
+/** Published load data are given for about 20 °C: the scale marks it. */
+const REFERENCE_CELSIUS = 20;
+
+/**
+ * The powder temperatures from −50 to 50 °C (analysis/temperature-range.ts): plain where the load stays
+ * within limits in the simulation, hatched where it doesn't (red above the maximum, amber where its speed
+ * regime or its burn changes), ticks every 10 °C with 20 °C, the usual reference of published data,
+ * marked, and the load's own temperature.
+ */
+export function temperatureScale(spans: readonly TemperatureSpan[], own: number, context: UiContext) {
+  const { t, quantity, number } = context;
+  const unit = displayUnit('temperature', context.units);
+  const from = spans[0]!.from;
+  const to = spans[spans.length - 1]!.to;
+  const zero = 273.15;
+  const ticks: number[] = [];
+  for (let celsius = Math.ceil((from - zero) / 10) * 10; celsius <= to - zero + 1e-9; celsius += 10) ticks.push(celsius + zero);
+  const within = withinSpan(spans, own);
+  const states = [...new Set(spans.map((span) => span.state))].filter((state) => state !== 'within');
+  const caption = within
+    ? t('temperatureRange.within', { from: quantity(within.from, 'temperature', 0), to: quantity(within.to, 'temperature', 0) })
+    : t('temperatureRange.notWithin');
+  const stateName = (state: TemperatureSpan['state']) => t(state === 'within' ? 'temperatureRange.withinState' : `temperatureRange.${state}`);
+  return html`
+    <div class="scale temperature-scale" role="img" aria-label=${caption}>
+      <div class="scale-track">
+        ${spans.map(
+          (span) => html`<div
+            class="scale-band temperature-${span.state}"
+            style=${styleMap({ left: percent(span.from, from, to), width: percent(span.to - span.from, 0, to - from) })}
+            title=${`${quantity(span.from, 'temperature', 0)} – ${quantity(span.to, 'temperature', 0)}: ${stateName(span.state)}`}
+          ></div>`,
+        )}
+        ${ticks.map(
+          (tick) => html`<div class="scale-mark tick ${Math.abs(tick - zero - REFERENCE_CELSIUS) < 1e-6 ? 'reference' : ''}"
+            style=${styleMap({ left: percent(tick, from, to) })}></div>`,
+        )}
+        <div class="scale-marker" style=${styleMap({ left: percent(Math.min(to, Math.max(from, own)), from, to) })}>▼</div>
+      </div>
+      <div class="scale-ticks">
+        ${ticks.map(
+          (tick) => html`<span class=${Math.abs(tick - zero - REFERENCE_CELSIUS) < 1e-6 ? 'reference' : ''}
+            style=${styleMap({ left: percent(tick, from, to) })}>${number(unit.fromSi(tick), 0)}</span>`,
+        )}
+        <span class="scale-unit">${unit.symbol}</span>
+      </div>
+      <div class="scale-caption">
+        <strong>${caption}</strong>
+        ${states.map((state) => html` · <span class="swatch temperature-${state}"></span> ${stateName(state)}`)}
+        · ▼ ${t('temperatureRange.own', { temperature: quantity(own, 'temperature', 0) })}
+        · ${t('temperatureRange.reference', { temperature: quantity(REFERENCE_CELSIUS + zero, 'temperature', 0) })}
+      </div>
+    </div>
+  `;
 }

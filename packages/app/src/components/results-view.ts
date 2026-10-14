@@ -37,7 +37,7 @@ export function renderResults(
   const fit = load.propellant.calibration;
   if (fit) container.append(renderFitNotice(fit, context));
   const review = element('div');
-  render(assessmentView(assessment, context), review);
+  render(assessmentView(assessment, load.charge.temperature, context), review);
   const figures = element('div');
   render(keyFigures(load, shot, assessment, context, renderDetails(load, shot, context)), figures);
   container.append(review, figures);

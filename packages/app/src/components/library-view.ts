@@ -1,5 +1,5 @@
 import { html, LitElement } from 'lit';
-import { summarizeLoad } from '../analysis/load-summary.ts';
+import { knownSummary, summarizeLoad } from '../analysis/load-summary.ts';
 import { icon } from '../icons/icons.ts';
 import { shelves, type Library, type LibraryEntry } from '../state/library.ts';
 import type { UiContext } from './context.ts';
@@ -104,14 +104,16 @@ export class LibraryView extends LitElement {
   private renderRow(entry: LibraryEntry) {
     const { t, quantity, number } = this.context;
     const { load } = entry;
-    const summary = summarizeLoad(load);
-    const simulated = summary.simulated;
+    const summary = knownSummary(load);
+    if (!summary) this.scheduleSummaries();
+    const simulated = summary?.simulated;
+    const pending = summary === undefined ? '…' : '';
     return html`<tr class="entry">
       <td><button class="link" @click=${() => this.fire('open-entry', entry.id)}>${entry.name}</button></td>
       <td class="nowrap">${`${load.propellant.maker} ${load.propellant.product}`.trim()}</td>
       <td class="projectile-name" title=${load.projectile.name}>${quantity(load.projectile.mass, 'projectileMass')} ${load.projectile.name}</td>
       <td class="number">${quantity(load.charge.mass, 'chargeMass')}</td>
-      <td class="number">${simulated ? quantity(simulated.muzzleVelocity, 'velocity') : t('results.notSimulated')}</td>
+      <td class="number">${simulated ? quantity(simulated.muzzleVelocity, 'velocity') : summary ? t('results.notSimulated') : pending}</td>
       <td class="number">${simulated ? quantity(simulated.muzzleEnergy, 'energy') : ''}</td>
       <td class="number" title=${simulated?.blastExtrapolated ? t('results.muzzleBlastExtrapolated') : t('results.muzzleBlastDetail')}>
         ${simulated?.blastLevel === undefined ? '' : `${simulated.blastExtrapolated ? '≈ ' : ''}${number(simulated.blastLevel, 0)} dB`}
@@ -120,13 +122,32 @@ export class LibraryView extends LitElement {
         ${simulated ? `${simulated.peakShare > 1 ? '▲ ' : ''}${number(simulated.peakShare * 100, 0)} %` : ''}
       </td>
       <td>${simulated ? html`<span class="level-badge ${simulated.level}">${t(`assessment.level.${simulated.level}`)}</span>` : ''}</td>
-      <td class="number">${summary.measuredVelocity === undefined ? '' : quantity(summary.measuredVelocity, 'velocity')}</td>
-      <td class="number">${summary.bestGroup ? `${number(summary.bestGroup.minutesOfAngle, 2)} MOA` : ''}</td>
+      <td class="number">${summary?.measuredVelocity === undefined ? '' : quantity(summary.measuredVelocity, 'velocity')}</td>
+      <td class="number">${summary?.bestGroup ? `${number(summary.bestGroup.minutesOfAngle, 2)} MOA` : ''}</td>
       <td>
         <button class="remove" aria-label=${t('library.remove', { name: entry.name })} title=${t('library.remove', { name: entry.name })}
           @click=${() => this.removeEntry(entry)}>${icon('close')}</button>
       </td>
     </tr>`;
+  }
+
+  private summarizing = false;
+
+  /**
+   * Computes the missing summaries a few at a time between frames (each runs about 30 simulations), so
+   * that a large library opens at once and fills in.
+   */
+  private scheduleSummaries(): void {
+    if (this.summarizing) return;
+    this.summarizing = true;
+    const step = () => {
+      const missing = this.entries.filter((entry) => knownSummary(entry.load) === undefined).slice(0, 4);
+      for (const entry of missing) summarizeLoad(entry.load);
+      this.requestUpdate();
+      if (missing.length > 0 && this.isConnected) setTimeout(step, 0);
+      else this.summarizing = false;
+    };
+    setTimeout(step, 0);
   }
 
   private removeEntry(entry: LibraryEntry): void {

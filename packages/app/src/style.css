@@ -1388,49 +1388,63 @@ dialog.shot-group-dialog {
   margin-top: 0.6rem;
 }
 
-.climate-days {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
-  gap: 0.5rem;
-}
-
-.climate-day {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: start;
-  gap: 0.1rem 0.5rem;
-  padding: 0.4rem 0.6rem;
-  border: 1px solid var(--rule);
-}
-
-.climate-day .icon {
-  grid-row: span 2;
-  width: 26px;
-  height: 26px;
-  color: var(--muted);
-}
-
-.climate-day.caution {
-  border-color: var(--warn-border);
-  background: var(--warn-bg);
-}
-
-.climate-day.caution .icon {
-  color: var(--warn-fg);
-}
-
-.climate-name {
-  font-weight: 600;
-}
-
-.climate-clear {
-  color: var(--muted);
-}
-
-.climate-day ul {
-  margin: 0;
-  padding-left: 1rem;
+.climate h5 {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.8rem 0 0;
   font-size: 0.9rem;
+}
+
+.findings .icon {
+  width: 16px;
+  height: 16px;
+  vertical-align: -3px;
+}
+
+/* Temperature scale (gauges.ts): plain within limits, hatched outside. */
+.temperature-scale .scale-track {
+  height: 1.1rem;
+}
+
+.scale-band.temperature-within,
+.swatch.temperature-within {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.scale-band.temperature-aboveLimit,
+.swatch.temperature-aboveLimit {
+  background: repeating-linear-gradient(-45deg, var(--critical) 0 3px, transparent 3px 6px);
+}
+
+.scale-band.temperature-regimeChange,
+.scale-band.temperature-incompleteBurn,
+.swatch.temperature-regimeChange,
+.swatch.temperature-incompleteBurn {
+  background: repeating-linear-gradient(-45deg, var(--warn-border) 0 3px, transparent 3px 6px);
+}
+
+.scale-band.temperature-notSimulated,
+.swatch.temperature-notSimulated {
+  background: repeating-linear-gradient(-45deg, var(--muted) 0 1px, transparent 1px 5px);
+}
+
+.scale-mark.tick {
+  top: auto;
+  bottom: -0.3rem;
+  height: 0.3rem;
+  border-left: 1px solid var(--muted);
+}
+
+.scale-mark.tick.reference {
+  top: -0.3rem;
+  height: auto;
+  border-left: 2px solid var(--fg);
+}
+
+.scale-ticks span.reference {
+  font-weight: 700;
+  color: var(--fg);
 }
 
 .climate .note {
@@ -1855,4 +1869,13 @@ dialog.shot-group-dialog {
 
 .library-table .nowrap {
   white-space: nowrap;
+}
+
+/* Room for the end labels; the caption gives the unit. */
+.temperature-scale {
+  padding: 0 0.9rem;
+}
+
+.temperature-scale .scale-unit {
+  display: none;
 }

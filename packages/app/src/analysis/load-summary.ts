@@ -29,6 +29,11 @@ export interface LoadSummary {
 
 const cache = new WeakMap<Load, LoadSummary>();
 
+/** The summary if already computed, without computing it (about 30 simulations): for lists that fill in the background. */
+export function knownSummary(load: Load): LoadSummary | undefined {
+  return cache.get(load);
+}
+
 /** The summary of a load, computed once per load object (loads are replaced, never mutated, on edit). */
 export function summarizeLoad(load: Load): LoadSummary {
   const known = cache.get(load);

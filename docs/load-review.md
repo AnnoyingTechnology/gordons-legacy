@@ -32,12 +32,13 @@ drilled case, SAAMI with a conformal transducer), so their values don't convert 
 | Incomplete burn | note | < 85 % burnt at the muzzle |
 | Low pressure | note | peak < 35 % of the lowest maximum |
 | Transonic | note | muzzle velocity between Mach 0.95 and 1.1 at the powder temperature |
-| Hot day | caution / note | powder at 40 °C: above the lowest maximum (caution); a subsonic load leaves the subsonic range (note) |
-| Cold day | note | powder at −15 °C: a supersonic load drops out of the supersonic range; burn falls below 85 % |
+| Temperature limit | note | past a powder temperature (colder or hotter than the load's), the peak exceeds the lowest maximum, the speed regime changes, the powder stops burning out, or the model can't simulate |
 
-The cold and hot days (−15 °C and 40 °C) are the maintainer's choice (issue #13; cold moved from −5 °C to −15 °C on 2026-10-14): a load worked up
-between about 14 and 26 °C, used in winter or in the desert. Climate findings are not a verdict: a load
-for one season, or for accuracy in steady conditions, need not pass both.
+The temperature range (`analysis/temperature-range.ts`, the maintainer's scale, issue #13) simulates the
+load from −50 to 50 °C every 5 °C, then refines each change to 0.5 °C by bisection: within limits where
+the peak stays under the lowest maximum, the speed regime stays the load's own and the powder still burns
+out. The review notes where the load leaves those limits on each side; it is not a verdict, since a load
+for one season, or for accuracy in steady conditions, need not cover the range.
 
 The thresholds are judgement, not published standards; they are constants with their reasons in the
 module, to be revised with the maintainer and with measured data.

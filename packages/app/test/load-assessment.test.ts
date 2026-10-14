@@ -67,12 +67,15 @@ describe('fill', () => {
 });
 
 describe('climate', () => {
-  test('a load just under its maximum goes above it on a hot day', () => {
-    // 3.5 % more powder: about 99 % of the maximum at 21 °C, above it at 40 °C.
+  test('a load just under its maximum leaves its limits a few degrees hotter', () => {
+    // 3.5 % more powder: about 99 % of the maximum at 21 °C.
     const load = { ...special, charge: { ...special.charge, mass: special.charge.mass * 1.035 } };
     const assessment = assess(load);
     expect(assessment.findings.some((finding) => finding.code === 'aboveLimit')).toBe(false);
-    expect(assessment.findings.find((finding) => finding.code === 'hotAboveLimit')).toMatchObject({ climate: 'hot', level: 'caution' });
+    const hot = assessment.findings.find((finding) => finding.code === 'temperatureLimit' && finding.side === 'hot')!;
+    expect(hot).toMatchObject({ level: 'note', temperatureState: 'aboveLimit' });
+    expect(hot.temperature! - 273.15).toBeGreaterThan(21);
+    expect(hot.temperature! - 273.15).toBeLessThan(40);
   });
 });
 

@@ -2,11 +2,14 @@ import { grtTraditional, type Simulation } from '@gordons-legacy/engine';
 import { standardMaxPressures, type Load } from '@gordons-legacy/formats';
 import { vary } from './sensitivity.ts';
 import { speedRegime } from './speed-of-sound.ts';
+import { INCOMPLETE_BURN, temperatureRange, withinSpan, type TemperatureSpan, type TemperatureState } from './temperature-range.ts';
+
+export { INCOMPLETE_BURN } from './temperature-range.ts';
 
 /**
  * One review of a simulated load, gathering every reason for concern in one place so that the UI shows
  * them the same way: over-pressure, little margin, a double charge that fits, compressed or low fills,
- * unburnt powder, the transonic band, and what a cold or hot day does to the load.
+ * unburnt powder, the transonic band, and the powder temperatures where the load leaves its limits.
  *
  * No finding doesn't make a load safe: the review only knows what the model predicts, and the model is
  * not load data.
@@ -42,14 +45,11 @@ export type FindingCode =
   | 'lowPressure'
   /** The muzzle velocity is in the transonic band. */
   | 'transonic'
-  /** On a hot day the peak is above the lowest maximum. */
-  | 'hotAboveLimit'
-  /** On a hot day a subsonic load reaches the transonic band or beyond. */
-  | 'hotTransonic'
-  /** On a cold day a supersonic load slows into the transonic band or below. */
-  | 'coldTransonic'
-  /** On a cold day much more powder is still burning at the muzzle. */
-  | 'coldIncompleteBurn';
+  /**
+   * Past a powder temperature, colder or hotter than the load's, the load leaves its limits in the
+   * simulation (analysis/temperature-range.ts): `side`, `temperature` and `temperatureState` say how.
+   */
+  | 'temperatureLimit';
 
 /** A maximum pressure the load is checked against. */
 export interface PressureLimit {
@@ -62,8 +62,10 @@ export interface PressureLimit {
 export interface Finding {
   code: FindingCode;
   level: ConcernLevel;
-  /** For climate findings, the day concerned. */
-  climate?: 'cold' | 'hot';
+  /** For temperature findings, on which side of the load's temperature. */
+  side?: 'cold' | 'hot';
+  /** For temperature findings, what happens past `temperature`. */
+  temperatureState?: Exclude<TemperatureState, 'within'>;
   /** The limit concerned, for pressure findings. */
   limit?: PressureLimit;
   /** Peak pressure concerned, Pa. */
@@ -84,8 +86,8 @@ export interface Assessment {
   findings: Finding[];
   /** The limits checked, lowest first. */
   limits: PressureLimit[];
-  /** Powder temperatures of the cold and hot days, K. */
-  climate: { cold: number; hot: number };
+  /** The powder temperatures from −50 to 50 °C, in spans of one state each. */
+  temperatures: TemperatureSpan[];
 }
 
 /** Share of the lowest maximum from which the margin is thinner than the model's uncertainty. */
@@ -100,21 +102,15 @@ export const DOUBLE_CHARGE_FILL = 0.55;
 export const LOW_FILL = 0.6;
 /** Above this case fill, the compression is heavy (the model refuses loads above 1.2, as GRT does). */
 export const HEAVY_COMPRESSION_FILL = 1.1;
-/** Below this burnt fraction at the muzzle, much of the powder leaves unburnt. */
-export const INCOMPLETE_BURN = 0.85;
 /** Below this share of the lowest maximum, the pressure is low for the powder to burn evenly. */
 export const LOW_PRESSURE_SHARE = 0.35;
-/**
- * The cold and hot days, °C: a load worked up between about 14 and 26 °C, then used in winter or in the
- * desert (the maintainer's choice: issue #13, then −15 °C for the cold day).
- */
-export const COLD_DAY_CELSIUS = -15;
-export const HOT_DAY_CELSIUS = 40;
-const ZERO_CELSIUS = 273.15;
 
 const LEVEL_ORDER: Record<ConcernLevel, number> = { danger: 0, caution: 1, note: 2 };
 
-/** Reviews a load whose simulation `shot` succeeded. Runs a few more simulations (climate, double charge). */
+/**
+ * Reviews a load whose simulation `shot` succeeded. Runs about 30 more simulations: the temperature range,
+ * the bench variations and a double charge.
+ */
 export function assessLoad(load: Load, shot: Simulation): Assessment {
   const limits = pressureLimits(load);
   const lowest = limits[0]!;
@@ -148,28 +144,22 @@ export function assessLoad(load: Load, shot: Simulation): Assessment {
   const regime = speedRegime(shot.muzzleVelocity, temperature);
   if (regime === 'transonic') findings.push({ code: 'transonic', level: 'note', velocity: shot.muzzleVelocity, temperature });
 
-  const climate = { cold: COLD_DAY_CELSIUS + ZERO_CELSIUS, hot: HOT_DAY_CELSIUS + ZERO_CELSIUS };
-  const hot = simulate(atTemperature(load, climate.hot));
-  if (hot) {
-    if (hot.maxPressure > lowest.pressure) {
-      findings.push({ code: 'hotAboveLimit', level: 'caution', climate: 'hot', limit: lowest, pressure: hot.maxPressure, temperature: climate.hot });
+  const temperatures = temperatureRange(load, shot, lowest.pressure);
+  const own = withinSpan(temperatures, temperature);
+  if (own) {
+    const index = temperatures.indexOf(own);
+    const colder = temperatures[index - 1];
+    const hotter = temperatures[index + 1];
+    if (colder && colder.state !== 'within') {
+      findings.push({ code: 'temperatureLimit', level: 'note', side: 'cold', temperature: own.from, temperatureState: colder.state });
     }
-    if (regime === 'subsonic' && speedRegime(hot.muzzleVelocity, climate.hot) !== 'subsonic') {
-      findings.push({ code: 'hotTransonic', level: 'note', climate: 'hot', velocity: hot.muzzleVelocity, temperature: climate.hot });
-    }
-  }
-  const cold = simulate(atTemperature(load, climate.cold));
-  if (cold) {
-    if (regime === 'supersonic' && speedRegime(cold.muzzleVelocity, climate.cold) !== 'supersonic') {
-      findings.push({ code: 'coldTransonic', level: 'note', climate: 'cold', velocity: cold.muzzleVelocity, temperature: climate.cold });
-    }
-    if (shot.burntFractionAtMuzzle >= INCOMPLETE_BURN && cold.burntFractionAtMuzzle < INCOMPLETE_BURN) {
-      findings.push({ code: 'coldIncompleteBurn', level: 'note', climate: 'cold', burnt: cold.burntFractionAtMuzzle, temperature: climate.cold });
+    if (hotter && hotter.state !== 'within') {
+      findings.push({ code: 'temperatureLimit', level: 'note', side: 'hot', temperature: own.to, temperatureState: hotter.state });
     }
   }
 
   findings.sort((a, b) => LEVEL_ORDER[a.level] - LEVEL_ORDER[b.level]);
-  return { level: findings[0]?.level ?? 'none', findings, limits, climate };
+  return { level: findings[0]?.level ?? 'none', findings, limits, temperatures };
 }
 
 /**
@@ -184,10 +174,6 @@ export function pressureLimits(load: Load): PressureLimit[] {
   const own = load.cartridge.maxPressure;
   if (!limits.some((limit) => Math.abs(limit.pressure / own - 1) <= 0.005)) limits.push({ source: 'load', pressure: own });
   return limits.sort((a, b) => a.pressure - b.pressure);
-}
-
-function atTemperature(load: Load, temperature: number): Load {
-  return { ...load, charge: { ...load.charge, temperature } };
 }
 
 function simulate(load: Load): Simulation | undefined {
