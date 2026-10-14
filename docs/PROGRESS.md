@@ -25,8 +25,9 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 
 1. M3: a load-file
    comparison view (several loads overlaid), printing/PDF report.
-2. After parity (decision of 2026-10-13): check OBT, the energy terms and the covolume handling against
-   the published science; record findings in `docs/model/`.
+2. After parity (decision of 2026-10-13): validation against reality started
+   (`docs/model/validation.md`, chronograph study done); next, published pressure data, then OBT, the
+   energy terms and the covolume handling against the published science.
 
 Reverse-engineering workspace (local, never committed; procedure in `docs/model/grt-structure.md`):
 
@@ -128,3 +129,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-14 | M3: the load's chronograph measurements are listed per charge (shots, mean, SD, ES) beside the simulated velocity and the difference, for calibration. |
 | 2026-10-14 | M3: opening a `.propellant` or `.projectile` file swaps that component in the active load (a chooser for multi-projectile files; the overall length and the caliber's initial pressure stay). A peak pressure above the cartridge maximum is now shown in the critical colour with a marker and words. |
 | 2026-10-14 | M5 start: GRT's OBT tool read from the binary (velocity calibration on k and Ba, charge for a node) and reproduced: each measured charge can be calibrated into a new copy of the load; an "OBT nodes" section lists the nodes around the load with the charge for each, its simulated peak and the max-pressure flag. |
+| 2026-10-14 | Validation: GRT Traditional against 51 chronograph-measured charges of the maintainer's loads (`tools/validation/chronograph.ts`, `docs/model/validation.md`): uncalibrated files over-predict velocity by ~10 % on average (up to 40 % for subsonic rifle loads); calibrated copies are within ~1 %. |
