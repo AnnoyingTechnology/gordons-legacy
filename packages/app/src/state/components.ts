@@ -6,7 +6,6 @@ import {
   importGrtProjectiles,
   importGrtPropellant,
   type CaliberDefinition,
-  type Firearm,
   type Projectile,
   type Propellant,
 } from '@gordons-legacy/formats';
@@ -72,11 +71,6 @@ export function repositoryComponents(documents: ReadonlyArray<{ path: string; do
     // A gun is not part of a load's recipe: the published ones go to the gun library (state/firearms.ts).
     return [];
   });
-}
-
-/** The published guns of the repository's documents (issue #30), in the order the index lists them. */
-export function repositoryFirearms(documents: ReadonlyArray<{ document: ComponentDocument }>): Firearm[] {
-  return documents.flatMap(({ document }) => (document.kind === 'firearm' ? [document.value] : []));
 }
 
 /** What a load is made of. The repository's guns are fetched on their own (state/published-firearms.ts). */

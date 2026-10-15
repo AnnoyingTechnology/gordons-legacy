@@ -16,9 +16,9 @@ function powderFile(): string {
   return `${JSON.stringify({ format: 'gordons-legacy.component', version: 1, kind: 'powder', provenance, value }, null, 2)}\n`;
 }
 
-/** A gun file of the repository: a published Glock, as the extractors write them (issue #30). */
+/** A gun file of the repository: one maker's published guns (issue #30). */
 function firearmFile(): string {
-  const value = {
+  const value = [{
     format: FIREARM_FORMAT,
     schemaVersion: FIREARM_SCHEMA_VERSION,
     name: 'Glock 17 Gen5',
@@ -27,7 +27,7 @@ function firearmFile(): string {
     cartridge: '9x19 mm',
     barrel: { name: 'Glock 17 Gen5', length: 0.114, gunMass: 0.705, gasLeaks: [] },
     source: { kind: 'published', publisher: 'Glock Ges.m.b.H.', url: 'https://example.invalid/g17', retrieved: '2026-10-15', massBasis: 'empty-magazine' },
-  };
+  }];
   const provenance = { origin: 'test', source: 'test', file: 'g17', author: 'Glock', date: '2026-10-15', method: 'test', status: 'published' };
   return `${JSON.stringify({ format: 'gordons-legacy.component', version: 1, kind: 'firearm', provenance, value }, null, 2)}\n`;
 }
@@ -101,15 +101,22 @@ describe('synchronise', () => {
     expect(cache.files.size).toBe(0);
   });
 
-  test('a published gun is read as a gun, with what its figures mean', async () => {
+  test("a maker's guns are read with what their figures mean", async () => {
     const text = firearmFile();
-    const files = { 'firearms/glock-17-gen5.json': text, 'index.json': await index([{ path: 'firearms/glock-17-gen5.json', text, kind: 'firearm' }]) };
+    const files = { 'firearms/glock.json': text, 'index.json': await index([{ path: 'firearms/glock.json', text, kind: 'firearm' }]) };
     const report = await synchronise(BASE, memoryCache(), server(files).fetch);
     expect(report.failed).toEqual([]);
     expect(report.documents[0]!.document).toMatchObject({
       kind: 'firearm',
-      value: { name: 'Glock 17 Gen5', barrel: { length: 0.114 }, source: { massBasis: 'empty-magazine' } },
+      value: [{ name: 'Glock 17 Gen5', barrel: { length: 0.114 }, source: { massBasis: 'empty-magazine' } }],
     });
+  });
+
+  test('a gun the format rejects loses its maker file, rather than leaving a catalogue with a hole in it', async () => {
+    const text = firearmFile().replace('"length": 0.114', '"length": 0');
+    const files = { 'firearms/glock.json': text, 'index.json': await index([{ path: 'firearms/glock.json', text, kind: 'firearm' }]) };
+    const report = await synchronise(BASE, memoryCache(), server(files).fetch);
+    expect(report.failed).toEqual([{ path: 'firearms/glock.json', reason: 'content' }]);
   });
 
   test('the components come without the gun database, and the guns later, without losing either', async () => {
@@ -117,10 +124,10 @@ describe('synchronise', () => {
     const gun = firearmFile();
     const files = {
       'powders/red-dot.json': powder,
-      'firearms/glock-17-gen5.json': gun,
+      'firearms/glock.json': gun,
       'index.json': await index([
         { path: 'powders/red-dot.json', text: powder },
-        { path: 'firearms/glock-17-gen5.json', text: gun, kind: 'firearm' },
+        { path: 'firearms/glock.json', text: gun, kind: 'firearm' },
       ]),
     };
     const cache = memoryCache();
@@ -135,7 +142,7 @@ describe('synchronise', () => {
     const second = await synchronise(BASE, cache, guns.fetch, ['firearm']);
     expect(second).toMatchObject({ downloaded: 1, removed: 0 });
     expect(second.documents.map(({ document }) => document.kind)).toEqual(['firearm']);
-    expect(guns.downloads).toEqual(['index.json', 'firearms/glock-17-gen5.json']);
+    expect(guns.downloads).toEqual(['index.json', 'firearms/glock.json']);
     expect(cache.files.size).toBe(2);
     expect((await cachedDocuments(cache)).map(({ document }) => document.kind).sort()).toEqual(['firearm', 'powder']);
   });

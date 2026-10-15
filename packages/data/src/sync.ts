@@ -153,11 +153,23 @@ export function readDocument(text: string, entry?: DataIndexEntry): ComponentDoc
     const result = checkCaliber(parsed.value);
     return result.ok ? { ...base, kind: 'caliber', value: result.value } : undefined;
   }
-  if (parsed.kind === 'firearm') {
-    const result = checkFirearm(parsed.value);
-    return result.ok ? { ...base, kind: 'firearm', value: result.value } : undefined;
-  }
+  if (parsed.kind === 'firearm') return firearmList(base, parsed.value);
   return undefined;
+}
+
+/**
+ * One maker's guns. The file is taken whole or not at all, as every other file is: a gun the format
+ * rejects is a bug in the export, and a catalogue that silently lost a few guns would hide it.
+ */
+function firearmList(base: { format: 'gordons-legacy.component'; version: 1; provenance: Provenance }, value: unknown): ComponentDocument | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const guns = [];
+  for (const gun of value) {
+    const result = checkFirearm(gun);
+    if (!result.ok) return undefined;
+    guns.push(result.value);
+  }
+  return { ...base, kind: 'firearm', value: guns };
 }
 
 function readProvenance(value: unknown): Provenance | undefined {

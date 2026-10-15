@@ -1,8 +1,8 @@
 # @gordons-legacy/data
 
 Client of the data repository [gordons-legacy-data](https://github.com/AnnoyingTechnology/gordons-legacy-data):
-powders, projectiles, calibers and published guns, one JSON file each, under CC0, with an `index.json` of
-SHA-256 hashes. No DOM: the cache and the fetch function are passed in, so it runs in browsers and in Node.
+powders, projectiles and calibers one JSON file each, the published guns one file per maker, all under
+CC0, with an `index.json` of SHA-256 hashes. No DOM: the cache and the fetch function are passed in, so it runs in browsers and in Node.
 
 ## Public API
 
@@ -17,12 +17,15 @@ SHA-256 hashes. No DOM: the cache and the fetch function are passed in, so it ru
 | `ComponentDocument`, `Provenance`, `DataIndex` | The repository's file formats. |
 
 A first synchronisation of the 453 component files takes about 3 s; later ones read only the index (about
-50 ms) and download what changed. The published guns (`kind: 'firearm'`, issue #30) are hundreds of files
-of their own and are left out of that first pass.
+50 ms) and download what changed. The published guns (`kind: 'firearm'`, issue #30) are left out of that
+first pass and fetched when a user looks for their gun.
 
-A gun file holds a `Firearm` document, which carries its own `source`: the maker, the page, the date it
-was read, what its published mass includes. The `provenance` beside it says, as for every other kind, how
-the file was made — not that anyone measured the gun.
+A gun file holds **one maker's catalogue** as a list of `Firearm` documents — the makers read so far hold
+about 2,500 guns, and that many single files would be that many requests on a first search. Each gun
+carries its own `source`: the page, the date it was read, what its published mass includes. The
+`provenance` beside it says, as for every other kind, how the file was made — not that anyone measured
+the gun. A gun the format rejects costs its whole maker file, so that a catalogue is never silently
+missing a few of its guns.
 
 ## Layout
 

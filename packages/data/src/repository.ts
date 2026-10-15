@@ -21,8 +21,9 @@ export interface DataIndexEntry {
 }
 
 /**
- * What a file of the repository holds. `firearm` is the published gun database (issue #30): hundreds of
- * files a load editor does not need until a user looks for their gun, so it is synchronised on its own.
+ * What a file of the repository holds. `firearm` is the published gun database (issue #30): one file per
+ * maker, holding that maker's guns, synchronised on its own because a load editor has no use for it
+ * until a user looks for their gun.
  */
 export type ComponentKind = 'powder' | 'projectile' | 'caliber' | 'firearm';
 
@@ -48,6 +49,9 @@ export type ComponentDocument =
   | { format: 'gordons-legacy.component'; version: 1; kind: 'powder'; provenance: Provenance; value: Propellant }
   | { format: 'gordons-legacy.component'; version: 1; kind: 'projectile'; provenance: Provenance; value: Projectile }
   | { format: 'gordons-legacy.component'; version: 1; kind: 'caliber'; provenance: Provenance; value: CaliberDefinition }
-  // A gun also carries its own `source` (the maker, the page, the date, what its mass includes); the
-  // provenance here says how the file was made, as it does for every other kind.
-  | { format: 'gordons-legacy.component'; version: 1; kind: 'firearm'; provenance: Provenance; value: Firearm };
+  // One maker's published guns, as a list rather than a file each: the application downloads the whole
+  // catalogue to search it, and the makers read so far hold about 2,500 guns — that many single files
+  // would be that many requests on a first search. Each gun still carries its own `source` (the page,
+  // the date it was read, what its published mass includes); the provenance here says how the file was
+  // made, as it does for every other kind.
+  | { format: 'gordons-legacy.component'; version: 1; kind: 'firearm'; provenance: Provenance; value: Firearm[] };

@@ -23,6 +23,11 @@ from another:
 Nothing else is taken: no prose, no picture, no price, no marketing name beyond the model. A record that
 cannot be built from the facts is not built at all.
 
+An extractor writes one file per gun; the data repository holds **one file per maker** (`firearms/
+glock.json`), holding that maker's records. The application downloads a whole catalogue to search it, and
+the makers read so far hold about 2,500 guns — that many single files would be that many requests on a
+first search. `tools/data/export-repository.ts --firearms <folder>` does the grouping.
+
 Three values the simulation wants are **never** published and stay absent: the jump to the lands, the
 gas leaks, and the real chamber-to-muzzle length (see below). The application shows a published barrel
 length as `(nominal)` so a user knows which figures are theirs to measure.
