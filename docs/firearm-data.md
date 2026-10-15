@@ -179,8 +179,8 @@ worse than no figure (Astra's review, 2026-10-15):
   disagree on a mass, both should be recorded with their sources; first-seen-wins makes the answer
   depend on the order of a sitemap. *Not implemented.* What exists today: Glock's duplicate pages are
   skipped by name, and Smith & Wesson's second listing of a gun is skipped **with what the two pages
-  disagree on printed in the crawl's log** (`weight 654.9 g against 581.2 g`), so the conflict is at
-  least visible to whoever runs the crawl. Merging the two — or averaging them — would put a figure in a
+  disagree on printed in the crawl's log** (`weight 654.9 g in the record, 581.2 g on this page`), so
+  the conflict is at least visible to whoever runs the crawl. Merging the two — or averaging them — would put a figure in a
   record that no maker printed.
 - **Every figure is checked against the string the maker printed**, before anything is published:
   `tools/data/firearms/check-corpus.ts` re-reads the SI value out of `source.published` and reports a

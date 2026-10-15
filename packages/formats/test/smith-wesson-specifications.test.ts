@@ -174,7 +174,9 @@ describe('reading a published specification', () => {
     const first = firearmFrom(pageWith(PISTOL), URL, '2026-10-15')!;
     const lighter = { ...PISTOL, dimensions: '<span>WEIGHT</span> 20.0 oz' };
     const second = firearmFrom(pageWith(lighter), `${URL}-again`, '2026-10-15')!;
-    expect(difference(first, second)).toBe(`, and that page's weight ${(first.barrel.gunMass! * 1000).toFixed(1)} g against 567.0 g`);
+    expect(difference(first, second)).toBe(
+      `, where the two pages disagree: weight ${(first.barrel.gunMass! * 1000).toFixed(1)} g in the record, 567.0 g on this page`,
+    );
     expect(difference(first, first)).toBe('');
   });
 

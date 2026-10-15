@@ -300,16 +300,16 @@ async function sitemapAddresses(url: string): Promise<string[]> {
  * disagreement belongs in the crawl's log, where a human can see it, until #30 settles how a record
  * should carry a conflict.
  */
-export function difference(first: Firearm, second: Firearm): string {
+export function difference(written: Firearm, skipped: Firearm): string {
   const figures: Array<[string, string, number | undefined, number | undefined]> = [
-    ['barrel length', 'mm', first.barrel.length, second.barrel.length],
-    ['weight', 'g', first.barrel.gunMass, second.barrel.gunMass],
-    ['twist', 'mm', first.barrel.twistLength, second.barrel.twistLength],
+    ['barrel length', 'mm', written.barrel.length, skipped.barrel.length],
+    ['weight', 'g', written.barrel.gunMass, skipped.barrel.gunMass],
+    ['twist', 'mm', written.barrel.twistLength, skipped.barrel.twistLength],
   ];
   const differing = figures
-    .filter(([, , a, b]) => a !== b)
-    .map(([what, unit, a, b]) => `${what} ${reading(a, unit)} against ${reading(b, unit)}`);
-  return differing.length === 0 ? '' : `, and that page's ${differing.join(', ')}`;
+    .filter(([, , kept, left]) => kept !== left)
+    .map(([what, unit, kept, left]) => `${what} ${reading(kept, unit)} in the record, ${reading(left, unit)} on this page`);
+  return differing.length === 0 ? '' : `, where the two pages disagree: ${differing.join('; ')}`;
 }
 
 /** A figure of a gun as the log writes it, in its milli-unit, or `none` where a page gave nothing. */
