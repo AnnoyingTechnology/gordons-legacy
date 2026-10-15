@@ -90,16 +90,23 @@ Separate repository, `gordons-legacy-data`, under CC0 1.0.
 
 - One JSON file per powder, projectile and caliber, with units and provenance: source, author or sharer,
   date, method (measured, fitted from published data, converted) and verification status.
+- One JSON file **per maker** for the published guns (`firearms/glock.json`, issue #30): barrel length,
+  twist, mass and cartridge as the maker publishes them, each record naming its page, the date it was
+  read and what its mass includes. The makers read so far hold about 2,500 guns, so a file per gun would
+  make a first search that many requests. Rules of the intake and of a refresh: `docs/firearm-data.md`.
 - A generated `index.json` lists every file with its version and SHA-256 hash.
 - The app downloads changes at startup, verifies hashes, caches everything for offline use, and ships a
-  snapshot in each release so a first run without network still works.
-- Users can import their own GRT powder files and database. Imported data stays on their machine.
+  snapshot in each release so a first run without network still works. The guns are the exception: they
+  are read when a user first looks for their gun, not at startup.
+- Users can import their own GRT powder files and database. Imported data stays on their machine. A
+  user's own gun always wins over a published record of the same name.
 
 Intake:
 
 - Accepted: CC0 community files (flagged unverified until checked), models fitted from published
   charge, velocity and pressure data, and factual specifications (bullet weight, length and BC;
-  cartridge dimensions).
+  cartridge dimensions; a gun's barrel length, twist and mass from its maker's own page — facts, not
+  authorship, and a maker specifying its own guns creates data rather than obtaining it).
 - Not accepted: GRT's database or anything derived from it, and whole tables copied from manufacturers'
   manuals (use them for validation and cite them).
 - Data changes are safety-critical: a wrong powder model predicts a wrong pressure. CI simulates
