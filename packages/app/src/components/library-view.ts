@@ -1,4 +1,4 @@
-import { html, LitElement } from 'lit';
+import { html, LitElement, nothing } from 'lit';
 import { knownSummary, summarizeLoad } from '../analysis/load-summary.ts';
 import { icon } from '../icons/icons.ts';
 import { shelves, type Library, type LibraryEntry } from '../state/library.ts';
@@ -116,6 +116,10 @@ export class LibraryView extends LitElement {
         <header class="library-head">
           <h2>${icon('barrel')} ${t('firearm.title')}</h2>
           <span class="spacer"></span>
+          <label class="button">
+            ${icon('open')} ${t('library.import')}
+            <input type="file" accept=".json" multiple class="file-input" @change=${this.importFiles} />
+          </label>
           <button @click=${() => this.fire('edit-firearm', { firearm: newFirearm() })}>${icon('add')} ${t('firearm.add')}</button>
         </header>
         ${this.firearms.length === 0
@@ -133,9 +137,13 @@ export class LibraryView extends LitElement {
                       <td>
                         <button class="link" title=${t('firearm.edit', { name })} @click=${() => this.fire('edit-firearm', { firearm, id })}>${name}</button>
                       </td>
-                      <td>${[firearm.maker, firearm.model].filter(Boolean).join(' ')}</td>
+                      <td>${firearm.maker ?? ''}</td>
                       <td>${firearm.cartridge ?? ''}</td>
-                      <td class="number">${quantity(firearm.barrel.length, 'barrelLength')}</td>
+                      <td class="number">
+                        ${quantity(firearm.barrel.length, 'barrelLength')}${firearm.source?.kind === 'published'
+                          ? html`<span class="note" title=${t('firearm.publishedBy', { publisher: firearm.source.publisher ?? '' })}> ${t('firearm.publishedShort')}</span>`
+                          : nothing}
+                      </td>
                       <td class="number">${firearm.barrel.twistLength === undefined ? '' : quantity(firearm.barrel.twistLength, 'twistLength')}</td>
                       <td class="number">${firearm.barrel.gunMass === undefined ? '' : quantity(firearm.barrel.gunMass, 'gunMass')}</td>
                       <td>

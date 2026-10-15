@@ -1,5 +1,5 @@
 import type { Firearm, Load, MeasurementSeries, Projectile } from '@gordons-legacy/formats';
-import { importGrtProjectiles, importGrtPropellant, importGrtrace, serializeLoad } from '@gordons-legacy/formats';
+import { FIREARM_FORMAT, importGrtProjectiles, importGrtPropellant, importGrtrace, parseFirearm, serializeFirearm, serializeLoad } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
 import type { Language } from '../i18n/i18n.ts';
 import { DocumentStore } from '../state/documents.ts';
@@ -163,6 +163,7 @@ export class AppShell extends LitElement {
         .firearm=${this.editedFirearm?.firearm}
         .context=${this.context}
         @save=${(event: CustomEvent<Firearm>) => void this.keepFirearm(event.detail, this.editedFirearm?.id)}
+        @export=${(event: CustomEvent<Firearm>) => download(serializeFirearm(event.detail), `${event.detail.name.trim() || 'gun'}.firearm.json`)}
         @close=${() => (this.editedFirearm = undefined)}
       ></gl-firearm-dialog>
       <gl-converter-dialog .open=${this.converterOpen} .context=${this.context} @close=${() => (this.converterOpen = false)}></gl-converter-dialog>
@@ -238,6 +239,11 @@ export class AppShell extends LitElement {
       }
       if (extension === '.csv') {
         errors.push(...this.openChronograph(file.name, text));
+        continue;
+      }
+      // A gun is JSON too: told apart by what it says it is, not by its name.
+      if (text.includes(FIREARM_FORMAT)) {
+        errors.push(...(await this.openFirearm(file.name, text)));
         continue;
       }
       const result = this.store.open(file.name, text);
@@ -334,6 +340,14 @@ export class AppShell extends LitElement {
     }
   }
 
+  /** A gun file, into the gun library: the same place "Save as a gun" puts one. */
+  private async openFirearm(name: string, text: string): Promise<string[]> {
+    const result = parseFirearm(text);
+    if (!result.ok) return [this.context.t('library.importFailed', { name })];
+    await this.keepFirearm(result.value, undefined);
+    return [];
+  }
+
   /** Saves a gun, or removes it when there is none to save; storage can refuse, so it is reported. */
   private async keepFirearm(firearm: Firearm | undefined, id: string | undefined): Promise<void> {
     try {
@@ -355,9 +369,12 @@ export class AppShell extends LitElement {
   private async importToLibrary(files: File[]): Promise<void> {
     const read = await Promise.all(files.map(async (file) => ({ name: file.name, text: await file.text() })));
     const isComponent = (name: string) => /\.(propellant|projectile|caliber)$/i.test(name);
+    const isFirearm = ({ text }: { text: string }) => text.includes(FIREARM_FORMAT);
     const errors: string[] = [];
     for (const file of read.filter(({ name }) => isComponent(name))) errors.push(...(await this.components.importFile(file.name, file.text)));
-    const failed = await this.library.importFiles(read.filter(({ name }) => !isComponent(name)));
+    for (const file of read.filter(isFirearm)) errors.push(...(await this.openFirearm(file.name, file.text)));
+    const loads = read.filter((file) => !isComponent(file.name) && !isFirearm(file));
+    const failed = await this.library.importFiles(loads);
     this.openErrors = [...failed.map((name) => this.context.t('library.importFailed', { name })), ...errors];
   }
 

@@ -97,6 +97,14 @@ export class FirearmDialog extends LitElement {
         </fieldset>
         ${draft.name.trim() === '' ? html`<p class="error">${t('firearm.nameNeeded')}</p>` : nothing}
         <form method="dialog">
+          <button
+            type="button"
+            ?disabled=${draft.name.trim() === ''}
+            title=${t('firearm.exportHelp')}
+            @click=${() => this.dispatchEvent(new CustomEvent('export', { detail: draft }))}
+          >
+            ${icon('export')} ${t('toolbar.export')}
+          </button>
           <button>${t('choice.cancel')}</button>
           <button ?disabled=${draft.name.trim() === ''} @click=${this.save}>${icon('save')} ${t('toolbar.save')}</button>
         </form>
