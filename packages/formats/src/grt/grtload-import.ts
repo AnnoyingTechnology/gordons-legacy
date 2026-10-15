@@ -192,7 +192,9 @@ function readLadder(fields: GrtFields): Ladder | undefined {
 
 function readBarrel(fields: GrtFields, gunElement: XmlElement | undefined, log: IssueLog): Barrel {
   const jumpOverridden = fields.boolean('gjumpUnlock');
-  const jump = fields.quantity('gjump', 'length', 'mm');
+  // Older files (GRT's own documentation samples among them) have no `gjump` at all; it is required
+  // only where the user overrode the jump, which is what `gjumpUnlock` says.
+  const jump = jumpOverridden ? fields.quantity('gjump', 'length', 'mm') : fields.optionalQuantity('gjump', 'length', 'mm');
   return {
     name: fields.text('GunName'),
     length: fields.quantity('xe', 'length', 'mm'),

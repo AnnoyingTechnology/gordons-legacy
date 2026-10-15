@@ -220,3 +220,28 @@ test("GRT's semi-spherical hollow base (type 3) keeps its dimensions", () => {
   expect(issueCodes(result)).not.toContain('unknown-code');
   expect(expectImported(result).projectile.base).toEqual({ shape: 'hollow-round', length: 0.002, diameterA: 0.005, diameterB: 0 });
 });
+
+describe('a gun section without a jump to the lands', () => {
+  // GRT's own documentation ships loads whose <gun> holds only the barrel, twist and gun mass
+  // (en/faq/files/30-06_*_IMR4166_*.grtload). `gjump` is written only where the user overrode it.
+  const withoutJump = () =>
+    readFixture('cc0/loads/327_Federal_Magnum_by_dpeppe01_2022.12.12.grtload')
+      .replace(/<input name="gjump"[^>]*\/>/, '')
+      .replace(/<input name="gjumpUnlock"[^>]*\/>/, '');
+
+  test('imports, with no jump of its own', () => {
+    const load = expectImported(importGrtLoad(withoutJump()));
+    expect(load.barrel.jumpToLands).toBeUndefined();
+    expect(load.barrel.length).toBeGreaterThan(0);
+  });
+
+  test('is still required where the user overrode it', () => {
+    const overridden = withoutJump().replace(
+      '<input name="xe"',
+      '<input name="gjumpUnlock" value="true" unit="" type="boolean" descr="unlocked bullet jump" />\n<input name="xe"',
+    );
+    const result = importGrtLoad(overridden);
+    expect(result.ok).toBe(false);
+    expect(result.issues).toContainEqual(expect.objectContaining({ severity: 'error', code: 'missing-value', path: 'gun/gjump' }));
+  });
+});
