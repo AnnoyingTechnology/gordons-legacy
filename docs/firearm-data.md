@@ -101,31 +101,33 @@ disappearing or pretending to be current.
 The test for a maker is the early warning: when their page shape changes, fix the extractor and the test
 page together, in one commit, so the next refresh starts from something that works.
 
-## Before any of it is published
+## Publishing
 
-The pilot's records are not publishable as they stand, and these are the gates (Astra's review,
-2026-10-15):
+**Rights: decided, 2026-10-15 (Julien).** The gun records go into the CC0 data repository with the rest
+of the component data. A barrel length and a weight are facts, not authorship: not copyrightable in the
+US (*Feist*), and under *British Horseracing Board* (C-203/02) the EU database right protects investment
+in *obtaining* data, which is not what a maker does when it *creates* the specifications of its own
+guns. The same figures are on Wikipedia. CC0 disposes only of rights *we* hold and claims nothing about
+anyone else's; every record names its source page and date, and a maker who asks for its records to be
+removed gets them removed.
 
-- **Rights are per source, not global.** Facts are not copyrightable in the US, and under
-  *British Horseracing Board* investment in *creating* data is not investment in *obtaining* it — which
-  covers a maker publishing specifications of its own guns. But a maker's catalogue is not categorically
-  outside the EU database right, and taking four fields from a whole catalogue is not automatically
-  insubstantial. Each source needs its own note: operator, terms, what we take, and the judgement made.
-  CC0 can only dispose of rights *we* hold; it cannot clear anyone else's. **The maintainer decides
-  before anything is published.**
-- **Record what a number means, not only its value.** Which mass basis (without magazine, with an empty
-  one, loaded, or unstated) and which barrel-length convention, or that the convention is unknown. An
-  unstated mass must not be silently called "the gun as it recoils".
+That settles the rights, not the honesty. These gates remain, because a figure nobody can interpret is
+worse than no figure (Astra's review, 2026-10-15):
+
+- **Record what a number means, not only its value.** *Done for the mass:* `source.massBasis` says
+  `without-magazine`, `empty-magazine`, `loaded` or `unstated`, and `source.published` keeps the maker's
+  own strings beside the SI values. An unstated mass must not be silently called "the gun as it recoils".
+  The barrel-length convention is still unrecorded — makers rarely state it — and `source.kind:
+  'published'` plus the `(nominal)` marking in the application is all that stands in for it.
 - **Unknown is not zero.** No published gas-leak information is not the same as a sealed barrel, and a
   revolver's cylinder gap is the obvious case.
-- **Keep the published value and unit** beside the SI one, so a rounding or a unit mix-up can be traced
-  back without re-fetching the page. Until that field exists, an extractor that is given the same measure
-  in two units keeps **the figure printed to the finer step**, not the metric one by habit: Ruger's
-  `18.50"` is 469.9 mm where the metric span beside it says `46.9 cm`, and taking the metric figure would
-  throw away a digit the maker published.
+- **Keep the figure printed to the finer step.** An extractor given the same measure in two units takes
+  the one with more resolution, not the metric one by habit: Ruger's `18.50"` is 469.9 mm where the
+  metric span beside it says `46.9 cm`, and taking the metric figure would throw away a digit the maker
+  published. Both strings are kept in `source.published` either way.
 - **Conflicts are kept, not resolved by crawl order.** Where a commercial and a law-enforcement page
   disagree on a mass, both are recorded with their sources; first-seen-wins makes the answer depend on
-  the order of a sitemap.
+  the order of a sitemap. *Not implemented: Glock's duplicate pages are skipped by name today.*
 - **A record is applied field by field**, never by replacing a user's barrel wholesale, and what a load
   copied from a record is pinned in the load.
 
@@ -141,7 +143,8 @@ exists.
   something this intake can correct; a revolver record is a starting point for the user to measure.
 - **A twist rate is often missing**, especially for pistols. The spin figures simply do not show for a
   gun without one.
-- **The mass is the gun as it recoils**, which means with an empty magazine where a maker publishes
-  several. Where only one figure exists, it is taken as it is.
+- **The mass is the gun as it recoils** where the maker says so: with an empty magazine, before the
+  cartridges. Where only one figure is published and its basis is not stated, `source.massBasis` is
+  `unstated` and the figure is a starting point, not an answer.
 - A user's own gun always wins over a published record. The published figures are a convenience, never
   a measurement of the gun in front of them.
