@@ -56,6 +56,8 @@ export function renderCharts(shot: Simulation, ladder: LadderShot[], axis: Chart
   const peakIndex = curve.pressure.indexOf(shot.maxPressure);
   const burnoutIndex = shot.burnout ? curve.travel.indexOf(shot.burnout.travel) : -1;
   const events = burnoutIndex >= 0 ? [{ x: x[burnoutIndex]!, label: t('results.burnoutLabel') }] : [];
+  // The powder burns from the start of travel to burnout, or to the muzzle when it never finishes.
+  const burn = { from: x[0] ?? 0, to: burnoutIndex >= 0 ? x[burnoutIndex]! : (x[x.length - 1] ?? 0) };
   const formatX = (value: number) => number(value, axis === 'travel' ? (xUnit.id === 'in' ? 1 : 0) : 2);
 
   const pressure = new LineChart({
@@ -75,6 +77,7 @@ export function renderCharts(shot: Simulation, ladder: LadderShot[], axis: Chart
     markers: peakIndex >= 0 ? [{ index: peakIndex, label: quantity(shot.maxPressure, 'pressure') }] : [],
     describePeak: (value, at) => t('results.chartPeak', { value: `${value} ${pressureUnit.symbol}`, at: `${at} ${xUnit.symbol}` }),
     events,
+    burn,
     others: reduced.map(({ simulation, opacity }) => ({
       x: xOf(simulation),
       y: Float64Array.from(simulation.curve.pressure, pressureUnit.fromSi),
@@ -94,6 +97,7 @@ export function renderCharts(shot: Simulation, ladder: LadderShot[], axis: Chart
     markers: [{ index: curve.velocity.length - 1, label: quantity(shot.muzzleVelocity, 'velocity') }],
     describePeak: (value, at) => t('results.chartPeak', { value: `${value} ${velocityUnit.symbol}`, at: `${at} ${xUnit.symbol}` }),
     events,
+    burn,
     others: reduced.map(({ simulation, opacity }) => ({
       x: xOf(simulation),
       y: Float64Array.from(simulation.curve.velocity, velocityUnit.fromSi),

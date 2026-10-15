@@ -28,6 +28,8 @@ export interface LineChartOptions {
   others?: { x: ArrayLike<number>; y: ArrayLike<number>; opacity?: number; color?: string; label?: string }[];
   /** Written at the end of the curve: what tells curves apart when their colours can't be. */
   label?: string;
+  /** Where the powder burns, in x units: drawn as a low line of flames along the bottom (issue #27). */
+  burn?: { from: number; to: number };
   /** `half` when the chart shares the width with another; `full` by default. */
   size?: keyof typeof SIZES;
   /**
@@ -46,6 +48,8 @@ const MARGIN = { top: 30, right: 16, bottom: 34, left: 58 };
 /** The hatching of the zone above a maximum, in drawing units; `--hatch-stripe` and `--hatch-period`
  * in the stylesheet, divided by the ~1.3 px a unit the charts are shown at. */
 const HATCH = { stripe: 2.3, period: 4.6 } as const;
+/** One flame of the burn zone, in drawing units. */
+const FLAME = { width: 11, height: 16, spacing: 17 } as const;
 const SVG = 'http://www.w3.org/2000/svg';
 
 export class LineChart {
@@ -84,6 +88,7 @@ export class LineChart {
     }
     this.drawAxes(yTicks, niceTicks(this.xMin, this.xMax, 8).filter((tick) => tick >= this.xMin && tick <= this.xMax));
     this.drawLimits();
+    this.drawBurn();
     this.drawEvents();
     for (const series of options.others ?? []) {
       const faint = series.color === undefined;
@@ -198,6 +203,31 @@ export class LineChart {
     }
   }
 
+  /**
+   * The burning powder, as a low line of flames on the floor of the plot, from ignition to burnout. It
+   * is decoration, kept short and faint so that it stays out of the way of the curve: what it shows is
+   * already written on the burnout line and in the figures.
+   */
+  private drawBurn(): void {
+    const burn = this.options.burn;
+    if (!burn || !(burn.to > burn.from)) return;
+    const left = this.xScale(burn.from);
+    const right = this.xScale(burn.to);
+    const floor = this.height - MARGIN.bottom;
+    const flames = Math.max(2, Math.round((right - left) / FLAME.spacing));
+    const group = svg('g', { class: 'burn' });
+    for (let index = 0; index < flames; index++) {
+      const x = left + ((right - left) * (index + 0.5)) / flames;
+      // Three sizes in turn, so the line of fire isn't a row of identical shapes.
+      const height = FLAME.height * [1, 0.68, 0.86, 0.76][index % 4]!;
+      const width = (height / FLAME.height) * FLAME.width;
+      group.append(svg('path', { d: flamePath(x, floor, width, height) }));
+      // A second, brighter flame inside the first, as a flame is brightest at its heart.
+      group.append(svg('path', { d: flamePath(x, floor, width * 0.45, height * 0.55), class: 'heart' }));
+    }
+    this.element.append(group);
+  }
+
   /** Each labelled curve named at its own end, in its colour: the legend's colours are not the only key. */
   private drawSeriesLabels(): void {
     const { options } = this;
@@ -247,6 +277,17 @@ export class LineChart {
 }
 
 /** Hatch patterns need ids unique in the page, across charts. */
+/** A flame standing on (`x`, `floor`): a wide base narrowing to a tip that leans, as a flame draws. */
+function flamePath(x: number, floor: number, width: number, height: number): string {
+  const half = width / 2;
+  return [
+    `M ${x - half} ${floor}`,
+    `C ${x - half} ${floor - height * 0.55} ${x - half * 0.15} ${floor - height * 0.45} ${x - half * 0.2} ${floor - height}`,
+    `C ${x + half * 0.25} ${floor - height * 0.6} ${x + half} ${floor - height * 0.6} ${x + half} ${floor}`,
+    'Z',
+  ].join(' ');
+}
+
 let hatchCount = 0;
 
 function svg<Tag extends keyof SVGElementTagNameMap>(

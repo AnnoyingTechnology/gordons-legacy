@@ -12,6 +12,8 @@
   --series-pressure: #2a78d6;
   --series-velocity: #eb6834;
   --critical: #d03b3b;
+  /* Decoration only: the flames at the foot of the charts. */
+  --flame: #e8873a;
   --grid: #e4e6e9;
   --case-fill: #e8dcc0;
   --projectile-fill: #c9a27a;
@@ -55,6 +57,7 @@
     --panel: #1d2024;
     --series-pressure: #3987e5;
     --series-velocity: #d95926;
+    --flame: #ff9245;
     --grid: #2b2f34;
     --case-fill: #5a5240;
     --projectile-fill: #7a5c40;
@@ -438,6 +441,16 @@ code {
 .line-chart .marker-label {
   fill: var(--fg);
   font-size: 11px;
+}
+
+/* The burning powder at the foot of the chart (issue #27): decoration, faint enough to read through. */
+.line-chart .burn path {
+  fill: var(--flame);
+  opacity: 0.28;
+}
+
+.line-chart .burn path.heart {
+  opacity: 0.4;
 }
 
 /* The number at the end of each compared curve: what names it when the colours can't be told apart. */
