@@ -1,10 +1,11 @@
 /**
  * Writes the data repository's files (gordons-legacy-data) from the bundled community snapshot: one JSON
  * file per powder, projectile and caliber, each with its provenance, and index.json with every file's
- * SHA-256. Run with an official Node 24, then check with validate-repository.ts:
+ * SHA-256. Run it on an official Node 24, or with Deno where Node strips no types (the maintainer's,
+ * which answers `ERR_UNKNOWN_FILE_EXTENSION`), then check the result with validate-repository.ts:
  *
  *     node tools/data/export-repository.ts <clone of gordons-legacy-data>
- *     node tools/data/export-repository.ts <clone> --firearms /tmp/guns-glock --firearms /tmp/guns-ruger
+ *     deno run -A tools/data/export-repository.ts <clone> --firearms /tmp/guns-glock --firearms /tmp/guns-ruger
  *
  * `--firearms` adds the gun files an extractor wrote (tools/data/firearms/, docs/firearm-data.md) to the
  * repository, as one file per maker (`firearms/glock.json`) holding that maker's guns: the application
@@ -128,10 +129,17 @@ function tidyNumbers(value: unknown): unknown {
   return value;
 }
 
-/** The gun records of `folders`, by maker, as the format reads them. A record it rejects is reported. */
+/**
+ * The gun records of `folders`, by maker, as the format reads them. A record the format rejects is
+ * reported and left out, and so is a second record of a name a folder has already given: within one
+ * reading of a catalogue, two guns of one name are a fault in the extractor — two pages read as one
+ * gun — and the published file must not quietly keep whichever came last. Across folders, a later
+ * folder is a newer reading and does replace what an earlier one gave.
+ */
 function readFirearms(folders: readonly string[]): Map<string, Map<string, Firearm>> {
   const byMaker = new Map<string, Map<string, Firearm>>();
   for (const folder of folders) {
+    const read = new Map<string, Map<string, Firearm>>();
     for (const { name, text } of firearmFiles(folder)) {
       const result = parseFirearm(text);
       if (!result.ok) {
@@ -141,9 +149,18 @@ function readFirearms(folders: readonly string[]): Map<string, Map<string, Firea
       }
       const firearm = tidyNumbers(result.value) as Firearm;
       const maker = slug(firearm.maker ?? firearm.source?.publisher ?? 'unknown');
-      const guns = byMaker.get(maker) ?? new Map<string, Firearm>();
+      const guns = read.get(maker) ?? new Map<string, Firearm>();
+      if (guns.has(firearm.name)) {
+        console.log(`  ${name} left out — another file of this folder already holds a gun called "${firearm.name}"`);
+        continue;
+      }
       guns.set(firearm.name, firearm);
-      byMaker.set(maker, guns);
+      read.set(maker, guns);
+    }
+    for (const [maker, guns] of read) {
+      const known = byMaker.get(maker) ?? new Map<string, Firearm>();
+      for (const [name, firearm] of guns) known.set(name, firearm);
+      byMaker.set(maker, known);
     }
   }
   return byMaker;

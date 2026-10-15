@@ -3,7 +3,8 @@
  * wrong. The checks themselves are `validateRepository` in @gordons-legacy/data; this reads the files.
  * Run by the data repository's CI, and by hand:
  *
- *     node tools/data/validate-repository.ts <repository folder>
+ *     node tools/data/validate-repository.ts <repository folder>      # as the CI runs it, on Node 24
+ *     deno run -A tools/data/validate-repository.ts <folder>          # where Node strips no types
  */
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';

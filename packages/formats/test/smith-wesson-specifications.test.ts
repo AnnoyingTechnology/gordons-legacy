@@ -3,6 +3,7 @@ import { units } from '../src/index.ts';
 import {
   barrelLength,
   completeGun,
+  difference,
   firearmFrom,
   gunMass,
   loadable,
@@ -167,6 +168,14 @@ describe('reading a published specification', () => {
     expect(firearmFrom(pageWith(slide), URL, '2026-10-15')).toBeUndefined();
     const shirt = { name: 'SAMPLE LOGO TEE', specifications: [] };
     expect(firearmFrom(pageWith(shirt), URL, '2026-10-15')).toBeUndefined();
+  });
+
+  it('says what two listings of one gun disagree on, so the second is skipped and not merged', () => {
+    const first = firearmFrom(pageWith(PISTOL), URL, '2026-10-15')!;
+    const lighter = { ...PISTOL, dimensions: '<span>WEIGHT</span> 20.0 oz' };
+    const second = firearmFrom(pageWith(lighter), `${URL}-again`, '2026-10-15')!;
+    expect(difference(first, second)).toBe(`, and that page's weight ${(first.barrel.gunMass! * 1000).toFixed(1)} g against 567.0 g`);
+    expect(difference(first, first)).toBe('');
   });
 
   it('reads text out of HTML', () => {

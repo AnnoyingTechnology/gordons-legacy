@@ -291,9 +291,30 @@ async function sitemapAddresses(url: string): Promise<string[]> {
   return lists.flat();
 }
 
-/** Whether two pages give the same figures, which makes the second a duplicate. */
-function sameFigures(a: Firearm, b: Firearm): boolean {
-  return a.cartridge === b.cartridge && a.barrel.length === b.barrel.length && a.barrel.gunMass === b.barrel.gunMass;
+/**
+ * What two listings of the same gun disagree on, for the skip list: Smith & Wesson lists some guns on
+ * two pages, and the two pages do not always print the same weight. Empty when they agree.
+ *
+ * The second listing is skipped rather than merged: nothing on either page says which figure supersedes
+ * the other, and a record that averaged them would hold a figure the maker never printed. The
+ * disagreement belongs in the crawl's log, where a human can see it, until #30 settles how a record
+ * should carry a conflict.
+ */
+export function difference(first: Firearm, second: Firearm): string {
+  const figures: Array<[string, string, number | undefined, number | undefined]> = [
+    ['barrel length', 'mm', first.barrel.length, second.barrel.length],
+    ['weight', 'g', first.barrel.gunMass, second.barrel.gunMass],
+    ['twist', 'mm', first.barrel.twistLength, second.barrel.twistLength],
+  ];
+  const differing = figures
+    .filter(([, , a, b]) => a !== b)
+    .map(([what, unit, a, b]) => `${what} ${reading(a, unit)} against ${reading(b, unit)}`);
+  return differing.length === 0 ? '' : `, and that page's ${differing.join(', ')}`;
+}
+
+/** A figure of a gun as the log writes it, in its milli-unit, or `none` where a page gave nothing. */
+function reading(value: number | undefined, unit: string): string {
+  return value === undefined ? 'none' : `${(value * 1000).toFixed(1)} ${unit}`;
 }
 
 async function main(): Promise<void> {
@@ -321,26 +342,29 @@ async function main(): Promise<void> {
       skipped.push(`${url}: not a complete gun with a loadable cartridge and a barrel length`);
       continue;
     }
+    // Two pages sometimes give one name: one model sold in two cartridges, or the same gun listed
+    // twice. The name is settled here, before the record is written, so that a file and the record
+    // inside it always carry the same name.
+    const taken = writtenFiles.get(fileName(firearm));
+    if (taken !== undefined) {
+      if (taken.cartridge !== firearm.cartridge) {
+        // A different cartridge is a different gun, so the cartridge belongs in its name.
+        firearm.name = `${firearm.name} ${firearm.cartridge}`;
+        firearm.barrel.name = firearm.name;
+      } else {
+        skipped.push(`${url}: ${firearm.name} is already written${difference(taken, firearm)}`);
+        continue;
+      }
+    }
+    const file = fileName(firearm);
+    if (writtenFiles.has(file)) {
+      skipped.push(`${url}: ${firearm.name} is already written`);
+      continue;
+    }
     const json = firearmJson(firearm);
     if ('problem' in json) {
       skipped.push(`${url}: ${json.problem}`);
       continue;
-    }
-    // Two pages sometimes give one name: the same gun listed twice, or one model in two cartridges.
-    let file = fileName(firearm);
-    const taken = writtenFiles.get(file);
-    if (taken !== undefined) {
-      if (sameFigures(taken, firearm)) {
-        skipped.push(`${url}: ${firearm.name} is already written`);
-        continue;
-      }
-      firearm.name = `${firearm.name} ${firearm.cartridge}`;
-      firearm.barrel.name = firearm.name;
-      file = fileName(firearm);
-      if (writtenFiles.has(file)) {
-        skipped.push(`${url}: ${firearm.name} is already written`);
-        continue;
-      }
     }
     writtenFiles.set(file, firearm);
     writeFileSync(join(folder, file), json.text);
