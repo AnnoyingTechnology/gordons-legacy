@@ -59,6 +59,9 @@ sitemap and writes the files. `glock.ts` is the one to copy.
     node tools/data/firearms/glock.ts /tmp/gl/guns-glock          # the whole catalogue
     node tools/data/firearms/glock.ts /tmp/gl/guns-glock --limit 5  # a sample, while developing
 
+On a Node built without TypeScript type stripping, `npx vite-node tools/data/firearms/glock.ts …` runs
+the same file.
+
 Each extractor has a test in `packages/formats/test/<maker>-specifications.test.ts`, written against a
 page **in the maker's shape but with invented figures**. The maker's own text is never reproduced in
 this repository, and the invented figures make it obvious that a test checks the parsing, not the data.
@@ -68,7 +71,7 @@ this repository, and the invented figures make it obvious that a test checks the
 | Maker | Status | Where the figures are | Guns |
 |---|---|---|---|
 | Glock | done (2026-10-15) | HTML blocks of titled specification lines | 87 pistols |
-| Ruger | in progress | spec sheets in plain HTML, both units | — |
+| Ruger | read (2026-10-15) | spec sheets in plain HTML; both units, each rounded differently | 433 of 603 sheets |
 | Smith & Wesson | in progress | JSON inside the product page | — |
 | CZ, Beretta, Tikka/Sako, Savage, and others | under reconnaissance | — | — |
 | SIG Sauer | refused | 403 to any request | — |
@@ -116,7 +119,10 @@ The pilot's records are not publishable as they stand, and these are the gates (
 - **Unknown is not zero.** No published gas-leak information is not the same as a sealed barrel, and a
   revolver's cylinder gap is the obvious case.
 - **Keep the published value and unit** beside the SI one, so a rounding or a unit mix-up can be traced
-  back without re-fetching the page.
+  back without re-fetching the page. Until that field exists, an extractor that is given the same measure
+  in two units keeps **the figure printed to the finer step**, not the metric one by habit: Ruger's
+  `18.50"` is 469.9 mm where the metric span beside it says `46.9 cm`, and taking the metric figure would
+  throw away a digit the maker published.
 - **Conflicts are kept, not resolved by crawl order.** Where a commercial and a law-enforcement page
   disagree on a mass, both are recorded with their sources; first-seen-wins makes the answer depend on
   the order of a sitemap.
