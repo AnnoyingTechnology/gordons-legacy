@@ -11,7 +11,13 @@ export const CUBIC_CENTIMETRE = 1e-6; // m³
 export const GRAM = 1e-3; // kg
 export const GRAIN = 64.79891e-6; // kg, exact by definition
 export const POUND = 0.45359237; // kg, exact by definition
+/** g₀, m/s², exact by definition: what turns a pound of mass into a pound of force. */
+export const STANDARD_GRAVITY = 9.80665;
 export const BAR = 1e5; // Pa
+/** Pounds-force per square inch, the unit American makers publish pressures in: 6,894.757 Pa. */
+export const PSI = (POUND * STANDARD_GRAVITY) / (INCH * INCH); // Pa
+/** Feet per second, the unit American makers publish velocities in. */
+export const FOOT_PER_SECOND = 0.3048; // m/s
 export const KILOJOULE_PER_KILOGRAM = 1e3; // J/kg
 export const CUBIC_CENTIMETRE_PER_GRAM = 1e-3; // m³/kg
 
