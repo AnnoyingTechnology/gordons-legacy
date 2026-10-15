@@ -2210,3 +2210,14 @@ dialog.cartridge-designer {
   width: 16px !important;
   height: 16px !important;
 }
+
+/* Printed report: nothing to fill in, no empty sections, choices as text. */
+@media print {
+  .notes-panel .new-note,
+  .notes-panel.empty,
+  .shot-groups-panel.empty,
+  .group-action,
+  .property-table select {
+    display: none;
+  }
+}

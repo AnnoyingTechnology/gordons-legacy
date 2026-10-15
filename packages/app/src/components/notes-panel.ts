@@ -29,7 +29,7 @@ export class NotesPanel extends LitElement {
     const notes = this.load.notes.map((note, index) => ({ note, index })).filter(({ note }) => !note.isReportTemplate);
     const pictures = this.load.pictures.filter((picture) => SHOWN_IMAGE_TYPES.has(picture.mediaType));
     return html`
-      <section class="notes-panel">
+      <section class="notes-panel ${notes.length === 0 && pictures.length === 0 ? 'empty' : ''}">
         <h3>${icon('notes')} ${t('notes.title')}</h3>
         ${notes.map(
           ({ note, index }) => html`

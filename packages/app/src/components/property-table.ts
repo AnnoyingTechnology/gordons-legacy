@@ -82,6 +82,7 @@ export class PropertyTable extends LitElement {
                 (option) => html`<option value=${option.value} ?selected=${option.value === field.get(this.load)}>${t(option.label)}</option>`,
               )}
             </select>
+            <span class="print-value">${t(field.options.find((option) => option.value === field.get(this.load))?.label ?? field.label)}</span>
           </td>
         </tr>
       `;

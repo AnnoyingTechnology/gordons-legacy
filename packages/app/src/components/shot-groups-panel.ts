@@ -31,7 +31,7 @@ export class ShotGroupsPanel extends LitElement {
     const { t, quantity } = this.context;
     const groups = this.load.shotGroups ?? [];
     return html`
-      <section class="shot-groups-panel">
+      <section class="shot-groups-panel ${(this.load.shotGroups ?? []).length === 0 ? 'empty' : ''}">
         <h3>${icon('target')} ${t('shotGroups.title')}</h3>
         <ul class="shot-groups">
           ${groups.map((group, index) => {
