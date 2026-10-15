@@ -375,7 +375,6 @@ export class AppShell extends LitElement {
     return [];
   }
 
-  /** Saves a gun, or removes it when there is none to save; storage can refuse, so it is reported. */
   /** Opens the gun chooser, and reads the published database the first time it is asked for (#30). */
   private pickFirearm(): void {
     this.firearmPickerOpen = true;

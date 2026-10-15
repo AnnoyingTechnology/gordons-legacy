@@ -25,8 +25,13 @@ cannot be built from the facts is not built at all.
 
 An extractor writes one file per gun; the data repository holds **one file per maker** (`firearms/
 glock.json`), holding that maker's records. The application downloads a whole catalogue to search it, and
-the makers read so far hold about 2,500 guns — that many single files would be that many requests on a
+the makers read so far hold about 3,100 guns — that many single files would be that many requests on a
 first search. `tools/data/export-repository.ts --firearms <folder>` does the grouping.
+
+Nine maker files are 3.4 MB of JSON, which GitHub serves gzipped at about a quarter of that. They are
+downloaded when a user first searches for their gun, never on a first visit, and cached afterwards: in a
+headless browser the whole database arrives and is searchable in half a second over a local server, and
+a keystroke filters all 3,122 guns in about a millisecond.
 
 Three values the simulation wants are **never** published and stay absent: the jump to the lands, the
 gas leaks, and the real chamber-to-muzzle length (see below). The application shows a published barrel
@@ -123,9 +128,17 @@ Refresh one maker at a time:
 
 1. Re-run its extractor into an empty folder.
 2. **Compare the counts with the previous run.** A large fall is almost always the parsing, not the
-   catalogue. Check one page by hand before believing it.
+   catalogue. Check one page by hand before believing it. When the catalogue really has changed, say so
+   in the table below, with what was dropped: Ruger's GP100 and SP101 pages stopped answering between
+   two runs on 2026-10-15, which is 43 guns of the 433 read that morning.
 3. Read the skip list. A new reason appearing in it is the first sign a page shape changed.
-4. Look for figures that cannot be true: a barrel over a metre, a gun under 200 g, a mass of zero.
+4. Run the checker over the folder; it fetches nothing, so it costs the maker's site nothing:
+
+       deno run -A tools/data/firearms/check-corpus.ts /tmp/gl/guns-glock
+
+   It compares every SI figure with the maker's own printed string in `source.published`, refuses a
+   figure no gun can have, and reports two files that hold one gun name. A clean run is necessary, not
+   sufficient: it cannot see a figure that is wrong in the same way in both the string and the value.
 5. Stage the differences as a reviewed diff, field by field, rather than swapping the folder. A changed
    barrel length is a correction to publish; a changed count is usually a bug to fix first.
 
@@ -163,8 +176,17 @@ worse than no figure (Astra's review, 2026-10-15):
   metric span beside it says `46.9 cm`, and taking the metric figure would throw away a digit the maker
   published. Both strings are kept in `source.published` either way.
 - **Conflicts are kept, not resolved by crawl order.** Where a commercial and a law-enforcement page
-  disagree on a mass, both are recorded with their sources; first-seen-wins makes the answer depend on
-  the order of a sitemap. *Not implemented: Glock's duplicate pages are skipped by name today.*
+  disagree on a mass, both should be recorded with their sources; first-seen-wins makes the answer
+  depend on the order of a sitemap. *Not implemented.* What exists today: Glock's duplicate pages are
+  skipped by name, and Smith & Wesson's second listing of a gun is skipped **with what the two pages
+  disagree on printed in the crawl's log** (`weight 654.9 g against 581.2 g`), so the conflict is at
+  least visible to whoever runs the crawl. Merging the two — or averaging them — would put a figure in a
+  record that no maker printed.
+- **Every figure is checked against the string the maker printed**, before anything is published:
+  `tools/data/firearms/check-corpus.ts` re-reads the SI value out of `source.published` and reports a
+  record where the two disagree, a figure no gun can have, and two files holding one gun name. It is how
+  the 4,535 kg Savage (their pages print `9999 lbs` where they have no weight) and five Smith & Wesson
+  files sharing a name were found.
 - **A record is applied field by field**, never by replacing a user's barrel wholesale, and what a load
   copied from a record is pinned in the load.
 
