@@ -1,4 +1,4 @@
-import { grtTraditional } from '@gordons-legacy/engine';
+
 import type { CaliberDefinition, Firearm, Load, Projectile, Propellant } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
 import { icon } from '../icons/icons.ts';
@@ -55,6 +55,8 @@ export class LoadEditor extends LitElement {
   /** The latest review from the worker, and the load it is for (an earlier one while a new one computes). */
   declare review: { load: Load; review: Review | undefined } | undefined;
   private readonly reviews = new ReviewClient();
+  /** The engine the shown review was computed with, so that changing the engine asks for a new one. */
+  private reviewedEngine: string | undefined;
   declare axis: ChartAxis;
   /** The assistant open, if any. */
   declare assistant: 'boreArea' | undefined;
@@ -71,11 +73,16 @@ export class LoadEditor extends LitElement {
     this.review = undefined;
   }
 
-  /** Each new load asks the worker for its review; the answer re-renders the editor. */
+  /**
+   * Each new load asks the worker for its review; the answer re-renders the editor. A new engine asks
+   * again for the same load, since every figure of the review comes from the engine.
+   */
   protected override willUpdate(changed: Map<string, unknown>): void {
-    if (changed.has('load')) {
+    const engine = this.context.engine;
+    if (changed.has('load') || engine.id !== this.reviewedEngine) {
       const load = this.load;
-      void this.reviews.review(load).then((review) => {
+      this.reviewedEngine = engine.id;
+      void this.reviews.review(load, engine).then((review) => {
         if (review !== undefined || this.load === load) this.review = { load, review };
       });
     }
@@ -99,7 +106,7 @@ export class LoadEditor extends LitElement {
   }
 
   protected override render() {
-    const result = grtTraditional.simulate(this.load);
+    const result = this.context.engine.simulate(this.load);
     const problems = result.ok ? [] : result.problems;
     const stale = this.review?.load !== this.load;
     const review = this.review?.review;

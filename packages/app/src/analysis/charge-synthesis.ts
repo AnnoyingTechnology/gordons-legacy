@@ -1,4 +1,4 @@
-import { grtTraditional, type Simulation } from '@gordons-legacy/engine';
+import type { Engine, Simulation } from '@gordons-legacy/engine';
 import type { Load, Propellant } from '@gordons-legacy/formats';
 import { withPropellant } from '../editor/components.ts';
 import { pressureLimits } from './load-assessment.ts';
@@ -85,15 +85,21 @@ const ROUNDING_TRIES = 5;
  * The matches of one powder for the load. `resolution` is the step of the charges shown, kg (0.001 g, or
  * 0.01 gr in imperial): every returned charge is a multiple of it and was simulated as such.
  */
-export function synthesizeCharges(load: Load, propellant: Propellant, criteria: SynthesisCriteria, resolution: number): SynthesisResult {
+export function synthesizeCharges(
+  load: Load,
+  propellant: Propellant,
+  criteria: SynthesisCriteria,
+  resolution: number,
+  engine: Engine,
+): SynthesisResult {
   const sampled: Record<ChargeStatus, number> = { match: 0, refused: 0, pressureHigh: 0, velocityHigh: 0, pressureLow: 0, velocityLow: 0 };
-  const own = simulate(load, load.charge.mass);
+  const own = simulate(load, load.charge.mass, engine);
   if (!own || criteriaProblems(criteria).length > 0 || !(resolution > 0)) return { matches: [], sampled };
   const base = withPropellant(load, propellant);
   const maximum = pressureLimits(load)[0]!.pressure;
 
   const statusAt = (charge: number): { status: ChargeStatus; simulation?: Simulation } => {
-    const simulation = simulate(base, charge);
+    const simulation = simulate(base, charge, engine);
     if (!simulation) return { status: 'refused' };
     const { maxPressure: peak, muzzleVelocity: velocity } = simulation;
     if (peak > maximum * criteria.pressureShare.max) return { status: 'pressureHigh', simulation };
@@ -166,8 +172,8 @@ function representable(low: number, high: number, resolution: number, check: (ch
   return { lowest, highest };
 }
 
-function simulate(load: Load, charge: number): Simulation | undefined {
+function simulate(load: Load, charge: number, engine: Engine): Simulation | undefined {
   if (!(charge > 0) || !Number.isFinite(charge)) return undefined;
-  const result = grtTraditional.simulate({ ...load, charge: { ...load.charge, mass: charge } });
+  const result = engine.simulate({ ...load, charge: { ...load.charge, mass: charge } });
   return result.ok ? result.simulation : undefined;
 }

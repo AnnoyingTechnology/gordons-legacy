@@ -1,5 +1,6 @@
 import { preferredLanguage, type Language } from '../i18n/i18n.ts';
 import { presetPreferences, type UnitPreferences, type UnitSystem } from '../units/units.ts';
+import { DEFAULT_ENGINE } from './engine-choice.ts';
 
 export interface Settings {
   language: Language;
@@ -8,13 +9,21 @@ export interface Settings {
   units: UnitPreferences;
   /** Titles of the input groups folded away in the editor (issue #25). */
   foldedGroups: string[];
+  /** Id of the engine that computes every figure shown (engine-choice.ts). */
+  engine: string;
 }
 
 const STORAGE_KEY = 'gordons-legacy.settings';
 
 /** Settings saved in the browser, with defaults from the browser's languages. */
 export function loadSettings(storage: Storage | undefined, browserLanguages: readonly string[]): Settings {
-  const defaults: Settings = { language: preferredLanguage(browserLanguages), unitSystem: 'metric', units: presetPreferences('metric'), foldedGroups: [] };
+  const defaults: Settings = {
+    language: preferredLanguage(browserLanguages),
+    unitSystem: 'metric',
+    units: presetPreferences('metric'),
+    foldedGroups: [],
+    engine: DEFAULT_ENGINE.id,
+  };
   try {
     const saved = JSON.parse(storage?.getItem(STORAGE_KEY) ?? '{}') as Partial<Settings>;
     return { ...defaults, ...saved };

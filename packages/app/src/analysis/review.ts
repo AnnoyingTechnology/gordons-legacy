@@ -1,4 +1,4 @@
-import { grtTraditional } from '@gordons-legacy/engine';
+import type { Engine } from '@gordons-legacy/engine';
 import type { Load } from '@gordons-legacy/formats';
 import { assessLoad, type Assessment } from './load-assessment.ts';
 import { sensitivities, type Sensitivity } from './sensitivity.ts';
@@ -29,18 +29,18 @@ export const TABLE_TEMPERATURES_CELSIUS = [-20, 0, 21, 35, 50];
 const ZERO_CELSIUS = 273.15;
 
 /** The review of a load; undefined when the load can't be simulated. */
-export function computeReview(load: Load): Review | undefined {
-  const result = grtTraditional.simulate(load);
+export function computeReview(load: Load, engine: Engine): Review | undefined {
+  const result = engine.simulate(load);
   if (!result.ok) return undefined;
   return {
-    assessment: assessLoad(load, result.simulation),
-    sensitivities: sensitivities(load),
-    temperatures: TABLE_TEMPERATURES_CELSIUS.map((celsius) => temperatureRow(load, celsius + ZERO_CELSIUS)),
+    assessment: assessLoad(load, result.simulation, engine),
+    sensitivities: sensitivities(load, engine),
+    temperatures: TABLE_TEMPERATURES_CELSIUS.map((celsius) => temperatureRow(load, celsius + ZERO_CELSIUS, engine)),
   };
 }
 
-function temperatureRow(load: Load, temperature: number): TemperatureRow {
-  const result = grtTraditional.simulate({ ...load, charge: { ...load.charge, temperature } });
+function temperatureRow(load: Load, temperature: number, engine: Engine): TemperatureRow {
+  const result = engine.simulate({ ...load, charge: { ...load.charge, temperature } });
   if (!result.ok) return { temperature };
   return { temperature, peakPressure: result.simulation.maxPressure, muzzleVelocity: result.simulation.muzzleVelocity };
 }

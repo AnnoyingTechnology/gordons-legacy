@@ -31,7 +31,7 @@ function passes(load: Load, charge: number, criteria: SynthesisCriteria, maximum
 
 describe('synthesizeCharges', () => {
   test("with the load's own powder: one match, its ends shown to 0.001 g and passing every filter when simulated again", () => {
-    const { matches } = synthesizeCharges(blackout, blackout.propellant, DEFAULT_CRITERIA, resolution);
+    const { matches } = synthesizeCharges(blackout, blackout.propellant, DEFAULT_CRITERIA, resolution, grtTraditional);
     expect(matches).toHaveLength(1);
     for (const end of [matches[0]!.lowest, matches[0]!.highest]) {
       expect(Math.abs(end.charge / resolution - Math.round(end.charge / resolution))).toBeLessThan(1e-6);
@@ -47,7 +47,7 @@ describe('synthesizeCharges', () => {
   ])('%s: every community powder match passes every filter at both ends', (_name, load, maximum) => {
     for (const entry of communityComponents()) {
       if (entry.kind !== 'propellant') continue;
-      const { matches } = synthesizeCharges(load, entry.value, DEFAULT_CRITERIA, resolution);
+      const { matches } = synthesizeCharges(load, entry.value, DEFAULT_CRITERIA, resolution, grtTraditional);
       for (const match of matches) {
         expect(match.lowest.charge).toBeLessThanOrEqual(match.highest.charge);
         for (const end of [match.lowest, match.highest]) {
@@ -58,16 +58,16 @@ describe('synthesizeCharges', () => {
   });
 
   test('a velocity window can rule out every charge, and the samples say why', () => {
-    const result = synthesizeCharges(blackout, blackout.propellant, { ...DEFAULT_CRITERIA, velocity: { max: 320 } }, resolution);
+    const result = synthesizeCharges(blackout, blackout.propellant, { ...DEFAULT_CRITERIA, velocity: { max: 320 } }, resolution, grtTraditional);
     expect(result.matches).toEqual([]);
     expect(result.sampled.velocityHigh).toBeGreaterThan(0);
     expect(result.sampled.match).toBe(0);
   });
 
   test('a minimum velocity raises the lowest match', () => {
-    const plain = synthesizeCharges(blackout, blackout.propellant, DEFAULT_CRITERIA, resolution).matches[0]!;
+    const plain = synthesizeCharges(blackout, blackout.propellant, DEFAULT_CRITERIA, resolution, grtTraditional).matches[0]!;
     const middle = (plain.lowest.simulation.muzzleVelocity + plain.highest.simulation.muzzleVelocity) / 2;
-    const faster = synthesizeCharges(blackout, blackout.propellant, { ...DEFAULT_CRITERIA, velocity: { min: middle } }, resolution).matches[0]!;
+    const faster = synthesizeCharges(blackout, blackout.propellant, { ...DEFAULT_CRITERIA, velocity: { min: middle } }, resolution, grtTraditional).matches[0]!;
     expect(faster.lowest.simulation.muzzleVelocity).toBeGreaterThanOrEqual(middle);
     expect(faster.lowest.charge).toBeGreaterThan(plain.lowest.charge);
   });
@@ -82,6 +82,6 @@ describe('criteriaProblems', () => {
   });
 
   test('invalid criteria give no match at all', () => {
-    expect(synthesizeCharges(blackout, blackout.propellant, { ...DEFAULT_CRITERIA, fill: { min: 0.9, max: 0.8 } }, resolution).matches).toEqual([]);
+    expect(synthesizeCharges(blackout, blackout.propellant, { ...DEFAULT_CRITERIA, fill: { min: 0.9, max: 0.8 } }, resolution, grtTraditional).matches).toEqual([]);
   });
 });

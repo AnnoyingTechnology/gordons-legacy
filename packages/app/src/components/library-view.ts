@@ -171,7 +171,7 @@ export class LibraryView extends LitElement {
   private renderRow(entry: LibraryEntry) {
     const { t, quantity, number } = this.context;
     const { load } = entry;
-    const summary = knownSummary(load);
+    const summary = knownSummary(load, this.context.engine);
     if (!summary) this.scheduleSummaries();
     const simulated = summary?.simulated;
     const pending = summary === undefined ? '…' : '';
@@ -208,8 +208,8 @@ export class LibraryView extends LitElement {
     if (this.summarizing) return;
     this.summarizing = true;
     const step = () => {
-      const missing = this.entries.filter((entry) => knownSummary(entry.load) === undefined).slice(0, 4);
-      for (const entry of missing) summarizeLoad(entry.load);
+      const missing = this.entries.filter((entry) => knownSummary(entry.load, this.context.engine) === undefined).slice(0, 4);
+      for (const entry of missing) summarizeLoad(entry.load, this.context.engine);
       this.requestUpdate();
       if (missing.length > 0 && this.isConnected) setTimeout(step, 0);
       else this.summarizing = false;

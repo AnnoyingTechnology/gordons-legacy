@@ -1,5 +1,7 @@
+import type { Engine } from '@gordons-legacy/engine';
 import { html } from 'lit';
 import { LANGUAGE_NAMES, type Language } from '../i18n/i18n.ts';
+import { ENGINES } from '../state/engine-choice.ts';
 import { icon } from '../icons/icons.ts';
 import type { UnitSystem } from '../units/units.ts';
 // The app icon, inlined so that the single-file copy shows it too.
@@ -16,6 +18,8 @@ export interface ToolbarState {
   converterOpen: boolean;
   unitSystem: UnitSystem;
   language: Language;
+  /** The engine every figure comes from, chosen here. */
+  engine: Engine;
 }
 
 /** What the toolbar's buttons do; the application shell provides them. */
@@ -28,6 +32,8 @@ export interface ToolbarActions {
   customizeUnits: () => void;
   toggleConverter: () => void;
   setLanguage: (language: Language) => void;
+  /** Changes the engine; takes its id, since that is what the setting keeps. */
+  setEngine: (id: string) => void;
   showAbout: () => void;
 }
 
@@ -75,6 +81,12 @@ export function toolbar(state: ToolbarState, actions: ToolbarActions, context: U
         <button class="tool" aria-pressed=${pressed(state.converterOpen)} @click=${actions.toggleConverter}>
           ${icon('calculator')}<span>${t('converter.short')}</span>
         </button>
+        <label class="tool tool-select">
+          <span>${t('toolbar.engine')}</span>
+          <select title=${t('toolbar.engineHelp')} @change=${(event: Event) => actions.setEngine((event.target as HTMLSelectElement).value)}>
+            ${ENGINES.map((engine) => html`<option value=${engine.id} ?selected=${engine.id === state.engine.id}>${engine.name}</option>`)}
+          </select>
+        </label>
         <label class="tool tool-select">
           <span>${t('toolbar.language')}</span>
           <select @change=${(event: Event) => actions.setLanguage((event.target as HTMLSelectElement).value as Language)}>

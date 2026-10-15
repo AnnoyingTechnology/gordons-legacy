@@ -1,4 +1,4 @@
-import { grtTraditional } from '@gordons-legacy/engine';
+import type { Engine } from '@gordons-legacy/engine';
 import type { Load } from '@gordons-legacy/formats';
 
 /**
@@ -44,12 +44,12 @@ export function vary(load: Load, variation: Variation): Load {
 }
 
 /** The peak pressure under each variation; undefined when the load itself can't be simulated. */
-export function sensitivities(load: Load): Sensitivity[] | undefined {
-  const base = grtTraditional.simulate(load);
+export function sensitivities(load: Load, engine: Engine): Sensitivity[] | undefined {
+  const base = engine.simulate(load);
   if (!base.ok) return undefined;
   const reference = base.simulation.maxPressure;
   return (['charge', 'seating', 'caseCapacity', 'projectileMass', 'combined'] as const).map((variation) => {
-    const result = grtTraditional.simulate(vary(load, variation));
+    const result = engine.simulate(vary(load, variation));
     if (!result.ok) return { variation };
     return { variation, peakPressure: result.simulation.maxPressure, change: result.simulation.maxPressure / reference - 1 };
   });

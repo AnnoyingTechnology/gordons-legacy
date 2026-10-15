@@ -1,4 +1,4 @@
-import { grtTraditional, type Simulation } from '@gordons-legacy/engine';
+import type { Engine, Simulation } from '@gordons-legacy/engine';
 import { standardMaxPressures, type Load } from '@gordons-legacy/formats';
 import { vary } from './sensitivity.ts';
 import { speedRegime } from './speed-of-sound.ts';
@@ -147,7 +147,7 @@ const LEVEL_ORDER: Record<ConcernLevel, number> = { danger: 0, caution: 1, note:
  * Reviews a load whose simulation `shot` succeeded. Runs about 30 more simulations: the temperature range,
  * the bench variations and a double charge.
  */
-export function assessLoad(load: Load, shot: Simulation): Assessment {
+export function assessLoad(load: Load, shot: Simulation, engine: Engine): Assessment {
   const limits = pressureLimits(load);
   const lowest = limits[0]!;
   const findings: Finding[] = [];
@@ -157,7 +157,7 @@ export function assessLoad(load: Load, shot: Simulation): Assessment {
   for (const limit of exceeded) findings.push({ code: 'aboveLimit', level: 'danger', limit, pressure: peak });
   if (exceeded.length === 0) {
     if (peak >= NEAR_LIMIT_SHARE * lowest.pressure) findings.push({ code: 'nearLimit', level: 'caution', limit: lowest, pressure: peak });
-    const varied = simulate(vary(load, 'combined'));
+    const varied = simulate(vary(load, 'combined'), engine);
     if (!varied) findings.push({ code: 'benchVariationsUnchecked', level: 'note' });
     else if (varied.maxPressure > lowest.pressure) {
       findings.push({ code: 'benchVariationsAboveLimit', level: 'caution', limit: lowest, pressure: varied.maxPressure });
@@ -167,7 +167,7 @@ export function assessLoad(load: Load, shot: Simulation): Assessment {
 
   const fill = shot.caseFill;
   if (fill <= DOUBLE_CHARGE_FILL) {
-    const doubled = simulate({ ...load, charge: { ...load.charge, mass: 2 * load.charge.mass } });
+    const doubled = simulate({ ...load, charge: { ...load.charge, mass: 2 * load.charge.mass } }, engine);
     // A double charge that stays under the maximum in the model (slow powders, light loads) is only noted.
     const level = doubled && doubled.maxPressure <= lowest.pressure ? 'note' : 'caution';
     findings.push({ code: 'doubleChargeFits', level, fill, limit: lowest, ...(doubled ? { pressure: doubled.maxPressure } : {}) });
@@ -232,7 +232,7 @@ export function pressureLimits(load: Load): PressureLimit[] {
   return limits.sort((a, b) => a.pressure - b.pressure);
 }
 
-function simulate(load: Load): Simulation | undefined {
-  const result = grtTraditional.simulate(load);
+function simulate(load: Load, engine: Engine): Simulation | undefined {
+  const result = engine.simulate(load);
   return result.ok ? result.simulation : undefined;
 }

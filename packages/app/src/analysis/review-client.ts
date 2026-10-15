@@ -1,3 +1,4 @@
+import type { Engine } from '@gordons-legacy/engine';
 import type { Load } from '@gordons-legacy/formats';
 import { computeReview, type Review } from './review.ts';
 // Inlined in the build, so that the single-file copy, opened from disk, has its worker too.
@@ -22,9 +23,9 @@ export class ReviewClient {
   }
 
   /** The review of `load`, or undefined if a newer request came first (its answer is the one to use). */
-  review(load: Load): Promise<Review | undefined> {
+  review(load: Load, engine: Engine): Promise<Review | undefined> {
     const id = ++this.latest;
-    if (!this.worker) return Promise.resolve(computeReview(load));
+    if (!this.worker) return Promise.resolve(computeReview(load, engine));
     return new Promise((resolve) => {
       this.waiting.set(id, resolve);
       // Older requests still waiting are superseded: they resolve now, with nothing.
@@ -34,7 +35,7 @@ export class ReviewClient {
           resolveOlder(undefined);
         }
       }
-      this.worker!.postMessage({ id, load });
+      this.worker!.postMessage({ id, load, engineId: engine.id });
     });
   }
 }

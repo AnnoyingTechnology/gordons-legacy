@@ -1,3 +1,4 @@
+import { grtTraditional } from '@gordons-legacy/engine';
 import { readFileSync } from 'node:fs';
 import { importGrtLoad, serializeLoad, type Load } from '@gordons-legacy/formats';
 import { describe, expect, test } from 'vitest';
@@ -109,7 +110,7 @@ describe('browsing', () => {
 
 describe('summarizeLoad', () => {
   test('gives the simulated velocity, energy, share of the maximum and review level', () => {
-    const summary = summarizeLoad(blackout);
+    const summary = summarizeLoad(blackout, grtTraditional);
     expect(summary.simulated?.muzzleVelocity).toBeCloseTo(647, 0);
     expect(summary.simulated?.peakShare).toBeCloseTo(0.88, 2);
     expect(summary.simulated?.level).toBe('caution');
@@ -129,12 +130,12 @@ describe('summarizeLoad', () => {
         },
       ],
     };
-    expect(summarizeLoad(withShots).measuredVelocity).toBe(605);
+    expect(summarizeLoad(withShots, grtTraditional).measuredVelocity).toBe(605);
   });
 
   test('takes the smallest group, in minutes of angle', () => {
     // Two hits 29.1 mm apart at 100 m: 1 MOA.
     const grouped: Load = { ...blackout, shotGroups: [{ title: '', distance: 100, hits: [{ x: 0, y: 0 }, { x: 0.02909, y: 0 }], note: '' }] };
-    expect(summarizeLoad(grouped).bestGroup!.angle * (180 / Math.PI) * 60).toBeCloseTo(1, 2);
+    expect(summarizeLoad(grouped, grtTraditional).bestGroup!.angle * (180 / Math.PI) * 60).toBeCloseTo(1, 2);
   });
 });

@@ -174,7 +174,7 @@ export class ChargeSynthesisView extends LitElement {
     const { t, quantity, number } = this.context;
     const limit = pressureLimits(run.load)[0]!.pressure;
     const load = { ...withPropellant(run.load, propellant), charge: { ...run.load.charge, mass: point.charge } };
-    const assessment = assessLoad(load, point.simulation);
+    const assessment = assessLoad(load, point.simulation, this.context.engine);
     const { maxPressure, muzzleVelocity, caseFill, warnings } = point.simulation;
     return html`<strong>${quantity(point.charge, 'chargeMass')}</strong>
       <span class="level-badge ${assessment.level}">${t(`assessment.level.${assessment.level}`)}</span>
@@ -235,7 +235,7 @@ export class ChargeSynthesisView extends LitElement {
       criteria,
       scope: this.scope,
       chargeUnit: unit.id,
-      rows: this.candidates().map((entry) => ({ entry, result: synthesizeCharges(load, entry.value, criteria, resolution) })),
+      rows: this.candidates().map((entry) => ({ entry, result: synthesizeCharges(load, entry.value, criteria, resolution, this.context.engine) })),
     };
   };
 

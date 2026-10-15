@@ -1,3 +1,4 @@
+import { grtTraditional } from '@gordons-legacy/engine';
 import { readFileSync } from 'node:fs';
 import { importGrtLoad, seatingDepth, type Load } from '@gordons-legacy/formats';
 import { expect, test } from 'vitest';
@@ -12,7 +13,7 @@ const load: Load = (() => {
 })();
 
 test('each variation raises the peak pressure, and all of them together raise it most', () => {
-  const results = sensitivities(load)!;
+  const results = sensitivities(load, grtTraditional)!;
   for (const { variation, change } of results) expect(change, variation).toBeGreaterThan(0);
   const combined = results.find((entry) => entry.variation === 'combined')!.change!;
   for (const { change } of results) expect(combined).toBeGreaterThanOrEqual(change!);

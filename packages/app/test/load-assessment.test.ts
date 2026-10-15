@@ -14,7 +14,7 @@ function fixture(path: string): Load {
 function assess(load: Load) {
   const result = grtTraditional.simulate(load);
   if (!result.ok) throw new Error('not simulated');
-  return assessLoad(load, result.simulation);
+  return assessLoad(load, result.simulation, grtTraditional);
 }
 
 const codes = (load: Load) => assess(load).findings.map((finding) => finding.code);

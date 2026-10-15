@@ -3,6 +3,7 @@ import { FIREARM_FORMAT, importGrtProjectiles, importGrtPropellant, importGrtrac
 import { html, LitElement, nothing } from 'lit';
 import type { Language } from '../i18n/i18n.ts';
 import { DocumentStore } from '../state/documents.ts';
+import { engineById, isResearchEngine } from '../state/engine-choice.ts';
 import { loadSettings, saveSettings, type Settings } from '../state/settings.ts';
 import { presetPreferences, type UnitPreferences, type UnitSystem } from '../units/units.ts';
 import { indexedDbDataCache } from '../state/data-cache.ts';
@@ -71,7 +72,7 @@ export class AppShell extends LitElement {
 
   constructor() {
     super();
-    this.context = createContext(this.settings.language, this.settings.units);
+    this.context = createContext(this.settings.language, this.settings.units, engineById(this.settings.engine));
     this.openErrors = [];
     this.unitsOpen = false;
     this.converterOpen = false;
@@ -109,6 +110,7 @@ export class AppShell extends LitElement {
           converterOpen: this.converterOpen,
           unitSystem: this.settings.unitSystem,
           language: this.settings.language,
+          engine: this.context.engine,
         },
         {
           openFiles: this.openFromInput,
@@ -119,6 +121,7 @@ export class AppShell extends LitElement {
           customizeUnits: () => (this.unitsOpen = true),
           toggleConverter: () => (this.converterOpen = !this.converterOpen),
           setLanguage: (language) => this.setLanguage(language),
+          setEngine: (id) => this.setEngine(id),
           showAbout: () => (this.aboutOpen = true),
         },
         this.context,
@@ -128,6 +131,9 @@ export class AppShell extends LitElement {
         close: (id) => this.store.close(id),
       }, this.context)}
       <main @dragover=${(event: DragEvent) => event.preventDefault()} @drop=${this.openFromDrop}>
+        ${isResearchEngine(this.context.engine)
+          ? html`<p class="warning">${t('engine.researchWarning', { name: this.context.engine.name })}</p>`
+          : nothing}
         ${this.store.storageFull ? html`<p class="warning">${t('documents.storageFull')}</p>` : nothing}
         ${this.openErrors.length > 0
           ? html`<ul class="issues">${this.openErrors.map((message) => html`<li class="error"><span class="severity">!</span> ${message}</li>`)}</ul>`
@@ -431,6 +437,12 @@ export class AppShell extends LitElement {
     this.applySettings();
   }
 
+  /** The engine every view computes with; the open loads are simulated again with it (engine-choice.ts). */
+  private setEngine(id: string): void {
+    this.settings = { ...this.settings, engine: id };
+    this.applySettings();
+  }
+
   private setLanguage(language: Language): void {
     this.settings = { ...this.settings, language };
     document.documentElement.lang = language;
@@ -439,7 +451,7 @@ export class AppShell extends LitElement {
 
   private applySettings(): void {
     saveSettings(window.localStorage, this.settings);
-    this.context = createContext(this.settings.language, this.settings.units);
+    this.context = createContext(this.settings.language, this.settings.units, engineById(this.settings.engine));
   }
 }
 

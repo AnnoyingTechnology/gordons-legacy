@@ -1,4 +1,4 @@
-import { grtTraditional } from '@gordons-legacy/engine';
+import type { Engine } from '@gordons-legacy/engine';
 import type { Load } from '@gordons-legacy/formats';
 import { shotStatistics } from '../measurements/statistics.ts';
 import { assessLoad, type AssessmentLevel } from './load-assessment.ts';
@@ -27,22 +27,23 @@ export interface LoadSummary {
   bestGroup?: { angle: number; shots: number };
 }
 
-const cache = new WeakMap<Load, LoadSummary>();
+/** Summaries already computed, per load and then per engine: changing the engine changes every figure. */
+const cache = new WeakMap<Load, Map<string, LoadSummary>>();
 
 /** The summary if already computed, without computing it (about 30 simulations): for lists that fill in the background. */
-export function knownSummary(load: Load): LoadSummary | undefined {
-  return cache.get(load);
+export function knownSummary(load: Load, engine: Engine): LoadSummary | undefined {
+  return cache.get(load)?.get(engine.id);
 }
 
 /** The summary of a load, computed once per load object (loads are replaced, never mutated, on edit). */
-export function summarizeLoad(load: Load): LoadSummary {
-  const known = cache.get(load);
+export function summarizeLoad(load: Load, engine: Engine): LoadSummary {
+  const known = cache.get(load)?.get(engine.id);
   if (known) return known;
   const summary: LoadSummary = {};
-  const result = grtTraditional.simulate(load);
+  const result = engine.simulate(load);
   if (result.ok) {
     const shot = result.simulation;
-    const assessment = assessLoad(load, shot);
+    const assessment = assessLoad(load, shot, engine);
     summary.simulated = {
       muzzleVelocity: shot.muzzleVelocity,
       muzzleEnergy: shot.muzzleEnergy,
@@ -66,6 +67,8 @@ export function summarizeLoad(load: Load): LoadSummary {
     const angle = Math.atan2(statistics.extremeSpread, group.distance);
     if (!summary.bestGroup || angle < summary.bestGroup.angle) summary.bestGroup = { angle, shots: statistics.count };
   }
-  cache.set(load, summary);
+  const byEngine = cache.get(load) ?? new Map<string, LoadSummary>();
+  byEngine.set(engine.id, summary);
+  cache.set(load, byEngine);
   return summary;
 }
