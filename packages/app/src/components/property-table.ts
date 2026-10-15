@@ -75,7 +75,9 @@ export class PropertyTable extends LitElement {
         <table class="property-table">
           <tbody>
             ${this.group.fields.map((field, index) =>
-              field.type === 'number' && field.visible && !field.visible(this.load) ? nothing : this.renderRow(field, index),
+              (field.type === 'number' || field.type === 'derived') && field.visible && !field.visible(this.load)
+                ? nothing
+                : this.renderRow(field, index),
             )}
           </tbody>
         </table>
@@ -115,6 +117,20 @@ export class PropertyTable extends LitElement {
             />
             <span class="print-value">${field.get(this.load)}</span>
           </td>
+        </tr>
+      `;
+    }
+    if (field.type === 'derived') {
+      // A value the load doesn't store: shown, never typed into.
+      const unit = displayUnit(field.kind, this.context.units);
+      const shown = `${formatNumber(unit.fromSi(field.get(this.load)), unit.decimals, this.context.language)}`;
+      return html`
+        <tr class="derived">
+          <th title=${field.help ? t(field.help) : nothing}>
+            ${t(field.label)}${field.help ? html`<span class="help-mark" aria-hidden="true"> ?</span>` : nothing}
+          </th>
+          <td class="derived-value">${shown}</td>
+          <td class="unit">${unit.symbol}</td>
         </tr>
       `;
     }

@@ -1,4 +1,5 @@
 import { seatingDepth, standardMaxPressures, type Load, type ProjectileBase, type StandardMaxPressures } from '@gordons-legacy/formats';
+import { combustionChamber, guidedSeatingDepth, travelToMuzzle } from '@gordons-legacy/engine';
 import type { MessageKey } from '../i18n/i18n.ts';
 import type { QuantityKind } from '../units/units.ts';
 import type { UiContext } from '../components/context.ts';
@@ -46,7 +47,21 @@ export interface TextField {
   set?: (load: Load, value: string) => Load;
 }
 
-export type Field = NumberField | TextField | ChoiceField;
+/**
+ * A value the load does not store, shown beside the inputs it follows from: GRT shows these too, and a
+ * reloader reads them to judge what they typed.
+ */
+export interface DerivedField {
+  type: 'derived';
+  label: MessageKey;
+  kind: QuantityKind;
+  get: (load: Load) => number;
+  help?: MessageKey;
+  /** Shown only when this holds; a value equal to one above it is noise. */
+  visible?: (load: Load) => boolean;
+}
+
+export type Field = NumberField | TextField | ChoiceField | DerivedField;
 
 export interface FieldGroup {
   title: MessageKey;
@@ -132,6 +147,7 @@ export const FIELD_GROUPS: FieldGroup[] = [
     fields: [
       { type: 'text', label: 'field.name', get: (l) => l.cartridge.name, set: (l, v) => ({ ...l, cartridge: { ...l.cartridge, name: v } }) },
       partNumber('cartridge', 'caseCapacity', { help: 'help.caseCapacity', label: 'field.caseCapacity', kind: 'caseCapacity', positive: true }),
+      { type: 'derived', label: 'field.combustionChamber', kind: 'caseCapacity', get: combustionChamber, help: 'help.combustionChamber' },
       partNumber('cartridge', 'caseLength', { label: 'field.caseLength', kind: 'length', positive: true }),
       partNumber('cartridge', 'overallLength', { label: 'field.overallLength', kind: 'length', positive: true }),
       partNumber('cartridge', 'grooveDiameter', { label: 'field.grooveDiameter', kind: 'length', positive: true }),
@@ -148,6 +164,7 @@ export const FIELD_GROUPS: FieldGroup[] = [
     fields: [
       { type: 'text', label: 'field.name', get: (l) => l.barrel.name, set: (l, v) => ({ ...l, barrel: { ...l.barrel, name: v } }) },
       partNumber('barrel', 'length', { label: 'field.barrelLength', kind: 'barrelLength', positive: true }),
+      { type: 'derived', label: 'field.travelToMuzzle', kind: 'barrelLength', get: travelToMuzzle, help: 'help.travelToMuzzle' },
       partNumber('barrel', 'twistLength', { label: 'field.twistLength', kind: 'twistLength', positive: true }),
       number({
         path: 'barrel.gunMass',
@@ -206,6 +223,14 @@ export const FIELD_GROUPS: FieldGroup[] = [
         get: (l) => seatingDepth(l),
         set: (l, v) => ({ ...l, cartridge: { ...l.cartridge, overallLength: l.cartridge.caseLength + l.projectile.length - v } }),
       }),
+      {
+        type: 'derived',
+        label: 'field.guidedSeatingDepth',
+        kind: 'length',
+        get: guidedSeatingDepth,
+        help: 'help.guidedSeatingDepth',
+        visible: (l) => l.projectile.base.shape === 'boattail',
+      },
       partNumber('projectile', 'shotStartPressure', { help: 'help.shotStartPressure', label: 'field.shotStartPressure', kind: 'pressure', positive: true }),
     ],
   },

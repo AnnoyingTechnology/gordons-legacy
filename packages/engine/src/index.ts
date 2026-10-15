@@ -19,6 +19,7 @@ export {
   type TemperatureCoefficients,
   type TemperatureMeasurement,
 } from './grt-traditional/calibration.ts';
+export { combustionChamber, guidedSeatingDepth, travelToMuzzle } from './grt-traditional/derived.ts';
 export { obtNodeTimes } from './grt-traditional/obt.ts';
 export { DEFAULT_COLD_COEFFICIENT, DEFAULT_HOT_COEFFICIENT } from './grt-traditional/burn.ts';
 export { researchEngine, simulateResearch } from './research/research-engine.ts';
