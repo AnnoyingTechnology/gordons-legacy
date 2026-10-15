@@ -41,4 +41,16 @@ export interface FirearmSource {
   url?: string;
   /** When they were read, YYYY-MM-DD. */
   retrieved?: string;
+  /**
+   * Which mass the publisher gave, when they say which: `without-magazine`, `empty-magazine`, `loaded`,
+   * or `unstated` when the page gives one figure and does not say what it includes. The simulation wants
+   * the gun as it recoils, so an unstated figure is a starting point, not that number.
+   */
+  massBasis?: string;
+  /**
+   * The figures as the publisher printed them, keyed by what they describe:
+   * `{ "barrelLength": "18.50 in", "weight": "7 lbs. 8 oz." }`. Kept beside the SI values so a rounding
+   * or a unit mix-up can be traced without fetching the page again.
+   */
+  published?: Record<string, string>;
 }

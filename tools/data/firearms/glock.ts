@@ -78,6 +78,11 @@ export function modelFrom(title: string): string | undefined {
   return parts[0];
 }
 
+/** A figure as the page prints it, spaces collapsed: `111 mm | 4.37 inch`. */
+function printed(value: string): string {
+  return value.replace(/\s+/g, ' ').trim();
+}
+
 /** The gun a page describes, or nothing when it is not one a reloader loads for. */
 export function firearmFrom(page: string, url: string, retrieved: string): Firearm | undefined {
   const items = specifications(page);
@@ -85,11 +90,17 @@ export function firearmFrom(page: string, url: string, retrieved: string): Firea
     items.find((item) => item.title.toLowerCase() === title && (subtitle === undefined || item.subtitle.toLowerCase() === subtitle))?.value;
   const title = /<title>([^<]*)<\/title>/.exec(page)?.[1]?.trim();
   const caliber = find('caliber');
-  const barrel = metric(find('barrel length') ?? '', 'mm');
-  // The gun as it recoils: with its magazine, before the cartridges.
-  const mass = metric(find('weight', 'with empty magazine') ?? find('weight', 'without magazine') ?? '', 'g');
+  const barrelValue = find('barrel length');
+  const barrel = metric(barrelValue ?? '', 'mm');
+  // The gun as it recoils: with its magazine, before the cartridges. Which of their three figures that
+  // is travels with the record, since a mass means nothing without knowing what it includes.
+  const withEmptyMagazine = find('weight', 'with empty magazine');
+  const withoutMagazine = find('weight', 'without magazine');
+  const weight = withEmptyMagazine ?? withoutMagazine;
+  const massBasis = withEmptyMagazine !== undefined ? 'empty-magazine' : withoutMagazine !== undefined ? 'without-magazine' : undefined;
+  const mass = metric(weight ?? '', 'g');
   const model = title === undefined ? undefined : modelFrom(title);
-  if (model === undefined || !caliber || !loadable(caliber) || !barrel) return undefined;
+  if (model === undefined || !caliber || !loadable(caliber) || barrelValue === undefined || !barrel) return undefined;
   return {
     format: FIREARM_FORMAT,
     schemaVersion: FIREARM_SCHEMA_VERSION,
@@ -98,7 +109,14 @@ export function firearmFrom(page: string, url: string, retrieved: string): Firea
     model,
     cartridge: caliber,
     barrel: { name: `Glock ${model}`, length: barrel, ...(mass === undefined ? {} : { gunMass: mass }), gasLeaks: [] },
-    source: { kind: 'published', publisher: 'Glock Ges.m.b.H.', url, retrieved },
+    source: {
+      kind: 'published',
+      publisher: 'Glock Ges.m.b.H.',
+      url,
+      retrieved,
+      ...(massBasis === undefined ? {} : { massBasis }),
+      published: { barrelLength: printed(barrelValue), ...(weight === undefined ? {} : { weight: printed(weight) }) },
+    },
   };
 }
 

@@ -88,13 +88,16 @@ describe('reading a published specification', () => {
     expect(firearm!.cartridge).toBe('6.5 Creedmoor');
     expect(firearm!.barrel.length).toBeCloseTo(0.508, 12);
     expect(firearm!.barrel.twistLength).toBeCloseTo(0.2032, 12);
-    // `7 lbs. 8 oz.` is printed to the ounce, finer than the `3.4 kg` beside it.
+    // `7.5 lbs.` steps by 45 g, finer than the `3.4 kg` beside it, which steps by 100 g.
     expect(firearm!.barrel.gunMass).toBeCloseTo(7.5 * 0.45359237, 9);
     expect(firearm!.source).toEqual({
       kind: 'published',
       publisher: 'Sturm, Ruger & Co., Inc.',
       url: 'https://example.invalid/specSheets/9001.html',
       retrieved: '2026-10-15',
+      // Ruger prints one Weight and does not say what it includes.
+      massBasis: 'unstated',
+      published: { barrelLength: '20.00" | 50.8 cm', weight: '7.5 lbs. | 3.4 kg', twist: '1:8" RH' },
     });
   });
 

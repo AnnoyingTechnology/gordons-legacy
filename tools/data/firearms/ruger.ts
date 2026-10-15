@@ -123,6 +123,16 @@ export function mass(value: string): number | undefined {
   return finest([reading(metric, 'g', units.GRAM), reading(metric, 'kg', 1), customary]);
 }
 
+/**
+ * A measure as the sheet prints it, both renderings when it gives two (`20.00" | 50.8 cm`), so a
+ * rounding or a unit mix-up can be traced without fetching the sheet again.
+ */
+function printed(value: string): string {
+  const { imperial, metric } = renderings(value);
+  const both = [imperial, metric].map((text) => text.trim()).filter((text) => text !== '');
+  return both.length > 0 ? both.join(' | ') : plainText(value);
+}
+
 /** `1:16" RH` → 0.4064 m, the length of barrel per turn. Anything else, such as `Varies`, is nothing. */
 export function twistLength(value: string): number | undefined {
   const match = /^1\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*("|&quot;|in)/i.exec(decode(plainText(value)).replace(/^\s+/, ''));
@@ -161,9 +171,19 @@ export function firearmFrom(page: string, url: string, retrieved: string): Firea
   const modelNumber = plainText(find('model number') ?? '');
   const caliber = plainText(find('caliber') ?? '');
   const model = modelNumber === '' ? undefined : modelFrom(page, modelNumber);
-  const barrel = length(find('barrel length') ?? '');
-  const gunMass = mass(find('weight') ?? '');
-  const twist = twistLength(find('twist') ?? '');
+  const barrelValue = find('barrel length') ?? '';
+  const weightValue = find('weight') ?? '';
+  const twistValue = find('twist') ?? '';
+  const barrel = length(barrelValue);
+  const gunMass = mass(weightValue);
+  const twist = twistLength(twistValue);
+  // Ruger prints one Weight and does not say what it includes, so the record says so rather than
+  // claiming it is the gun as it recoils.
+  const published = Object.fromEntries(
+    ([['barrelLength', barrelValue], ['weight', weightValue], ['twist', twistValue]] as const)
+      .map(([key, value]) => [key, printed(value)] as const)
+      .filter(([, value]) => value !== ''),
+  );
   if (model === undefined || caliber === '' || !loadable(caliber) || barrel === undefined) return undefined;
   return {
     format: FIREARM_FORMAT,
@@ -179,7 +199,7 @@ export function firearmFrom(page: string, url: string, retrieved: string): Firea
       ...(gunMass === undefined ? {} : { gunMass }),
       gasLeaks: [],
     },
-    source: { kind: 'published', publisher: 'Sturm, Ruger & Co., Inc.', url, retrieved },
+    source: { kind: 'published', publisher: 'Sturm, Ruger & Co., Inc.', url, retrieved, massBasis: 'unstated', published },
   };
 }
 

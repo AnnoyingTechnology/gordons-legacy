@@ -277,6 +277,8 @@ const firearmSource = {
   publisher: optionalString,
   url: optionalString,
   retrieved: optionalString,
+  massBasis: optionalString,
+  published: { optional: 'stringRecord' },
 } satisfies ShapeOf<FirearmSource>;
 
 const firearm = {

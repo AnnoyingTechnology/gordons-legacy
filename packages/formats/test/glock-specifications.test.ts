@@ -73,7 +73,15 @@ describe('reading a published specification', () => {
     expect(firearm!.barrel.length).toBeCloseTo(0.111, 12);
     // With the empty magazine, not without it: that is the gun that recoils.
     expect(firearm!.barrel.gunMass).toBeCloseTo(0.7, 12);
-    expect(firearm!.source).toEqual({ kind: 'published', publisher: 'Glock Ges.m.b.H.', url: 'https://example.invalid/g17', retrieved: '2026-10-15' });
+    expect(firearm!.source).toEqual({
+      kind: 'published',
+      publisher: 'Glock Ges.m.b.H.',
+      url: 'https://example.invalid/g17',
+      retrieved: '2026-10-15',
+      // Which of their three weights was taken, and both figures as the page prints them.
+      massBasis: 'empty-magazine',
+      published: { barrelLength: '111 mm | 4.37 inch', weight: '700 g | 24.69 oz' },
+    });
   });
 
   it('leaves out what a reloader cannot load for', () => {
