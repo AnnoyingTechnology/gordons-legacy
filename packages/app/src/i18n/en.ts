@@ -57,6 +57,8 @@ export const en = {
   'quantity.specificEnergy': 'Specific energy',
   'quantity.specificVolume': 'Specific volume',
   'documents.empty': 'Open a load: a GRT .grtload file or a saved Gordon’s Legacy load (.json). Files stay on this computer.',
+  'example.title': 'Example load',
+  'example.note': "An example so that the tool is not empty on a first visit: a .308 Winchester from the community's CC0 files, with a charge the simulation puts well under the maximum. It is not load data, and nothing here was measured: check every charge against the powder or bullet maker's published data. Open your own file, or edit this one.",
   'documents.storageFull': "The open loads no longer fit in the browser's storage (large pictures?): save them to files, or they will be lost when the page closes.",
   'documents.close': 'Close {name}',
   'documents.open': 'Open loads',

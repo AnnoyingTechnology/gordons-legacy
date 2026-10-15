@@ -55,6 +55,8 @@ export const de: Messages = {
   'quantity.specificEnergy': 'Spezifische Energie',
   'quantity.specificVolume': 'Spezifisches Volumen',
   'documents.empty': 'Öffnen Sie eine Ladung: eine GRT-.grtload-Datei oder eine gespeicherte Gordon’s-Legacy-Ladung (.json). Die Dateien bleiben auf diesem Computer.',
+  'example.title': 'Beispielladung',
+  'example.note': 'Ein Beispiel, damit das Werkzeug beim ersten Besuch nicht leer ist: eine .308 Winchester aus den CC0-Dateien der Gemeinschaft, mit einer Ladung, die die Simulation deutlich unter dem Maximum sieht. Das sind keine Ladedaten, und nichts davon wurde gemessen: Prüfen Sie jede Ladung anhand der veröffentlichten Daten des Pulver- oder Geschossherstellers. Öffnen Sie Ihre eigene Datei oder ändern Sie diese.',
   'documents.storageFull': 'Die geöffneten Ladungen passen nicht mehr in den Speicher des Browsers (große Bilder?): Speichern Sie sie in Dateien, sonst gehen sie beim Schließen der Seite verloren.',
   'documents.close': '{name} schließen',
   'documents.open': 'Geöffnete Ladungen',

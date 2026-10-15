@@ -55,6 +55,8 @@ export const it: Messages = {
   'quantity.specificEnergy': 'Energia specifica',
   'quantity.specificVolume': 'Volume specifico',
   'documents.empty': 'Aprire una carica: un file GRT .grtload o una carica Gordon’s Legacy salvata (.json). I file restano su questo computer.',
+  'example.title': 'Ricarica di esempio',
+  'example.note': 'Un esempio, perché lo strumento non sia vuoto alla prima visita: un .308 Winchester dai file CC0 della comunità, con una carica che la simulazione colloca ben sotto il massimo. Non sono dati di ricarica, e nulla qui è stato misurato: verificate ogni carica sui dati pubblicati dal produttore della polvere o della palla. Aprite il vostro file, o modificate questo.',
   'documents.storageFull': 'Le ricariche aperte non entrano più nella memoria del browser (immagini grandi?): salvatele su file, o andranno perse alla chiusura della pagina.',
   'documents.close': 'Chiudi {name}',
   'documents.open': 'Ricariche aperte',

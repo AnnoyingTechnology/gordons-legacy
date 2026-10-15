@@ -6,6 +6,7 @@ import { DocumentStore } from '../state/documents.ts';
 import { loadSettings, saveSettings, type Settings } from '../state/settings.ts';
 import { presetPreferences, type UnitPreferences, type UnitSystem } from '../units/units.ts';
 import { indexedDbDataCache } from '../state/data-cache.ts';
+import { exampleLoad } from '../state/example-load.ts';
 import { download, saveTextFile } from '../state/file-saving.ts';
 import { createContext, type UiContext } from './context.ts';
 import { tabBar } from './tab-bar.ts';
@@ -70,8 +71,10 @@ export class AppShell extends LitElement {
     this.projectileChoice = undefined;
     this.view = 'editor';
     this.chronograph = undefined;
-    // The dedication and safety notice open on a browser's first visit.
+    // The dedication and safety notice open on a browser's first visit, over an example load, so that the
+    // tool shows what it does instead of an empty page (#29).
     this.aboutOpen = window.localStorage.getItem(WELCOME_SEEN_KEY) === null;
+    if (this.aboutOpen && this.store.documents.length === 0) this.openExample();
     this.store.subscribe(() => this.requestUpdate());
     this.library.subscribe(() => this.requestUpdate());
     this.components.subscribe(() => this.requestUpdate());
@@ -351,6 +354,13 @@ export class AppShell extends LitElement {
   private showDocument(id: number): void {
     this.view = 'editor';
     this.store.activate(id);
+  }
+
+  /** The example load of a first visit, in a tab of its own; nothing happens if the corpus lacks a part. */
+  private openExample(): void {
+    const { t } = this.context;
+    const load = exampleLoad({ title: t('example.title'), note: t('example.note') });
+    if (load) this.store.openNew(`${t('example.title')}.json`, load);
   }
 
   private closeAbout = () => {
