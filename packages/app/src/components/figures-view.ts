@@ -41,6 +41,11 @@ export function renderDetails(load: Load, shot: Simulation, context: UiContext):
       : [{ label: t('results.obt'), value: formatObt(shot.optimalBarrelTime, context), help: t('results.obtHelp'), wide: true }]),
     ...(shot.muzzleSpinRate === undefined ? [] : [{ label: t('results.spinRate'), value: quantity(shot.muzzleSpinRate, 'spinRate') }]),
     { label: t('results.powerFactor'), value: number(powerFactor, 1) },
+    // The projectile's momentum alone: the figure German DSB rules call the minimum impulse.
+    { label: t('results.projectileImpulse'), value: quantity(shot.recoil.projectileImpulse, 'impulse'), help: t('results.projectileImpulseHelp') },
+    ...(shot.recoil.gun === undefined
+      ? []
+      : [{ label: t('results.recoilForce'), value: quantity(shot.recoil.gun.force, 'force'), help: t('results.recoilForceHelp') }]),
     { label: t('results.muzzlePressure'), value: quantity(shot.muzzlePressure, 'pressure') },
     { label: t('results.gasExitVelocity'), value: quantity(shot.recoil.gasExitVelocity, 'velocity') },
   ];

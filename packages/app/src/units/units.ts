@@ -26,6 +26,8 @@ export type QuantityKind =
   | 'time'
   | 'spinRate'
   | 'impulse'
+  /** Force: the mean recoil force over the barrel time. SI: newtons. */
+  | 'force'
   | 'distance'
   | 'ballisticCoefficient'
   /** Angles seen from the muzzle: group sizes. SI: radians. */
@@ -85,6 +87,7 @@ const UNITS: Record<QuantityKind, DisplayUnit[]> = {
   // SI: revolutions per second.
   spinRate: [linear('rpm', 'rpm', 1 / 60, 0)],
   impulse: [linear('N-s', 'N·s', 1, 2), linear('lbf-s', 'lbf·s', 4.4482216152605, 3)],
+  force: [linear('N', 'N', 1, 0), linear('lbf', 'lbf', 4.4482216152605, 0)],
   // Range to a target.
   distance: [linear('m', 'm', 1, 0), linear('yd', 'yd', 0.9144, 0)],
   ballisticCoefficient: [linear('lb/in2', 'lb/in²', units.POUND_PER_SQUARE_INCH_MASS, 3), linear('kg/m2', 'kg/m²', 1, 1)],
@@ -116,6 +119,7 @@ const PRESETS: Record<UnitSystem, Partial<Record<QuantityKind, string>>> = {
     velocity: 'ft/s',
     energy: 'ft-lbf',
     impulse: 'lbf-s',
+    force: 'lbf',
     distance: 'yd',
   },
 };
