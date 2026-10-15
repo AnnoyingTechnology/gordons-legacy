@@ -1,11 +1,7 @@
-import { importGrtLoad, parseLoad, serializeLoad, type Barrel, type Load } from '@gordons-legacy/formats';
+import { importGrtLoad, parseLoad, type Load } from '@gordons-legacy/formats';
 import type { LibraryEntry, LibraryStorage } from './library-storage.ts';
 
 export type { LibraryEntry } from './library-storage.ts';
-
-/** The backup file's format: every load of the library in one JSON file. */
-export const LIBRARY_BACKUP_FORMAT = 'gordons-legacy.library';
-export const LIBRARY_BACKUP_VERSION = 1;
 
 /**
  * The user's own loads, kept in the browser, so that loads are saved and found without managing files
@@ -65,35 +61,6 @@ export class Library {
     return failed;
   }
 
-  /** Every load as one JSON file, to keep somewhere safe or move to another browser. */
-  backup(): string {
-    const loads = this.entries.map(({ name, updatedAt, load }) => ({ name, updatedAt, load: JSON.parse(serializeLoad(load)) as unknown }));
-    return JSON.stringify({ format: LIBRARY_BACKUP_FORMAT, version: LIBRARY_BACKUP_VERSION, loads }, null, 1);
-  }
-
-  /** Adds the loads of a backup (as new entries, nothing is overwritten); returns how many were added and failed. */
-  async restore(text: string): Promise<{ added: number; failed: number }> {
-    let parsed: { format?: unknown; loads?: unknown };
-    try {
-      parsed = JSON.parse(text) as typeof parsed;
-    } catch {
-      return { added: 0, failed: 1 };
-    }
-    if (parsed.format !== LIBRARY_BACKUP_FORMAT || !Array.isArray(parsed.loads)) return { added: 0, failed: 1 };
-    let added = 0;
-    let failed = 0;
-    for (const item of parsed.loads as Array<{ name?: unknown; load?: unknown }>) {
-      const result = parseLoad(JSON.stringify(item.load));
-      if (result.ok && typeof item.name === 'string') {
-        await this.save(item.name, result.value);
-        added++;
-      } else {
-        failed++;
-      }
-    }
-    return { added, failed };
-  }
-
   private changed(): void {
     for (const listener of this.listeners) listener();
   }
@@ -135,24 +102,4 @@ export function shelves(entries: readonly LibraryEntry[]): CartridgeShelf[] {
           entries: [...list].sort((a, b) => compare(powder(a), powder(b)) || compare(a.name, b.name)),
         })),
     }));
-}
-
-/** A firearm: a named barrel, as the library's loads use it, with the latest saved specs. */
-export interface Firearm {
-  name: string;
-  barrel: Barrel;
-}
-
-/** The firearms of the library's loads, by name; the most recently saved load gives a firearm's specs. */
-export function firearms(entries: readonly LibraryEntry[]): Firearm[] {
-  const latest = new Map<string, LibraryEntry>();
-  for (const entry of entries) {
-    const name = entry.load.barrel.name.trim();
-    if (name === '') continue;
-    const known = latest.get(name);
-    if (!known || known.updatedAt < entry.updatedAt) latest.set(name, entry);
-  }
-  return [...latest.values()]
-    .map((entry) => ({ name: entry.load.barrel.name.trim(), barrel: entry.load.barrel }))
-    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
 }

@@ -1,9 +1,12 @@
 import { readFileSync } from 'node:fs';
-import { importGrtLoad, type Load } from '@gordons-legacy/formats';
+import { importGrtLoad, serializeLoad, type Load } from '@gordons-legacy/formats';
 import { describe, expect, test } from 'vitest';
 import { summarizeLoad } from '../src/analysis/load-summary.ts';
 import { memoryStorage } from '../src/state/library-storage.ts';
-import { firearms, Library, shelves } from '../src/state/library.ts';
+import { Library, shelves } from '../src/state/library.ts';
+import { readBackup, writeBackup } from '../src/state/backup.ts';
+import { choosableFirearms, FirearmLibrary, newFirearm, type FirearmEntry } from '../src/state/firearms.ts';
+import { memoryStore } from '../src/state/indexed-db.ts';
 
 function fixtureText(path: string): string {
   return readFileSync(new URL(`../../formats/test/fixtures/${path}`, import.meta.url), 'utf8');
@@ -48,18 +51,32 @@ describe('Library', () => {
     expect(library.entries.map((entry) => entry.name)).toEqual(['glock17_eng5_n340_115grain_xtp_PLUS-P']);
   });
 
-  test('a backup restores every load into another library', async () => {
+  test('a backup restores every load and every gun into another library', async () => {
     const source = new Library(memoryStorage());
+    const sourceGuns = new FirearmLibrary(memoryStore<FirearmEntry>());
     await source.save('A', blackout);
     await source.save('B', glock);
+    await sourceGuns.save({ ...newFirearm(), name: 'Rhino 40DS' });
     const target = new Library(memoryStorage());
-    expect(await target.restore(source.backup())).toEqual({ added: 2, failed: 0 });
+    const targetGuns = new FirearmLibrary(memoryStore<FirearmEntry>());
+    const text = writeBackup(source.entries, sourceGuns.entries);
+    expect(await readBackup(text, target, targetGuns)).toEqual({ added: 3, failed: 0 });
     expect(target.entries.map((entry) => entry.load)).toEqual([blackout, glock]);
+    expect(targetGuns.entries.map((entry) => entry.firearm.name)).toEqual(['Rhino 40DS']);
+  });
+
+  test('a backup made before guns existed still restores its loads', async () => {
+    const library = new Library(memoryStorage());
+    const guns = new FirearmLibrary(memoryStore<FirearmEntry>());
+    const version1 = JSON.stringify({ format: 'gordons-legacy.library', version: 1, loads: [{ name: 'A', load: JSON.parse(serializeLoad(glock)) }] });
+    expect(await readBackup(version1, library, guns)).toEqual({ added: 1, failed: 0 });
+    expect(library.entries.map((entry) => entry.load)).toEqual([glock]);
   });
 
   test('a file that is not a backup adds nothing', async () => {
     const library = new Library(memoryStorage());
-    expect(await library.restore('{"loads": []}')).toEqual({ added: 0, failed: 1 });
+    const guns = new FirearmLibrary(memoryStore<FirearmEntry>());
+    expect(await readBackup('{"loads": []}', library, guns)).toEqual({ added: 0, failed: 1 });
   });
 });
 
@@ -78,9 +95,15 @@ describe('browsing', () => {
     expect(names.sort()).toEqual(['A1 OBT', 'Plus-P']);
   });
 
-  test('firearms take the specs of their latest load', () => {
-    const named = firearms(entries);
+  test('a barrel named in a load is offered as a gun when none is described', () => {
+    const named = choosableFirearms([], entries);
     expect(named.map((firearm) => firearm.name)).toContain(blackout.barrel.name.trim());
+  });
+
+  test('a described gun hides the barrel of the same name', () => {
+    const described = { id: '1', updatedAt: '2026-10-15T00:00:00Z', firearm: { ...newFirearm(), name: blackout.barrel.name.trim(), maker: 'CMMG' } };
+    const named = choosableFirearms([described], entries);
+    expect(named.filter((firearm) => firearm.name === blackout.barrel.name.trim())).toEqual([described.firearm]);
   });
 });
 

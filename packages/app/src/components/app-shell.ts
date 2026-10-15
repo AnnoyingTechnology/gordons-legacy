@@ -1,4 +1,4 @@
-import type { Load, MeasurementSeries, Projectile } from '@gordons-legacy/formats';
+import type { Firearm, Load, MeasurementSeries, Projectile } from '@gordons-legacy/formats';
 import { importGrtProjectiles, importGrtPropellant, importGrtrace, serializeLoad } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
 import type { Language } from '../i18n/i18n.ts';
@@ -20,9 +20,12 @@ import './compare-view.ts';
 import type { CalibratedLoad } from './measurements-view.ts';
 import './library-view.ts';
 import './load-editor.ts';
-import { firearms, Library } from '../state/library.ts';
+import { Library } from '../state/library.ts';
 import { indexedDbStorage } from '../state/library-storage.ts';
 import { ComponentLibrary, type ComponentEntry } from '../state/components.ts';
+import { choosableFirearms, FirearmLibrary, firearmFromLoad, type FirearmEntry } from '../state/firearms.ts';
+import { readBackup, writeBackup } from '../state/backup.ts';
+import './firearm-dialog.ts';
 import { indexedDbStore } from '../state/indexed-db.ts';
 import './converter-dialog.ts';
 import './units-dialog.ts';
@@ -43,6 +46,7 @@ export class AppShell extends LitElement {
     projectileChoice: { state: true },
     view: { state: true },
     chronograph: { state: true },
+    editedFirearm: { state: true },
   };
 
   declare context: UiContext;
@@ -54,12 +58,15 @@ export class AppShell extends LitElement {
   declare view: 'editor' | 'compare' | 'library';
   /** A chronograph export waiting for the user to confirm its column and unit. */
   declare chronograph: { csv: ChronographCsv; fileName: string } | undefined;
+  /** The gun being described, with the id of the entry it replaces when it is an edit (issue #24). */
+  declare editedFirearm: { firearm: Firearm; id?: string } | undefined;
   declare unitsOpen: boolean;
   declare aboutOpen: boolean;
   declare converterOpen: boolean;
   private readonly store = new DocumentStore(window.localStorage);
   private readonly library = new Library(indexedDbStorage());
   private readonly components = new ComponentLibrary(indexedDbStore<ComponentEntry>('components'));
+  private readonly firearms = new FirearmLibrary(indexedDbStore<FirearmEntry>('firearms'));
   private settings: Settings = loadSettings(window.localStorage, navigator.languages);
 
   constructor() {
@@ -71,12 +78,14 @@ export class AppShell extends LitElement {
     this.projectileChoice = undefined;
     this.view = 'editor';
     this.chronograph = undefined;
+    this.editedFirearm = undefined;
     // The dedication and safety notice open on a browser's first visit, over an example load, so that the
     // tool shows what it does instead of an empty page (#29).
     this.aboutOpen = window.localStorage.getItem(WELCOME_SEEN_KEY) === null;
     if (this.aboutOpen && this.store.documents.length === 0) this.openExample();
     this.store.subscribe(() => this.requestUpdate());
     this.library.subscribe(() => this.requestUpdate());
+    this.firearms.subscribe(() => this.requestUpdate());
     this.components.subscribe(() => this.requestUpdate());
     void this.components.useRepository(indexedDbDataCache(), (url) => fetch(url));
     // Ask the browser not to clear the library under storage pressure; it may still refuse.
@@ -150,6 +159,12 @@ export class AppShell extends LitElement {
             @close=${() => (this.chronograph = undefined)}
           ></gl-chronograph-dialog>`
         : nothing}
+      <gl-firearm-dialog
+        .firearm=${this.editedFirearm?.firearm}
+        .context=${this.context}
+        @save=${(event: CustomEvent<Firearm>) => void this.firearms.save(event.detail, this.editedFirearm?.id)}
+        @close=${() => (this.editedFirearm = undefined)}
+      ></gl-firearm-dialog>
       <gl-converter-dialog .open=${this.converterOpen} .context=${this.context} @close=${() => (this.converterOpen = false)}></gl-converter-dialog>
       <gl-units-dialog
         .open=${this.unitsOpen}
@@ -168,7 +183,10 @@ export class AppShell extends LitElement {
       return html`<gl-library-view
         .library=${this.library}
         .entries=${this.library.entries}
+        .firearms=${this.firearms.entries}
         .context=${this.context}
+        @edit-firearm=${(event: CustomEvent<{ firearm: Firearm; id?: string }>) => (this.editedFirearm = event.detail)}
+        @remove-firearm=${(event: CustomEvent<string>) => void this.firearms.remove(event.detail)}
         @open-entry=${(event: CustomEvent<string>) => this.openEntry(event.detail)}
         @import-files=${(event: CustomEvent<File[]>) => void this.importToLibrary(event.detail)}
         @backup=${() => this.downloadBackup()}
@@ -187,11 +205,12 @@ export class AppShell extends LitElement {
       <gl-load-editor
         .load=${active.load}
         .context=${this.context}
-        .firearms=${firearms(this.library.entries)}
+        .firearms=${choosableFirearms(this.firearms.entries, this.library.entries)}
         .components=${this.components}
         .componentEntries=${this.components.entries}
         .foldedGroups=${this.settings.foldedGroups}
         @fold-group=${(event: CustomEvent<string>) => this.foldGroup(event.detail)}
+        @save-firearm=${() => (this.editedFirearm = { firearm: firearmFromLoad(active.load) })}
         @load-change=${(event: CustomEvent<Load>) => this.store.update(active.id, event.detail)}
         @calibrated=${(event: CustomEvent<CalibratedLoad>) => this.openCalibrated(active.name, event.detail)}
         @open-load=${(event: CustomEvent<{ name: string; load: Load }>) => this.store.openNew(`${event.detail.name}.json`, event.detail.load)}
@@ -334,11 +353,11 @@ export class AppShell extends LitElement {
 
   private downloadBackup(): void {
     const date = new Date().toISOString().slice(0, 10);
-    download(this.library.backup(), `gordons-legacy-library-${date}.json`);
+    download(writeBackup(this.library.entries, this.firearms.entries), `gordons-legacy-library-${date}.json`);
   }
 
   private async restoreBackup(file: File): Promise<void> {
-    const { added, failed } = await this.library.restore(await file.text());
+    const { added, failed } = await readBackup(await file.text(), this.library, this.firearms);
     this.openErrors = failed > 0 ? [this.context.t('library.restoreFailed', { added: String(added), failed: String(failed) })] : [];
   }
 

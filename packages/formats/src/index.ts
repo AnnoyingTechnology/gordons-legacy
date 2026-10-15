@@ -11,6 +11,7 @@ export {
   type StandardMaxPressures,
 } from './load/cartridge.ts';
 export type { ComponentInfo } from './load/component-info.ts';
+export { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, type Firearm, type FirearmSource } from './load/firearm.ts';
 export {
   LOAD_FORMAT,
   LOAD_SCHEMA_VERSION,
@@ -29,7 +30,7 @@ export type { Projectile, ProjectileBase } from './load/projectile.ts';
 export type { GrtBurnModel, Propellant, PropellantCalibration } from './load/propellant.ts';
 
 export type { ImportIssue, ImportResult, IssueSeverity } from './import-issues.ts';
-export { checkCaliber, checkProjectile, checkPropellant, parseLoad, serializeLoad } from './json/load-json.ts';
+export { checkCaliber, checkFirearm, checkProjectile, checkPropellant, parseFirearm, parseLoad, serializeFirearm, serializeLoad } from './json/load-json.ts';
 export { importGrtCaliber, importGrtProjectiles, importGrtPropellant } from './grt/component-import.ts';
 export { importGrtrace } from './grt/grtrace-import.ts';
 export { importGrtLoad, type GrtLoadImportOptions } from './grt/grtload-import.ts';

@@ -1,8 +1,8 @@
 import { grtTraditional } from '@gordons-legacy/engine';
-import type { CaliberDefinition, Load, Projectile, Propellant } from '@gordons-legacy/formats';
+import type { CaliberDefinition, Firearm, Load, Projectile, Propellant } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
 import { icon } from '../icons/icons.ts';
-import type { Firearm } from '../state/library.ts';
+import { withFirearm } from '../state/firearms.ts';
 import type { ComponentEntry, ComponentLibrary } from '../state/components.ts';
 import { withCaliber, withProjectile, withPropellant } from '../editor/components.ts';
 import './charge-synthesis-view.ts';
@@ -41,7 +41,7 @@ export class LoadEditor extends LitElement {
 
   declare load: Load;
   declare context: UiContext;
-  /** The firearms of the library, whose barrel the load can take. */
+  /** The guns to choose from: those described in the library, and the barrels named in saved loads. */
   declare firearms: Firearm[];
   /** Powders and projectiles to choose from, and their entries (passed apart to re-render on import). */
   declare components: ComponentLibrary | undefined;
@@ -186,25 +186,37 @@ export class LoadEditor extends LitElement {
     this.dispatchEvent(new CustomEvent('load-change', { detail: load, bubbles: true }));
   }
 
-  /** Takes a firearm's barrel from the library: length, twist, gun mass, jump and gas leaks (issue #12). */
+  /**
+   * Takes a gun's barrel: length, twist, gun mass, jump and gas leaks (issues #12, #24). The gun's name
+   * becomes the barrel's, so that the load says which gun it was worked up in.
+   */
   private renderFirearmChoice() {
     const { t } = this.context;
-    if (this.firearms.length === 0) return nothing;
     return html`<label class="firearm-choice">
-      ${icon('barrel')} ${t('firearm.use')}
-      <select
-        @change=${(event: Event) => {
-          const select = event.target as HTMLSelectElement;
-          const firearm = this.firearms[Number(select.value)];
-          select.value = '';
-          if (firearm) this.dispatchEvent(new CustomEvent('load-change', { detail: { ...this.load, barrel: firearm.barrel }, bubbles: true }));
-        }}
-      >
-        <option value="">${t('firearm.choose')}</option>
-        ${this.firearms.map((firearm, index) => html`<option value=${index}>${firearm.name}</option>`)}
-      </select>
-    </label>`;
+        ${icon('barrel')} ${t('firearm.use')}
+        <select
+          ?disabled=${this.firearms.length === 0}
+          @change=${(event: Event) => {
+            const select = event.target as HTMLSelectElement;
+            const firearm = this.firearms[Number(select.value)];
+            select.value = '';
+            if (firearm) this.emit(withFirearm(this.load, firearm));
+          }}
+        >
+          <option value="">${this.firearms.length === 0 ? t('firearm.none') : t('firearm.choose')}</option>
+          ${this.firearms.map((firearm, index) => html`<option value=${index}>${firearmOption(firearm)}</option>`)}
+        </select>
+      </label>
+      <button class="component-choice" title=${t('firearm.saveHelp')} @click=${() => this.dispatchEvent(new CustomEvent('save-firearm', { bubbles: true }))}>
+        ${icon('save')} ${t('firearm.save')}
+      </button>`;
   }
+}
+
+/** A gun in the chooser: its name, then what tells it apart when the name alone wouldn't. */
+function firearmOption(firearm: Firearm): string {
+  const parts = [firearm.name, [firearm.maker, firearm.model].filter(Boolean).join(' '), firearm.cartridge];
+  return parts.filter((part) => part !== undefined && part.trim() !== '').join(' · ');
 }
 
 customElements.define('gl-load-editor', LoadEditor);

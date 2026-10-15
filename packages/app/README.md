@@ -67,9 +67,11 @@ src/
   units/units.ts        display units per kind of quantity (metric and imperial presets)
   units/conversions.ts  the unit converter's units
   i18n/                 message catalogs (en is the source; the compiler checks the others are complete)
-  state/                open documents and settings (localStorage); the library of saved loads and
-                        the component library (IndexedDB: indexed-db.ts, library.ts, components.ts);
-                        the data repository's cache (data-cache.ts); saving files (file-saving.ts)
+  state/                open documents and settings (localStorage); the library of saved loads, the
+                        user's guns and the component library (IndexedDB: indexed-db.ts, library.ts,
+                        firearms.ts, components.ts); the backup file holding them all (backup.ts);
+                        the data repository's cache (data-cache.ts); saving files (file-saving.ts);
+                        the example load of a first visit (example-load.ts)
   data/                 community-components.json: the CC0 community components bundled for a first
                         offline visit (tools/data/build-community.ts); online, the app takes them from
                         the data repository through @gordons-legacy/data

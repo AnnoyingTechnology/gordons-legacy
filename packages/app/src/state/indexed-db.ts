@@ -1,11 +1,12 @@
 /**
  * The app's IndexedDB database: one object store per kind of saved thing, keyed by `id`. Version 2 added
- * the user's components beside the library of loads; version 3 the data repository's files.
+ * the user's components beside the library of loads; version 3 the data repository's files; version 4
+ * the user's guns.
  */
 const DATABASE = 'gordons-legacy';
-const VERSION = 3;
-export type StoreName = 'library' | 'components' | 'data';
-const STORES: StoreName[] = ['library', 'components', 'data'];
+const VERSION = 4;
+export type StoreName = 'library' | 'components' | 'data' | 'firearms';
+const STORES: StoreName[] = ['library', 'components', 'data', 'firearms'];
 
 /** A record store: list, put and remove records that carry an `id`. */
 export interface RecordStore<T extends { id: string }> {

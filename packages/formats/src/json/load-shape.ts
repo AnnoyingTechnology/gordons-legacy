@@ -1,4 +1,5 @@
 import type { Barrel, GasLeak } from '../load/barrel.ts';
+import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, type Firearm, type FirearmSource } from '../load/firearm.ts';
 import type { CaliberDefinition, Cartridge, CaseDimensions, ChamberDimensions, Rifling, StandardMaxPressures } from '../load/cartridge.ts';
 import type { ComponentInfo } from '../load/component-info.ts';
 import type { Charge, ImportOrigin, Ladder, Load, Note, Picture, ShotGroup } from '../load/load.ts';
@@ -271,8 +272,30 @@ const load = {
   unmapped,
 } satisfies ShapeOf<Load>;
 
+const firearmSource = {
+  kind: 'string',
+  publisher: optionalString,
+  url: optionalString,
+  retrieved: optionalString,
+} satisfies ShapeOf<FirearmSource>;
+
+const firearm = {
+  format: { literal: FIREARM_FORMAT },
+  schemaVersion: { literal: FIREARM_SCHEMA_VERSION },
+  name: 'string',
+  maker: optionalString,
+  model: optionalString,
+  cartridge: optionalString,
+  barrel: { object: barrel },
+  notes: optionalString,
+  source: { optional: { object: firearmSource } },
+} satisfies ShapeOf<Firearm>;
+
 /** The specification of a whole load document. */
 export const LOAD_SPEC: FieldSpec = { object: load };
+
+/** The specification of a gun saved on its own (issue #24). */
+export const FIREARM_SPEC: FieldSpec = { object: firearm };
 
 /** The specifications of the components imported on their own. */
 export const CALIBER_DEFINITION_SPEC: FieldSpec = { object: caliberDefinition };

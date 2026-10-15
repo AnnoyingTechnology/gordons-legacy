@@ -2,6 +2,8 @@ import { html, LitElement } from 'lit';
 import { knownSummary, summarizeLoad } from '../analysis/load-summary.ts';
 import { icon } from '../icons/icons.ts';
 import { shelves, type Library, type LibraryEntry } from '../state/library.ts';
+import { firearmLabel, newFirearm, type FirearmEntry } from '../state/firearms.ts';
+import { headerRow } from '../dom.ts';
 import type { UiContext } from './context.ts';
 
 /**
@@ -14,6 +16,7 @@ export class LibraryView extends LitElement {
   static override properties = {
     library: { attribute: false },
     entries: { attribute: false },
+    firearms: { attribute: false },
     context: { attribute: false },
     filter: { state: true },
   };
@@ -21,6 +24,8 @@ export class LibraryView extends LitElement {
   declare library: Library;
   /** The library's entries, passed apart so that a change (a new array) re-renders the view. */
   declare entries: LibraryEntry[];
+  /** The user's guns, shown under the loads (issue #24). */
+  declare firearms: FirearmEntry[];
   declare context: UiContext;
   /** Words that every shown load must contain, in any of its names. */
   declare filter: string;
@@ -28,6 +33,7 @@ export class LibraryView extends LitElement {
   constructor() {
     super();
     this.filter = '';
+    this.firearms = [];
   }
 
   protected override createRenderRoot(): HTMLElement {
@@ -97,6 +103,55 @@ export class LibraryView extends LitElement {
                 </tbody>`,
               )}
             </table></div>`}
+        ${this.renderFirearms()}
+      </section>
+    `;
+  }
+
+  /** The guns the user has described, with what the simulation takes from each (issue #24). */
+  private renderFirearms() {
+    const { t, quantity } = this.context;
+    return html`
+      <section class="firearms">
+        <header class="library-head">
+          <h2>${icon('barrel')} ${t('firearm.title')}</h2>
+          <span class="spacer"></span>
+          <button @click=${() => this.fire('edit-firearm', { firearm: newFirearm() })}>${icon('add')} ${t('firearm.add')}</button>
+        </header>
+        ${this.firearms.length === 0
+          ? html`<p class="empty">${t('firearm.empty')}</p>`
+          : html`<table class="data-table firearm-table">
+              <thead>
+                ${headerRow([t('field.name'), t('firearm.maker'), t('firearm.cartridge'), t('field.barrelLength'), t('field.twistLength'), t('field.gunMass'), ''])}
+              </thead>
+              <tbody>
+                ${[...this.firearms]
+                  .sort((a, b) => a.firearm.name.localeCompare(b.firearm.name, undefined, { numeric: true }))
+                  .map(({ id, firearm }) => {
+                    const name = firearmLabel(firearm);
+                    return html`<tr>
+                      <td>
+                        <button class="link" title=${t('firearm.edit', { name })} @click=${() => this.fire('edit-firearm', { firearm, id })}>${name}</button>
+                      </td>
+                      <td>${[firearm.maker, firearm.model].filter(Boolean).join(' ')}</td>
+                      <td>${firearm.cartridge ?? ''}</td>
+                      <td class="number">${quantity(firearm.barrel.length, 'barrelLength')}</td>
+                      <td class="number">${firearm.barrel.twistLength === undefined ? '' : quantity(firearm.barrel.twistLength, 'twistLength')}</td>
+                      <td class="number">${firearm.barrel.gunMass === undefined ? '' : quantity(firearm.barrel.gunMass, 'gunMass')}</td>
+                      <td>
+                        <button
+                          class="remove"
+                          aria-label=${t('firearm.remove', { name })}
+                          title=${t('firearm.remove', { name })}
+                          @click=${() => this.fire('remove-firearm', id)}
+                        >
+                          ${icon('close')}
+                        </button>
+                      </td>
+                    </tr>`;
+                  })}
+              </tbody>
+            </table>`}
       </section>
     `;
   }
