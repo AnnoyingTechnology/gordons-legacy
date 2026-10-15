@@ -31,19 +31,15 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
    (`docs/model/validation.md`, chronograph study done); next, published pressure data, then OBT, the
    energy terms and the covolume handling against the published science.
 
-Maintainer issues picked up 2026-10-14 (GitHub #1–#13, all UI or features beyond GRT). Order:
+Open issues (GitHub, `AnnoyingTechnology/gordons-legacy`), 2026-10-15:
 
-| Issue | Plan | State |
+| Issue | What | State |
 |---|---|---|
-| #1, #3 | Full-height toolbar buttons, bigger tabs and inputs; notes typed in place, no "add note" button. | Done |
-| #5, #7, #8, #9 | Results hierarchy: large key cards (velocity, energy, recoil, sound), fill and pressure as gauges, velocity on a speed scale with the transonic band. | Done (sound waits for #6) |
-| #11 | Tab badges: cartridge, projectile, powder. | Done |
-| #2, #13 | One warning system with a load danger level (overpressure, compressed or low fill, …) and cold/hot climate warnings. | Done |
-| #4 | CIP and SAAMI maximum pressures both on the charts. | Done (values entered by the user until the data repository) |
-| #6 | Muzzle-blast sound level estimate at 1 m; physics to check with Codex. | Done (docs/model/muzzle-blast.md); handguns are extrapolations |
-| #12 | Local load library (browse by cartridge, then powder/projectile, with key figures). | Done (first version) |
-| #14 | Shot groups: take a photo with the camera on phones and tablets. | Done |
-| #10 | Survey of GRT users' complaints; report on the issue for the maintainer to choose. | Done: three review notes, units audit, decisions in docs/research/grt-user-feedback.md. Reopened by the maintainer for inventory: low priority, serverless sync by animated QR codes between bench and phone (backlog) |
+| #19 | Import GRT's database: approach decided (local tool writing GRT component files); the agent's client blocks it from finishing, so it is the maintainer's to run. Not blocking: data comes from the CC0 repository and the user's files. | Maintainer |
+| #22 | Pressure validation: published loads with measured pressures, or pressure traces. Blocks M7 and any claim about pressure accuracy. | Needs data |
+| #20 | Accessibility audit (keyboard, contrast, screen readers), promised in PLAN.md, never done. | To do |
+| #21 | Serverless bench↔phone sync by animated QR codes, with an inventory. Low priority (maintainer). | Backlog |
+| #10 | GRT users' complaints: done, reopened for the inventory idea (see #21). | Open |
 
 Reverse-engineering workspace (local, never committed; procedure in `docs/model/grt-structure.md`):
 
