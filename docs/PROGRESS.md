@@ -43,7 +43,7 @@ Maintainer issues picked up 2026-10-14 (GitHub #1–#13, all UI or features beyo
 | #6 | Muzzle-blast sound level estimate at 1 m; physics to check with Codex. | Done (docs/model/muzzle-blast.md); handguns are extrapolations |
 | #12 | Local load library (browse by cartridge, then powder/projectile, with key figures). | Done (first version) |
 | #14 | Shot groups: take a photo with the camera on phones and tablets. | Done |
-| #10 | Survey of GRT users' complaints; report on the issue for the maintainer to choose. | Done: three review notes, units audit, decisions in docs/research/grt-user-feedback.md |
+| #10 | Survey of GRT users' complaints; report on the issue for the maintainer to choose. | Done: three review notes, units audit, decisions in docs/research/grt-user-feedback.md. Reopened by the maintainer for inventory: low priority, serverless sync by animated QR codes between bench and phone (backlog) |
 
 Reverse-engineering workspace (local, never committed; procedure in `docs/model/grt-structure.md`):
 
