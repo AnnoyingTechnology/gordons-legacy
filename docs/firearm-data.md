@@ -64,9 +64,15 @@ sitemap and writes the files. `glock.ts` is the one to copy.
     node tools/data/firearms/glock.ts /tmp/gl/guns-glock          # the whole catalogue
     node tools/data/firearms/glock.ts /tmp/gl/guns-glock --limit 5  # a sample, while developing
 
-On a Node built without TypeScript type stripping (this machine's, which answers `ERR_NO_TYPESCRIPT`),
-`npx vite-node tools/data/firearms/glock.ts …` or `deno run -A tools/data/firearms/glock.ts …` runs the
-same file.
+On a Node built without TypeScript type stripping (the maintainer's, which answers `ERR_NO_TYPESCRIPT`),
+run them with Deno instead:
+
+    deno run -A tools/data/firearms/glock.ts /tmp/gl/guns-glock
+
+`npx vite-node` does **not** work for these: it leaves `import.meta.main` undefined, so the file loads,
+does nothing and exits with status 0 — a silent no-op that looks like a crawl finding nothing. The guard
+stays as it is all the same, because the tests import these modules for their parsers and must not set a
+crawl going.
 
 What every extractor shares sits beside them: `published-figures.ts` (the maker's own strings, and what
 a published mass includes). Everything else is the maker's own shape and stays in its own file.
