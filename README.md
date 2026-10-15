@@ -8,10 +8,29 @@ free. After his death, volunteers kept it running, but development has ended and
 was removed on 2026-07-27. Its code was never published, so the tool can't be maintained or ported.
 Gordon's Legacy is a from-scratch, GPL-licensed rewrite so that his work stays available for decades.
 
-> **Status: in development, not released.** The "GRT Traditional" engine reproduces GRT's results to
-> machine precision on every reference load, and the [development site](https://annoyingtechnology.github.io/gordons-legacy/)
-> opens, edits and simulates GRT load files. It hasn't been reviewed for use: don't develop loads with
-> it yet. Progress: [docs/PROGRESS.md](docs/PROGRESS.md), plan: [docs/PLAN.md](docs/PLAN.md).
+> **Status: in development.** The "GRT Traditional" engine reproduces GRT's results to machine
+> precision on every reference load, and the [site](https://annoyingtechnology.github.io/gordons-legacy/)
+> opens, edits and simulates GRT load files. The first build is published as
+> [v2026.10.15](https://github.com/AnnoyingTechnology/gordons-legacy/releases/tag/v2026.10.15), as one
+> HTML file you can keep. **Its pressure predictions have not been checked against measured pressures:
+> don't develop loads with it yet.** Progress: [docs/PROGRESS.md](docs/PROGRESS.md), plan:
+> [docs/PLAN.md](docs/PLAN.md).
+
+## What it does
+
+Open a `.grtload` file or start from the example load, and it simulates the shot as you type: pressure
+and velocity along the barrel, the peak against the cartridge's maxima, the case fill, the recoil, the
+muzzle blast, and a review of the load in words — what is near a maximum, what ordinary bench
+variations would do to it, over what powder temperatures it stays within limits.
+
+Beside that it carries GRT's tools: the component databases (powders, projectiles, cartridges) from a
+public CC0 repository, the burning-rate table and powder search, the tolerance synthesis, the cartridge
+designer, the unit converter, the OBT tool, the bore-area, initial-pressure and temperature-coefficient
+assistants, chronograph and pressure-trace import, shot-group analysis on a photo of the target, a
+library of your loads and guns, and a printed report.
+
+Everything stays on your computer: there is no account and no server. The library and the guns are kept
+in the browser, and the backup file holds both.
 
 ## Dedication
 
