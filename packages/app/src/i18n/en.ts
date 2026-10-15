@@ -369,6 +369,8 @@ export const en = {
   'firearm.empty': 'No gun yet. Add one, or save the barrel of a load you have open.',
   'firearm.publishedNote': 'A published barrel length is nominal: it is not always the bolt face to muzzle length the simulation needs.',
   'firearm.choose': "Use the barrel of…",
+  'firearm.chambered': 'Listed by the maker for this cartridge',
+  'firearm.otherGuns': 'Other guns',
   'library.review': "Review",
   'results.muzzleBlast': "Muzzle blast",
   'results.muzzleBlastDetail': "estimated peak, 1 m beside the muzzle, prone (muzzle 20 cm over hard ground)",

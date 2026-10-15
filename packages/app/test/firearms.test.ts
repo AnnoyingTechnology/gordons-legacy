@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { importGrtLoad, parseFirearm, serializeFirearm, type Load } from '@gordons-legacy/formats';
+import { importGrtLoad, parseFirearm, serializeFirearm, type Firearm, type Load } from '@gordons-legacy/formats';
 import { describe, expect, test } from 'vitest';
 import { chamberedFor, choosableFirearms, FirearmLibrary, firearmFromLoad, newFirearm, withFirearm, type FirearmEntry } from '../src/state/firearms.ts';
 import { memoryStore } from '../src/state/indexed-db.ts';
@@ -57,6 +57,17 @@ describe('the gun library', () => {
     expect(ordered.map((firearm) => firearm.name)).toEqual(['Alpha 9', 'Zeta .45']);
     expect(chamberedFor(entries[1]!.firearm, '9 mm Luger (9 x 19)')).toBe(true);
     expect(chamberedFor(entries[0]!.firearm, '9 mm Luger (9 x 19)')).toBe(false);
+    // A bare calibre names no cartridge: Glock writes `.357` for .357 SIG, which is also how a
+    // .357 Magnum begins. Neither is ever offered for the other.
+    const sig: Firearm = { ...newFirearm(), name: 'Glock 31', cartridge: '.357' };
+    expect(chamberedFor(sig, '.357 Magnum')).toBe(false);
+    expect(chamberedFor(sig, '.357 SIG')).toBe(false);
+    expect(chamberedFor({ ...newFirearm(), name: 'Colt', cartridge: '.45' }, '.454 Casull')).toBe(false);
+    // The case decides when both names carry it, whatever else the makers wrote around it.
+    expect(chamberedFor({ ...newFirearm(), name: 'CZ', cartridge: '9x19 mm' }, '9 mm Luger (9 x 19)')).toBe(true);
+    expect(chamberedFor({ ...newFirearm(), name: 'Makarov', cartridge: '9x18 mm' }, '9 mm Luger (9 x 19)')).toBe(false);
+    // The same cartridge spelled the same way still matches, calibre-only names included.
+    expect(chamberedFor({ ...newFirearm(), name: 'Ruger', cartridge: '.357 Magnum' }, '.357 Magnum')).toBe(true);
     // Without a cartridge they are simply in order of name.
     expect(choosableFirearms(entries, []).map((firearm) => firearm.name)).toEqual(['Alpha 9', 'Zeta .45']);
   });

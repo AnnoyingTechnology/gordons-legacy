@@ -367,6 +367,8 @@ export const it: Messages = {
   'firearm.empty': 'Nessuna arma. Aggiungetene una, o salvate la canna di una ricarica aperta.',
   'firearm.publishedNote': 'Una lunghezza di canna pubblicata è nominale: non è sempre la distanza dalla faccia dell’otturatore alla volata che la simulazione richiede.',
   'firearm.choose': "Usa la canna di…",
+  'firearm.chambered': 'Indicata dal fabbricante per questa cartuccia',
+  'firearm.otherGuns': 'Altre armi',
   'library.review': "Revisione",
   'results.muzzleBlast': "Scoppio alla volata",
   'results.muzzleBlastDetail': "picco stimato, a 1 m di lato alla volata, a terra (volata a 20 cm da un suolo duro)",

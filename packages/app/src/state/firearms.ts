@@ -99,15 +99,31 @@ function normalise(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]/g, '').replaceAll('mm', '');
 }
 
+/** The `9x19` of a name, when it has one: what two namings of the same cartridge share. */
+function dimensions(name: string): string | undefined {
+  return /\d+x\d+/.exec(name)?.[0];
+}
+
 /**
- * Whether a gun is chambered for a cartridge, as far as two names written by different people can say:
- * one contains the other once both are stripped to letters and digits. Only used to put the likely
- * guns first, so a miss costs nothing.
+ * Whether a gun's maker says it is chambered for a cartridge, as far as two names written by different
+ * people can say. Used only to put the likely guns first in the chooser, and shown as the maker's word,
+ * never as a statement that the load suits the gun.
+ *
+ * A name that is only a calibre names no cartridge: Glock writes `.357` for .357 SIG, and `.357` is
+ * equally the start of .357 Magnum — two cartridges that must never be offered for one another. Those
+ * match nothing; the user picks their gun themselves. The same rule keeps `.45` away from .454 Casull.
  */
 export function chamberedFor(firearm: Firearm, cartridge: string): boolean {
   const gun = normalise(firearm.cartridge ?? '');
   const load = normalise(cartridge);
   if (gun === '' || load === '') return false;
+  if (gun === load) return true;
+  // A bare calibre is ambiguous by construction, whichever side of the comparison it is on.
+  if (/^\d+$/.test(gun) || /^\d+$/.test(load)) return false;
+  const gunDimensions = dimensions(gun);
+  const loadDimensions = dimensions(load);
+  // `9x19 mm` against `9 mm Luger (9 x 19)`: when both name a case, the case decides.
+  if (gunDimensions !== undefined && loadDimensions !== undefined) return gunDimensions === loadDimensions;
   return load.includes(gun) || gun.includes(load);
 }
 

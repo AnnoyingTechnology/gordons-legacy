@@ -1,8 +1,9 @@
 
 import type { CaliberDefinition, Firearm, Load, Projectile, Propellant } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
+import type { MessageKey } from '../i18n/i18n.ts';
 import { icon } from '../icons/icons.ts';
-import { withFirearm } from '../state/firearms.ts';
+import { chamberedFor, withFirearm } from '../state/firearms.ts';
 import type { ComponentEntry, ComponentLibrary } from '../state/components.ts';
 import { withCaliber, withProjectile, withPropellant } from '../editor/components.ts';
 import './charge-synthesis-view.ts';
@@ -197,6 +198,21 @@ export class LoadEditor extends LitElement {
    * Takes a gun's barrel: length, twist, gun mass, jump and gas leaks (issues #12, #24). The gun's name
    * becomes the barrel's, so that the load says which gun it was worked up in.
    */
+  /**
+   * The chooser's two groups: the guns whose maker lists this cartridge, then the rest. The label says
+   * it is the maker's word — a catalogue match is not a statement that the load suits the gun.
+   */
+  private firearmGroups(): { label: MessageKey; guns: { firearm: Firearm; index: number }[] }[] {
+    const cartridge = this.load.cartridge.name;
+    const numbered = this.firearms.map((firearm, index) => ({ firearm, index }));
+    const chambered = numbered.filter(({ firearm }) => chamberedFor(firearm, cartridge));
+    const others = numbered.filter(({ firearm }) => !chamberedFor(firearm, cartridge));
+    return [
+      ...(chambered.length > 0 ? [{ label: 'firearm.chambered' as MessageKey, guns: chambered }] : []),
+      ...(others.length > 0 ? [{ label: 'firearm.otherGuns' as MessageKey, guns: others }] : []),
+    ];
+  }
+
   private renderFirearmChoice() {
     const { t } = this.context;
     return html`<select
@@ -211,7 +227,11 @@ export class LoadEditor extends LitElement {
         }}
       >
         <option value="">${this.firearms.length === 0 ? t('firearm.none') : t('firearm.choose')}</option>
-        ${this.firearms.map((firearm, index) => html`<option value=${index}>${firearmOption(firearm)}</option>`)}
+        ${this.firearmGroups().map(
+          ({ label, guns }) => html`<optgroup label=${t(label)}>
+            ${guns.map(({ firearm, index }) => html`<option value=${index}>${firearmOption(firearm)}</option>`)}
+          </optgroup>`,
+        )}
       </select>
       <button
         class="component-choice icon-only"

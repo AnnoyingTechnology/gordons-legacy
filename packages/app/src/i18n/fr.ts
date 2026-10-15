@@ -367,6 +367,8 @@ export const fr: Messages = {
   'firearm.empty': 'Aucune arme. Ajoutez-en une, ou enregistrez le canon d’un chargement ouvert.',
   'firearm.publishedNote': 'Une longueur de canon publiée est nominale : ce n’est pas toujours la distance entre la face de culasse et la bouche dont la simulation a besoin.',
   'firearm.choose': "Utiliser le canon de…",
+  'firearm.chambered': 'Donnée par le fabricant pour cette munition',
+  'firearm.otherGuns': 'Autres armes',
   'library.review': "Revue",
   'results.muzzleBlast': "Bruit de bouche",
   'results.muzzleBlastDetail': "crête estimée, à 1 m à côté de la bouche, couché (bouche à 20 cm d’un sol dur)",

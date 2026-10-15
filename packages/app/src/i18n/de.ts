@@ -367,6 +367,8 @@ export const de: Messages = {
   'firearm.empty': 'Noch keine Waffe. Fügen Sie eine hinzu oder speichern Sie den Lauf einer geöffneten Ladung.',
   'firearm.publishedNote': 'Eine veröffentlichte Lauflänge ist nominal: Sie ist nicht immer die Länge vom Stoßboden bis zur Mündung, die die Simulation braucht.',
   'firearm.choose': "Lauf übernehmen von…",
+  'firearm.chambered': 'Vom Hersteller für diese Patrone angegeben',
+  'firearm.otherGuns': 'Weitere Waffen',
   'library.review': "Prüfung",
   'results.muzzleBlast': "Mündungsknall",
   'results.muzzleBlastDetail': "geschätzte Spitze, 1 m neben der Mündung, liegend (Mündung 20 cm über hartem Boden)",

@@ -367,6 +367,8 @@ export const es: Messages = {
   'firearm.empty': 'Ningún arma todavía. Añada una, o guarde el cañón de una carga abierta.',
   'firearm.publishedNote': 'Una longitud de cañón publicada es nominal: no siempre es la distancia desde la cara del cierre hasta la boca que la simulación necesita.',
   'firearm.choose': "Usar el cañón de…",
+  'firearm.chambered': 'Indicada por el fabricante para este cartucho',
+  'firearm.otherGuns': 'Otras armas',
   'library.review': "Revisión",
   'results.muzzleBlast': "Estampido en boca",
   'results.muzzleBlastDetail': "pico estimado, a 1 m al lado de la boca, tendido (boca a 20 cm de un suelo duro)",
