@@ -91,8 +91,14 @@ Traditional's uniform travel grid (2000 points) so that the engines compare poin
 
 ## Validation plan
 
-1. Unit tests: closed-form limits (isentropic expansion after burnout, a restrained projectile as a
-   closed vessel), and energy conservation to the integrator's tolerance.
+1. Unit tests: closed-form limits and energy conservation to the integrator's tolerance. Done
+   (`packages/engine/test/research-physics.test.ts`, 2026-10-15): in a closed vessel the model reaches
+   the Noble-Abel pressure *f*·Δ / (1 − η·Δ) exactly, with *f* = (k − 1)·Q and Δ = m_c/V_b; the free
+   volume holds the unburnt solid before the burn and the gas covolume after, in proportion to z; and
+   the pressure gradient obeys the published Lagrange ratios, p̄ = p_base (1 + m_c/3M) and
+   p_breech = p_base (1 + m_c/2M), with the bore resistance entering at the base. Checked by mutation:
+   a covolume applied to the whole charge instead of the burnt share, or a 4 in place of the 3 of the
+   mean-pressure ratio, fails them.
 2. The chronograph corpus (`tools/validation/chronograph.ts`) for both engines, uncalibrated: mean
    error, RMS and 90th percentile, per regime (subsonic rifle, pistol, revolver, supersonic rifle).
 3. Published pressure data, when available (validation.md, Pressure). Velocity agreement alone never
