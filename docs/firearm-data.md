@@ -28,10 +28,10 @@ glock.json`), holding that maker's records. The application downloads a whole ca
 the makers read so far hold about 3,100 guns — that many single files would be that many requests on a
 first search. `tools/data/export-repository.ts --firearms <folder>` does the grouping.
 
-Nine maker files are 3.4 MB of JSON, which GitHub serves gzipped at about a quarter of that. They are
-downloaded when a user first searches for their gun, never on a first visit, and cached afterwards: in a
-headless browser the whole database arrives and is searchable in half a second over a local server, and
-a keystroke filters all 3,122 guns in about a millisecond.
+Nine maker files are 2.5 MB of JSON, which GitHub serves gzipped at 101 kB. They are downloaded when a
+user first searches for their gun, never on a first visit, and cached afterwards: in a headless browser
+the whole database arrives and is searchable in 520 ms over a local server, and a keystroke filters all
+3,123 guns in about a millisecond.
 
 Three values the simulation wants are **never** published and stay absent: the jump to the lands, the
 gas leaks, and the real chamber-to-muzzle length (see below). The application shows a published barrel
@@ -91,19 +91,21 @@ this repository, and the invented figures make it obvious that a test checks the
 
 ## Makers
 
-One extractor per maker, each read once on 2026-10-15. The counts are what that run wrote, before the
-`massBasis` and `published` fields existed, so every corpus is regenerated before publication.
+One extractor per maker, all read on 2026-10-15, and **these counts are what is published**: every
+corpus was read again after `massBasis` and `source.published` existed, Savage once more after the
+weight gate and Smith & Wesson once more after the naming fix. Each re-read matched the first run gun
+for gun except Ruger, where the catalogue itself changed (below).
 
 | Maker | Extractor | Where the figures are | Guns read | Watch out for |
 |---|---|---|---|---|
 | Glock | `glock.ts` | HTML blocks of titled specification lines | 86 pistols | three weights per gun; `.357` means .357 SIG |
-| Ruger | `ruger.ts` | spec sheets in plain HTML | 433 of 603 sheets | both units, each rounded differently; one *Weight*, basis unstated |
+| Ruger | `ruger.ts` | spec sheets in plain HTML | 390 of 552 sheets | both units, each rounded differently; one *Weight*, basis unstated. **The GP100 and SP101 pages stopped answering between two runs the same afternoon** — family pages and spec sheets both redirect to their 404 page — so 43 guns read at 18:50 were gone by 19:40. Not published: the only reading we have predates the finer-step fix and carries no printed strings, and the pages cannot be read again. An archived snapshot would need its own citation |
 | CZ | `cz.ts` | Next.js script chunks, keyed in German | 88 | the `/en-us/` pages 404 for pistols, so the German tree is read; pistols give an empty-magazine weight, rifles do not |
 | Sako and Tikka | `sako.ts` | `__NEXT_DATA__` JSON, one entry per variant | 671 (393 Tikka, 278 Sako) | a page lists one rifle many times (hand, finish, market); the record takes the first variant's own figures and names the other masses |
-| Savage | `savage.ts` | SKU property tables | 991 | one SKU stands for a model, cartridge and barrel; package models may be weighed with their scope, and say so in `notes` |
+| Savage | `savage.ts` | SKU property tables | 991 | one SKU stands for a model, cartridge and barrel; package models may be weighed with their scope, and say so in `notes`; **their sheets print `9999 lbs` where they hold no weight**, which became a 4,535 kg rifle until the weight gate |
 | Bergara | `bergara.ts` | configuration table, columns in any order | 118 | 32 pages have no table (rimfire and limited editions); model names come out in capitals |
 | Henry | `henry.ts` | specification block per chambering | 149 | inch and pound only; their `robots.txt` asks for ten seconds between pages |
-| Smith & Wesson | `smith-wesson.ts` | `__NEXT_DATA__` JSON inside the product page | 634 of 1,278 pages | the sitemap mixes guns with slides, uppers, barrels and apparel, so a page counts as a gun only if it has an `ACTION` and a `CAPACITY`; barrel lengths carry no unit and are read as inches; the twist is only in the description prose; their calibers (`9MM`) are mapped to conventional names, with the maker's own word kept in `published.caliber` |
+| Smith & Wesson | `smith-wesson.ts` | `__NEXT_DATA__` JSON inside the product page | 630 of 1,278 pages | the sitemap mixes guns with slides, uppers, barrels and apparel, so a page counts as a gun only if it has an `ACTION` and a `CAPACITY`; barrel lengths carry no unit and are read as inches; the twist is only in the description prose; their calibers (`9MM`) are mapped to conventional names, with the maker's own word kept in `published.caliber`; **some guns are listed twice with different weights** — four here — and the second listing is skipped with the disagreement printed, while a second listing of *another cartridge* (the Model 1854 America 250 in .44 Magnum and .45-70) is a different gun and keeps the cartridge in its name |
 | SIG Sauer | — | — | refused | 403 to any request |
 | Beretta | — | — | refused | every product page answers with an Imperva challenge |
 | Howa | — | nothing published on the pages | none | the figures are in catalogue PDFs |
