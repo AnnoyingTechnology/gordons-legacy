@@ -9,3 +9,4 @@ export {
   type Provenance,
 } from './repository.ts';
 export { cachedDocuments, readDocument, sha256, synchronise, type CachedFile, type DataCache, type SyncReport } from './sync.ts';
+export { validateRepository, type RepositoryProblem } from './validation.ts';

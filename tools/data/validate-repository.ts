@@ -1,38 +1,36 @@
-// Checks a clone of the data repository (gordons-legacy-data): index.json lists every component file and
-// only those, each file's SHA-256 matches, and each file is a component the app reads (format, provenance,
-// values checked like a saved load's). Exits with status 1 on any problem. Run by the data repository's
-// CI, and by hand:
-//   node tools/data/validate-repository.ts <repository folder>
+/**
+ * Checks a clone of the data repository (gordons-legacy-data) and exits with status 1 if anything is
+ * wrong. The checks themselves are `validateRepository` in @gordons-legacy/data; this reads the files.
+ * Run by the data repository's CI, and by hand:
+ *
+ *     node tools/data/validate-repository.ts <repository folder>
+ */
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { readDocument, sha256, type DataIndex } from '@gordons-legacy/data';
+import { validateRepository, type DataIndex } from '@gordons-legacy/data';
 
-const folder = process.argv[2];
-if (!folder) throw new Error('usage: validate-repository.ts <repository folder>');
+/** The folders that hold component files. */
+const COMPONENT_FOLDERS = ['powders', 'projectiles', 'calibers'];
 
-const problems: string[] = [];
-const index = JSON.parse(readFileSync(join(folder, 'index.json'), 'utf8')) as DataIndex;
-if (index.format !== 'gordons-legacy.data-index' || index.version !== 1) problems.push('index.json: not a data index of version 1');
-
-const onDisk = new Set(
-  ['powders', 'projectiles', 'calibers'].flatMap((kind) =>
-    readdirSync(join(folder, kind)).filter((name) => name.endsWith('.json')).map((name) => `${kind}/${name}`),
-  ),
-);
-const listed = new Set<string>();
-for (const entry of index.files) {
-  if (listed.has(entry.path)) problems.push(`${entry.path}: listed twice`);
-  listed.add(entry.path);
-  if (!onDisk.has(entry.path)) {
-    problems.push(`${entry.path}: listed but missing`);
-    continue;
+/** Every component file of the repository, by its path from the repository's root. */
+function readComponentFiles(repository: string): Map<string, string> {
+  const files = new Map<string, string>();
+  for (const folder of COMPONENT_FOLDERS) {
+    for (const name of readdirSync(join(repository, folder))) {
+      if (name.endsWith('.json')) files.set(`${folder}/${name}`, readFileSync(join(repository, folder, name), 'utf8'));
+    }
   }
-  const text = readFileSync(join(folder, entry.path), 'utf8');
-  if ((await sha256(text)) !== entry.sha256) problems.push(`${entry.path}: SHA-256 differs from index.json`);
-  if (!readDocument(text, entry)) problems.push(`${entry.path}: not a valid ${entry.kind} file`);
+  return files;
 }
-for (const path of onDisk) if (!listed.has(path)) problems.push(`${path}: not listed in index.json`);
 
-console.log(`${index.files.length} files checked, ${problems.length} problems`);
-for (const problem of problems) console.log(`  ${problem}`);
-process.exitCode = problems.length > 0 ? 1 : 0;
+async function main(): Promise<void> {
+  const repository = process.argv[2];
+  if (!repository) throw new Error('usage: validate-repository.ts <repository folder>');
+  const index = JSON.parse(readFileSync(join(repository, 'index.json'), 'utf8')) as DataIndex;
+  const problems = await validateRepository(index, readComponentFiles(repository));
+  console.log(`${index.files.length} files checked, ${problems.length} problems`);
+  for (const { path, problem } of problems) console.log(`  ${path}: ${problem}`);
+  process.exitCode = problems.length > 0 ? 1 : 0;
+}
+
+await main();
