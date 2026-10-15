@@ -162,7 +162,7 @@ export class AppShell extends LitElement {
       <gl-firearm-dialog
         .firearm=${this.editedFirearm?.firearm}
         .context=${this.context}
-        @save=${(event: CustomEvent<Firearm>) => void this.firearms.save(event.detail, this.editedFirearm?.id)}
+        @save=${(event: CustomEvent<Firearm>) => void this.keepFirearm(event.detail, this.editedFirearm?.id)}
         @close=${() => (this.editedFirearm = undefined)}
       ></gl-firearm-dialog>
       <gl-converter-dialog .open=${this.converterOpen} .context=${this.context} @close=${() => (this.converterOpen = false)}></gl-converter-dialog>
@@ -186,7 +186,7 @@ export class AppShell extends LitElement {
         .firearms=${this.firearms.entries}
         .context=${this.context}
         @edit-firearm=${(event: CustomEvent<{ firearm: Firearm; id?: string }>) => (this.editedFirearm = event.detail)}
-        @remove-firearm=${(event: CustomEvent<string>) => void this.firearms.remove(event.detail)}
+        @remove-firearm=${(event: CustomEvent<string>) => void this.keepFirearm(undefined, event.detail)}
         @open-entry=${(event: CustomEvent<string>) => this.openEntry(event.detail)}
         @import-files=${(event: CustomEvent<File[]>) => void this.importToLibrary(event.detail)}
         @backup=${() => this.downloadBackup()}
@@ -329,6 +329,16 @@ export class AppShell extends LitElement {
     try {
       const libraryId = await this.library.save(name, document.load, document.libraryId);
       this.store.markSaved(id, document.name, libraryId);
+    } catch {
+      this.openErrors = [this.context.t('library.saveFailed')];
+    }
+  }
+
+  /** Saves a gun, or removes it when there is none to save; storage can refuse, so it is reported. */
+  private async keepFirearm(firearm: Firearm | undefined, id: string | undefined): Promise<void> {
+    try {
+      if (firearm) await this.firearms.save(firearm, id);
+      else if (id) await this.firearms.remove(id);
     } catch {
       this.openErrors = [this.context.t('library.saveFailed')];
     }
