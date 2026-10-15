@@ -29,6 +29,10 @@ every change.
 - **Erasable TypeScript only.** `erasableSyntaxOnly` is on so that sources can run with type stripping:
   no `enum`, no `namespace`, no constructor parameter properties (`constructor(private x)`). Use union
   types and explicit fields.
+- **No dead code.** `noUnusedLocals` and `noUnusedParameters` are on; prefix a deliberately ignored
+  binding with `_` (`const { unmapped: _unmapped, ...rest }`). A test fails on translation keys that no
+  code uses; keys looked up with a computed name belong to a family listed in
+  `packages/app/test/unused-messages.test.ts`.
 - **Optional properties.** `exactOptionalPropertyTypes` is on: an optional property must be absent, not
   `undefined`, which keeps JSON output clean. Use `optionalProperty()` from the formats package to
   spread optional values into object literals.

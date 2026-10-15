@@ -2,7 +2,6 @@ import type { Messages } from './en.ts';
 
 export const de: Messages = {
   'app.title': "Gordon's Legacy",
-  'app.subtitle': "Freier Simulator für Innenballistik, Nachfolger von Gordon's Reloading Tool.",
   'app.development': 'In Entwicklung. Nichts hier eignet sich zur Entwicklung von Ladungen.',
   'safety.simulated':
     'Simulierte Werte, keine Ladedaten. Prüfen Sie jede Ladung anhand der veröffentlichten Daten des Pulver- oder Geschossherstellers, beginnen Sie niedrig und tasten Sie sich heran.',
@@ -88,7 +87,6 @@ export const de: Messages = {
   'base.hollow': 'Hohlboden',
   'base.hollow-round': 'Hohlboden (halbkugelförmig)',
   'field.shotStartPressure': 'Anfangsdruck',
-  'field.boreResistance': 'Anpassung des Geschosswiderstands',
   'field.heatOfExplosion': 'Explosionswärme',
   'field.heatCapacityRatio': 'Isentropenexponent',
   'field.vivacity': 'Vivazität Ba',

@@ -28,7 +28,7 @@ export class ShotGroupsPanel extends LitElement {
   }
 
   protected override render() {
-    const { t, quantity, number } = this.context;
+    const { t, quantity } = this.context;
     const groups = this.load.shotGroups ?? [];
     return html`
       <section class="shot-groups-panel">

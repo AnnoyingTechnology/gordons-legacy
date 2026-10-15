@@ -4,7 +4,6 @@
  */
 export const en = {
   'app.title': "Gordon's Legacy",
-  'app.subtitle': "Open interior-ballistics simulator, carrying on Gordon's Reloading Tool.",
   'app.development': 'Under development. Nothing here is usable for load development.',
   'safety.simulated':
     'Simulated values, not load data. Check every charge against published data from the powder or bullet maker, start low and work up.',
@@ -90,7 +89,6 @@ export const en = {
   'base.hollow': 'Hollow base',
   'base.hollow-round': 'Hollow base (semi-spherical)',
   'field.shotStartPressure': 'Initial pressure',
-  'field.boreResistance': 'Bore resistance adjustment',
   'field.heatOfExplosion': 'Heat of explosion',
   'field.heatCapacityRatio': 'Ratio of specific heats',
   'field.vivacity': 'Vivacity Ba',

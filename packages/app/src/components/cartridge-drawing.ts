@@ -19,7 +19,7 @@ const DIMENSIONS_HEIGHT = 40;
  * features (extractor groove, ogive) are drawn schematically.
  */
 export function cartridgeDrawing(load: Load, shot: Simulation | undefined, context: UiContext) {
-  const { cartridge, projectile } = load;
+  const { cartridge } = load;
   const outlineOfCase = caseOutline(load);
   const caseRadius = Math.max(...outlineOfCase.stations.map(([, radius]) => radius));
   const overallLength = Math.max(cartridge.overallLength, cartridge.caseLength);

@@ -65,7 +65,7 @@ export function speedScale(velocity: number, temperature: number, context: UiCon
  * beside it, never by colour alone.
  */
 export function pressureGauge(peak: number, limits: PressureLimit[], nearShare: number, context: UiContext) {
-  const { t, quantity } = context;
+  const { quantity } = context;
   const lowest = limits[0]!.pressure;
   const top = Math.max(peak, ...limits.map((limit) => limit.pressure)) * 1.15;
   const state = peak > lowest ? 'above' : peak >= nearShare * lowest ? 'near' : 'within';

@@ -2,7 +2,6 @@ import type { Messages } from './en.ts';
 
 export const fr: Messages = {
   'app.title': "Gordon's Legacy",
-  'app.subtitle': "Simulateur de balistique intérieure libre, dans la continuité de Gordon's Reloading Tool.",
   'app.development': 'En développement. Rien ici n’est utilisable pour mettre au point une charge.',
   'safety.simulated':
     'Valeurs simulées, pas des données de chargement. Vérifiez chaque charge avec les données publiées par le fabricant de la poudre ou du projectile, commencez bas et montez progressivement.',
@@ -88,7 +87,6 @@ export const fr: Messages = {
   'base.hollow': 'Culot creux',
   'base.hollow-round': 'Culot creux (hémisphérique)',
   'field.shotStartPressure': 'Pression initiale',
-  'field.boreResistance': 'Ajustement de la résistance au forcement',
   'field.heatOfExplosion': 'Chaleur d’explosion',
   'field.heatCapacityRatio': 'Rapport des chaleurs spécifiques',
   'field.vivacity': 'Vivacité Ba',
