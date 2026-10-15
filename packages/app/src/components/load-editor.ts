@@ -192,23 +192,27 @@ export class LoadEditor extends LitElement {
    */
   private renderFirearmChoice() {
     const { t } = this.context;
-    return html`<label class="firearm-choice">
-        ${icon('barrel')} ${t('firearm.use')}
-        <select
-          ?disabled=${this.firearms.length === 0}
-          @change=${(event: Event) => {
-            const select = event.target as HTMLSelectElement;
-            const firearm = this.firearms[Number(select.value)];
-            select.value = '';
-            if (firearm) this.emit(withFirearm(this.load, firearm));
-          }}
-        >
-          <option value="">${this.firearms.length === 0 ? t('firearm.none') : t('firearm.choose')}</option>
-          ${this.firearms.map((firearm, index) => html`<option value=${index}>${firearmOption(firearm)}</option>`)}
-        </select>
-      </label>
-      <button class="component-choice" title=${t('firearm.saveHelp')} @click=${() => this.dispatchEvent(new CustomEvent('save-firearm', { bubbles: true }))}>
-        ${icon('save')} ${t('firearm.save')}
+    return html`<select
+        class="firearm-choice"
+        aria-label=${t('firearm.use')}
+        ?disabled=${this.firearms.length === 0}
+        @change=${(event: Event) => {
+          const select = event.target as HTMLSelectElement;
+          const firearm = this.firearms[Number(select.value)];
+          select.value = '';
+          if (firearm) this.emit(withFirearm(this.load, firearm));
+        }}
+      >
+        <option value="">${this.firearms.length === 0 ? t('firearm.none') : t('firearm.choose')}</option>
+        ${this.firearms.map((firearm, index) => html`<option value=${index}>${firearmOption(firearm)}</option>`)}
+      </select>
+      <button
+        class="component-choice icon-only"
+        aria-label=${t('firearm.save')}
+        title=${t('firearm.saveHelp')}
+        @click=${() => this.dispatchEvent(new CustomEvent('save-firearm', { bubbles: true }))}
+      >
+        ${icon('save')}
       </button>`;
   }
 }
