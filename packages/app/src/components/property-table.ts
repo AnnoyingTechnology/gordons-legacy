@@ -22,6 +22,7 @@ const GROUP_ICONS: Partial<Record<string, IconName>> = {
 export class PropertyTable extends LitElement {
   static override properties = {
     group: { attribute: false },
+    folded: { type: Boolean },
     load: { attribute: false },
     context: { attribute: false },
     problems: { attribute: false },
@@ -30,6 +31,8 @@ export class PropertyTable extends LitElement {
   };
 
   declare group: FieldGroup;
+  /** Folded away: only the header and the group's summary are shown (issue #25). */
+  declare folded: boolean;
   declare load: Load;
   declare context: UiContext;
   /** Why the engine can't simulate the load; the fields concerned are marked. */
@@ -43,6 +46,7 @@ export class PropertyTable extends LitElement {
     super();
     this.drafts = new Map();
     this.problems = [];
+    this.folded = false;
   }
 
   // Light DOM, so that the application's style sheet applies.
@@ -53,11 +57,21 @@ export class PropertyTable extends LitElement {
   protected override render() {
     const { t } = this.context;
     return html`
-      <section class="property-group">
+      <!-- A folded group keeps its fields in the page, hidden: the printed report shows them all. -->
+      <section class="property-group ${this.folded ? 'folded' : ''}">
         <h2>
-          ${icon(GROUP_ICONS[this.group.title] ?? 'settings')} ${t(this.group.title)}
+          <button
+            class="group-fold"
+            aria-expanded=${this.folded ? 'false' : 'true'}
+            title=${t(this.folded ? 'group.unfold' : 'group.fold')}
+            @click=${() => this.dispatchEvent(new CustomEvent('fold-group', { detail: this.group.title, bubbles: true }))}
+          >
+            ${icon(GROUP_ICONS[this.group.title] ?? 'settings')} ${t(this.group.title)}
+            <span class="fold-mark" aria-hidden="true">${this.folded ? '▸' : '▾'}</span>
+          </button>
           ${this.action ? html`<span class="group-action">${this.action}</span>` : nothing}
         </h2>
+        ${this.folded ? html`<p class="group-summary">${this.group.summary(this.load, this.context)}</p>` : nothing}
         <table class="property-table">
           <tbody>
             ${this.group.fields.map((field, index) =>

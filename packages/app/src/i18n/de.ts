@@ -62,6 +62,8 @@ export const de: Messages = {
   'documents.open': 'Geöffnete Ladungen',
   'documents.unsaved': 'ungespeicherte Änderungen',
   'group.cartridge': 'Patrone',
+  'group.fold': 'Einklappen',
+  'group.unfold': 'Ausklappen',
   'group.barrel': 'Lauf',
   'group.projectile': 'Geschoss',
   'group.propellant': 'Pulver',

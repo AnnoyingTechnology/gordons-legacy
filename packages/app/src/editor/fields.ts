@@ -1,6 +1,7 @@
 import { seatingDepth, standardMaxPressures, type Load, type ProjectileBase, type StandardMaxPressures } from '@gordons-legacy/formats';
 import type { MessageKey } from '../i18n/i18n.ts';
 import type { QuantityKind } from '../units/units.ts';
+import type { UiContext } from '../components/context.ts';
 
 /**
  * The editable values of a load, grouped as in GRT's input panels. Each field says how to read its
@@ -49,7 +50,14 @@ export type Field = NumberField | TextField | ChoiceField;
 
 export interface FieldGroup {
   title: MessageKey;
+  /** The few values the group still shows when it is folded away (issue #25). */
+  summary: (load: Load, context: UiContext) => string;
   fields: Field[];
+}
+
+/** Values of a folded group, the empty ones left out. */
+function folded(...values: Array<string | undefined>): string {
+  return values.filter((value) => value !== undefined && value.trim() !== '').join(' · ');
 }
 
 const number = (field: Omit<NumberField, 'type'>): NumberField => ({ type: 'number', ...field });
@@ -120,6 +128,7 @@ const BASE_DIMENSIONS = [
 export const FIELD_GROUPS: FieldGroup[] = [
   {
     title: 'group.cartridge',
+    summary: (load, { quantity }) => folded(load.cartridge.name, quantity(load.cartridge.maxPressure, 'pressure')),
     fields: [
       { type: 'text', label: 'field.name', get: (l) => l.cartridge.name, set: (l, v) => ({ ...l, cartridge: { ...l.cartridge, name: v } }) },
       partNumber('cartridge', 'caseCapacity', { help: 'help.caseCapacity', label: 'field.caseCapacity', kind: 'caseCapacity', positive: true }),
@@ -135,6 +144,7 @@ export const FIELD_GROUPS: FieldGroup[] = [
   },
   {
     title: 'group.barrel',
+    summary: (load, { quantity }) => folded(load.barrel.name, quantity(load.barrel.length, 'barrelLength')),
     fields: [
       { type: 'text', label: 'field.name', get: (l) => l.barrel.name, set: (l, v) => ({ ...l, barrel: { ...l.barrel, name: v } }) },
       partNumber('barrel', 'length', { label: 'field.barrelLength', kind: 'barrelLength', positive: true }),
@@ -165,6 +175,7 @@ export const FIELD_GROUPS: FieldGroup[] = [
   },
   {
     title: 'group.projectile',
+    summary: (load, { quantity }) => folded(load.projectile.name, quantity(load.projectile.mass, 'projectileMass')),
     fields: [
       { type: 'text', label: 'field.name', get: (l) => l.projectile.name, set: (l, v) => ({ ...l, projectile: { ...l.projectile, name: v } }) },
       partNumber('projectile', 'mass', { label: 'field.mass', kind: 'projectileMass', positive: true }),
@@ -200,6 +211,7 @@ export const FIELD_GROUPS: FieldGroup[] = [
   },
   {
     title: 'group.propellant',
+    summary: (load, { quantity }) => folded(`${load.propellant.maker} ${load.propellant.product}`, quantity(load.charge.mass, 'chargeMass')),
     fields: [
       { type: 'text', label: 'field.name', get: (l) => `${l.propellant.maker} ${l.propellant.product}`.trim() },
       burnModelNumber('vivacity', { help: 'help.vivacity', label: 'field.vivacity', kind: 'plain', decimals: 4, positive: true }),
@@ -216,6 +228,7 @@ export const FIELD_GROUPS: FieldGroup[] = [
   },
   {
     title: 'group.charge',
+    summary: (load, { quantity }) => folded(quantity(load.charge.mass, 'chargeMass'), quantity(load.charge.temperature, 'temperature')),
     fields: [
       partNumber('charge', 'mass', { label: 'field.chargeMass', kind: 'chargeMass', positive: true }),
       partNumber('charge', 'temperature', { label: 'field.temperature', kind: 'temperature', positive: true }),

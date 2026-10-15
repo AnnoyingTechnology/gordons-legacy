@@ -62,6 +62,8 @@ export const es: Messages = {
   'documents.open': 'Cargas abiertas',
   'documents.unsaved': 'cambios sin guardar',
   'group.cartridge': 'Cartucho',
+  'group.fold': 'Plegar',
+  'group.unfold': 'Desplegar',
   'group.barrel': 'Cañón',
   'group.projectile': 'Proyectil',
   'group.propellant': 'Pólvora',

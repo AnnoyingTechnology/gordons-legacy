@@ -31,6 +31,7 @@ export class LoadEditor extends LitElement {
     firearms: { attribute: false },
     components: { attribute: false },
     componentEntries: { attribute: false },
+    foldedGroups: { attribute: false },
     picking: { state: true },
     review: { state: true },
     designing: { state: true },
@@ -45,6 +46,8 @@ export class LoadEditor extends LitElement {
   /** Powders and projectiles to choose from, and their entries (passed apart to re-render on import). */
   declare components: ComponentLibrary | undefined;
   declare componentEntries: ComponentEntry[];
+  /** Titles of the groups folded away; the shell keeps them with the settings. */
+  declare foldedGroups: string[];
   /** The component being chosen, if the picker is open. */
   declare picking: 'propellant' | 'projectile' | 'caliber' | undefined;
   /** Whether the cartridge designer is open. */
@@ -62,6 +65,7 @@ export class LoadEditor extends LitElement {
     this.assistant = undefined;
     this.firearms = [];
     this.componentEntries = [];
+    this.foldedGroups = [];
     this.picking = undefined;
     this.designing = false;
     this.review = undefined;
@@ -108,6 +112,7 @@ export class LoadEditor extends LitElement {
             (group) => html`<gl-property-table
               .action=${group.title === 'group.barrel' ? this.renderFirearmChoice() : this.renderComponentChoice(group.title)}
               .group=${group}
+              .folded=${this.foldedGroups.includes(group.title)}
               .load=${this.load}
               .context=${this.context}
               .problems=${problems}

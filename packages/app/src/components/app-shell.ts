@@ -190,6 +190,8 @@ export class AppShell extends LitElement {
         .firearms=${firearms(this.library.entries)}
         .components=${this.components}
         .componentEntries=${this.components.entries}
+        .foldedGroups=${this.settings.foldedGroups}
+        @fold-group=${(event: CustomEvent<string>) => this.foldGroup(event.detail)}
         @load-change=${(event: CustomEvent<Load>) => this.store.update(active.id, event.detail)}
         @calibrated=${(event: CustomEvent<CalibratedLoad>) => this.openCalibrated(active.name, event.detail)}
         @open-load=${(event: CustomEvent<{ name: string; load: Load }>) => this.store.openNew(`${event.detail.name}.json`, event.detail.load)}
@@ -369,6 +371,15 @@ export class AppShell extends LitElement {
   };
 
   /** Units chosen one kind at a time; the preset shown stays the one they started from. */
+  /** Folds an input group away, or brings it back; kept with the settings, not with the load (#25). */
+  private foldGroup(title: string): void {
+    const folded = this.settings.foldedGroups.includes(title)
+      ? this.settings.foldedGroups.filter((group) => group !== title)
+      : [...this.settings.foldedGroups, title];
+    this.settings = { ...this.settings, foldedGroups: folded };
+    this.applySettings();
+  }
+
   private setUnitPreferences(units: UnitPreferences): void {
     this.settings = { ...this.settings, units };
     this.applySettings();

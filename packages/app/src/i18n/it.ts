@@ -62,6 +62,8 @@ export const it: Messages = {
   'documents.open': 'Ricariche aperte',
   'documents.unsaved': 'modifiche non salvate',
   'group.cartridge': 'Cartuccia',
+  'group.fold': 'Richiudi',
+  'group.unfold': 'Espandi',
   'group.barrel': 'Canna',
   'group.projectile': 'Palla',
   'group.propellant': 'Polvere',

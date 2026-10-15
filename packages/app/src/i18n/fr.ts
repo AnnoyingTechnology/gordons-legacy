@@ -62,6 +62,8 @@ export const fr: Messages = {
   'documents.open': 'Charges ouvertes',
   'documents.unsaved': 'modifications non enregistrées',
   'group.cartridge': 'Cartouche',
+  'group.fold': 'Replier',
+  'group.unfold': 'Déplier',
   'group.barrel': 'Canon',
   'group.projectile': 'Projectile',
   'group.propellant': 'Poudre',

@@ -64,6 +64,8 @@ export const en = {
   'documents.open': 'Open loads',
   'documents.unsaved': 'unsaved changes',
   'group.cartridge': 'Cartridge',
+  'group.fold': 'Fold',
+  'group.unfold': 'Unfold',
   'group.barrel': 'Barrel',
   'group.projectile': 'Projectile',
   'group.propellant': 'Propellant',

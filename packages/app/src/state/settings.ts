@@ -6,13 +6,15 @@ export interface Settings {
   /** The preset last chosen; `units` may differ from it after per-kind changes. */
   unitSystem: UnitSystem;
   units: UnitPreferences;
+  /** Titles of the input groups folded away in the editor (issue #25). */
+  foldedGroups: string[];
 }
 
 const STORAGE_KEY = 'gordons-legacy.settings';
 
 /** Settings saved in the browser, with defaults from the browser's languages. */
 export function loadSettings(storage: Storage | undefined, browserLanguages: readonly string[]): Settings {
-  const defaults: Settings = { language: preferredLanguage(browserLanguages), unitSystem: 'metric', units: presetPreferences('metric') };
+  const defaults: Settings = { language: preferredLanguage(browserLanguages), unitSystem: 'metric', units: presetPreferences('metric'), foldedGroups: [] };
   try {
     const saved = JSON.parse(storage?.getItem(STORAGE_KEY) ?? '{}') as Partial<Settings>;
     return { ...defaults, ...saved };

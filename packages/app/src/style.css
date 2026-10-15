@@ -916,7 +916,7 @@ main {
   .readout,
   .curve-table,
   .issues,
-  button,
+  button:not(.group-fold),
   gl-units-dialog,
   gl-about-dialog,
   gl-choice-dialog {
@@ -2315,6 +2315,42 @@ dialog.cartridge-designer {
 }
 
 /* Buttons in a group's header, right-aligned (choose a powder, use a firearm's barrel…). */
+/* The header's title is the button that folds the group away (issue #25). */
+.group-fold {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1 1 auto;
+  height: auto;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.group-fold .fold-mark {
+  color: var(--muted);
+  font-size: 0.8em;
+}
+
+.property-group.folded h2 {
+  margin-bottom: 0;
+  border-bottom-width: 1px;
+}
+
+.property-group.folded .property-table {
+  display: none;
+}
+
+.group-summary {
+  margin: 0.2rem 0 0.8rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
 .group-action {
   display: flex;
   gap: 0.4rem;
@@ -2344,8 +2380,20 @@ dialog.cartridge-designer {
   .notes-panel.empty,
   .shot-groups-panel.empty,
   .group-action,
+  .group-summary,
+  .fold-mark,
   .property-table select {
     display: none;
+  }
+
+  /* A folded group prints in full: the report is the load, not the screen. */
+  .property-group.folded .property-table {
+    display: table;
+  }
+
+  /* The group's title is a button on screen; on paper it is just the heading again. */
+  .group-fold {
+    display: inline-flex !important;
   }
 }
 
