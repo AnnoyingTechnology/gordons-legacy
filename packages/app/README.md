@@ -75,7 +75,9 @@ src/
                         the data repository through @gordons-legacy/data
   icons/icons.ts        original SVG icons
   measurements/         statistics of measured shots; reading chronograph CSV exports
-  analysis/             GRT's powder factors (powder-factors.ts); tolerance synthesis
+  analysis/             review.ts, review-worker.ts, review-client.ts: the heavy analyses (review,
+                        bench variations, temperature table) in a Web Worker;
+                        GRT's powder factors (powder-factors.ts); tolerance synthesis
                         (charge-synthesis.ts); a load's summary for the library (load-summary.ts); muzzle blast level
                         (docs/model/muzzle-blast.md); the load's review; its temperature range (docs/load-review.md); speed of sound; bench variations
                         (sensitivity of the peak pressure); shot-group statistics

@@ -447,6 +447,7 @@ export const en = {
   'components.source.bundled': "Community data: the copy bundled with this version of the application (the repository has not been reached yet).",
   'components.chooseShort': "Choose…",
   'designer.short': "Design…",
+  'assessment.updating': "Reviewing the load…",
 } as const;
 
 export type MessageKey = keyof typeof en;

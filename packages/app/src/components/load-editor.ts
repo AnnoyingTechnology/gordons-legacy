@@ -8,7 +8,8 @@ import { withCaliber, withProjectile, withPropellant } from '../editor/component
 import './charge-synthesis-view.ts';
 import './cartridge-designer.ts';
 import './component-picker.ts';
-import { assessLoad } from '../analysis/load-assessment.ts';
+import type { Review } from '../analysis/review.ts';
+import { ReviewClient } from '../analysis/review-client.ts';
 import { FIELD_GROUPS } from '../editor/fields.ts';
 import { cartridgeDrawing } from './cartridge-drawing.ts';
 import type { UiContext } from './context.ts';
@@ -31,6 +32,7 @@ export class LoadEditor extends LitElement {
     components: { attribute: false },
     componentEntries: { attribute: false },
     picking: { state: true },
+    review: { state: true },
     designing: { state: true },
     axis: { state: true },
     assistant: { state: true },
@@ -47,6 +49,9 @@ export class LoadEditor extends LitElement {
   declare picking: 'propellant' | 'projectile' | 'caliber' | undefined;
   /** Whether the cartridge designer is open. */
   declare designing: boolean;
+  /** The latest review from the worker, and the load it is for (an earlier one while a new one computes). */
+  declare review: { load: Load; review: Review | undefined } | undefined;
+  private readonly reviews = new ReviewClient();
   declare axis: ChartAxis;
   /** The assistant open, if any. */
   declare assistant: 'boreArea' | undefined;
@@ -59,6 +64,17 @@ export class LoadEditor extends LitElement {
     this.componentEntries = [];
     this.picking = undefined;
     this.designing = false;
+    this.review = undefined;
+  }
+
+  /** Each new load asks the worker for its review; the answer re-renders the editor. */
+  protected override willUpdate(changed: Map<string, unknown>): void {
+    if (changed.has('load')) {
+      const load = this.load;
+      void this.reviews.review(load).then((review) => {
+        if (review !== undefined || this.load === load) this.review = { load, review };
+      });
+    }
   }
 
   private stopWatchingLayout = () => {};
@@ -81,7 +97,9 @@ export class LoadEditor extends LitElement {
   protected override render() {
     const result = grtTraditional.simulate(this.load);
     const problems = result.ok ? [] : result.problems;
-    const assessment = result.ok ? assessLoad(this.load, result.simulation) : undefined;
+    const stale = this.review?.load !== this.load;
+    const review = this.review?.review;
+    const assessment = review?.assessment;
     // A load the review finds dangerous gets a striped border around the whole editor.
     return html`
       <div class="load-editor concern-${assessment?.level ?? 'none'}" @assistant=${(event: CustomEvent<'boreArea'>) => (this.assistant = event.detail)}>
@@ -129,8 +147,8 @@ export class LoadEditor extends LitElement {
           ></gl-bore-area-dialog>
         </div>
         <div class="results">
-          ${result.ok && assessment
-            ? renderResults(this.load, result.simulation, assessment, this.context, this.axis, (axis) => (this.axis = axis))
+          ${result.ok
+            ? renderResults(this.load, result.simulation, review, stale, this.context, this.axis, (axis) => (this.axis = axis))
             : html`${cartridgeDrawing(this.load, undefined, this.context)}${renderProblems(problems, this.context)}`}
           ${result.ok && this.components
             ? html`<gl-charge-synthesis .load=${this.load} .entries=${this.componentEntries} .context=${this.context}></gl-charge-synthesis>`

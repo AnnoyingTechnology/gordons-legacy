@@ -1,29 +1,23 @@
-import { grtTraditional } from '@gordons-legacy/engine';
 import type { Load } from '@gordons-legacy/formats';
+import type { TemperatureRow } from '../analysis/review.ts';
 import { element } from '../dom.ts';
 import type { UiContext } from './context.ts';
 import './temperature-fit.ts';
 import type { TemperatureFit } from './temperature-fit.ts';
 
-/** Powder temperatures shown, °C: from a cold winter day to a cartridge left in the sun. */
-const TEMPERATURES = [-20, 0, 21, 35, 50];
-const ZERO_CELSIUS = 273.15;
-
 /**
- * The load at several powder temperatures: peak pressure, its share of the maximum and the muzzle
- * velocity. A powder's vivacity rises with temperature, and with it the pressure (GRT's temperature
+ * The load at several powder temperatures (computed with the review, analysis/review.ts): peak
+ * pressure, its share of the maximum and the muzzle velocity. A powder's vivacity rises with temperature, and with it the pressure (GRT's temperature
  * coefficients, grt-traditional.md).
  */
-export function renderTemperatures(load: Load, context: UiContext): HTMLElement {
+export function renderTemperatures(load: Load, table: readonly TemperatureRow[], context: UiContext): HTMLElement {
   const { t, quantity, number } = context;
   let firstAboveMaximum: number | undefined;
-  const rows = TEMPERATURES.map((celsius) => {
-    const temperature = celsius + ZERO_CELSIUS;
-    const result = grtTraditional.simulate({ ...load, charge: { ...load.charge, temperature } });
-    if (!result.ok) {
+  const rows = table.map(({ temperature, peakPressure, muzzleVelocity }) => {
+    if (peakPressure === undefined || muzzleVelocity === undefined) {
       return element('tr', {}, [quantity(temperature, 'temperature'), t('results.notSimulated'), '', '', ''].map((cell) => element('td', {}, [cell])));
     }
-    const shot = result.simulation;
+    const shot = { maxPressure: peakPressure, muzzleVelocity };
     const share = shot.maxPressure / load.cartridge.maxPressure;
     if (share > 1 && firstAboveMaximum === undefined) firstAboveMaximum = temperature;
     const flag = share > 1 ? [element('span', { class: 'severity error' }, [`▲ ${t('results.aboveMaximum')}`])] : [];

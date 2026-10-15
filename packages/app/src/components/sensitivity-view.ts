@@ -1,5 +1,5 @@
 import type { Load } from '@gordons-legacy/formats';
-import { sensitivities } from '../analysis/sensitivity.ts';
+import type { Sensitivity } from '../analysis/sensitivity.ts';
 import { element } from '../dom.ts';
 import type { UiContext } from './context.ts';
 
@@ -7,8 +7,7 @@ import type { UiContext } from './context.ts';
  * How much the peak pressure rises with ordinary bench variations (analysis/sensitivity.ts). Folded,
  * its summary still says when a variation takes the load above the maximum.
  */
-export function renderSensitivity(load: Load, context: UiContext): HTMLElement | undefined {
-  const results = sensitivities(load);
+export function renderSensitivity(load: Load, results: Sensitivity[] | undefined, context: UiContext): HTMLElement | undefined {
   if (!results) return undefined;
   const { t, quantity, number } = context;
   const aboveMaximum = results.some((entry) => entry.peakPressure !== undefined && entry.peakPressure > load.cartridge.maxPressure);

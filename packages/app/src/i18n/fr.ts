@@ -445,4 +445,5 @@ export const fr: Messages = {
   'components.source.bundled': "Données de la communauté : la copie fournie avec cette version de l’application (le dépôt n’a pas encore été joint).",
   'components.chooseShort': "Choisir…",
   'designer.short': "Concevoir…",
+  'assessment.updating': "Revue du chargement en cours…",
 };

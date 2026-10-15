@@ -2221,3 +2221,9 @@ dialog.cartridge-designer {
     display: none;
   }
 }
+
+/* The previous review, shown while the worker computes the new one. */
+.updating {
+  opacity: 0.55;
+  transition: opacity 0.15s;
+}

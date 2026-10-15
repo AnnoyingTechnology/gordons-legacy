@@ -445,4 +445,5 @@ export const es: Messages = {
   'components.source.bundled': "Datos de la comunidad: la copia incluida en esta versión de la aplicación (aún no se ha alcanzado el repositorio).",
   'components.chooseShort': "Elegir…",
   'designer.short': "Diseñar…",
+  'assessment.updating': "Revisando la carga…",
 };

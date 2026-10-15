@@ -1,7 +1,8 @@
 import type { Simulation } from '@gordons-legacy/engine';
 import type { Load } from '@gordons-legacy/formats';
 import { render } from 'lit';
-import type { Assessment } from '../analysis/load-assessment.ts';
+import { pressureLimits } from '../analysis/load-assessment.ts';
+import type { Review } from '../analysis/review.ts';
 import { element } from '../dom.ts';
 import { assessmentView } from './assessment-view.ts';
 import { renderAxisSwitch, renderCharts, type ChartAxis } from './charts-view.ts';
@@ -22,11 +23,15 @@ export { renderProblems } from './problems-view.ts';
  * The simulated shot, built as plain DOM from the sections in the neighbouring modules: safety notice,
  * the load's review, key figures and details, charts, curve table, ladder, powder temperature, bench
  * variations, OBT nodes and measurements.
+ *
+ * `review` comes from the review worker; until it arrives for this load, `stale` is true and the
+ * previous review (if any) is shown dimmed and marked as updating.
  */
 export function renderResults(
   load: Load,
   shot: Simulation,
-  assessment: Assessment,
+  review: Review | undefined,
+  stale: boolean,
   context: UiContext,
   axis: ChartAxis,
   onAxis: (axis: ChartAxis) => void,
@@ -36,11 +41,12 @@ export function renderResults(
   container.append(element('p', { class: 'warning' }, [t('safety.simulated')]));
   const fit = load.propellant.calibration;
   if (fit) container.append(renderFitNotice(fit, context));
-  const review = element('div');
-  render(assessmentView(assessment, load.charge.temperature, context), review);
+  const reviewPanel = element('div', stale ? { class: 'updating', 'aria-busy': 'true' } : {});
+  if (review) render(assessmentView(review.assessment, load.charge.temperature, context), reviewPanel);
+  else reviewPanel.append(element('p', { class: 'note' }, [t('assessment.updating')]));
   const figures = element('div');
-  render(keyFigures(load, shot, assessment, context, renderDetails(load, shot, context)), figures);
-  container.append(review, figures);
+  render(keyFigures(load, shot, pressureLimits(load), context, renderDetails(load, shot, context)), figures);
+  container.append(reviewPanel, figures);
   if (shot.warnings.length > 0) {
     container.append(
       element('ul', { class: 'issues' }, shot.warnings.map((warning) =>
@@ -53,9 +59,11 @@ export function renderResults(
   if (ladder.length > 1) container.append(renderLegend(ladder, context));
   container.append(renderTable(shot, context));
   if (ladder.length > 1) container.append(renderLadder(load, ladder, context));
-  container.append(renderTemperatures(load, context));
-  const sensitivity = renderSensitivity(load, context);
-  if (sensitivity) container.append(sensitivity);
+  if (review) {
+    container.append(renderTemperatures(load, review.temperatures, context));
+    const sensitivity = renderSensitivity(load, review.sensitivities, context);
+    if (sensitivity) container.append(sensitivity);
+  }
   const obtNodes = renderObtNodes(load, shot, context);
   if (obtNodes) container.append(obtNodes);
   const measurements = renderMeasurements(load, context);

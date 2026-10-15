@@ -1,7 +1,7 @@
 import type { Simulation } from '@gordons-legacy/engine';
 import type { Load } from '@gordons-legacy/formats';
 import { html, nothing, type TemplateResult } from 'lit';
-import { NEAR_LIMIT_SHARE, type Assessment } from '../analysis/load-assessment.ts';
+import { NEAR_LIMIT_SHARE, type PressureLimit } from '../analysis/load-assessment.ts';
 import { muzzleBlast } from '../analysis/muzzle-blast.ts';
 import { speedOfSound } from '../analysis/speed-of-sound.ts';
 import { icon, type IconName } from '../icons/icons.ts';
@@ -14,9 +14,9 @@ import { limitName, pressureGauge, speedScale } from './gauges.ts';
  * then energy, recoil and the muzzle blast's sound level; then the case, drawn filled to scale, beside
  * the secondary results (`details`), barrel time and burn among them.
  */
-export function keyFigures(load: Load, shot: Simulation, assessment: Assessment, context: UiContext, details: Node): TemplateResult {
+export function keyFigures(load: Load, shot: Simulation, limits: PressureLimit[], context: UiContext, details: Node): TemplateResult {
   const { t, quantity, number } = context;
-  const lowest = assessment.limits[0]!;
+  const lowest = limits[0]!;
   const share = shot.maxPressure / lowest.pressure;
   const above = shot.maxPressure > lowest.pressure;
   const temperature = load.charge.temperature;
@@ -38,7 +38,7 @@ export function keyFigures(load: Load, shot: Simulation, assessment: Assessment,
           ${above ? html`<strong>▲ ${t('results.aboveMaximum')}:</strong> ` : nothing}
           ${t('gauge.ofLimit', { percent: number(share * 100, 0), limit: `${limitName(lowest, context)} ${quantity(lowest.pressure, 'pressure')}` })}
         </div>
-        ${pressureGauge(shot.maxPressure, assessment.limits, NEAR_LIMIT_SHARE, context)}
+        ${pressureGauge(shot.maxPressure, limits, NEAR_LIMIT_SHARE, context)}
       </section>
       ${card('energy', t('results.muzzleEnergy'), quantity(shot.muzzleEnergy, 'energy'), t('results.efficiencyDetail', { percent: number(shot.efficiency * 100, 1) }))}
       ${gun
