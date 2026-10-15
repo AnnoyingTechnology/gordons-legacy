@@ -435,9 +435,16 @@ code {
   font-size: 11px;
 }
 
+/* The number at the end of each compared curve: what names it when the colours can't be told apart. */
+.line-chart .series-label {
+  font-size: 12px;
+  font-weight: 700;
+}
+
 /* A halo of the background colour keeps labels legible where they cross a line. */
 .line-chart .limit-label,
 .line-chart .event-label,
+.line-chart .series-label,
 .line-chart .marker-label {
   paint-order: stroke;
   stroke: var(--bg);
@@ -978,6 +985,11 @@ main {
 
 .compare-table td.name {
   text-align: left;
+}
+
+.series-number {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .compare-table .swatch,

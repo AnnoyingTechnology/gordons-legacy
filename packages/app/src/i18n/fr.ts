@@ -209,6 +209,7 @@ export const fr: Messages = {
   'results.timeAxis': 'Temps depuis l’allumage',
   'results.hover': 'Survolez un graphique pour en lire les valeurs.',
   'results.pressure': 'Pression',
+  'results.chartPeak': 'Maximum {value} à {at} ; toutes les valeurs sont dans le tableau sous les graphiques.',
   'results.velocity': 'Vitesse',
   'results.burnoutLabel': 'fin de combustion',
   'results.table': 'Courbe sous forme de tableau',

@@ -209,6 +209,7 @@ export const de: Messages = {
   'results.timeAxis': 'Zeit seit der Zündung',
   'results.hover': 'Zeigen Sie auf ein Diagramm, um die Werte abzulesen.',
   'results.pressure': 'Gasdruck',
+  'results.chartPeak': 'Höchstwert {value} bei {at}; alle Werte stehen in der Tabelle unter den Diagrammen.',
   'results.velocity': 'Geschwindigkeit',
   'results.burnoutLabel': 'Abbrand',
   'results.table': 'Kurve als Tabelle',

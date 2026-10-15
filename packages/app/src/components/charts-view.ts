@@ -73,6 +73,7 @@ export function renderCharts(shot: Simulation, ladder: LadderShot[], axis: Chart
       label: `${limitName(limit, context)} ${quantity(limit.pressure, 'pressure')}`,
     })),
     markers: peakIndex >= 0 ? [{ index: peakIndex, label: quantity(shot.maxPressure, 'pressure') }] : [],
+    describePeak: (value, at) => t('results.chartPeak', { value: `${value} ${pressureUnit.symbol}`, at: `${at} ${xUnit.symbol}` }),
     events,
     others: reduced.map(({ simulation, opacity }) => ({
       x: xOf(simulation),
@@ -91,6 +92,7 @@ export function renderCharts(shot: Simulation, ladder: LadderShot[], axis: Chart
     formatX,
     formatY: (value) => number(value, 0),
     markers: [{ index: curve.velocity.length - 1, label: quantity(shot.muzzleVelocity, 'velocity') }],
+    describePeak: (value, at) => t('results.chartPeak', { value: `${value} ${velocityUnit.symbol}`, at: `${at} ${xUnit.symbol}` }),
     events,
     others: reduced.map(({ simulation, opacity }) => ({
       x: xOf(simulation),

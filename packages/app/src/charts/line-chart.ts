@@ -25,9 +25,16 @@ export interface LineChartOptions {
    * Other curves, drawn behind the main one: in the main colour at a lower opacity (faint, thinner),
    * or in their own colour (another load, same width).
    */
-  others?: { x: ArrayLike<number>; y: ArrayLike<number>; opacity?: number; color?: string }[];
+  others?: { x: ArrayLike<number>; y: ArrayLike<number>; opacity?: number; color?: string; label?: string }[];
+  /** Written at the end of the curve: what tells curves apart when their colours can't be. */
+  label?: string;
   /** `half` when the chart shares the width with another; `full` by default. */
   size?: keyof typeof SIZES;
+  /**
+   * How to word the curve's peak for a screen reader, which cannot read the drawing: given the highest
+   * value and where it happens, both formatted. Without it the chart is announced by its title alone.
+   */
+  describePeak?: (value: string, at: string) => string;
 }
 
 /**
@@ -66,7 +73,12 @@ export class LineChart {
     this.yScale = (value) => MARGIN.top + plotHeight - (value / yMax) * plotHeight;
 
     this.element = svg('svg', { viewBox: `0 0 ${this.width} ${this.height}`, class: 'line-chart', role: 'img' });
-    this.element.append(svg('title', {}, options.title));
+    this.element.append(svg('title', {}, `${options.title} (${options.yLabel})`));
+    if (options.describePeak) {
+      let peak = 0;
+      for (let index = 1; index < options.y.length; index++) if (options.y[index]! > options.y[peak]!) peak = index;
+      this.element.append(svg('desc', {}, options.describePeak(options.formatY(options.y[peak] ?? 0), options.formatX(options.x[peak] ?? 0))));
+    }
     this.drawAxes(yTicks, niceTicks(this.xMin, this.xMax, 8).filter((tick) => tick >= this.xMin && tick <= this.xMax));
     this.drawLimits();
     this.drawEvents();
@@ -82,6 +94,7 @@ export class LineChart {
       );
     }
     this.element.append(svg('path', { d: this.linePath(options.x, options.y), class: 'series', stroke: options.color }));
+    this.drawSeriesLabels();
     this.drawMarkers();
 
     this.crosshair = svg('line', { y1: MARGIN.top, y2: this.height - MARGIN.bottom, class: 'crosshair', visibility: 'hidden' });
@@ -175,6 +188,29 @@ export class LineChart {
       const x = this.xScale(event.x);
       this.element.append(svg('line', { x1: x, x2: x, y1: MARGIN.top, y2: this.height - MARGIN.bottom, class: 'event' }));
       this.element.append(svg('text', { x: x + 4, y: this.height - MARGIN.bottom - 6, class: 'event-label' }, event.label));
+    }
+  }
+
+  /** Each labelled curve named at its own end, in its colour: the legend's colours are not the only key. */
+  private drawSeriesLabels(): void {
+    const { options } = this;
+    const series = [{ x: options.x, y: options.y, color: options.color, label: options.label }, ...(options.others ?? [])];
+    for (const curve of series) {
+      const last = curve.x.length - 1;
+      if (curve.label === undefined || last < 0) continue;
+      this.element.append(
+        svg(
+          'text',
+          {
+            x: this.xScale(curve.x[last]!) - 3,
+            y: this.yScale(curve.y[last]!) - 6,
+            class: 'series-label',
+            fill: curve.color ?? options.color,
+            'text-anchor': 'end',
+          },
+          curve.label,
+        ),
+      );
     }
   }
 

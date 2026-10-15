@@ -131,12 +131,21 @@ export class CompareView extends LitElement {
         color: first!.color,
         formatX,
         formatY: (value) => number(value, 0),
-        others: rest.map((entry) => ({ x: xOf(entry.simulation), y: Float64Array.from(values(entry.simulation), toUnit), color: entry.color })),
+        label: '1',
+        others: rest.map((entry, index) => ({
+          x: xOf(entry.simulation),
+          y: Float64Array.from(values(entry.simulation), toUnit),
+          color: entry.color,
+          label: String(index + 2),
+        })),
       }).element;
-    const legend = element('ul', { class: 'chart-legend' }, compared.map((entry) => {
+    const legend = element('ul', { class: 'chart-legend' }, compared.map((entry, index) => {
       const swatch = element('span', { class: 'swatch' });
       swatch.style.borderTopColor = entry.color;
-      return element('li', {}, [swatch, entry.name]);
+      // The number is on the curve too: which curve is which must not depend on telling colours apart.
+      const number = element('span', { class: 'series-number' }, [String(index + 1)]);
+      number.style.color = entry.color;
+      return element('li', {}, [swatch, number, entry.name]);
     }));
     return [
       element('div', { class: 'chart-pair' }, [
@@ -163,11 +172,12 @@ export class CompareView extends LitElement {
           </tr>
         </thead>
         <tbody>
-          ${compared.map(({ name, load, simulation, color }) => {
+          ${compared.map(({ name, load, simulation, color }, index) => {
             const share = simulation.maxPressure / load.cartridge.maxPressure;
             return html`<tr>
               <td class="name">
-                <span class="swatch" style="border-top-color: ${color}"></span> ${name}
+                <span class="swatch" style="border-top-color: ${color}"></span>
+                <span class="series-number" style="color: ${color}">${index + 1}</span> ${name}
                 ${load.propellant.calibration ? html`<span class="severity">(${t('compare.fitted')})</span>` : nothing}
               </td>
               <td>${quantity(load.charge.mass, 'chargeMass')}</td>

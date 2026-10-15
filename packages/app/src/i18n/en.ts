@@ -211,6 +211,7 @@ export const en = {
   'results.timeAxis': 'Time since ignition',
   'results.hover': 'Hover a chart to read its values.',
   'results.pressure': 'Pressure',
+  'results.chartPeak': 'Highest {value} at {at}; every value is in the table under the charts.',
   'results.velocity': 'Velocity',
   'results.burnoutLabel': 'burnout',
   'results.table': 'Curve as a table',
