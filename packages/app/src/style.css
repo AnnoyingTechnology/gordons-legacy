@@ -508,6 +508,8 @@ code {
 .toolbar {
   display: flex;
   align-items: stretch;
+  /* The groups wrap rather than run off a narrow screen: this is used on a phone at the bench. */
+  flex-wrap: wrap;
   gap: 0;
   padding: 0 0.5rem;
   min-height: 3.6rem;
@@ -905,6 +907,7 @@ main {
 .obt-nodes tr.current td {
   font-weight: 600;
 }
+
 
 /* Printed report: the load's inputs and its simulation, in the light theme, without the controls. */
 @media print {
@@ -2452,5 +2455,98 @@ dialog.cartridge-designer {
 @media (prefers-reduced-motion: reduce) {
   .updating {
     transition: none;
+  }
+}
+
+/* A phone: the toolbar's groups wrap, the title keeps its logo alone, and nothing is cut off. */
+@media (max-width: 640px) {
+  .toolbar {
+    padding: 0 0.25rem;
+    min-height: 0;
+  }
+
+  .toolbar h1 {
+    font-size: 0;
+    margin: 0 0.4rem 0 0.2rem;
+  }
+
+  .toolbar .tool {
+    min-width: 3.4rem;
+    padding: 0.3rem 0.35rem;
+    font-size: 0.8rem;
+  }
+
+  .spacer {
+    display: none;
+  }
+
+  .tool-group:first-of-type {
+    border-left: 0;
+  }
+
+  .property-table th {
+    width: 8.5rem;
+  }
+
+  .property-table .unit {
+    width: 3.2rem;
+  }
+
+  .tabs {
+    max-width: 100%;
+  }
+
+  /* A grid item is as wide as its content unless told otherwise; the header wraps instead. */
+  .inputs,
+  .results {
+    min-width: 0;
+  }
+
+  .property-group h2,
+  .notes-panel h2,
+  .shot-groups-panel h2 {
+    flex-wrap: wrap;
+  }
+
+  .group-action {
+    margin-left: 0;
+  }
+
+  /* Tables of many columns scroll inside their panel rather than widening the page. */
+  .results details,
+  .measurements {
+    overflow-x: auto;
+  }
+
+  /* The four-step scale goes under the review's title instead of beside it. */
+  .assessment-head {
+    flex-wrap: wrap;
+  }
+
+  .concern-scale {
+    font-size: 0.75rem;
+  }
+
+  /* 4 × 5.5rem does not fit a phone; the steps share what there is. */
+  .concern-scale li {
+    min-width: 0;
+    flex: 1 1 auto;
+    padding: 0.2rem 0.3rem;
+  }
+
+  /* Two key figures a row rather than three squeezed ones. */
+  .key-figures {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .key-card,
+  .key-card.primary,
+  .key-card.fill-card,
+  .key-card.details-card {
+    grid-column: span 1;
+  }
+
+  .key-card.primary {
+    grid-column: span 2;
   }
 }
