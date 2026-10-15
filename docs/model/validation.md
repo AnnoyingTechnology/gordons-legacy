@@ -107,6 +107,32 @@ velocity error is +12.2 % (GRT Traditional: +6.8 %); GRT's powder data don't tra
 Scaled to match GRT's velocity load by load, R1 predicts peaks up to 1.7 times GRT's for subsonic
 rifle loads: an open discrepancy on pressure that only measured pressures can settle.
 
+### How the two engines differ across a real corpus (2026-10-15)
+
+Both engines run over the maintainer's 58 importable loads, same inputs, no measurements involved: this
+says nothing about which is right, only where they disagree. R1 refuses five of the loads (gas leaks, a
+jump to the lands).
+
+| Regime | Loads | R1 against GRT Traditional, peak pressure |
+|---|---|---|
+| At or above 3,000 bar | 12 | **−10.9 % median**, −16.3 % to −7.4 %: cooler on every one |
+| 2,000–3,000 bar | 21 | +9.2 % median, −9.5 % to +16.8 % |
+| Under 2,000 bar | 25 | +32.6 % median, +8.9 % to +51.0 % |
+| Compressed, fill ≥ 100 % | 13 | −8.2 % median |
+| Light, fill under 70 % | 18 | +32.6 % median |
+
+The disagreement is monotone in how hard the load is working, not scattered by cartridge or powder:
+every full-case supersonic .300 Blackout load has R1 cooler, every light subsonic one has R1 hotter. The
+four measured .30-06 rounds above sit in the top band and agree with its direction — R1 was 14–15 %
+under the measured peak there.
+
+Two consequences. **R1 reads cooler than GRT exactly in the regime where a handloader is in danger**,
+full cases near the maximum, and under-reading is the unsafe direction. And any comparison of the two
+engines must be reported per regime: pooled over a corpus the bands cancel, and R1 comes out looking
+*hotter* overall (median +11.9 %, cooler on only 19 loads of 58), which is the opposite of what matters.
+
+Velocities disagree far less: R1 is 2.5 % slower at the median (−8.8 % to +6.2 %).
+
 ## Next
 
 - Published data (Vihtavuori, Hodgdon…): charge, velocity and pressure for named components and
