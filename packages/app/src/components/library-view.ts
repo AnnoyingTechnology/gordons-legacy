@@ -73,7 +73,7 @@ export class LibraryView extends LitElement {
         </header>
         <p class="note">${t('library.help')}</p>
         ${this.entries.length === 0
-          ? html`<p class="empty">${t('library.empty')}</p>`
+          ? html`<p class="empty-message">${t('library.empty')}</p>`
           : html`<div class="table-scroll"><table class="library-table">
               <thead>
                 <tr>
@@ -127,7 +127,7 @@ export class LibraryView extends LitElement {
           <button @click=${() => this.fire('edit-firearm', { firearm: newFirearm() })}>${icon('add')} ${t('firearm.add')}</button>
         </header>
         ${shown.length === 0
-          ? html`<p class="empty">${t(this.firearms.length === 0 ? 'firearm.empty' : 'library.noMatch')}</p>`
+          ? html`<p class="empty-message">${t(this.firearms.length === 0 ? 'firearm.empty' : 'library.noMatch')}</p>`
           : html`<table class="data-table firearm-table">
               <thead>
                 ${headerRow([t('field.name'), t('firearm.maker'), t('firearm.cartridge'), t('field.barrelLength'), t('field.twistLength'), t('field.gunMass'), ''])}

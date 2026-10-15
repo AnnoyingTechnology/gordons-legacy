@@ -726,7 +726,9 @@ main {
   min-height: 60vh;
 }
 
-.empty {
+/* A page with nothing in it yet: the library before a first load, the editor before a document. Not
+   the editor's own panels, which carry `empty` only as a marker for the printed report. */
+.empty-message {
   color: var(--muted);
   border: 1px dashed var(--rule);
   padding: 2rem;
@@ -1088,14 +1090,16 @@ button[aria-pressed='true'] {
 }
 
 .notes-panel {
-  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
+/* A note is its title and its text, one above the other, across the whole column. */
 .notes-panel .note {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  margin-bottom: 0.6rem;
 }
 
 .notes-panel .note-title {

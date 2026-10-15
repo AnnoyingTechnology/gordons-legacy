@@ -197,7 +197,7 @@ export class AppShell extends LitElement {
     if (this.view === 'compare' && this.store.documents.length >= 2) {
       return html`<gl-compare-view .documents=${this.store.documents} .context=${this.context}></gl-compare-view>`;
     }
-    if (!active) return html`<p class="empty">${t('documents.empty')}</p>`;
+    if (!active) return html`<p class="empty-message">${t('documents.empty')}</p>`;
     return html`
       <header class="print-header">
         <h1>${t('app.title')}: ${active.name.replace(/\.json$/i, '')}</h1>
