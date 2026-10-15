@@ -54,6 +54,42 @@ export interface FieldGroup {
 
 const number = (field: Omit<NumberField, 'type'>): NumberField => ({ type: 'number', ...field });
 
+/** What a number field says about itself; its path, getter and setter follow from where it sits. */
+type FieldOptions = Omit<NumberField, 'type' | 'path' | 'get' | 'set'>;
+
+type LoadPart = 'cartridge' | 'barrel' | 'projectile' | 'propellant' | 'charge';
+
+/** The keys of a part of the load that hold a number. */
+type NumberKey<Part extends LoadPart> = {
+  [Key in keyof Load[Part]]-?: Exclude<Load[Part][Key], undefined> extends number ? Key : never;
+}[keyof Load[Part]] &
+  string;
+
+/** A number of one part of the load (`cartridge.caseLength`…), read and written by its key. */
+function partNumber<Part extends LoadPart>(part: Part, key: NumberKey<Part>, options: FieldOptions): NumberField {
+  return number({
+    ...options,
+    path: `${part}.${key}`,
+    get: (load) => load[part][key] as number | undefined,
+    set: (load, value) => ({ ...load, [part]: { ...load[part], [key]: value } }),
+  });
+}
+
+type BurnModel = Load['propellant']['burnModel'];
+
+/** The coefficients of the powder's GRT burn model. */
+type BurnModelKey = { [Key in keyof BurnModel]-?: BurnModel[Key] extends number ? Key : never }[keyof BurnModel] & string;
+
+/** A coefficient of the powder's GRT burn model. */
+function burnModelNumber(key: BurnModelKey, options: FieldOptions): NumberField {
+  return number({
+    ...options,
+    path: `propellant.burnModel.${key}`,
+    get: (load) => load.propellant.burnModel[key],
+    set: (load, value) => withBurnModel(load, { [key]: value }),
+  });
+}
+
 /** A standard's maximum pressure: shown as known (entered, or from the caliber definition), stored when entered. */
 function standardPressureField(standard: keyof StandardMaxPressures, label: MessageKey): NumberField {
   const withValue = (load: Load, value: number | undefined): Load => {
@@ -86,23 +122,23 @@ export const FIELD_GROUPS: FieldGroup[] = [
     title: 'group.cartridge',
     fields: [
       { type: 'text', label: 'field.name', get: (l) => l.cartridge.name, set: (l, v) => ({ ...l, cartridge: { ...l.cartridge, name: v } }) },
-      number({ path: 'cartridge.caseCapacity', help: 'help.caseCapacity', label: 'field.caseCapacity', kind: 'caseCapacity', positive: true, get: (l) => l.cartridge.caseCapacity, set: (l, v) => ({ ...l, cartridge: { ...l.cartridge, caseCapacity: v } }) }),
-      number({ path: 'cartridge.caseLength', label: 'field.caseLength', kind: 'length', positive: true, get: (l) => l.cartridge.caseLength, set: (l, v) => ({ ...l, cartridge: { ...l.cartridge, caseLength: v } }) }),
-      number({ path: 'cartridge.overallLength', label: 'field.overallLength', kind: 'length', positive: true, get: (l) => l.cartridge.overallLength, set: (l, v) => ({ ...l, cartridge: { ...l.cartridge, overallLength: v } }) }),
-      number({ path: 'cartridge.grooveDiameter', label: 'field.grooveDiameter', kind: 'length', positive: true, get: (l) => l.cartridge.grooveDiameter, set: (l, v) => ({ ...l, cartridge: { ...l.cartridge, grooveDiameter: v } }) }),
-      number({ path: 'cartridge.effectiveBoreArea', help: 'help.effectiveBoreArea', assistant: 'boreArea', label: 'field.effectiveBoreArea', kind: 'area', positive: true, get: (l) => l.cartridge.effectiveBoreArea, set: (l, v) => ({ ...l, cartridge: { ...l.cartridge, effectiveBoreArea: v } }) }),
-      number({ path: 'cartridge.maxPressure', label: 'field.maxPressure', kind: 'pressure', positive: true, get: (l) => l.cartridge.maxPressure, set: (l, v) => ({ ...l, cartridge: { ...l.cartridge, maxPressure: v } }) }),
+      partNumber('cartridge', 'caseCapacity', { help: 'help.caseCapacity', label: 'field.caseCapacity', kind: 'caseCapacity', positive: true }),
+      partNumber('cartridge', 'caseLength', { label: 'field.caseLength', kind: 'length', positive: true }),
+      partNumber('cartridge', 'overallLength', { label: 'field.overallLength', kind: 'length', positive: true }),
+      partNumber('cartridge', 'grooveDiameter', { label: 'field.grooveDiameter', kind: 'length', positive: true }),
+      partNumber('cartridge', 'effectiveBoreArea', { help: 'help.effectiveBoreArea', assistant: 'boreArea', label: 'field.effectiveBoreArea', kind: 'area', positive: true }),
+      partNumber('cartridge', 'maxPressure', { label: 'field.maxPressure', kind: 'pressure', positive: true }),
       standardPressureField('cip', 'field.cipMaxPressure'),
       standardPressureField('saami', 'field.saamiMaxPressure'),
-      number({ path: 'cartridge.sebertFactor', help: 'help.sebertFactor', label: 'field.sebertFactor', kind: 'plain', decimals: 2, get: (l) => l.cartridge.sebertFactor, set: (l, v) => ({ ...l, cartridge: { ...l.cartridge, sebertFactor: v } }) }),
+      partNumber('cartridge', 'sebertFactor', { help: 'help.sebertFactor', label: 'field.sebertFactor', kind: 'plain', decimals: 2 }),
     ],
   },
   {
     title: 'group.barrel',
     fields: [
       { type: 'text', label: 'field.name', get: (l) => l.barrel.name, set: (l, v) => ({ ...l, barrel: { ...l.barrel, name: v } }) },
-      number({ path: 'barrel.length', label: 'field.barrelLength', kind: 'barrelLength', positive: true, get: (l) => l.barrel.length, set: (l, v) => ({ ...l, barrel: { ...l.barrel, length: v } }) }),
-      number({ path: 'barrel.twistLength', label: 'field.twistLength', kind: 'twistLength', positive: true, get: (l) => l.barrel.twistLength, set: (l, v) => ({ ...l, barrel: { ...l.barrel, twistLength: v } }) }),
+      partNumber('barrel', 'length', { label: 'field.barrelLength', kind: 'barrelLength', positive: true }),
+      partNumber('barrel', 'twistLength', { label: 'field.twistLength', kind: 'twistLength', positive: true }),
       number({
         path: 'barrel.gunMass',
         label: 'field.gunMass',
@@ -131,9 +167,9 @@ export const FIELD_GROUPS: FieldGroup[] = [
     title: 'group.projectile',
     fields: [
       { type: 'text', label: 'field.name', get: (l) => l.projectile.name, set: (l, v) => ({ ...l, projectile: { ...l.projectile, name: v } }) },
-      number({ path: 'projectile.mass', label: 'field.mass', kind: 'projectileMass', positive: true, get: (l) => l.projectile.mass, set: (l, v) => ({ ...l, projectile: { ...l.projectile, mass: v } }) }),
-      number({ path: 'projectile.diameter', label: 'field.diameter', kind: 'length', positive: true, get: (l) => l.projectile.diameter, set: (l, v) => ({ ...l, projectile: { ...l.projectile, diameter: v } }) }),
-      number({ path: 'projectile.length', label: 'field.length', kind: 'length', positive: true, get: (l) => l.projectile.length, set: (l, v) => ({ ...l, projectile: { ...l.projectile, length: v } }) }),
+      partNumber('projectile', 'mass', { label: 'field.mass', kind: 'projectileMass', positive: true }),
+      partNumber('projectile', 'diameter', { label: 'field.diameter', kind: 'length', positive: true }),
+      partNumber('projectile', 'length', { label: 'field.length', kind: 'length', positive: true }),
       {
         type: 'choice',
         label: 'field.base',
@@ -159,30 +195,30 @@ export const FIELD_GROUPS: FieldGroup[] = [
         get: (l) => seatingDepth(l),
         set: (l, v) => ({ ...l, cartridge: { ...l.cartridge, overallLength: l.cartridge.caseLength + l.projectile.length - v } }),
       }),
-      number({ path: 'projectile.shotStartPressure', help: 'help.shotStartPressure', label: 'field.shotStartPressure', kind: 'pressure', positive: true, get: (l) => l.projectile.shotStartPressure, set: (l, v) => ({ ...l, projectile: { ...l.projectile, shotStartPressure: v } }) }),
+      partNumber('projectile', 'shotStartPressure', { help: 'help.shotStartPressure', label: 'field.shotStartPressure', kind: 'pressure', positive: true }),
     ],
   },
   {
     title: 'group.propellant',
     fields: [
       { type: 'text', label: 'field.name', get: (l) => `${l.propellant.maker} ${l.propellant.product}`.trim() },
-      number({ path: 'propellant.burnModel.vivacity', help: 'help.vivacity', label: 'field.vivacity', kind: 'plain', decimals: 4, positive: true, get: (l) => l.propellant.burnModel.vivacity, set: (l, v) => withBurnModel(l, { vivacity: v }) }),
-      number({ path: 'propellant.burnModel.a0', help: 'help.a0', label: 'field.a0', kind: 'plain', decimals: 4, get: (l) => l.propellant.burnModel.a0, set: (l, v) => withBurnModel(l, { a0: v }) }),
-      number({ path: 'propellant.burnModel.z1', help: 'help.z1', label: 'field.z1', kind: 'plain', decimals: 4, get: (l) => l.propellant.burnModel.z1, set: (l, v) => withBurnModel(l, { z1: v }) }),
-      number({ path: 'propellant.burnModel.z2', help: 'help.z2', label: 'field.z2', kind: 'plain', decimals: 4, get: (l) => l.propellant.burnModel.z2, set: (l, v) => withBurnModel(l, { z2: v }) }),
-      number({ path: 'propellant.burnModel.coldTemperatureCoefficient', help: 'help.temperatureCoefficients', label: 'field.coldTemperatureCoefficient', kind: 'plain', decimals: 4, get: (l) => l.propellant.burnModel.coldTemperatureCoefficient, set: (l, v) => withBurnModel(l, { coldTemperatureCoefficient: v }) }),
-      number({ path: 'propellant.burnModel.hotTemperatureCoefficient', help: 'help.temperatureCoefficients', label: 'field.hotTemperatureCoefficient', kind: 'plain', decimals: 4, get: (l) => l.propellant.burnModel.hotTemperatureCoefficient, set: (l, v) => withBurnModel(l, { hotTemperatureCoefficient: v }) }),
-      number({ path: 'propellant.heatOfExplosion', help: 'help.heatOfExplosion', label: 'field.heatOfExplosion', kind: 'specificEnergy', positive: true, get: (l) => l.propellant.heatOfExplosion, set: (l, v) => ({ ...l, propellant: { ...l.propellant, heatOfExplosion: v } }) }),
-      number({ path: 'propellant.heatCapacityRatio', help: 'help.heatCapacityRatio', label: 'field.heatCapacityRatio', kind: 'plain', decimals: 4, positive: true, get: (l) => l.propellant.heatCapacityRatio, set: (l, v) => ({ ...l, propellant: { ...l.propellant, heatCapacityRatio: v } }) }),
-      number({ path: 'propellant.grainDensity', help: 'help.grainDensity', label: 'field.grainDensity', kind: 'density', positive: true, get: (l) => l.propellant.grainDensity, set: (l, v) => ({ ...l, propellant: { ...l.propellant, grainDensity: v } }) }),
-      number({ path: 'propellant.bulkDensity', help: 'help.bulkDensity', label: 'field.bulkDensity', kind: 'density', positive: true, get: (l) => l.propellant.bulkDensity, set: (l, v) => ({ ...l, propellant: { ...l.propellant, bulkDensity: v } }) }),
+      burnModelNumber('vivacity', { help: 'help.vivacity', label: 'field.vivacity', kind: 'plain', decimals: 4, positive: true }),
+      burnModelNumber('a0', { help: 'help.a0', label: 'field.a0', kind: 'plain', decimals: 4 }),
+      burnModelNumber('z1', { help: 'help.z1', label: 'field.z1', kind: 'plain', decimals: 4 }),
+      burnModelNumber('z2', { help: 'help.z2', label: 'field.z2', kind: 'plain', decimals: 4 }),
+      burnModelNumber('coldTemperatureCoefficient', { help: 'help.temperatureCoefficients', label: 'field.coldTemperatureCoefficient', kind: 'plain', decimals: 4 }),
+      burnModelNumber('hotTemperatureCoefficient', { help: 'help.temperatureCoefficients', label: 'field.hotTemperatureCoefficient', kind: 'plain', decimals: 4 }),
+      partNumber('propellant', 'heatOfExplosion', { help: 'help.heatOfExplosion', label: 'field.heatOfExplosion', kind: 'specificEnergy', positive: true }),
+      partNumber('propellant', 'heatCapacityRatio', { help: 'help.heatCapacityRatio', label: 'field.heatCapacityRatio', kind: 'plain', decimals: 4, positive: true }),
+      partNumber('propellant', 'grainDensity', { help: 'help.grainDensity', label: 'field.grainDensity', kind: 'density', positive: true }),
+      partNumber('propellant', 'bulkDensity', { help: 'help.bulkDensity', label: 'field.bulkDensity', kind: 'density', positive: true }),
     ],
   },
   {
     title: 'group.charge',
     fields: [
-      number({ path: 'charge.mass', label: 'field.chargeMass', kind: 'chargeMass', positive: true, get: (l) => l.charge.mass, set: (l, v) => ({ ...l, charge: { ...l.charge, mass: v } }) }),
-      number({ path: 'charge.temperature', label: 'field.temperature', kind: 'temperature', positive: true, get: (l) => l.charge.temperature, set: (l, v) => ({ ...l, charge: { ...l.charge, temperature: v } }) }),
+      partNumber('charge', 'mass', { label: 'field.chargeMass', kind: 'chargeMass', positive: true }),
+      partNumber('charge', 'temperature', { label: 'field.temperature', kind: 'temperature', positive: true }),
       number({
         label: 'field.ladderSteps',
         kind: 'plain',
