@@ -284,7 +284,6 @@ export const fr: Messages = {
   'finding.incompleteBurn': "Seuls {burnt} % de la poudre brûlent avant la bouche : attendez-vous à plus de dispersion des vitesses, à de la poudre imbrûlée et à une flamme de bouche.",
   'finding.lowPressure': "Pression maximale à {percent} % du {limit} : loin sous sa pression de travail, une poudre peut brûler irrégulièrement et, au pire, une balle peut rester dans le canon.",
   'finding.transonic': "La vitesse initiale {velocity} est dans la zone transsonique ({from} à {to} à {temperature}) : la précision en souffre, et un chargement subsonique claque.",
-  'climate.help': "Simulé avec les coefficients de température de la poudre. Un chargement prévu pour une saison, ou pour la précision dans des conditions stables, n'a pas à couvrir toute la plage.",
   'speed.mach': "Mach {mach} à {temperature}",
   'speed.soundAt': "vitesse du son à {temperature} : {velocity}",
   'speed.transonic': "zone transsonique",

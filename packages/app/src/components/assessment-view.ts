@@ -40,7 +40,6 @@ export function assessmentView(assessment: Assessment, ownTemperature: number, c
       <div class="climate">
         <h4>${icon('temperature')} ${t('temperatureRange.title')}</h4>
         ${temperatureScale(assessment.temperatures, ownTemperature, context)}
-        <p class="note">${t('climate.help')}</p>
       </div>
     </section>
   `;

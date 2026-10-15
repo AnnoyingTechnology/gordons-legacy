@@ -286,7 +286,6 @@ export const en = {
   'finding.incompleteBurn': "Only {burnt} % of the powder burns before the muzzle: expect a wider velocity spread, unburnt powder and muzzle flash.",
   'finding.lowPressure': "Peak pressure at {percent} % of the {limit}: far below its working pressure, a powder may burn unevenly, and in the worst case a bullet can stay in the bore.",
   'finding.transonic': "Muzzle velocity {velocity} is in the transonic band ({from} to {to} at {temperature}): accuracy suffers, and a subsonic load cracks.",
-  'climate.help': "Simulated with the powder's temperature coefficients. A load meant for one season, or for accuracy in steady conditions, need not cover the whole range.",
   'speed.mach': "Mach {mach} at {temperature}",
   'speed.soundAt': "speed of sound at {temperature}: {velocity}",
   'speed.transonic': "transonic band",

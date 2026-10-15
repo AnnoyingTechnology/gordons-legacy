@@ -284,7 +284,6 @@ export const it: Messages = {
   'finding.incompleteBurn': "Solo il {burnt} % della polvere brucia prima della volata: aspettatevi più dispersione delle velocità, polvere incombusta e vampa.",
   'finding.lowPressure': "Pressione di picco al {percent} % del {limit}: molto sotto la sua pressione di lavoro, una polvere può bruciare in modo irregolare e, nel caso peggiore, una palla può restare nella canna.",
   'finding.transonic': "La velocità alla volata {velocity} è nella banda transonica (da {from} a {to} a {temperature}): la precisione ne risente e una carica subsonica schiocca.",
-  'climate.help': "Simulato con i coefficienti di temperatura della polvere. Una carica pensata per una stagione, o per la precisione in condizioni stabili, non deve per forza coprire tutto l’intervallo.",
   'speed.mach': "Mach {mach} a {temperature}",
   'speed.soundAt': "velocità del suono a {temperature}: {velocity}",
   'speed.transonic': "banda transonica",

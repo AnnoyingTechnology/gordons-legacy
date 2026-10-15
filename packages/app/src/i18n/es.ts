@@ -284,7 +284,6 @@ export const es: Messages = {
   'finding.incompleteBurn': "Solo el {burnt} % de la pólvora arde antes de la boca: espere más dispersión de velocidades, pólvora sin quemar y fogonazo.",
   'finding.lowPressure': "Presión máxima al {percent} % del {limit}: muy por debajo de su presión de trabajo, una pólvora puede arder de forma irregular y, en el peor caso, una bala puede quedarse en el cañón.",
   'finding.transonic': "La velocidad en boca {velocity} está en la banda transónica ({from} a {to} a {temperature}): la precisión se resiente y una carga subsónica restalla.",
-  'climate.help': "Simulado con los coeficientes de temperatura de la pólvora. Una carga pensada para una estación, o para la precisión en condiciones estables, no necesita cubrir todo el rango.",
   'speed.mach': "Mach {mach} a {temperature}",
   'speed.soundAt': "velocidad del sonido a {temperature}: {velocity}",
   'speed.transonic': "banda transónica",

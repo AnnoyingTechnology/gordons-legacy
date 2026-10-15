@@ -25,6 +25,10 @@
   --compare-6: #008300;
   --compare-7: #4a3aa7;
   --compare-8: #e34948;
+  /* Every hatched zone leans the same way and has the same weight (issue #26); the charts repeat it in
+     SVG units (charts/line-chart.ts). */
+  --hatch-stripe: 3px;
+  --hatch-period: 6px;
   /* Native widgets (dropdown lists, checkboxes, scrollbars) follow the theme the media query picks. */
   color-scheme: light dark;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -410,13 +414,14 @@ code {
   stroke-width: 1;
 }
 
+/* The stroke width comes with the pattern (charts/line-chart.ts), in the chart's units. */
 .line-chart .limit-hatch {
   stroke: var(--critical);
-  stroke-width: 2;
 }
 
+/* The same weight as the gauge's zone above the maximum, so the two read as one marking (issue #26). */
 .line-chart .limit-zone {
-  opacity: 0.35;
+  opacity: 0.6;
 }
 
 .line-chart .limit-label {
@@ -1470,19 +1475,19 @@ dialog.shot-group-dialog {
 
 .scale-band.temperature-aboveLimit,
 .swatch.temperature-aboveLimit {
-  background: repeating-linear-gradient(-45deg, var(--critical) 0 3px, transparent 3px 6px);
+  background: repeating-linear-gradient(-45deg, var(--critical) 0 var(--hatch-stripe), transparent var(--hatch-stripe) var(--hatch-period));
 }
 
 .scale-band.temperature-regimeChange,
 .scale-band.temperature-incompleteBurn,
 .swatch.temperature-regimeChange,
 .swatch.temperature-incompleteBurn {
-  background: repeating-linear-gradient(-45deg, var(--warn-border) 0 3px, transparent 3px 6px);
+  background: repeating-linear-gradient(-45deg, var(--warn-border) 0 var(--hatch-stripe), transparent var(--hatch-stripe) var(--hatch-period));
 }
 
 .scale-band.temperature-notSimulated,
 .swatch.temperature-notSimulated {
-  background: repeating-linear-gradient(-45deg, var(--muted) 0 1px, transparent 1px 5px);
+  background: repeating-linear-gradient(-45deg, var(--muted) 0 var(--hatch-stripe), transparent var(--hatch-stripe) var(--hatch-period));
 }
 
 .scale-mark.tick {
@@ -1616,7 +1621,7 @@ dialog.shot-group-dialog {
 
 .scale-band.transonic,
 .swatch.transonic {
-  background: repeating-linear-gradient(-45deg, var(--warn-border) 0 3px, transparent 3px 6px);
+  background: repeating-linear-gradient(-45deg, var(--warn-border) 0 var(--hatch-stripe), transparent var(--hatch-stripe) var(--hatch-period));
 }
 
 .swatch {
@@ -1628,7 +1633,7 @@ dialog.shot-group-dialog {
 }
 
 .scale-band.over {
-  background: repeating-linear-gradient(-45deg, var(--critical) 0 2px, transparent 2px 7px);
+  background: repeating-linear-gradient(-45deg, var(--critical) 0 var(--hatch-stripe), transparent var(--hatch-stripe) var(--hatch-period));
   opacity: 0.6;
 }
 

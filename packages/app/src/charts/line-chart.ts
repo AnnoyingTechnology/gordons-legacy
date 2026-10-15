@@ -43,6 +43,9 @@ export interface LineChartOptions {
  */
 const SIZES = { full: { width: 720, height: 230 }, half: { width: 460, height: 250 } } as const;
 const MARGIN = { top: 30, right: 16, bottom: 34, left: 58 };
+/** The hatching of the zone above a maximum, in drawing units; `--hatch-stripe` and `--hatch-period`
+ * in the stylesheet, divided by the ~1.3 px a unit the charts are shown at. */
+const HATCH = { stripe: 2.3, period: 4.6 } as const;
 const SVG = 'http://www.w3.org/2000/svg';
 
 export class LineChart {
@@ -158,9 +161,13 @@ export class LineChart {
     if (lowest) {
       // Above the lowest maximum, the plot is hatched red, as on the pressure gauge (issue #16).
       const id = `limit-hatch-${++hatchCount}`;
-      // rotate(45) leans the stripes the same way as the CSS hatchings (`-45deg` there, the axes differ).
-      const pattern = svg('pattern', { id, width: 7, height: 7, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' });
-      pattern.append(svg('line', { x1: 0, y1: 0, x2: 0, y2: 7, class: 'limit-hatch' }));
+      // Same hatching as the gauges and the scales: `--hatch-stripe` over `--hatch-period`, leaning the
+      // same way (rotate(45) here against -45deg in CSS: the axes differ). The chart is drawn in its own
+      // units and scaled to its container, about 1.3 px a unit at the sizes it is shown in, so the tile
+      // is that much smaller than the 6 px of the stylesheet. The line sits at the centre of the tile:
+      // on its edge, half of the stroke would be clipped away.
+      const pattern = svg('pattern', { id, width: HATCH.period, height: HATCH.period, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' });
+      pattern.append(svg('line', { x1: HATCH.period / 2, y1: 0, x2: HATCH.period / 2, y2: HATCH.period, class: 'limit-hatch', 'stroke-width': HATCH.stripe }));
       const defs = svg('defs', {});
       defs.append(pattern);
       const top = MARGIN.top;

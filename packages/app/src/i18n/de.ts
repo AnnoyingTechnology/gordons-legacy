@@ -284,7 +284,6 @@ export const de: Messages = {
   'finding.incompleteBurn': "Nur {burnt} % des Pulvers verbrennen vor der Mündung: mit größerer Geschwindigkeitsstreuung, unverbranntem Pulver und Mündungsfeuer rechnen.",
   'finding.lowPressure': "Spitzendruck bei {percent} % von {limit}: Weit unter seinem Arbeitsdruck kann ein Pulver ungleichmäßig abbrennen, und im schlimmsten Fall bleibt ein Geschoss im Lauf stecken.",
   'finding.transonic': "Die Mündungsgeschwindigkeit {velocity} liegt im transsonischen Bereich ({from} bis {to} bei {temperature}): Die Präzision leidet, und eine Unterschallladung knallt.",
-  'climate.help': "Simuliert mit den Temperaturkoeffizienten des Pulvers. Eine Ladung für eine Jahreszeit oder für Präzision unter gleichbleibenden Bedingungen muss nicht den ganzen Bereich abdecken.",
   'speed.mach': "Mach {mach} bei {temperature}",
   'speed.soundAt': "Schallgeschwindigkeit bei {temperature}: {velocity}",
   'speed.transonic': "transsonischer Bereich",
