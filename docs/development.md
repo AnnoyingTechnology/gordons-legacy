@@ -16,6 +16,8 @@ single-file copy and a zip of the site (`.github/workflows/release.yml`).
 
 The data repository's files are written by `node tools/data/export-repository.ts <clone of
 gordons-legacy-data>` from the community snapshot, which `node tools/data/build-community.ts` builds.
+`node tools/data/validate-repository.ts <clone>` checks a clone; the data repository's CI runs it on
+every change.
 
 ## Pitfalls
 
