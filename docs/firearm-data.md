@@ -95,7 +95,7 @@ One extractor per maker, each read once on 2026-10-15. The counts are what that 
 | Savage | `savage.ts` | SKU property tables | 991 | one SKU stands for a model, cartridge and barrel; package models may be weighed with their scope, and say so in `notes` |
 | Bergara | `bergara.ts` | configuration table, columns in any order | 118 | 32 pages have no table (rimfire and limited editions); model names come out in capitals |
 | Henry | `henry.ts` | specification block per chambering | 149 | inch and pound only; their `robots.txt` asks for ten seconds between pages |
-| Smith & Wesson | `smith-wesson.ts` | JSON inside the product page | being read | the sitemap mixes guns with uppers and accessories |
+| Smith & Wesson | `smith-wesson.ts` | `__NEXT_DATA__` JSON inside the product page | 634 of 1,278 pages | the sitemap mixes guns with slides, uppers, barrels and apparel, so a page counts as a gun only if it has an `ACTION` and a `CAPACITY`; barrel lengths carry no unit and are read as inches; the twist is only in the description prose; their calibers (`9MM`) are mapped to conventional names, with the maker's own word kept in `published.caliber` |
 | SIG Sauer | — | — | refused | 403 to any request |
 | Beretta | — | — | refused | every product page answers with an Imperva challenge |
 | Howa | — | nothing published on the pages | none | the figures are in catalogue PDFs |
@@ -103,6 +103,12 @@ One extractor per maker, each read once on 2026-10-15. The counts are what that 
 | Weatherby | — | a tech-specs table per product page | not read | no product URL in any sitemap, so it needs a link crawl; the WooCommerce `weight` is a shipping weight and must never be used as the gun's mass |
 
 A refusal is a final answer: a 403 or a bot challenge is not something to work around.
+
+Where a maker writes a cartridge in a form no reloader uses (`9MM`, `45 ACP`), the extractor maps it to
+the conventional name **in a table, one entry per form**, and keeps the maker's own word in
+`source.published.caliber`. That is a per-maker reading, not a guess: a mapping is written only where the
+maker's catalogue leaves no doubt. Where there is doubt, the record keeps the maker's wording and the
+chooser simply does not put the gun first.
 
 ## Keeping it current
 

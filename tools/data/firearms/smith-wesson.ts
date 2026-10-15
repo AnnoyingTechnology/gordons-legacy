@@ -27,6 +27,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, parseFirearm, serializeFirearm, units, type Firearm } from '@gordons-legacy/formats';
+import { publishedFigures } from './published-figures.ts';
 
 const SITEMAP = 'https://www.smith-wesson.com/sitemap.xml';
 const AGENT = 'gordons-legacy-research/1.0 (+https://github.com/AnnoyingTechnology/gordons-legacy)';
@@ -129,11 +130,12 @@ export function gunMass(dimensions: string): number | undefined {
 }
 
 /**
- * `4.22” 1:10” twist stainless steel barrel` → 0.254 m, the barrel length per full turn. Only the
- * `1:10` followed by `twist` (or preceded by `twist`) in inches is read, and a twist not given in
- * inches is left out.
+ * The twist as the description writes it, and its figure: `4.22” 1:10” twist stainless steel barrel` →
+ * `1:10” twist` and 10 inches per turn. Only a `1:10` tied to the word `twist` or `rifling` is read, so
+ * that no other ratio on the page is mistaken for one, and the figure is read as inches — the unit this
+ * maker writes everywhere, and the one its own `1:10”` carries where it bothers to mark it.
  */
-export function twistLength(description: string): number | undefined {
+function twistReading(description: string): { text: string; inchesPerTurn: number } | undefined {
   const text = plainText(description);
   const match =
     /\b1\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*(?:”|"|-?\s*in(?:ch(?:es)?)?\b)?\s*(?:twist|rifling)/i.exec(text) ??
@@ -142,7 +144,13 @@ export function twistLength(description: string): number | undefined {
   const inchesPerTurn = Number(match[1]);
   // A twist is a few inches to a few tens of inches per turn; anything else is another number.
   if (!(inchesPerTurn >= 3 && inchesPerTurn <= 40)) return undefined;
-  return tidy(inchesPerTurn * units.INCH);
+  return { text: match[0].replace(/\s+/g, ' ').trim(), inchesPerTurn };
+}
+
+/** `4.22” 1:10” twist stainless steel barrel` → 0.254 m, the length of barrel per full turn. */
+export function twistLength(description: string): number | undefined {
+  const reading = twistReading(description);
+  return reading === undefined ? undefined : tidy(reading.inchesPerTurn * units.INCH);
 }
 
 /**
@@ -236,7 +244,11 @@ export function firearmFrom(page: string, url: string, retrieved: string): Firea
   const length = barrelLength(product.specifications.get('BARREL LENGTH'));
   if (!caliber || !loadable(caliber) || length === undefined) return undefined;
   const mass = gunMass(product.dimensions);
-  const twist = twistLength(product.description);
+  const twistFound = twistReading(product.description);
+  const twist = twistFound === undefined ? undefined : tidy(twistFound.inchesPerTurn * units.INCH);
+  // Their pages print one weight and do not say what it includes, and their calibers are written in
+  // capitals without punctuation: the record keeps both as published beside the names it uses.
+  const weight = /\bWEIGHT\s*([0-9.]+\s*(?:oz|lbs?))\b/i.exec(plainText(product.dimensions))?.[1];
   const name = readableName(product.name);
   const model = product.specifications.get('MODEL');
   return {
@@ -253,7 +265,19 @@ export function firearmFrom(page: string, url: string, retrieved: string): Firea
       ...(mass === undefined ? {} : { gunMass: mass }),
       gasLeaks: [],
     },
-    source: { kind: 'published', publisher: 'Smith & Wesson Brands, Inc.', url, retrieved },
+    source: {
+      kind: 'published',
+      publisher: 'Smith & Wesson Brands, Inc.',
+      url,
+      retrieved,
+      ...(mass === undefined ? {} : { massBasis: 'unstated' as const }),
+      published: publishedFigures({
+        caliber,
+        barrelLength: product.specifications.get('BARREL LENGTH'),
+        weight,
+        twist: twistFound?.text,
+      }),
+    },
   };
 }
 

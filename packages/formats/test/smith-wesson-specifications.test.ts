@@ -139,7 +139,16 @@ describe('reading a published specification', () => {
     expect(firearm!.barrel.gunMass).toBeCloseTo(0.82213, 4);
     // The page's own description, not the related product's 1:99.
     expect(firearm!.barrel.twistLength).toBeCloseTo(0.254, 12);
-    expect(firearm!.source).toEqual({ kind: 'published', publisher: 'Smith & Wesson Brands, Inc.', url: URL, retrieved: '2026-10-15' });
+    expect(firearm!.source).toEqual({
+      kind: 'published',
+      publisher: 'Smith & Wesson Brands, Inc.',
+      url: URL,
+      retrieved: '2026-10-15',
+      // One weight, with nothing said about what it covers; and their own words for the cartridge,
+      // kept beside the conventional name the record carries.
+      massBasis: 'unstated',
+      published: { caliber: '9MM', barrelLength: '4.2', weight: '29 oz', twist: '1:10” twist' },
+    });
   });
 
   it('keeps a gun whose mass or twist is not published, without them', () => {
