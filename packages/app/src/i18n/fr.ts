@@ -100,6 +100,8 @@ export const fr: Messages = {
   'base.hollow': 'Culot creux',
   'base.hollow-round': 'Culot creux (hémisphérique)',
   'field.shotStartPressure': 'Pression initiale',
+  'field.boreResistance': 'Résistance au passage',
+  'help.boreResistance': 'L’ajustement GRT du frottement de la balle dans le canon, ajouté à la valeur propre du moteur, qui découle de la longueur de la balle et de la section. Laissez vide sauf si le fabricant publie une valeur ou si vous l’avez mesurée : le manuel de GRT déconseille de la régler pour des balles chemisées ordinaires. Une valeur négative diminue la résistance.',
   'field.heatOfExplosion': 'Chaleur d’explosion',
   'field.heatCapacityRatio': 'Rapport des chaleurs spécifiques',
   'field.vivacity': 'Vivacité Ba',

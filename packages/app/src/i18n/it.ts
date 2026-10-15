@@ -100,6 +100,8 @@ export const it: Messages = {
   'base.hollow': 'Fondello cavo',
   'base.hollow-round': 'Fondello cavo (semisferico)',
   'field.shotStartPressure': 'Pressione iniziale',
+  'field.boreResistance': 'Resistenza in canna',
+  'help.boreResistance': 'La correzione di GRT all’attrito della palla in canna, aggiunta al valore proprio del motore, che discende dalla lunghezza della palla e dalla sezione. Lasciatelo vuoto a meno che il produttore pubblichi un valore o lo abbiate misurato: il manuale di GRT sconsiglia di impostarlo per palle blindate ordinarie. Un valore negativo riduce la resistenza.',
   'field.heatOfExplosion': 'Calore di esplosione',
   'field.heatCapacityRatio': 'Rapporto dei calori specifici',
   'field.vivacity': 'Vivacità Ba',

@@ -100,6 +100,8 @@ export const es: Messages = {
   'base.hollow': 'Base hueca',
   'base.hollow-round': 'Base hueca (semiesférica)',
   'field.shotStartPressure': 'Presión inicial',
+  'field.boreResistance': 'Resistencia en el ánima',
+  'help.boreResistance': 'El ajuste de GRT al rozamiento de la bala en el ánima, sumado al valor propio del motor, que se deduce de la longitud de la bala y la sección. Déjelo vacío salvo que el fabricante publique un valor o usted lo haya medido: el manual de GRT desaconseja fijarlo para balas encamisadas corrientes. Un valor negativo reduce la resistencia.',
   'field.heatOfExplosion': 'Calor de explosión',
   'field.heatCapacityRatio': 'Relación de calores específicos',
   'field.vivacity': 'Vivacidad Ba',

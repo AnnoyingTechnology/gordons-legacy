@@ -102,6 +102,8 @@ export const en = {
   'base.hollow': 'Hollow base',
   'base.hollow-round': 'Hollow base (semi-spherical)',
   'field.shotStartPressure': 'Initial pressure',
+  'field.boreResistance': 'Bore resistance',
+  'help.boreResistance': 'GRT’s adjustment to the friction of the bullet in the bore, added to the engine’s own figure, which follows from the bullet’s length and the bore area. Leave it empty unless the bullet’s maker publishes a value or you measured one: GRT’s manual says not to set it for ordinary jacketed bullets. A negative value lowers the resistance.',
   'field.heatOfExplosion': 'Heat of explosion',
   'field.heatCapacityRatio': 'Ratio of specific heats',
   'field.vivacity': 'Vivacity Ba',

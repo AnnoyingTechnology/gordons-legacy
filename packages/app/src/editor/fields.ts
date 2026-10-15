@@ -232,6 +232,19 @@ export const FIELD_GROUPS: FieldGroup[] = [
         visible: (l) => l.projectile.base.shape === 'boattail',
       },
       partNumber('projectile', 'shotStartPressure', { help: 'help.shotStartPressure', label: 'field.shotStartPressure', kind: 'pressure', positive: true }),
+      // GRT's `gfriction`: imported with the load, and until now invisible although it changes the result.
+      number({
+        path: 'projectile.boreResistanceAdjustment',
+        label: 'field.boreResistance',
+        help: 'help.boreResistance',
+        kind: 'pressure',
+        get: (l) => l.projectile.boreResistanceAdjustment,
+        set: (l, v) => ({ ...l, projectile: { ...l.projectile, boreResistanceAdjustment: v } }),
+        clear: (l) => {
+          const { boreResistanceAdjustment: _dropped, ...projectile } = l.projectile;
+          return { ...l, projectile };
+        },
+      }),
     ],
   },
   {

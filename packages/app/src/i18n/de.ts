@@ -100,6 +100,8 @@ export const de: Messages = {
   'base.hollow': 'Hohlboden',
   'base.hollow-round': 'Hohlboden (halbkugelförmig)',
   'field.shotStartPressure': 'Anfangsdruck',
+  'field.boreResistance': 'Laufwiderstand',
+  'help.boreResistance': 'GRTs Korrektur der Reibung des Geschosses im Lauf, zusätzlich zum eigenen Wert der Rechnung, der sich aus Geschosslänge und Querschnitt ergibt. Leer lassen, außer der Hersteller veröffentlicht einen Wert oder Sie haben ihn gemessen: GRTs Handbuch rät davon ab, ihn für gewöhnliche Mantelgeschosse zu setzen. Ein negativer Wert verringert den Widerstand.',
   'field.heatOfExplosion': 'Explosionswärme',
   'field.heatCapacityRatio': 'Isentropenexponent',
   'field.vivacity': 'Vivazität Ba',
