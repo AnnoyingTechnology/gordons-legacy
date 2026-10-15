@@ -78,6 +78,12 @@ describe('reading a published specification', () => {
     expect(mass('7 lbs')).toBeCloseTo(3.175, 3);
   });
 
+  it('refuses a weight no gun can have, which is how their pages say they have none', () => {
+    // Their .204 Ruger Trail Blazer sheet printed this, and it became a 4,535 kg rifle.
+    expect(mass('9999 lbs (4535.47 kg)')).toBeUndefined();
+    expect(mass('0 lbs (0 kg)')).toBeUndefined();
+  });
+
   it('reads the twist in inches per turn, and nothing without the inch mark', () => {
     expect(twistLength('1:10"')).toBeCloseTo(0.254, 12);
     expect(twistLength('1:10')).toBeUndefined();

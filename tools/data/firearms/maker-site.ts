@@ -42,6 +42,24 @@ export function fileName(firearm: Firearm): string {
     .replace(/^-|-$/g, '')}.firearm.json`;
 }
 
+/**
+ * The lightest and the heaviest a gun can be, kg. A pocket pistol is about 250 g and a .50 BMG rifle
+ * about 14 kg, so anything outside this is not a gun's weight at all: a shipping weight, a figure in
+ * the wrong unit, or a page's own placeholder — Savage's pages print `9999 lbs` where they hold no
+ * weight, which converts to a 4,535 kg rifle.
+ */
+const GUN_MASS_RANGE = { lightest: 0.1, heaviest: 25 };
+
+/**
+ * A published mass, or nothing when the figure cannot be a gun's. A mass that reaches a record becomes
+ * the mass the engine recoils, so a figure nobody can believe must not get that far; the maker's own
+ * string stays in `source.published`, where it says what the page printed.
+ */
+export function plausibleGunMass(mass: number | undefined): number | undefined {
+  if (mass === undefined) return undefined;
+  return mass >= GUN_MASS_RANGE.lightest && mass <= GUN_MASS_RANGE.heaviest ? mass : undefined;
+}
+
 /** Where a crawl writes, and how many pages it reads (all of them, unless `--limit` says fewer). */
 export interface CrawlArguments {
   folder: string;

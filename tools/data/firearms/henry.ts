@@ -14,7 +14,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, fetchText, fileName, firearmJson, sleep, summaryLine } from './maker-site.ts';
+import { crawlArguments, fetchText, fileName, firearmJson, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const SITEMAP = 'https://www.henryusa.com/firearm-sitemap.xml';
@@ -62,7 +62,7 @@ export function barrelLength(text: string | undefined): number | undefined {
 /** A mass in kilograms from `6.75 lbs.`. */
 export function mass(text: string | undefined): number | undefined {
   const match = /^([0-9]+(?:\.[0-9]+)?)\s*lbs?\b/.exec(text ?? '');
-  return match ? Number(match[1]) * units.POUND : undefined;
+  return plausibleGunMass(match ? Number(match[1]) * units.POUND : undefined);
 }
 
 /**

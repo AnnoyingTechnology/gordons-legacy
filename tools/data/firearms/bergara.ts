@@ -14,7 +14,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, DELAY, fetchText, fileName, firearmJson, sleep, summaryLine } from './maker-site.ts';
+import { crawlArguments, DELAY, fetchText, fileName, firearmJson, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const SITEMAP = 'https://www.bergara.online/en/page-sitemap.xml';
@@ -65,7 +65,7 @@ export function length(text: string | undefined): number | undefined {
 /** A mass in kilograms from `3,2 kg (7.1 lbs)`: the metric figure only. */
 export function mass(text: string | undefined): number | undefined {
   const match = /([0-9]+(?:[.,][0-9]+)?)\s*kg\b/.exec(text ?? '');
-  return match ? Number(match[1]!.replace(',', '.')) : undefined;
+  return plausibleGunMass(match ? Number(match[1]!.replace(',', '.')) : undefined);
 }
 
 /**

@@ -17,7 +17,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, DELAY, fetchText, fileName, firearmJson, sleep, summaryLine } from './maker-site.ts';
+import { crawlArguments, DELAY, fetchText, fileName, firearmJson, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const SITEMAP = 'https://www.czfirearms.com/sitemap.xml';
@@ -141,7 +141,7 @@ export function firearmFrom(variant: Variant, url: string, retrieved: string): F
   // and do not say what it covers, so the record says `unstated` instead of claiming that basis.
   const emptyMagazine = find('gewicht-mit-leerem-magazin');
   const weight = metricValue(emptyMagazine) === undefined ? find('gewicht') : emptyMagazine;
-  const mass = metricValue(weight);
+  const mass = plausibleGunMass(metricValue(weight));
   const twistText = find('dralllange-anzahl-der-zuge')?.text;
   const twist = twistLength(twistText);
   if (!cartridge || !loadable(cartridge) || length === undefined) return undefined;

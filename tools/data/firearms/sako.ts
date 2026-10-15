@@ -20,7 +20,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, DELAY, fetchText, fileName, firearmJson, sleep, summaryLine } from './maker-site.ts';
+import { crawlArguments, DELAY, fetchText, fileName, firearmJson, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const SITEMAP = 'https://www.sako.global/sitemap.xml';
@@ -136,7 +136,7 @@ export function firearmsFrom(variants: RifleVariant[], url: string, retrieved: s
     const { first, group } = gun;
     const name = (uses.get(plainName(gun)) ?? 0) > 1 ? `${plainName(gun)} ${first.twist ?? ''}`.trim() : plainName(gun);
     const twist = twistLength(first.twist);
-    const mass = first.mass;
+    const mass = plausibleGunMass(first.mass);
     // Finishes and handedness of one rifle are weighed differently; the record takes one of those
     // figures and says that the others exist, rather than inventing an average of them.
     const published = [...new Set(masses(group).map((value) => `${value} kg`))];

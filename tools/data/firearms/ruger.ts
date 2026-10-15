@@ -21,7 +21,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, DELAY, fetchText, fileName, firearmJson, sleep, summaryLine } from './maker-site.ts';
+import { crawlArguments, DELAY, fetchText, fileName, firearmJson, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
 
 const SITE = 'https://ruger.com';
 const OUNCE = units.POUND / 16; // kg
@@ -118,7 +118,7 @@ export function mass(value: string): number | undefined {
     pounds === undefined && ounces === undefined
       ? undefined
       : { value: (pounds?.value ?? 0) + (ounces?.value ?? 0), step: (ounces ?? pounds!).step };
-  return finest([reading(metric, 'g', units.GRAM), reading(metric, 'kg', 1), customary]);
+  return plausibleGunMass(finest([reading(metric, 'g', units.GRAM), reading(metric, 'kg', 1), customary]));
 }
 
 /**

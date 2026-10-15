@@ -27,7 +27,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, DELAY, fetchText, fileName, firearmJson, sleep, summaryLine } from './maker-site.ts';
+import { crawlArguments, DELAY, fetchText, fileName, firearmJson, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const SITEMAP = 'https://www.smith-wesson.com/sitemap.xml';
@@ -124,7 +124,7 @@ export function gunMass(dimensions: string): number | undefined {
   if (!match) return undefined;
   const number = Number(match[1]);
   if (!(number > 0)) return undefined;
-  return tidy(number * (match[2]!.toLowerCase() === 'oz' ? OUNCE : units.POUND));
+  return plausibleGunMass(tidy(number * (match[2]!.toLowerCase() === 'oz' ? OUNCE : units.POUND)));
 }
 
 /**

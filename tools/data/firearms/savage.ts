@@ -14,7 +14,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, DELAY, fetchText, fileName, firearmJson, sleep, summaryLine } from './maker-site.ts';
+import { crawlArguments, DELAY, fetchText, fileName, firearmJson, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const SITEMAP = 'https://savagearms.com/site-map';
@@ -76,9 +76,9 @@ export function length(text: string | undefined): number | undefined {
 /** A mass in kilograms from `6.1 lbs (2.77 kg)`: the metric figure, else the pounds. */
 export function mass(text: string | undefined): number | undefined {
   const kilograms = /\(([0-9]+(?:\.[0-9]+)?)\s*kg\)/.exec(text ?? '');
-  if (kilograms) return Number(kilograms[1]);
+  if (kilograms) return plausibleGunMass(Number(kilograms[1]));
   const pounds = /^\s*([0-9]+(?:\.[0-9]+)?)\s*lbs?\b/.exec(text ?? '');
-  return pounds ? Number(pounds[1]) * units.POUND : undefined;
+  return plausibleGunMass(pounds ? Number(pounds[1]) * units.POUND : undefined);
 }
 
 /** The twist in metres per turn from `1:16"`: inches per turn. Nothing without the inch mark. */

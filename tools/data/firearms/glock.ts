@@ -16,7 +16,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, DELAY, fetchText, fileName, firearmJson, sleep, summaryLine } from './maker-site.ts';
+import { crawlArguments, DELAY, fetchText, fileName, firearmJson, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
 
 const SITEMAP = 'https://us.glock.com/sitemap.xml';
 
@@ -96,7 +96,7 @@ export function firearmFrom(page: string, url: string, retrieved: string): Firea
   const withoutMagazine = find('weight', 'without magazine');
   const weight = withEmptyMagazine ?? withoutMagazine;
   const massBasis = withEmptyMagazine !== undefined ? 'empty-magazine' : withoutMagazine !== undefined ? 'without-magazine' : undefined;
-  const mass = metric(weight ?? '', 'g');
+  const mass = plausibleGunMass(metric(weight ?? '', 'g'));
   const model = title === undefined ? undefined : modelFrom(title);
   if (model === undefined || !caliber || !loadable(caliber) || barrelValue === undefined || !barrel) return undefined;
   return {
