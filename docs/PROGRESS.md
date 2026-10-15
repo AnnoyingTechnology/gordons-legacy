@@ -114,6 +114,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 - Unit and reference pressure of GRT's `Ba` (needed for M2).
 - The five UI languages. Proposed and built in: English, German, French, Spanish, Italian (Russian the
   main alternative). Translations of `packages/app/src/i18n/*.ts` need review by native reloaders.
+  Interim review by Codex on 2026-10-15 (49 corrections applied, see Log); the maintainer reviews French.
 - Format and encryption of `GordonsReloadingTool.db` (M4): found 2026-10-14, an SQLite database encrypted
   with SQLite's commercial encryption extension (SEE, used by Xojo): bytes 16–23 are SQLite's plain
   header (page size 1024, 12 reserved bytes per page), the rest is ciphertext. GRT's plugin IPC has no
@@ -234,3 +235,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-15 | #18: editor number fields defined by their place in the load (`partNumber`, `burnModelNumber`); the app shell split (toolbar, tab bar, file saving, data cache moved to their own modules; 448 → 379 lines). |
 | 2026-10-15 | #18: the densest lines rewritten: monolithic bullet lines as a named list, `originLabel` shared, the designer's three tables through one `numberRows`, the stale-run check spelled out, picker length cells named. |
 | 2026-10-15 | #18 closed: dead-code and unused-message gates, field definitions, app shell split, data tools and dense lines rewritten; README no longer promises a GRT database import. |
+| 2026-10-15 | Translations reviewed by Codex (`gpt-6.1-sol`, xhigh) against English, as an interim before native reviewers: 49 corrections applied, among them seating rendered as crimping (fr, es), "to the neck" for "to the mouth" (fr), the double-charge check placed before crimping instead of before seating (fr), land diameter for groove diameter (de), percentage points for percent (it), and safety notices that had lost the progressive work-up (all four). Placeholders verified key by key. Alliant's 2022 guide checked for pressure data: psi for shotshells only. |
