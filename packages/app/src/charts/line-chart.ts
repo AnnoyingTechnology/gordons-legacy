@@ -145,7 +145,8 @@ export class LineChart {
     if (lowest) {
       // Above the lowest maximum, the plot is hatched red, as on the pressure gauge (issue #16).
       const id = `limit-hatch-${++hatchCount}`;
-      const pattern = svg('pattern', { id, width: 7, height: 7, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(-45)' });
+      // rotate(45) leans the stripes the same way as the CSS hatchings (`-45deg` there, the axes differ).
+      const pattern = svg('pattern', { id, width: 7, height: 7, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' });
       pattern.append(svg('line', { x1: 0, y1: 0, x2: 0, y2: 7, class: 'limit-hatch' }));
       const defs = svg('defs', {});
       defs.append(pattern);

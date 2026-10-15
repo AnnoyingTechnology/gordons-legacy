@@ -9,6 +9,12 @@ on:
 permissions:
   contents: write
 
+# One run per tag: GitHub sometimes delivers a push event twice, and two runs racing to create the same
+# release leave one of them failed (seen on v2026.10.15).
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   release:
     runs-on: ubuntu-24.04
@@ -27,10 +33,15 @@ jobs:
           mkdir release
           cp packages/app/dist/gordons-legacy.html "release/gordons-legacy-${GITHUB_REF_NAME}.html"
           (cd packages/app/dist && zip -qr "../../../release/gordons-legacy-site-${GITHUB_REF_NAME}.zip" .)
+      # Re-running the workflow on a tag that is already released replaces its files instead of failing.
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" release/* \
-            --title "Gordon's Legacy $GITHUB_REF_NAME" \
-            --notes "Your own copy of Gordon's Legacy at $GITHUB_REF_NAME: open the .html file in a browser, from disk, with no install and no network; or serve the site zip. This software simulates; it does not produce load data. Check every charge against the powder or bullet maker's published data."
+          if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" release/* --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" release/* \
+              --title "Gordon's Legacy $GITHUB_REF_NAME" \
+              --notes "Your own copy of Gordon's Legacy at $GITHUB_REF_NAME: open the .html file in a browser, from disk, with no install and no network; or serve the site zip. This software simulates; it does not produce load data. Check every charge against the powder or bullet maker's published data."
+          fi
