@@ -59,8 +59,12 @@ sitemap and writes the files. `glock.ts` is the one to copy.
     node tools/data/firearms/glock.ts /tmp/gl/guns-glock          # the whole catalogue
     node tools/data/firearms/glock.ts /tmp/gl/guns-glock --limit 5  # a sample, while developing
 
-On a Node built without TypeScript type stripping, `npx vite-node tools/data/firearms/glock.ts …` runs
-the same file.
+On a Node built without TypeScript type stripping (this machine's, which answers `ERR_NO_TYPESCRIPT`),
+`npx vite-node tools/data/firearms/glock.ts …` or `deno run -A tools/data/firearms/glock.ts …` runs the
+same file.
+
+What every extractor shares sits beside them: `published-figures.ts` (the maker's own strings, and what
+a published mass includes). Everything else is the maker's own shape and stays in its own file.
 
 Each extractor has a test in `packages/formats/test/<maker>-specifications.test.ts`, written against a
 page **in the maker's shape but with invented figures**. The maker's own text is never reproduced in
@@ -68,13 +72,26 @@ this repository, and the invented figures make it obvious that a test checks the
 
 ## Makers
 
-| Maker | Status | Where the figures are | Guns |
-|---|---|---|---|
-| Glock | done (2026-10-15) | HTML blocks of titled specification lines | 87 pistols |
-| Ruger | read (2026-10-15) | spec sheets in plain HTML; both units, each rounded differently | 433 of 603 sheets |
-| Smith & Wesson | in progress | JSON inside the product page | — |
-| CZ, Beretta, Tikka/Sako, Savage, and others | under reconnaissance | — | — |
-| SIG Sauer | refused | 403 to any request | — |
+One extractor per maker, each read once on 2026-10-15. The counts are what that run wrote, before the
+`massBasis` and `published` fields existed, so every corpus is regenerated before publication.
+
+| Maker | Extractor | Where the figures are | Guns read | Watch out for |
+|---|---|---|---|---|
+| Glock | `glock.ts` | HTML blocks of titled specification lines | 87 pistols | three weights per gun; `.357` means .357 SIG |
+| Ruger | `ruger.ts` | spec sheets in plain HTML | 433 of 603 sheets | both units, each rounded differently; one *Weight*, basis unstated |
+| CZ | `cz.ts` | Next.js script chunks, keyed in German | 88 | the `/en-us/` pages 404 for pistols, so the German tree is read; pistols give an empty-magazine weight, rifles do not |
+| Sako and Tikka | `sako.ts` | `__NEXT_DATA__` JSON, one entry per variant | 671 (393 Tikka, 278 Sako) | a page lists one rifle many times (hand, finish, market); the record takes the first variant's own figures and names the other masses |
+| Savage | `savage.ts` | SKU property tables | 991 | one SKU stands for a model, cartridge and barrel; package models may be weighed with their scope, and say so in `notes` |
+| Bergara | `bergara.ts` | configuration table, columns in any order | 118 | 32 pages have no table (rimfire and limited editions); model names come out in capitals |
+| Henry | `henry.ts` | specification block per chambering | 149 | inch and pound only; their `robots.txt` asks for ten seconds between pages |
+| Smith & Wesson | `smith-wesson.ts` | JSON inside the product page | being read | the sitemap mixes guns with uppers and accessories |
+| SIG Sauer | — | — | refused | 403 to any request |
+| Beretta | — | — | refused | every product page answers with an Imperva challenge |
+| Howa | — | nothing published on the pages | none | the figures are in catalogue PDFs |
+| Marlin | — | nothing published on the pages | none | the sitemap is a 2021 stub |
+| Weatherby | — | a tech-specs table per product page | not read | no product URL in any sitemap, so it needs a link crawl; the WooCommerce `weight` is a shipping weight and must never be used as the gun's mass |
+
+A refusal is a final answer: a 403 or a bot challenge is not something to work around.
 
 ## Keeping it current
 
