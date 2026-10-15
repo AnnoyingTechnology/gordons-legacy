@@ -18,7 +18,9 @@ public/                 copied to the build unchanged: manifest, icon
 src/
   main.ts               entry point
   components/           Lit elements and render functions
-    app-shell.ts          <gl-app>: toolbar, tabs, drag and drop, open and save, footer
+    app-shell.ts          <gl-app>: the views, open and save, drag and drop, settings, footer
+    toolbar.ts            the toolbar (full-height buttons in groups)
+    tab-bar.ts            one tab per open load, with its badges
     about-dialog.ts       dedication, safety notice and build; opens on a first visit
     units-dialog.ts       display unit of each kind of quantity
     choice-dialog.ts      pick one of several options (projectiles of a file)
@@ -66,7 +68,8 @@ src/
   units/conversions.ts  the unit converter's units
   i18n/                 message catalogs (en is the source; the compiler checks the others are complete)
   state/                open documents and settings (localStorage); the library of saved loads and
-                        the component library (IndexedDB: indexed-db.ts, library.ts, components.ts)
+                        the component library (IndexedDB: indexed-db.ts, library.ts, components.ts);
+                        the data repository's cache (data-cache.ts); saving files (file-saving.ts)
   data/                 community-components.json: the CC0 community components bundled for a first
                         offline visit (tools/data/build-community.ts); online, the app takes them from
                         the data repository through @gordons-legacy/data

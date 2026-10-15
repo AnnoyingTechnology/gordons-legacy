@@ -1,17 +1,17 @@
 import type { Load, MeasurementSeries, Projectile } from '@gordons-legacy/formats';
 import { importGrtProjectiles, importGrtPropellant, importGrtrace, serializeLoad } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
-import { LANGUAGE_NAMES, type Language } from '../i18n/i18n.ts';
-import { icon } from '../icons/icons.ts';
+import type { Language } from '../i18n/i18n.ts';
 import { DocumentStore } from '../state/documents.ts';
 import { loadSettings, saveSettings, type Settings } from '../state/settings.ts';
 import { presetPreferences, type UnitPreferences, type UnitSystem } from '../units/units.ts';
+import { indexedDbDataCache } from '../state/data-cache.ts';
+import { download, saveTextFile } from '../state/file-saving.ts';
 import { createContext, type UiContext } from './context.ts';
-import { loadBadges } from './load-badges.ts';
+import { tabBar } from './tab-bar.ts';
+import { toolbar } from './toolbar.ts';
 import { withProjectile, withPropellant } from '../editor/components.ts';
 import { REPOSITORY } from './about-dialog.ts';
-// The app icon, inlined so that the single-file copy shows it too.
-import logo from '../../public/icon.svg?raw';
 import './choice-dialog.ts';
 import './chronograph-dialog.ts';
 import { readChronographCsv, type ChronographCsv } from '../measurements/chronograph-csv.ts';
@@ -23,7 +23,6 @@ import { firearms, Library } from '../state/library.ts';
 import { indexedDbStorage } from '../state/library-storage.ts';
 import { ComponentLibrary, type ComponentEntry } from '../state/components.ts';
 import { indexedDbStore } from '../state/indexed-db.ts';
-import type { CachedFile, DataCache } from '@gordons-legacy/data';
 import './converter-dialog.ts';
 import './units-dialog.ts';
 
@@ -76,7 +75,7 @@ export class AppShell extends LitElement {
     this.store.subscribe(() => this.requestUpdate());
     this.library.subscribe(() => this.requestUpdate());
     this.components.subscribe(() => this.requestUpdate());
-    void this.components.useRepository(dataCache(), (url) => fetch(url));
+    void this.components.useRepository(indexedDbDataCache(), (url) => fetch(url));
     // Ask the browser not to clear the library under storage pressure; it may still refuse.
     void navigator.storage?.persist?.();
     document.documentElement.lang = this.settings.language;
@@ -90,66 +89,32 @@ export class AppShell extends LitElement {
     const { t } = this.context;
     const active = this.store.active;
     return html`
-      <header class="toolbar">
-        <h1><img class="logo" src=${`data:image/svg+xml,${encodeURIComponent(logo)}`} alt="" />${t('app.title')}</h1>
-        <div class="tool-group">
-          <label class="tool">
-            ${icon('open')}<span>${t('toolbar.open')}</span>
-            <input type="file" accept=".grtload,.json,.propellant,.projectile,.grtrace,.csv" multiple hidden @change=${this.openFromInput} />
-          </label>
-          <button class="tool" ?disabled=${!active} title=${t('toolbar.saveHelp')} @click=${() => active && this.saveToLibrary(active.id)}>${icon('save')}<span>${t('toolbar.save')}</span></button>
-          <button class="tool" ?disabled=${!active} title=${t('toolbar.exportHelp')} @click=${() => active && this.exportFile(active.id)}>${icon('export')}<span>${t('toolbar.export')}</span></button>
-          <button class="tool" ?disabled=${!active} @click=${() => window.print()}>${icon('print')}<span>${t('toolbar.print')}</span></button>
-        </div>
-        <div class="tool-group">
-          <button class="tool" aria-pressed=${this.view === 'library' ? 'true' : 'false'} @click=${() => this.toggleView('library')}>
-            ${icon('database')}<span>${t('toolbar.library')}</span>
-          </button>
-          <button
-            class="tool"
-            ?disabled=${this.store.documents.length < 2}
-            aria-pressed=${this.view === 'compare' ? 'true' : 'false'}
-            @click=${() => this.toggleView('compare')}
-          >${icon('compare')}<span>${t('toolbar.compare')}</span></button>
-        </div>
-        <span class="spacer"></span>
-        <div class="tool-group">
-          <label class="tool tool-select">
-            <span>${t('toolbar.units')}</span>
-            <select @change=${(event: Event) => this.setUnits((event.target as HTMLSelectElement).value as UnitSystem)}>
-              <option value="metric" ?selected=${this.settings.unitSystem === 'metric'}>${t('units.metric')}</option>
-              <option value="imperial" ?selected=${this.settings.unitSystem === 'imperial'}>${t('units.imperial')}</option>
-            </select>
-          </label>
-          <button class="tool" @click=${() => (this.unitsOpen = true)}>${icon('units')}<span>${t('units.customize')}</span></button>
-          <button class="tool" aria-pressed=${this.converterOpen ? 'true' : 'false'} @click=${() => (this.converterOpen = !this.converterOpen)}>
-            ${icon('calculator')}<span>${t('converter.short')}</span>
-          </button>
-          <label class="tool tool-select">
-            <span>${t('toolbar.language')}</span>
-            <select @change=${(event: Event) => this.setLanguage((event.target as HTMLSelectElement).value as Language)}>
-              ${Object.entries(LANGUAGE_NAMES).map(
-                ([code, name]) => html`<option value=${code} ?selected=${code === this.settings.language}>${name}</option>`,
-              )}
-            </select>
-          </label>
-          <button class="tool" @click=${() => (this.aboutOpen = true)}>${icon('info')}<span>${t('toolbar.about')}</span></button>
-        </div>
-      </header>
-      <nav class="tabs" role="tablist">
-        ${this.store.documents.map((document) => {
-          const dirty = this.store.isDirty(document);
-          return html`
-            <div class="tab ${document.id === active?.id ? 'active' : ''}" role="tab" aria-selected=${document.id === active?.id}>
-              <button class="tab-name" title=${document.name} @click=${() => this.showDocument(document.id)}>
-                <span class="tab-title">${document.name.replace(/\.json$/i, '')}${dirty ? html`<span class="unsaved" title=${t('documents.unsaved')}> •</span>` : nothing}</span>
-                ${loadBadges(document.load, this.context)}
-              </button>
-              <button class="tab-close" aria-label=${t('documents.close', { name: document.name })} @click=${() => this.store.close(document.id)}>${icon('close')}</button>
-            </div>
-          `;
-        })}
-      </nav>
+      ${toolbar(
+        {
+          hasActiveLoad: active !== undefined,
+          openLoads: this.store.documents.length,
+          view: this.view,
+          converterOpen: this.converterOpen,
+          unitSystem: this.settings.unitSystem,
+          language: this.settings.language,
+        },
+        {
+          openFiles: this.openFromInput,
+          save: () => active && void this.saveToLibrary(active.id),
+          exportFile: () => active && void this.exportFile(active.id),
+          toggleView: (view) => this.toggleView(view),
+          setUnits: (system) => this.setUnits(system),
+          customizeUnits: () => (this.unitsOpen = true),
+          toggleConverter: () => (this.converterOpen = !this.converterOpen),
+          setLanguage: (language) => this.setLanguage(language),
+          showAbout: () => (this.aboutOpen = true),
+        },
+        this.context,
+      )}
+      ${tabBar(this.store.documents, active?.id, (document) => this.store.isDirty(document), {
+        show: (id) => this.showDocument(id),
+        close: (id) => this.store.close(id),
+      }, this.context)}
       <main @dragover=${(event: DragEvent) => event.preventDefault()} @drop=${this.openFromDrop}>
         ${this.store.storageFull ? html`<p class="warning">${t('documents.storageFull')}</p>` : nothing}
         ${this.openErrors.length > 0
@@ -375,21 +340,7 @@ export class AppShell extends LitElement {
   /** Writes the load to a file of the user's choice, or downloads it: a copy to share or archive. */
   private async exportFile(id: number): Promise<void> {
     const document = this.store.documents.find((candidate) => candidate.id === id);
-    if (!document) return;
-    const text = serializeLoad(document.load);
-    const picker = (window as { showSaveFilePicker?: (options: object) => Promise<FileSystemFileHandle> }).showSaveFilePicker;
-    if (picker) {
-      try {
-        const handle = await picker({ suggestedName: document.name, types: [{ accept: { 'application/json': ['.json'] } }] });
-        const writable = await handle.createWritable();
-        await writable.write(text);
-        await writable.close();
-      } catch {
-        // Cancelled by the user.
-      }
-      return;
-    }
-    download(text, document.name);
+    if (document) await saveTextFile(serializeLoad(document.load), document.name);
   }
 
   private setUnits(system: UnitSystem): void {
@@ -423,26 +374,6 @@ export class AppShell extends LitElement {
     saveSettings(window.localStorage, this.settings);
     this.context = createContext(this.settings.language, this.settings.units);
   }
-}
-
-/** The data repository's files, kept in IndexedDB by path. */
-function dataCache(): DataCache {
-  const store = indexedDbStore<CachedFile & { id: string }>('data');
-  return {
-    list: () => store.list(),
-    put: (file) => store.put({ ...file, id: file.path }),
-    remove: (path) => store.remove(path),
-  };
-}
-
-/** Downloads text as a JSON file. */
-function download(text: string, name: string): void {
-  const link = Object.assign(window.document.createElement('a'), {
-    href: URL.createObjectURL(new Blob([text], { type: 'application/json' })),
-    download: name,
-  });
-  link.click();
-  URL.revokeObjectURL(link.href);
 }
 
 customElements.define('gl-app', AppShell);
