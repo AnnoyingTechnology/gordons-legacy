@@ -233,3 +233,4 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 | 2026-10-15 | #18 started: TypeScript now rejects unused locals and parameters (three removed); a test fails on translation keys no code uses (two removed: `app.subtitle`, `field.boreResistance`). |
 | 2026-10-15 | #18: editor number fields defined by their place in the load (`partNumber`, `burnModelNumber`); the app shell split (toolbar, tab bar, file saving, data cache moved to their own modules; 448 → 379 lines). |
 | 2026-10-15 | #18: the densest lines rewritten: monolithic bullet lines as a named list, `originLabel` shared, the designer's three tables through one `numberRows`, the stale-run check spelled out, picker length cells named. |
+| 2026-10-15 | #18 closed: dead-code and unused-message gates, field definitions, app shell split, data tools and dense lines rewritten; README no longer promises a GRT database import. |

@@ -27,8 +27,10 @@ attempts to improve on it.
 - **Runs anywhere, installs nothing.** A static web app served from GitHub Pages that also installs as
   an offline app. No server, no account, no Electron.
 - **Open formats.** Loads are saved as versioned JSON. GRT `.grtload` files can be imported.
-- **Open data.** Powder, projectile and caliber data is downloaded from a public CC0 data repository and
-  cached for offline use. Users can import their own GRT powder files and database, which stay local.
+- **Open data.** Powder, projectile and caliber data is downloaded from a public CC0 data repository,
+  [gordons-legacy-data](https://github.com/AnnoyingTechnology/gordons-legacy-data), checked file by
+  file and cached for offline use. Users can import their own GRT powder, projectile and caliber files,
+  which stay local.
 - **Verifiable.** A "GRT Traditional" engine reproduces GRT's results. A later engine built from the
   scientific literature must match or beat it against measured velocities and pressures.
 
