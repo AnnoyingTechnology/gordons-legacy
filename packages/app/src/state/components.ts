@@ -6,10 +6,11 @@ import {
   importGrtProjectiles,
   importGrtPropellant,
   type CaliberDefinition,
+  type Firearm,
   type Projectile,
   type Propellant,
 } from '@gordons-legacy/formats';
-import { cachedDocuments, DATA_REPOSITORY_URL, synchronise, type ComponentDocument, type DataCache } from '@gordons-legacy/data';
+import { cachedDocuments, DATA_REPOSITORY_URL, synchronise, type ComponentDocument, type ComponentKind, type DataCache } from '@gordons-legacy/data';
 import community from '../data/community-components.json' with { type: 'json' };
 import type { RecordStore } from './indexed-db.ts';
 
@@ -62,14 +63,24 @@ export function communityComponents(snapshot: CommunitySnapshot = community as C
 
 /** The data repository's documents as component entries, identified by their path in the repository. */
 export function repositoryComponents(documents: ReadonlyArray<{ path: string; document: ComponentDocument }>): ComponentEntry[] {
-  return documents.map(({ path, document }) => {
+  return documents.flatMap(({ path, document }): ComponentEntry[] => {
     const source: ComponentSource = { origin: 'community', file: document.provenance.file, author: document.provenance.author, date: document.provenance.date };
     const id = `repository:${path}`;
-    if (document.kind === 'powder') return { id, kind: 'propellant', source, value: document.value };
-    if (document.kind === 'projectile') return { id, kind: 'projectile', source, value: document.value };
-    return { id, kind: 'caliber', source, value: document.value };
+    if (document.kind === 'powder') return [{ id, kind: 'propellant', source, value: document.value }];
+    if (document.kind === 'projectile') return [{ id, kind: 'projectile', source, value: document.value }];
+    if (document.kind === 'caliber') return [{ id, kind: 'caliber', source, value: document.value }];
+    // A gun is not part of a load's recipe: the published ones go to the gun library (state/firearms.ts).
+    return [];
   });
 }
+
+/** The published guns of the repository's documents (issue #30), in the order the index lists them. */
+export function repositoryFirearms(documents: ReadonlyArray<{ document: ComponentDocument }>): Firearm[] {
+  return documents.flatMap(({ document }) => (document.kind === 'firearm' ? [document.value] : []));
+}
+
+/** What a load is made of. The repository's guns are fetched on their own (state/published-firearms.ts). */
+const COMPONENT_KINDS: readonly ComponentKind[] = ['powder', 'projectile', 'caliber'];
 
 /** Where the community's components came from this time: the repository, its cache, or the bundled copy. */
 export type CommunitySource = 'repository' | 'cache' | 'bundled';
@@ -105,7 +116,7 @@ export class ComponentLibrary {
     const cached = await cachedDocuments(cache);
     if (cached.length > 0) this.replaceCommunity(repositoryComponents(cached), 'cache');
     try {
-      const report = await synchronise(DATA_REPOSITORY_URL, cache, fetch);
+      const report = await synchronise(DATA_REPOSITORY_URL, cache, fetch, COMPONENT_KINDS);
       if (report.documents.length > 0) this.replaceCommunity(repositoryComponents(report.documents), 'repository');
     } catch {
       // Offline or the repository unreachable: keep what we have.

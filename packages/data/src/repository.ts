@@ -1,4 +1,4 @@
-import type { CaliberDefinition, Projectile, Propellant } from '@gordons-legacy/formats';
+import type { CaliberDefinition, Firearm, Projectile, Propellant } from '@gordons-legacy/formats';
 
 /** Where the data repository's files are served: raw GitHub, which allows cross-origin reads. */
 export const DATA_REPOSITORY_URL = 'https://raw.githubusercontent.com/AnnoyingTechnology/gordons-legacy-data/main/';
@@ -20,7 +20,11 @@ export interface DataIndexEntry {
   sha256: string;
 }
 
-export type ComponentKind = 'powder' | 'projectile' | 'caliber';
+/**
+ * What a file of the repository holds. `firearm` is the published gun database (issue #30): hundreds of
+ * files a load editor does not need until a user looks for their gun, so it is synchronised on its own.
+ */
+export type ComponentKind = 'powder' | 'projectile' | 'caliber' | 'firearm';
 
 /** Where a component comes from and how far it has been checked. */
 export interface Provenance {
@@ -43,4 +47,7 @@ export interface Provenance {
 export type ComponentDocument =
   | { format: 'gordons-legacy.component'; version: 1; kind: 'powder'; provenance: Provenance; value: Propellant }
   | { format: 'gordons-legacy.component'; version: 1; kind: 'projectile'; provenance: Provenance; value: Projectile }
-  | { format: 'gordons-legacy.component'; version: 1; kind: 'caliber'; provenance: Provenance; value: CaliberDefinition };
+  | { format: 'gordons-legacy.component'; version: 1; kind: 'caliber'; provenance: Provenance; value: CaliberDefinition }
+  // A gun also carries its own `source` (the maker, the page, the date, what its mass includes); the
+  // provenance here says how the file was made, as it does for every other kind.
+  | { format: 'gordons-legacy.component'; version: 1; kind: 'firearm'; provenance: Provenance; value: Firearm };

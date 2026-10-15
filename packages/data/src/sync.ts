@@ -1,5 +1,5 @@
-import { checkCaliber, checkProjectile, checkPropellant } from '@gordons-legacy/formats';
-import type { ComponentDocument, DataIndex, DataIndexEntry, Provenance } from './repository.ts';
+import { checkCaliber, checkFirearm, checkProjectile, checkPropellant } from '@gordons-legacy/formats';
+import type { ComponentDocument, ComponentKind, DataIndex, DataIndexEntry, Provenance } from './repository.ts';
 
 /** A file kept from an earlier synchronisation: its text and the hash it was checked against. */
 export interface CachedFile {
@@ -46,8 +46,13 @@ async function inParallel<T>(items: readonly T[], limit: number, task: (item: T)
  * whose hash changed, checks each file's SHA-256 against the index and its content against the load
  * format, and drops files the index no longer lists. A file that fails any check is left out, never
  * half-used. Throws when the index itself can't be read, so that the caller keeps what it had.
+ *
+ * `kinds` limits what is downloaded and returned, so the gun database (hundreds of files) is fetched
+ * when a user looks for their gun rather than on a first visit. Files of the other kinds stay in the
+ * cache untouched: what the index no longer lists is dropped whatever its kind, so the cache never
+ * keeps a file the repository has withdrawn.
  */
-export async function synchronise(baseUrl: string, cache: DataCache, fetch: Fetch): Promise<SyncReport> {
+export async function synchronise(baseUrl: string, cache: DataCache, fetch: Fetch, kinds?: readonly ComponentKind[]): Promise<SyncReport> {
   const response = await fetch(`${baseUrl}index.json`);
   if (!response.ok) throw new Error('index.json could not be downloaded');
   const index = JSON.parse(await response.text()) as DataIndex;
@@ -63,6 +68,7 @@ export async function synchronise(baseUrl: string, cache: DataCache, fetch: Fetc
   const missing: DataIndexEntry[] = [];
   for (const entry of index.files) {
     listed.add(entry.path);
+    if (kinds !== undefined && !kinds.includes(entry.kind)) continue;
     const file = cached.get(entry.path);
     if (file && file.sha256 === entry.sha256 && (await sha256(file.text)) === entry.sha256) {
       files.set(entry.path, file);
@@ -146,6 +152,10 @@ export function readDocument(text: string, entry?: DataIndexEntry): ComponentDoc
   if (parsed.kind === 'caliber') {
     const result = checkCaliber(parsed.value);
     return result.ok ? { ...base, kind: 'caliber', value: result.value } : undefined;
+  }
+  if (parsed.kind === 'firearm') {
+    const result = checkFirearm(parsed.value);
+    return result.ok ? { ...base, kind: 'firearm', value: result.value } : undefined;
   }
   return undefined;
 }
