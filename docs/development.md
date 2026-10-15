@@ -19,6 +19,36 @@ gordons-legacy-data>` from the community snapshot, which `node tools/data/build-
 `node tools/data/validate-repository.ts <clone>` checks a clone; the data repository's CI runs it on
 every change.
 
+## Accessibility
+
+The tool is read on a bench, in daylight or at dusk, sometimes by people who cannot use a mouse. It
+follows WCAG 2.2 AA; the audit of 2026-10-15 fixed what did not.
+
+What is checked automatically: `packages/app/test/contrast.test.ts` computes the contrast of every
+colour pair of the palette in the three themes (light, dark, print) and fails below 4.5:1 for text,
+3:1 for large text and for the marks that carry meaning (hatchings, curves, gauges).
+
+What is checked by hand, with the browser, when the interface changes:
+
+- **axe-core in headless Chromium.** Download `axe.min.js` from a CDN into a scratch folder, open the
+  app with the Chrome DevTools Protocol, inject it, and run `axe.run(document)` on each state (editor,
+  library, comparison, every dialog, the panels unfolded) in both themes. It is not a dependency of
+  the repository: it is an audit tool, not part of the product.
+- **A walk with the Tab key**, checking that every control is reached, that the ring shows on each, and
+  that a modal dialog keeps the focus inside and gives it back when it closes.
+
+Rules that the code must keep:
+
+- Headings go down one level at a time: `h1` the application, `h2` the sections of a load (the input
+  groups, the simulation, the notes), `h3` the cards inside them, `h4` what sits inside a card.
+- A file input is never `hidden` or `display: none`, which takes it out of the tab order: it carries
+  `class="file-input"`, which clips it while leaving it focusable, inside the label that looks like a
+  button.
+- No control inside another control; no empty `<th>` (a column without a header is a `<td>`); every
+  icon-only button carries an `aria-label`; every input is tied to its label by `for`/`id`.
+- Colour never carries meaning alone: the review levels have words, the compared curves have numbers,
+  the scales have markers and hatchings.
+
 ## Pitfalls
 
 - **Debian's Node.js can't run TypeScript.** Official Node 24 builds strip types natively, but Debian
