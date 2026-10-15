@@ -86,11 +86,42 @@ Refresh one maker at a time:
    catalogue. Check one page by hand before believing it.
 3. Read the skip list. A new reason appearing in it is the first sign a page shape changed.
 4. Look for figures that cannot be true: a barrel over a metre, a gun under 200 g, a mass of zero.
-5. Replace the maker's files wholesale rather than merging: `retrieved` then means what it says, and a
-   gun dropped from the catalogue disappears instead of lingering.
+5. Stage the differences as a reviewed diff, field by field, rather than swapping the folder. A changed
+   barrel length is a correction to publish; a changed count is usually a bug to fix first.
+
+**A gun that has left the catalogue is not deleted.** Discontinued guns stay in use for decades, and
+their owners load for them; a record whose page is gone is marked as such — its figures were true when
+they were read — rather than removed. What expires is the *review*, not the fact. A record carries when
+it was retrieved and when its figures were last confirmed, and an old one says so plainly instead of
+disappearing or pretending to be current.
 
 The test for a maker is the early warning: when their page shape changes, fix the extractor and the test
 page together, in one commit, so the next refresh starts from something that works.
+
+## Before any of it is published
+
+The pilot's records are not publishable as they stand, and these are the gates (Astra's review,
+2026-10-15):
+
+- **Rights are per source, not global.** Facts are not copyrightable in the US, and under
+  *British Horseracing Board* investment in *creating* data is not investment in *obtaining* it — which
+  covers a maker publishing specifications of its own guns. But a maker's catalogue is not categorically
+  outside the EU database right, and taking four fields from a whole catalogue is not automatically
+  insubstantial. Each source needs its own note: operator, terms, what we take, and the judgement made.
+  CC0 can only dispose of rights *we* hold; it cannot clear anyone else's. **The maintainer decides
+  before anything is published.**
+- **Record what a number means, not only its value.** Which mass basis (without magazine, with an empty
+  one, loaded, or unstated) and which barrel-length convention, or that the convention is unknown. An
+  unstated mass must not be silently called "the gun as it recoils".
+- **Unknown is not zero.** No published gas-leak information is not the same as a sealed barrel, and a
+  revolver's cylinder gap is the obvious case.
+- **Keep the published value and unit** beside the SI one, so a rounding or a unit mix-up can be traced
+  back without re-fetching the page.
+- **Conflicts are kept, not resolved by crawl order.** Where a commercial and a law-enforcement page
+  disagree on a mass, both are recorded with their sources; first-seen-wins makes the answer depend on
+  the order of a sitemap.
+- **A record is applied field by field**, never by replacing a user's barrel wholesale, and what a load
+  copied from a record is pinned in the load.
 
 ## Known limits of published figures
 
