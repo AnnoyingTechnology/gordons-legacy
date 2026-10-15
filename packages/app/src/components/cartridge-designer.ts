@@ -49,6 +49,18 @@ const RIFLING_FIELDS: NumberEntry<keyof Rifling>[] = [
   { key: 'grooveWidth', letter: 'b', label: 'designer.grooveWidth', kind: 'length' },
 ];
 
+/** One editable number as the dialog draws it: the input's id ties it to its label. */
+interface NumberRow {
+  id: string;
+  letter: string;
+  label: MessageKey;
+  kind: QuantityKind | 'count';
+  value: number;
+  set: (value: number) => void;
+  /** Decimals shown; the display unit's own by default. */
+  decimals?: number;
+}
+
 /** The definition's text values the designer edits. */
 type TextKey = 'name' | 'alternativeNames' | 'standard' | 'countryOfOrigin' | 'caseType' | 'standardDate' | 'specificationUrl';
 
@@ -121,7 +133,7 @@ export class CartridgeDesigner extends LitElement {
         <header class="picker-head">
           <h2>${icon('cartridge')} ${t('designer.title')}</h2>
           <span class="spacer"></span>
-          <button @click=${() => this.dispatchEvent(new Event('close'))}>${icon('close')}</button>
+          <button aria-label=${t('app.close')} @click=${() => this.dispatchEvent(new Event('close'))}>${icon('close')}</button>
         </header>
         <p class="note">${t('designer.help', { unit: lengthUnit.symbol })}</p>
         <div class="designer-drawing">${technicalDrawing(draft, format)}</div>
@@ -130,29 +142,49 @@ export class CartridgeDesigner extends LitElement {
             <h3>${t('designer.general')}</h3>
             <table class="property-table"><tbody>
               ${TEXT_FIELDS.map(({ key, label }) => html`<tr>
-                <th>${t(label)}</th>
+                <th><label for=${`general-${key}`}>${t(label)}</label></th>
                 <td colspan="2">
-                  <input type="text" .value=${draft[key]} @change=${(event: Event) => this.edit({ [key]: (event.target as HTMLInputElement).value })} />
+                  <input
+                    id=${`general-${key}`}
+                    type="text"
+                    .value=${draft[key]}
+                    @change=${(event: Event) => this.edit({ [key]: (event.target as HTMLInputElement).value })}
+                  />
                 </td>
               </tr>`)}
-              ${this.numberRow('Pmax', 'field.maxPressure', 'pressure', draft.maxPressure, (value) => this.edit({ maxPressure: value }))}
-              ${this.numberRow('', 'field.sebertFactor', 'count', draft.sebertFactor, (value) => this.edit({ sebertFactor: value }), 2)}
+              ${this.numberRow({
+                id: 'general-maxPressure',
+                letter: 'Pmax',
+                label: 'field.maxPressure',
+                kind: 'pressure',
+                value: draft.maxPressure,
+                set: (value) => this.edit({ maxPressure: value }),
+              })}
+              ${this.numberRow({
+                id: 'general-sebertFactor',
+                letter: '',
+                label: 'field.sebertFactor',
+                kind: 'count',
+                value: draft.sebertFactor,
+                set: (value) => this.edit({ sebertFactor: value }),
+                decimals: 2,
+              })}
             </tbody></table>
             <h3>${t('designer.rifling')}</h3>
             <table class="property-table"><tbody>
-              ${this.numberRows(RIFLING_FIELDS, draft.rifling, (key, value) => this.editRifling(key, value))}
+              ${this.numberRows('rifling', RIFLING_FIELDS, draft.rifling, (key, value) => this.editRifling(key, value))}
             </tbody></table>
           </section>
           <section>
             <h3>${t('designer.case')}</h3>
             <table class="property-table"><tbody>
-              ${this.numberRows(CASE_FIELDS, draft.caseDimensions, (key, value) => this.editCase(key, value))}
+              ${this.numberRows('case', CASE_FIELDS, draft.caseDimensions, (key, value) => this.editCase(key, value))}
             </tbody></table>
           </section>
           <section>
             <h3>${t('designer.chamber')}</h3>
             <table class="property-table"><tbody>
-              ${this.numberRows(CHAMBER_FIELDS, draft.chamberDimensions, (key, value) => this.editChamber(key, value))}
+              ${this.numberRows('chamber', CHAMBER_FIELDS, draft.chamberDimensions, (key, value) => this.editChamber(key, value))}
             </tbody></table>
           </section>
         </div>
@@ -167,20 +199,34 @@ export class CartridgeDesigner extends LitElement {
   }
 
   /** One row per field of a group, read from `values` (0 when the group isn't given yet). */
-  private numberRows<Key extends string>(fields: NumberEntry<Key>[], values: Partial<Record<Key, number>> | undefined, set: (key: Key, value: number) => void) {
+  private numberRows<Key extends string>(
+    group: string,
+    fields: NumberEntry<Key>[],
+    values: Partial<Record<Key, number>> | undefined,
+    set: (key: Key, value: number) => void,
+  ) {
     return fields.map((field) =>
-      this.numberRow(field.letter, field.label, field.kind, values?.[field.key] ?? 0, (value) => set(field.key, value), field.kind === 'count' ? 0 : undefined),
+      this.numberRow({
+        id: `${group}-${field.key}`,
+        letter: field.letter,
+        label: field.label,
+        kind: field.kind,
+        value: values?.[field.key] ?? 0,
+        set: (value) => set(field.key, value),
+        ...(field.kind === 'count' ? { decimals: 0 } : {}),
+      }),
     );
   }
 
-  private numberRow(letter: string, label: MessageKey, kind: QuantityKind | 'count', value: number, set: (value: number) => void, decimals?: number) {
+  private numberRow({ id, letter, label, kind, value, set, decimals }: NumberRow) {
     const { t } = this.context;
     const unit = kind === 'count' ? undefined : displayUnit(kind, this.context.units);
     const shown = unit ? unit.fromSi(value) : value;
     return html`<tr>
-      <th><span class="letter">${letter}</span> ${t(label)}</th>
+      <th><label for=${id}><span class="letter">${letter}</span> ${t(label)}</label></th>
       <td>
         <input
+          id=${id}
           type="text"
           inputmode="decimal"
           .value=${formatNumber(shown, decimals ?? unit?.decimals ?? 2, 'en').replace(/,/g, '')}

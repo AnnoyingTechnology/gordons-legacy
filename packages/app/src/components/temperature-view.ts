@@ -1,6 +1,6 @@
 import type { Load } from '@gordons-legacy/formats';
 import type { TemperatureRow } from '../analysis/review.ts';
-import { element } from '../dom.ts';
+import { element, headerRow } from '../dom.ts';
 import type { UiContext } from './context.ts';
 import './temperature-fit.ts';
 import type { TemperatureFit } from './temperature-fit.ts';
@@ -42,7 +42,7 @@ export function renderTemperatures(load: Load, table: readonly TemperatureRow[],
     ]),
     element('p', { class: 'note' }, [t('temperatures.help')]),
     element('table', { class: 'data-table' }, [
-      element('thead', {}, [element('tr', {}, head.map((label) => element('th', {}, [label])))]),
+      element('thead', {}, [headerRow(head)]),
       element('tbody', {}, rows),
     ]),
     fitForm(load, context),

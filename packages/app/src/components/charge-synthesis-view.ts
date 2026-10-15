@@ -132,7 +132,7 @@ export class ChargeSynthesisView extends LitElement {
             <th>${t('group.propellant')}</th>
             <th>${t('synthesis.lowest')}</th>
             <th>${t('synthesis.highest')}</th>
-            <th></th>
+            <td></td>
           </tr>
         </thead>
         <tbody>

@@ -1,6 +1,6 @@
 import { grtTraditional, type SimulationResult } from '@gordons-legacy/engine';
 import { ladderChargeMasses, type Load } from '@gordons-legacy/formats';
-import { element } from '../dom.ts';
+import { element, headerRow } from '../dom.ts';
 import type { UiContext } from './context.ts';
 
 /** One charge of a ladder and its simulation; the first is the load's own charge. */
@@ -52,10 +52,10 @@ export function renderLadder(load: Load, ladder: LadderShot[], context: UiContex
   });
   const head = [t('field.chargeMass'), t('results.peakPressure'), '%', t('results.muzzleVelocity'), t('results.barrelTime'), ''];
   return element('section', { class: 'ladder' }, [
-    element('h4', {}, [t('results.ladder')]),
+    element('h3', {}, [t('results.ladder')]),
     element('p', { class: 'warning' }, [t('safety.simulated')]),
     element('table', { class: 'data-table' }, [
-      element('thead', {}, [element('tr', {}, head.map((label) => element('th', {}, [label])))]),
+      element('thead', {}, [headerRow(head)]),
       element('tbody', {}, rows),
     ]),
   ]);

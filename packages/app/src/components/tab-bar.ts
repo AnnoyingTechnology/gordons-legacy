@@ -14,12 +14,12 @@ export function tabBar(
 ) {
   const { t } = context;
   return html`
-    <nav class="tabs" role="tablist">
+    <nav class="tabs" aria-label=${t('documents.open')}>
       ${documents.map((document) => {
         const active = document.id === activeId;
         return html`
-          <div class="tab ${active ? 'active' : ''}" role="tab" aria-selected=${active}>
-            <button class="tab-name" title=${document.name} @click=${() => actions.show(document.id)}>
+          <div class="tab ${active ? 'active' : ''}">
+            <button class="tab-name" title=${document.name} aria-current=${active ? 'true' : nothing} @click=${() => actions.show(document.id)}>
               <span class="tab-title">
                 ${document.name.replace(/\.json$/i, '')}${isDirty(document) ? html`<span class="unsaved" title=${t('documents.unsaved')}> •</span>` : nothing}
               </span>

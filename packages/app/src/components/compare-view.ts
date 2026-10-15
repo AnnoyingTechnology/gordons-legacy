@@ -76,7 +76,7 @@ export class CompareView extends LitElement {
     });
     return html`
       <section class="compare">
-        <h3>${t('compare.title')}</h3>
+        <h2>${t('compare.title')}</h2>
         <p class="warning">${t('safety.simulated')}</p>
         <fieldset class="compare-choice">
           <legend>${t('compare.loads', { count: String(MAXIMUM_COMPARED) })}</legend>
@@ -153,7 +153,7 @@ export class CompareView extends LitElement {
       <table class="data-table compare-table">
         <thead>
           <tr>
-            <th></th>
+            <th>${t('field.name')}</th>
             <th>${t('field.chargeMass')}</th>
             <th>${t('results.peakPressure')}</th>
             <th>%</th>

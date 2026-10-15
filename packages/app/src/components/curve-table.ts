@@ -1,5 +1,5 @@
 import type { Simulation } from '@gordons-legacy/engine';
-import { element } from '../dom.ts';
+import { element, headerRow } from '../dom.ts';
 import type { UiContext } from './context.ts';
 
 /** The curve as a table, every 50th point plus the last, for reading values without hovering. */
@@ -21,7 +21,7 @@ export function renderTable(shot: Simulation, context: UiContext): HTMLElement {
   return element('details', { class: 'curve-table' }, [
     element('summary', {}, [t('results.table')]),
     element('table', { class: 'data-table' }, [
-      element('thead', {}, [element('tr', {}, head.map((label) => element('th', {}, [label])))]),
+      element('thead', {}, [headerRow(head)]),
       element('tbody', {}, rows),
     ]),
   ]);

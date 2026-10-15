@@ -53,16 +53,16 @@ export class LibraryView extends LitElement {
           <span class="spacer"></span>
           <label class="button">
             ${icon('open')} ${t('library.import')}
-            <input type="file" accept=".grtload,.json,.propellant,.projectile,.caliber" multiple hidden @change=${this.importFiles} />
+            <input type="file" accept=".grtload,.json,.propellant,.projectile,.caliber" multiple class="file-input" @change=${this.importFiles} />
           </label>
           <label class="button">
             ${icon('open')} ${t('library.importFolder')}
-            <input type="file" webkitdirectory multiple hidden @change=${this.importFiles} />
+            <input type="file" webkitdirectory multiple class="file-input" @change=${this.importFiles} />
           </label>
           <button @click=${() => this.fire('backup')}>${icon('save')} ${t('library.backup')}</button>
           <label class="button">
             ${icon('undo')} ${t('library.restore')}
-            <input type="file" accept=".json" hidden @change=${this.restore} />
+            <input type="file" accept=".json" class="file-input" @change=${this.restore} />
           </label>
         </header>
         <p class="note">${t('library.help')}</p>
@@ -82,7 +82,7 @@ export class LibraryView extends LitElement {
                   <th>${t('library.review')}</th>
                   <th class="number">${t('library.measured')}</th>
                   <th class="number">${t('library.bestGroup')}</th>
-                  <th></th>
+                  <td></td>
                 </tr>
               </thead>
               ${shelves(shown).map(

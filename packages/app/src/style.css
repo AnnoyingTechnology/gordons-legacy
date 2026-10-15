@@ -15,15 +15,18 @@
   --grid: #e4e6e9;
   --case-fill: #e8dcc0;
   --projectile-fill: #c9a27a;
-  /* Categorical palette for comparing loads (validated reference palette, fixed order). */
+  /* Categorical palette for comparing loads (validated reference palette, fixed order; the green, amber
+     and pink darkened from it to reach 3:1 on white, test/contrast.test.ts). */
   --compare-1: #2a78d6;
   --compare-2: #eb6834;
-  --compare-3: #1baf7a;
-  --compare-4: #eda100;
-  --compare-5: #e87ba4;
+  --compare-3: #15996b;
+  --compare-4: #b87b00;
+  --compare-5: #d4557f;
   --compare-6: #008300;
   --compare-7: #4a3aa7;
   --compare-8: #e34948;
+  /* Native widgets (dropdown lists, checkboxes, scrollbars) follow the theme the media query picks. */
+  color-scheme: light dark;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   font-size: 15px;
   line-height: 1.45;
@@ -42,6 +45,8 @@
     --warn-bg: #3a3017;
     --warn-border: #eda100;
     --error-fg: #ff8a8f;
+    /* The light theme's #d03b3b reaches only 3.4:1 on this panel, and it is read as text. */
+    --critical: #ff6b6b;
     --accent: #8fb8e0;
     --panel: #1d2024;
     --series-pressure: #3987e5;
@@ -63,6 +68,33 @@
 body {
   margin: 0;
   padding: 0;
+}
+
+/* One focus ring for the whole tool, keyboard only: the browser's default is thin on our own surfaces. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/*
+ * A file input inside a label styled as a button: hidden from sight but still in the tab order, so the
+ * keyboard can open files too. `display: none` or `hidden` would take it out of the tab order.
+ */
+.file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+label:has(> .file-input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 h1 {
@@ -149,23 +181,6 @@ code {
   margin-bottom: 0.4rem;
 }
 
-.import-result h3 {
-  font-size: 1rem;
-  margin: 1.2rem 0 0.6rem;
-}
-
-.summary {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
-  gap: 0 2rem;
-}
-
-.summary h4 {
-  font-size: 0.9rem;
-  margin: 0.8rem 0 0.3rem;
-  border-bottom: 1px solid var(--rule);
-}
-
 .summary dl {
   margin: 0;
   gap: 0.15rem 1rem;
@@ -209,7 +224,7 @@ code {
   text-decoration: none;
 }
 
-.simulation h4 {
+.simulation h3 {
   font-size: 0.95rem;
   margin: 1.2rem 0 0.5rem;
 }
@@ -543,6 +558,9 @@ code {
 .toolbar .tool-select select {
   font: inherit;
   color: var(--fg);
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 0.2rem;
   padding: 0.15rem 0.2rem;
 }
 
@@ -703,9 +721,9 @@ main {
   }
 }
 
-.property-group h3,
-.notes-panel h3,
-.shot-groups-panel h3 {
+.property-group h2,
+.notes-panel h2,
+.shot-groups-panel h2 {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -717,9 +735,9 @@ main {
   border-bottom: 2px solid var(--rule);
 }
 
-.property-group h3 .icon,
-.notes-panel h3 .icon,
-.shot-groups-panel h3 .icon {
+.property-group h2 .icon,
+.notes-panel h2 .icon,
+.shot-groups-panel h2 .icon {
   width: 24px;
   height: 24px;
   color: var(--accent);
@@ -807,9 +825,11 @@ main {
   font-size: 0.8rem;
 }
 
-.results h3 {
+.results h2 {
   font-size: 1rem;
   margin: 0.8rem 0 0.4rem;
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
 .status-footer {
@@ -1081,7 +1101,7 @@ button[aria-pressed='true'] {
   margin-top: 0.6rem;
 }
 
-.temperature-fit h5 {
+.temperature-fit h4 {
   margin: 0.4rem 0;
   font-size: 0.9rem;
 }
@@ -1244,6 +1264,18 @@ dialog.shot-group-dialog {
   vector-effect: non-scaling-stroke;
 }
 
+/* The keyboard's crosshair: white under black, so it shows on any photo. */
+.target-photo .target-cursor line {
+  stroke: #000;
+  stroke-width: 3;
+  paint-order: stroke;
+  vector-effect: non-scaling-stroke;
+}
+
+.target-photo .target-cursor {
+  filter: drop-shadow(0 0 2px #fff) drop-shadow(0 0 2px #fff);
+}
+
 .shot-group-side label {
   display: block;
   margin: 0.3rem 0;
@@ -1304,7 +1336,7 @@ dialog.shot-group-dialog {
   gap: 0.5rem 1rem;
 }
 
-.assessment h4 {
+.assessment h3 {
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -1312,7 +1344,7 @@ dialog.shot-group-dialog {
   font-size: 1rem;
 }
 
-.assessment.level-danger h4 {
+.assessment.level-danger h3 {
   color: var(--critical);
 }
 
@@ -1400,7 +1432,7 @@ dialog.shot-group-dialog {
   margin-top: 0.6rem;
 }
 
-.climate h5 {
+.climate h4 {
   display: flex;
   align-items: center;
   gap: 0.35rem;
@@ -1507,7 +1539,7 @@ dialog.shot-group-dialog {
   grid-column: auto;
 }
 
-.key-card h4 {
+.key-card h3 {
   display: flex;
   align-items: center;
   gap: 0.35rem;
@@ -1517,7 +1549,7 @@ dialog.shot-group-dialog {
   color: var(--muted);
 }
 
-.key-card h4 .icon {
+.key-card h3 .icon {
   width: 18px;
   height: 18px;
 }
@@ -2226,4 +2258,10 @@ dialog.cartridge-designer {
 .updating {
   opacity: 0.55;
   transition: opacity 0.15s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .updating {
+    transition: none;
+  }
 }

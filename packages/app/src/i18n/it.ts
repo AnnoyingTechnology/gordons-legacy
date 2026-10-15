@@ -2,6 +2,7 @@ import type { Messages } from './en.ts';
 
 export const it: Messages = {
   'app.title': "Gordon's Legacy",
+  'app.close': 'Chiudi',
   'app.development': 'In sviluppo. Niente di quanto qui presente è utilizzabile per sviluppare cariche.',
   'safety.simulated':
     'Valori simulati, non dati di ricarica. Verificare ogni carica con i dati pubblicati dal produttore della polvere o della palla, partire basso e salire gradualmente.',
@@ -56,6 +57,7 @@ export const it: Messages = {
   'documents.empty': 'Aprire una carica: un file GRT .grtload o una carica Gordon’s Legacy salvata (.json). I file restano su questo computer.',
   'documents.storageFull': 'Le ricariche aperte non entrano più nella memoria del browser (immagini grandi?): salvatele su file, o andranno perse alla chiusura della pagina.',
   'documents.close': 'Chiudi {name}',
+  'documents.open': 'Ricariche aperte',
   'documents.unsaved': 'modifiche non salvate',
   'group.cartridge': 'Cartuccia',
   'group.barrel': 'Canna',
@@ -148,6 +150,7 @@ export const it: Messages = {
   'shotGroups.scaleLength': 'Lunghezza tra i punti',
   'shotGroups.setScale': 'Imposta la scala',
   'shotGroups.hitsHelp': 'Fate clic sul centro di ogni colpo; un nuovo clic su un colpo lo rimuove.',
+  'shotGroups.keyboardHelp': 'Senza mouse: le frecce spostano un reticolo (più fine con Maiusc, ancora più con Ctrl), Invio segna il punto.',
   'shotGroups.needHits': 'Segnate almeno due colpi.',
   'shotGroups.hits': 'Colpi',
   'shotGroups.extremeSpread': 'Dispersione massima',

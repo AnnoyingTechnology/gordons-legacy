@@ -44,7 +44,7 @@ export function toolbar(state: ToolbarState, actions: ToolbarActions, context: U
       <div class="tool-group">
         <label class="tool">
           ${icon('open')}<span>${t('toolbar.open')}</span>
-          <input type="file" accept=${OPENED_FILES} multiple hidden @change=${actions.openFiles} />
+          <input type="file" accept=${OPENED_FILES} multiple class="file-input" @change=${actions.openFiles} />
         </label>
         <button class="tool" ?disabled=${!state.hasActiveLoad} title=${t('toolbar.saveHelp')} @click=${actions.save}>
           ${icon('save')}<span>${t('toolbar.save')}</span>

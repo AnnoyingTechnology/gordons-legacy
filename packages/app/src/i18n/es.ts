@@ -2,6 +2,7 @@ import type { Messages } from './en.ts';
 
 export const es: Messages = {
   'app.title': "Gordon's Legacy",
+  'app.close': 'Cerrar',
   'app.development': 'En desarrollo. Nada de lo que hay aquí sirve para desarrollar cargas.',
   'safety.simulated':
     'Valores simulados, no datos de recarga. Compruebe cada carga con los datos publicados por el fabricante de la pólvora o del proyectil, empiece bajo y suba poco a poco.',
@@ -56,6 +57,7 @@ export const es: Messages = {
   'documents.empty': 'Abra una carga: un archivo GRT .grtload o una carga guardada de Gordon’s Legacy (.json). Los archivos se quedan en este ordenador.',
   'documents.storageFull': 'Las cargas abiertas ya no caben en el almacenamiento del navegador (¿imágenes grandes?): guárdelas en archivos o se perderán al cerrar la página.',
   'documents.close': 'Cerrar {name}',
+  'documents.open': 'Cargas abiertas',
   'documents.unsaved': 'cambios sin guardar',
   'group.cartridge': 'Cartucho',
   'group.barrel': 'Cañón',
@@ -148,6 +150,7 @@ export const es: Messages = {
   'shotGroups.scaleLength': 'Longitud entre los puntos',
   'shotGroups.setScale': 'Fijar la escala',
   'shotGroups.hitsHelp': 'Haga clic en el centro de cada impacto; vuelva a hacer clic en un impacto para quitarlo.',
+  'shotGroups.keyboardHelp': 'Sin ratón: las flechas mueven una retícula (más fino con Mayús, aún más con Ctrl), Intro marca el punto.',
   'shotGroups.needHits': 'Marque al menos dos impactos.',
   'shotGroups.hits': 'Impactos',
   'shotGroups.extremeSpread': 'Dispersión máxima',

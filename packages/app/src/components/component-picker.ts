@@ -85,9 +85,9 @@ export class ComponentPicker extends LitElement {
           <span class="spacer"></span>
           <label class="button">
             ${icon('open')} ${t('components.importFiles')}
-            <input type="file" accept=${`.${this.kind}`} multiple hidden @change=${this.importFiles} />
+            <input type="file" accept=${`.${this.kind}`} multiple class="file-input" @change=${this.importFiles} />
           </label>
-          <button @click=${this.close}>${icon('close')}</button>
+          <button aria-label=${t('app.close')} @click=${this.close}>${icon('close')}</button>
         </header>
         <p class="warning">${t(NOTICES[this.kind])}</p>
         <p class="note">${t(`components.source.${this.library.communitySource}`)}</p>
@@ -130,7 +130,7 @@ export class ComponentPicker extends LitElement {
         <table class="data-table picker-table">
           <thead>
             <tr>
-              <th></th>
+              <td></td>
               <th>${t('group.propellant')}</th>
               <th>${t('components.source')}</th>
               <th title=${t('components.brpHelp')}>Brp</th>
@@ -185,7 +185,7 @@ export class ComponentPicker extends LitElement {
         <table class="data-table picker-table">
           <thead>
             <tr>
-              <th></th>
+              <td></td>
               <th>${t('group.projectile')}</th>
               <th>${t('components.source')}</th>
               <th>${t('field.diameter')} (${lengthUnit.symbol})</th>
@@ -239,7 +239,7 @@ export class ComponentPicker extends LitElement {
         <table class="data-table picker-table">
           <thead>
             <tr>
-              <th></th>
+              <td></td>
               <th>${t('group.cartridge')}</th>
               <th>${t('components.source')}</th>
               <th>${t('components.standard')}</th>

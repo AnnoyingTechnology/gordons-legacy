@@ -57,11 +57,11 @@ export class TemperatureFit extends LitElement {
     const normal = formatNumber(temperature.fromSi(REFERENCE_CELSIUS + 273.15), 0, 'en');
     return html`
       <div class="temperature-fit">
-        <h5>${t('temperatureFit.title')}</h5>
+        <h4>${t('temperatureFit.title')}</h4>
         <p class="note">${t('temperatureFit.help')}</p>
         <table class="data-table">
           <thead>
-            <tr><th></th><th>${t('field.temperature')} (${temperature.symbol})</th><th>${t('measurements.mean')} (${velocity.symbol})</th></tr>
+            <tr><td></td><th>${t('field.temperature')} (${temperature.symbol})</th><th>${t('measurements.mean')} (${velocity.symbol})</th></tr>
           </thead>
           <tbody>
             <tr><td>${t('temperatureFit.cold')}</td><td>${input('coldTemperature', t('temperatureFit.cold'))}</td><td>${input('coldVelocity', t('temperatureFit.cold'))}</td></tr>

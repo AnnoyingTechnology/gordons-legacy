@@ -26,13 +26,13 @@ export function keyFigures(load: Load, shot: Simulation, limits: PressureLimit[]
   return html`
     <div class="key-figures">
       <section class="key-card primary">
-        <h4>${icon('velocity')} ${t('results.muzzleVelocity')}</h4>
+        <h3>${icon('velocity')} ${t('results.muzzleVelocity')}</h3>
         <div class="key-value">${quantity(shot.muzzleVelocity, 'velocity')}</div>
         <div class="key-detail">${t('speed.mach', { mach: number(mach, 2), temperature: quantity(temperature, 'temperature', 0) })}</div>
         ${speedScale(shot.muzzleVelocity, temperature, context)}
       </section>
       <section class="key-card primary ${above ? 'critical' : ''}">
-        <h4>${icon('pressure')} ${t('results.peakPressure')}</h4>
+        <h3>${icon('pressure')} ${t('results.peakPressure')}</h3>
         <div class="key-value">${quantity(shot.maxPressure, 'pressure')}</div>
         <div class="key-detail">
           ${above ? html`<strong>▲ ${t('results.aboveMaximum')}:</strong> ` : nothing}
@@ -57,7 +57,7 @@ export function keyFigures(load: Load, shot: Simulation, limits: PressureLimit[]
           )
         : nothing}
       <section class="key-card fill-card">
-        <h4>${icon('cartridge')} ${t('results.caseFill')}</h4>
+        <h3>${icon('cartridge')} ${t('results.caseFill')}</h3>
         ${cartridgeDrawing(load, shot, context)}
       </section>
       <section class="key-card details-card">${details}</section>
@@ -68,7 +68,7 @@ export function keyFigures(load: Load, shot: Simulation, limits: PressureLimit[]
 function card(name: IconName, label: string, value: string, detail: string, help?: string): TemplateResult {
   return html`
     <section class="key-card" title=${help ?? nothing}>
-      <h4>${icon(name)} ${label}</h4>
+      <h3>${icon(name)} ${label}</h3>
       <div class="key-value">${value}</div>
       ${detail ? html`<div class="key-detail">${detail}</div>` : nothing}
     </section>

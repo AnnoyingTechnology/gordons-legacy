@@ -18,7 +18,7 @@ export function assessmentView(assessment: Assessment, ownTemperature: number, c
   return html`
     <section class="assessment level-${assessment.level}" aria-labelledby="assessment-title">
       <div class="assessment-head">
-        <h4 id="assessment-title">${icon(assessment.level === 'danger' ? 'error' : assessment.level === 'none' ? 'info' : 'warning')} ${t('assessment.title')}</h4>
+        <h3 id="assessment-title">${icon(assessment.level === 'danger' ? 'error' : assessment.level === 'none' ? 'info' : 'warning')} ${t('assessment.title')}</h3>
         <ol class="concern-scale" aria-label=${t('assessment.scale')}>
           ${LEVELS.map(
             (level) => html`<li class="${level} ${level === assessment.level ? 'current' : ''}" aria-current=${level === assessment.level ? 'true' : nothing}>
@@ -38,7 +38,7 @@ export function assessmentView(assessment: Assessment, ownTemperature: number, c
             )}
           </ul>`}
       <div class="climate">
-        <h5>${icon('temperature')} ${t('temperatureRange.title')}</h5>
+        <h4>${icon('temperature')} ${t('temperatureRange.title')}</h4>
         ${temperatureScale(assessment.temperatures, ownTemperature, context)}
         <p class="note">${t('climate.help')}</p>
       </div>

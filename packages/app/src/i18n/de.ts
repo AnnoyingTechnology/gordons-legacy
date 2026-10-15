@@ -2,6 +2,7 @@ import type { Messages } from './en.ts';
 
 export const de: Messages = {
   'app.title': "Gordon's Legacy",
+  'app.close': 'Schließen',
   'app.development': 'In Entwicklung. Nichts hier eignet sich zur Entwicklung von Ladungen.',
   'safety.simulated':
     'Simulierte Werte, keine Ladedaten. Prüfen Sie jede Ladung anhand der veröffentlichten Daten des Pulver- oder Geschossherstellers, beginnen Sie niedrig und tasten Sie sich heran.',
@@ -56,6 +57,7 @@ export const de: Messages = {
   'documents.empty': 'Öffnen Sie eine Ladung: eine GRT-.grtload-Datei oder eine gespeicherte Gordon’s-Legacy-Ladung (.json). Die Dateien bleiben auf diesem Computer.',
   'documents.storageFull': 'Die geöffneten Ladungen passen nicht mehr in den Speicher des Browsers (große Bilder?): Speichern Sie sie in Dateien, sonst gehen sie beim Schließen der Seite verloren.',
   'documents.close': '{name} schließen',
+  'documents.open': 'Geöffnete Ladungen',
   'documents.unsaved': 'ungespeicherte Änderungen',
   'group.cartridge': 'Patrone',
   'group.barrel': 'Lauf',
@@ -148,6 +150,7 @@ export const de: Messages = {
   'shotGroups.scaleLength': 'Länge zwischen den Punkten',
   'shotGroups.setScale': 'Maßstab setzen',
   'shotGroups.hitsHelp': 'Mitte jedes Treffers anklicken; einen Treffer erneut anklicken, um ihn zu entfernen.',
+  'shotGroups.keyboardHelp': 'Ohne Maus: Die Pfeiltasten bewegen ein Fadenkreuz (feiner mit Umschalt, am feinsten mit Strg), Eingabe setzt den Punkt.',
   'shotGroups.needHits': 'Mindestens zwei Treffer markieren.',
   'shotGroups.hits': 'Treffer',
   'shotGroups.extremeSpread': 'Streukreis (ES)',

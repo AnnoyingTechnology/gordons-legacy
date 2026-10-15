@@ -4,6 +4,7 @@
  */
 export const en = {
   'app.title': "Gordon's Legacy",
+  'app.close': 'Close',
   'app.development': 'Under development. Nothing here is usable for load development.',
   'safety.simulated':
     'Simulated values, not load data. Check every charge against published data from the powder or bullet maker, start low and work up.',
@@ -58,6 +59,7 @@ export const en = {
   'documents.empty': 'Open a load: a GRT .grtload file or a saved Gordon’s Legacy load (.json). Files stay on this computer.',
   'documents.storageFull': "The open loads no longer fit in the browser's storage (large pictures?): save them to files, or they will be lost when the page closes.",
   'documents.close': 'Close {name}',
+  'documents.open': 'Open loads',
   'documents.unsaved': 'unsaved changes',
   'group.cartridge': 'Cartridge',
   'group.barrel': 'Barrel',
@@ -150,6 +152,7 @@ export const en = {
   'shotGroups.scaleLength': 'Length between the points',
   'shotGroups.setScale': 'Set the scale',
   'shotGroups.hitsHelp': 'Click the centre of each hit; click a hit again to remove it.',
+  'shotGroups.keyboardHelp': 'Without a mouse: the arrow keys move a crosshair (finer with Shift, finest with Ctrl), Enter marks the point.',
   'shotGroups.needHits': 'Mark at least two hits.',
   'shotGroups.hits': 'Hits',
   'shotGroups.extremeSpread': 'Extreme spread',

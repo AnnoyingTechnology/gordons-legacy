@@ -1,6 +1,6 @@
 import type { Load } from '@gordons-legacy/formats';
 import type { Sensitivity } from '../analysis/sensitivity.ts';
-import { element } from '../dom.ts';
+import { element, headerRow } from '../dom.ts';
 import type { UiContext } from './context.ts';
 
 /**
@@ -32,7 +32,7 @@ export function renderSensitivity(load: Load, results: Sensitivity[] | undefined
     ]),
     element('p', { class: 'note' }, [t('sensitivity.help')]),
     element('table', { class: 'data-table' }, [
-      element('thead', {}, [element('tr', {}, head.map((label) => element('th', {}, [label])))]),
+      element('thead', {}, [headerRow(head)]),
       element('tbody', {}, rows),
     ]),
   ]);

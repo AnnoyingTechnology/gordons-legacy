@@ -37,7 +37,7 @@ export function renderResults(
   onAxis: (axis: ChartAxis) => void,
 ): HTMLElement {
   const { t } = context;
-  const container = element('section', { class: 'simulation' }, [element('h3', {}, [t('results.title')])]);
+  const container = element('section', { class: 'simulation' }, [element('h2', {}, [t('results.title')])]);
   container.append(element('p', { class: 'warning' }, [t('safety.simulated')]));
   const fit = load.propellant.calibration;
   if (fit) container.append(renderFitNotice(fit, context));

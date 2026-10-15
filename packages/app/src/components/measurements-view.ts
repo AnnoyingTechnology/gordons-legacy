@@ -1,6 +1,6 @@
 import { calibrateToVelocity, grtTraditional } from '@gordons-legacy/engine';
 import type { Load, MeasuredCharge, MeasurementSeries } from '@gordons-legacy/formats';
-import { element } from '../dom.ts';
+import { element, headerRow } from '../dom.ts';
 import { shotStatistics } from '../measurements/statistics.ts';
 import type { UiContext } from './context.ts';
 
@@ -13,19 +13,21 @@ export function renderMeasurements(load: Load, context: UiContext): HTMLElement 
   if (series.length === 0) return undefined;
   const { t } = context;
   return element('section', { class: 'measurements' }, [
-    element('h4', {}, [t('measurements.title')]),
+    element('h3', {}, [t('measurements.title')]),
     element('p', { class: 'note' }, [t('measurements.help')]),
     // Each row is a simulated charge: the notice belongs next to it, not only above the charts.
     element('p', { class: 'warning' }, [t('safety.simulated')]),
     ...series.map((entry) =>
       element('table', { class: 'data-table' }, [
         element('caption', {}, [entry.title]),
-        element('thead', {}, [element('tr', {}, [
-          t('field.chargeMass'), t('measurements.shots'), t('measurements.mean'), t('measurements.deviation'),
-          t('measurements.spread'), t('measurements.simulated'), t('measurements.difference'),
-          ...(measuresPressure(entry) ? [t('measurements.measuredPeak')] : []),
-          t('results.peakPressure'), '%', t('measurements.note'), '',
-        ].map((label) => element('th', {}, [label])))]),
+        element('thead', {}, [
+          headerRow([
+            t('field.chargeMass'), t('measurements.shots'), t('measurements.mean'), t('measurements.deviation'),
+            t('measurements.spread'), t('measurements.simulated'), t('measurements.difference'),
+            ...(measuresPressure(entry) ? [t('measurements.measuredPeak')] : []),
+            t('results.peakPressure'), '%', t('measurements.note'), '',
+          ]),
+        ]),
         element('tbody', {}, entry.charges.filter((charge) => charge.shots.length > 0).map((charge) => renderCharge(load, charge, measuresPressure(entry), context))),
       ]),
     ),

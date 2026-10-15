@@ -27,6 +27,7 @@ export class ShotGroupDialog extends LitElement {
     scalePoints: { state: true },
     scaleLength: { state: true },
     distanceText: { state: true },
+    cursor: { state: true },
   };
 
   declare load: Load;
@@ -41,6 +42,8 @@ export class ShotGroupDialog extends LitElement {
   /** The real length between the scale points, as typed, in the length unit. */
   declare scaleLength: string;
   declare distanceText: string;
+  /** Where the keyboard's crosshair sits, in the photo's pixels; undefined until a key moves it. */
+  declare cursor: Hit | undefined;
 
   constructor() {
     super();
@@ -51,6 +54,7 @@ export class ShotGroupDialog extends LitElement {
     this.scalePoints = [];
     this.scaleLength = '';
     this.distanceText = '';
+    this.cursor = undefined;
   }
 
   protected override createRenderRoot(): HTMLElement {
@@ -100,12 +104,12 @@ export class ShotGroupDialog extends LitElement {
     const touch = window.matchMedia('(pointer: coarse)').matches;
     return html`<label class="button photo-choice">
         ${this.context.t('shotGroups.choosePhoto')}
-        <input type="file" accept="image/*" hidden @change=${this.choosePhoto} />
+        <input type="file" accept="image/*" class="file-input" @change=${this.choosePhoto} />
       </label>
       ${touch
         ? html`<label class="button photo-choice">
             ${this.context.t('shotGroups.takePhoto')}
-            <input type="file" accept="image/*" capture="environment" hidden @change=${this.choosePhoto} />
+            <input type="file" accept="image/*" capture="environment" class="file-input" @change=${this.choosePhoto} />
           </label>`
         : nothing}`;
   }
@@ -116,9 +120,25 @@ export class ShotGroupDialog extends LitElement {
     const radius = scale ? this.load.projectile.diameter / 2 / scale : 6;
     const statistics = groupStatistics(this.group.hits);
     const toPixels = (hit: Hit) => (scale ? { x: hit.x / scale, y: hit.y / scale } : hit);
+    const { t } = this.context;
+    const cursor = this.cursor;
     return html`
-      <svg class="target-photo" viewBox="0 0 ${picture.width} ${picture.height}" @click=${this.clickTarget}>
+      <svg
+        class="target-photo"
+        viewBox="0 0 ${picture.width} ${picture.height}"
+        tabindex="0"
+        role="img"
+        aria-label=${`${t(this.mode === 'scale' ? 'shotGroups.scaleHelp' : 'shotGroups.hitsHelp')} ${t('shotGroups.keyboardHelp')}`}
+        @click=${this.clickTarget}
+        @keydown=${this.keyTarget}
+      >
         <image href="data:${picture.mediaType};base64,${picture.data}" width=${picture.width} height=${picture.height} />
+        ${cursor
+          ? svg`<g class="target-cursor">
+              <line x1=${cursor.x - picture.width / 25} y1=${cursor.y} x2=${cursor.x + picture.width / 25} y2=${cursor.y} />
+              <line x1=${cursor.x} y1=${cursor.y - picture.width / 25} x2=${cursor.x} y2=${cursor.y + picture.width / 25} />
+            </g>`
+          : nothing}
         ${this.scalePoints.map((point) => svg`<circle class="scale-point" cx=${point.x} cy=${point.y} r=${Math.max(4, picture.width / 200)} />`)}
         ${this.scalePoints.length === 2
           ? svg`<line class="scale-line" x1=${this.scalePoints[0]!.x} y1=${this.scalePoints[0]!.y} x2=${this.scalePoints[1]!.x} y2=${this.scalePoints[1]!.y} />`
@@ -152,11 +172,11 @@ export class ShotGroupDialog extends LitElement {
                 @change=${() => (this.mode = 'hits')} /> ${t('shotGroups.hitsMode')}</label>
             </div>
             ${this.mode === 'scale'
-              ? html`<p class="note">${t('shotGroups.scaleHelp')}</p>
+              ? html`<p class="note">${t('shotGroups.scaleHelp')} ${t('shotGroups.keyboardHelp')}</p>
                   <label>${t('shotGroups.scaleLength')} <input type="text" inputmode="decimal" .value=${this.scaleLength}
                     @input=${(event: Event) => (this.scaleLength = (event.target as HTMLInputElement).value)} /> ${length.symbol}</label>
                   <button type="button" ?disabled=${this.scalePoints.length !== 2} @click=${this.setScale}>${t('shotGroups.setScale')}</button>`
-              : html`<p class="note">${t('shotGroups.hitsHelp')}</p>`}
+              : html`<p class="note">${t('shotGroups.hitsHelp')} ${t('shotGroups.keyboardHelp')}</p>`}
           `
         : nothing}
     `;
@@ -192,7 +212,42 @@ export class ShotGroupDialog extends LitElement {
     const matrix = target.getScreenCTM();
     if (!matrix) return;
     const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(matrix.inverse());
-    const pixel = { x: point.x, y: point.y };
+    this.cursor = undefined;
+    this.place({ x: point.x, y: point.y });
+  };
+
+  /**
+   * The same marking without a pointer: the arrows move a crosshair (a tenth as far with Shift, a
+   * hundredth with Control, down to the pixel), Enter or the space bar places a point where it sits.
+   */
+  private keyTarget = (event: KeyboardEvent) => {
+    const picture = this.picture;
+    if (!picture) return;
+    const MOVES: Record<string, { x: number; y: number }> = {
+      ArrowLeft: { x: -1, y: 0 },
+      ArrowRight: { x: 1, y: 0 },
+      ArrowUp: { x: 0, y: -1 },
+      ArrowDown: { x: 0, y: 1 },
+    };
+    const move = MOVES[event.key];
+    const cursor = this.cursor ?? { x: picture.width / 2, y: picture.height / 2 };
+    if (move) {
+      event.preventDefault();
+      const step = Math.max(1, (picture.width / 50) * (event.ctrlKey ? 0.01 : event.shiftKey ? 0.1 : 1));
+      this.cursor = {
+        x: Math.min(picture.width, Math.max(0, cursor.x + move.x * step)),
+        y: Math.min(picture.height, Math.max(0, cursor.y + move.y * step)),
+      };
+      return;
+    }
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    this.cursor = cursor;
+    this.place(cursor);
+  };
+
+  /** Marks one point of the photo: a scale point, or a hit (on an existing hit, removes it). */
+  private place(pixel: Hit): void {
     if (this.mode === 'scale') {
       this.scalePoints = this.scalePoints.length >= 2 ? [pixel] : [...this.scalePoints, pixel];
       return;
@@ -203,7 +258,7 @@ export class ShotGroupDialog extends LitElement {
     const hit = { x: pixel.x * scale, y: pixel.y * scale };
     const near = this.group.hits.findIndex((existing) => Math.hypot(existing.x - hit.x, existing.y - hit.y) < radius);
     this.group = { ...this.group, hits: near >= 0 ? this.group.hits.filter((_, index) => index !== near) : [...this.group.hits, hit] };
-  };
+  }
 
   /** Sets metres per pixel from the two scale points, moving hits already placed with the photo. */
   private setScale = () => {

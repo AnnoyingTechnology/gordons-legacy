@@ -54,10 +54,10 @@ export class PropertyTable extends LitElement {
     const { t } = this.context;
     return html`
       <section class="property-group">
-        <h3>
+        <h2>
           ${icon(GROUP_ICONS[this.group.title] ?? 'settings')} ${t(this.group.title)}
           ${this.action ? html`<span class="group-action">${this.action}</span>` : nothing}
-        </h3>
+        </h2>
         <table class="property-table">
           <tbody>
             ${this.group.fields.map((field, index) =>

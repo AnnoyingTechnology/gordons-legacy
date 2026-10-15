@@ -1,6 +1,6 @@
 import { chargeForLeadTime, obtNodeTimes, type Simulation } from '@gordons-legacy/engine';
 import type { Load } from '@gordons-legacy/formats';
-import { element } from '../dom.ts';
+import { element, headerRow } from '../dom.ts';
 import type { UiContext } from './context.ts';
 
 /** How many nodes on each side of the nearest one are listed. */
@@ -23,9 +23,9 @@ export function renderObtNodes(load: Load, shot: Simulation, context: UiContext)
     details.append(
       element('p', { class: 'warning' }, [t('obt.safety')]),
       element('table', { class: 'data-table' }, [
-        element('thead', {}, [element('tr', {}, [
-          t('obt.node'), t('obt.time'), t('field.chargeMass'), t('results.peakPressure'), '%', t('results.muzzleVelocity'), '',
-        ].map((label) => element('th', {}, [label])))]),
+        element('thead', {}, [
+          headerRow([t('obt.node'), t('obt.time'), t('field.chargeMass'), t('results.peakPressure'), '%', t('results.muzzleVelocity'), '']),
+        ]),
         element('tbody', {}, shown.map((entry) => renderNode(load, entry, entry.node === nearest.node, context))),
       ]),
     );
