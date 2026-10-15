@@ -158,8 +158,10 @@ export class CompareView extends LitElement {
 
   private renderTable(compared: Compared[]) {
     const { t, quantity, number } = this.context;
+    // Seven columns: on a narrow screen the table scrolls instead of widening the page.
     return html`
-      <table class="data-table compare-table">
+      <div class="table-scroll">
+        <table class="data-table compare-table">
         <thead>
           <tr>
             <th>${t('field.name')}</th>
@@ -190,6 +192,7 @@ export class CompareView extends LitElement {
           })}
         </tbody>
       </table>
+      </div>
       ${compared.some(({ load }) => load.propellant.calibration)
         ? html`<p class="warning">${t('compare.fittedNote')}</p>`
         : nothing}

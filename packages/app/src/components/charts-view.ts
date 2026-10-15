@@ -12,17 +12,25 @@ export type ChartAxis = 'travel' | 'time';
 
 /** From this width the pressure and velocity charts sit side by side (`.chart-pair` in style.css). */
 export const SIDE_BY_SIDE = '(min-width: 1500px)';
+/** Under this width a chart is narrow enough that the smaller drawing keeps its text readable. */
+const NARROW = '(max-width: 640px)';
 
-/** Calls `redraw` when the window crosses the side-by-side width; returns a function that stops it. */
+/** Calls `redraw` when the window crosses a width that changes the charts; returns a stop function. */
 export function onChartLayoutChange(redraw: () => void): () => void {
-  const query = window.matchMedia(SIDE_BY_SIDE);
-  query.addEventListener('change', redraw);
-  return () => query.removeEventListener('change', redraw);
+  const queries = [window.matchMedia(SIDE_BY_SIDE), window.matchMedia(NARROW)];
+  for (const query of queries) query.addEventListener('change', redraw);
+  return () => {
+    for (const query of queries) query.removeEventListener('change', redraw);
+  };
 }
 
-/** The drawing size for the charts of a pair, at the current window width. */
+/**
+ * The drawing size for the charts of a pair. A chart scales to its container, text included, so the
+ * smaller drawing is used wherever the container is narrow: side by side on a wide screen, and on a
+ * phone, where a full-width chart is still only a few hundred pixels.
+ */
 export function pairedChartSize(): 'full' | 'half' {
-  return window.matchMedia(SIDE_BY_SIDE).matches ? 'half' : 'full';
+  return window.matchMedia(SIDE_BY_SIDE).matches || window.matchMedia(NARROW).matches ? 'half' : 'full';
 }
 
 export function renderAxisSwitch(current: ChartAxis, onAxis: (axis: ChartAxis) => void, context: UiContext): HTMLElement {
