@@ -2,7 +2,7 @@
  * Reads Glock's published pistol specifications into gun files (issue #30). Maintainer tool: a first
  * extractor, to see what one maker's pages give before any of this is published.
  *
- *     node tools/data/firearms/glock.ts <output folder> [--limit 5]
+ *     deno run -A tools/data/firearms/glock.ts <output folder> [--limit 5]
  *
  * It takes the pages the maker's own sitemap lists, waits a second between them, and keeps only the
  * figures the simulation needs: the barrel length, the mass with an empty magazine (the gun as it
@@ -15,12 +15,10 @@
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, parseFirearm, serializeFirearm, units, type Firearm } from '@gordons-legacy/formats';
+import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
+import { crawlArguments, DELAY, fetchText, fileName, firearmJson, sleep, summaryLine } from './maker-site.ts';
 
 const SITEMAP = 'https://us.glock.com/sitemap.xml';
-const AGENT = 'gordons-legacy-research/1.0 (+https://github.com/AnnoyingTechnology/gordons-legacy)';
-/** A second between pages: their robots.txt allows everything, which is no reason to be rude. */
-const DELAY = 1000;
 
 /** One line of a page's technical data: its title, the qualifier under it, and the value. */
 interface Specification {
@@ -120,31 +118,10 @@ export function firearmFrom(page: string, url: string, retrieved: string): Firea
   };
 }
 
-async function fetchText(url: string): Promise<string> {
-  const response = await fetch(url, { headers: { 'user-agent': AGENT } });
-  if (!response.ok) throw new Error(`${response.status} for ${url}`);
-  return response.text();
-}
-
-function sleep(milliseconds: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, milliseconds));
-}
-
-/** A file name from a gun's name: lower case, words joined by hyphens. */
-function fileName(firearm: Firearm): string {
-  return `${firearm.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.firearm.json`;
-}
-
 async function main(): Promise<void> {
-  const args = process.argv.slice(2);
-  const folder = args.find((argument) => !argument.startsWith('--'));
-  const limitIndex = args.indexOf('--limit');
-  const limit = limitIndex >= 0 ? Number(args[limitIndex + 1]) : Infinity;
-  if (!folder) {
-    console.error('usage: node tools/data/firearms/glock.ts <output folder> [--limit 5]');
-    process.exitCode = 1;
-    return;
-  }
+  const args = crawlArguments('glock', process.argv.slice(2));
+  if (args === undefined) return;
+  const { folder, limit } = args;
   const sitemap = await fetchText(SITEMAP);
   const pistols = [...sitemap.matchAll(/<loc>([^<]*)<\/loc>/g)]
     .map(([, url]) => url!)
@@ -171,11 +148,9 @@ async function main(): Promise<void> {
       skipped.push(`${url}: no cartridge or no barrel length`);
       continue;
     }
-    // Written through the format's own reader, so nothing invalid is ever produced.
-    const text = serializeFirearm(firearm);
-    const check = parseFirearm(text);
-    if (!check.ok) {
-      skipped.push(`${url}: ${check.issues.map((issue) => issue.message).join('; ')}`);
+    const json = firearmJson(firearm);
+    if ('problem' in json) {
+      skipped.push(`${url}: ${json.problem}`);
       continue;
     }
     const file = fileName(firearm);
@@ -184,13 +159,9 @@ async function main(): Promise<void> {
       continue;
     }
     names.add(file);
-    writeFileSync(join(folder, file), text);
+    writeFileSync(join(folder, file), json.text);
     written++;
-    console.log(
-      `${firearm.name.padEnd(28)} ${firearm.cartridge?.padEnd(14)} ` +
-        `${(firearm.barrel.length * 1000).toFixed(1)} mm` +
-        `${firearm.barrel.gunMass === undefined ? '' : `  ${(firearm.barrel.gunMass * 1000).toFixed(0)} g`}`,
-    );
+    console.log(summaryLine(firearm));
   }
   console.log(`\n${written} guns written to ${folder}`);
   if (skipped.length > 0) {

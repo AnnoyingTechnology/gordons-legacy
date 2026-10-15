@@ -115,6 +115,19 @@ function firearmFiles(folder: string): Array<{ name: string; text: string }> {
     .map((name) => ({ name, text: readFileSync(join(folder, name), 'utf8') }));
 }
 
+/**
+ * The same figure without the noise a unit conversion leaves behind: a 1:14" twist comes out of
+ * `14 * 0.0254` as 0.35559999999999997 metres, which is the same length written unreadably. Ten
+ * significant digits keep every figure a maker publishes — a barrel measured to the micrometre needs
+ * seven — and drop the binary remainder, so the published files read as the numbers they are.
+ */
+function tidyNumbers(value: unknown): unknown {
+  if (typeof value === 'number') return Number.isFinite(value) ? Number(value.toPrecision(10)) : value;
+  if (Array.isArray(value)) return value.map(tidyNumbers);
+  if (value !== null && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key, inner]) => [key, tidyNumbers(inner)]));
+  return value;
+}
+
 /** The gun records of `folders`, by maker, as the format reads them. A record it rejects is reported. */
 function readFirearms(folders: readonly string[]): Map<string, Map<string, Firearm>> {
   const byMaker = new Map<string, Map<string, Firearm>>();
@@ -126,7 +139,7 @@ function readFirearms(folders: readonly string[]): Map<string, Map<string, Firea
         console.log(`  ${name} left out — ${issues}`);
         continue;
       }
-      const firearm = result.value;
+      const firearm = tidyNumbers(result.value) as Firearm;
       const maker = slug(firearm.maker ?? firearm.source?.publisher ?? 'unknown');
       const guns = byMaker.get(maker) ?? new Map<string, Firearm>();
       guns.set(firearm.name, firearm);

@@ -61,21 +61,24 @@ Each is a small module with the same skeleton: exported pure functions that pars
 specification lines → a `Firearm`), and a `main()` behind `if (import.meta.main)` that walks the maker's
 sitemap and writes the files. `glock.ts` is the one to copy.
 
-    node tools/data/firearms/glock.ts /tmp/gl/guns-glock          # the whole catalogue
-    node tools/data/firearms/glock.ts /tmp/gl/guns-glock --limit 5  # a sample, while developing
+    deno run -A tools/data/firearms/glock.ts /tmp/gl/guns-glock            # the whole catalogue
+    deno run -A tools/data/firearms/glock.ts /tmp/gl/guns-glock --limit 5  # a sample, while developing
 
-On a Node built without TypeScript type stripping (the maintainer's, which answers `ERR_NO_TYPESCRIPT`),
-run them with Deno instead:
-
-    deno run -A tools/data/firearms/glock.ts /tmp/gl/guns-glock
-
-`npx vite-node` does **not** work for these: it leaves `import.meta.main` undefined, so the file loads,
+Deno, not Node: a Node built without TypeScript type stripping (the maintainer's) answers
+`ERR_NO_TYPESCRIPT`. And `npx vite-node` does **not** work for these: it leaves `import.meta.main` undefined, so the file loads,
 does nothing and exits with status 0 — a silent no-op that looks like a crawl finding nothing. The guard
 stays as it is all the same, because the tests import these modules for their parsers and must not set a
 crawl going.
 
-What every extractor shares sits beside them: `published-figures.ts` (the maker's own strings, and what
-a published mass includes). Everything else is the maker's own shape and stays in its own file.
+What every extractor shares sits beside them, and nothing of it is written twice:
+
+- `maker-site.ts`: how a crawl identifies itself (`AGENT`), the second it waits between pages (`DELAY`,
+  which Henry overrides with the ten its `robots.txt` asks for), the command line (`crawlArguments`), a
+  gun's file name, the write that goes through the format's own reader (`firearmJson`), and the log line.
+- `published-figures.ts`: the maker's own strings, and what a published mass includes.
+
+Everything else is the maker's own shape — which pages to read, and how to read a figure out of one —
+and stays in its own file.
 
 Each extractor has a test in `packages/formats/test/<maker>-specifications.test.ts`, written against a
 page **in the maker's shape but with invented figures**. The maker's own text is never reproduced in
@@ -88,7 +91,7 @@ One extractor per maker, each read once on 2026-10-15. The counts are what that 
 
 | Maker | Extractor | Where the figures are | Guns read | Watch out for |
 |---|---|---|---|---|
-| Glock | `glock.ts` | HTML blocks of titled specification lines | 87 pistols | three weights per gun; `.357` means .357 SIG |
+| Glock | `glock.ts` | HTML blocks of titled specification lines | 86 pistols | three weights per gun; `.357` means .357 SIG |
 | Ruger | `ruger.ts` | spec sheets in plain HTML | 433 of 603 sheets | both units, each rounded differently; one *Weight*, basis unstated |
 | CZ | `cz.ts` | Next.js script chunks, keyed in German | 88 | the `/en-us/` pages 404 for pistols, so the German tree is read; pistols give an empty-magazine weight, rifles do not |
 | Sako and Tikka | `sako.ts` | `__NEXT_DATA__` JSON, one entry per variant | 671 (393 Tikka, 278 Sako) | a page lists one rifle many times (hand, finish, market); the record takes the first variant's own figures and names the other masses |

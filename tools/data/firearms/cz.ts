@@ -1,7 +1,7 @@
 /**
  * Reads CZ's published rifle and pistol specifications into gun files (issue #30). Maintainer tool.
  *
- *     node tools/data/firearms/cz.ts <output folder> [--limit 5]
+ *     deno run -A tools/data/firearms/cz.ts <output folder> [--limit 5]
  *
  * czfirearms.com (czub.cz and cz-usa.com both lead there) is a Next.js site. Its specifications are not
  * in the visible markup but in the page's own data, which the server sends inside the HTML as
@@ -16,13 +16,11 @@
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, parseFirearm, serializeFirearm, units, type Firearm } from '@gordons-legacy/formats';
+import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
+import { crawlArguments, DELAY, fetchText, fileName, firearmJson, sleep, summaryLine } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const SITEMAP = 'https://www.czfirearms.com/sitemap.xml';
-const AGENT = 'gordons-legacy-research/1.0 (+https://github.com/AnnoyingTechnology/gordons-legacy)';
-/** A second between pages. */
-const DELAY = 1000;
 /** Centerfire categories of the German pages; shotguns and rimfire rifles are left out. */
 const CATEGORIES = ['pistolen', 'zentralfeuerbuchsen', 'selbstladebuchsen'];
 
@@ -173,31 +171,10 @@ export function firearmFrom(variant: Variant, url: string, retrieved: string): F
   };
 }
 
-async function fetchText(url: string): Promise<string> {
-  const response = await fetch(url, { headers: { 'user-agent': AGENT } });
-  if (!response.ok) throw new Error(`${response.status} for ${url}`);
-  return response.text();
-}
-
-function sleep(milliseconds: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, milliseconds));
-}
-
-/** A file name from a gun's name: lower case, words joined by hyphens. */
-function fileName(firearm: Firearm): string {
-  return `${firearm.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.firearm.json`;
-}
-
 async function main(): Promise<void> {
-  const args = process.argv.slice(2);
-  const folder = args.find((argument) => !argument.startsWith('--'));
-  const limitIndex = args.indexOf('--limit');
-  const limit = limitIndex >= 0 ? Number(args[limitIndex + 1]) : Infinity;
-  if (!folder) {
-    console.error('usage: node tools/data/firearms/cz.ts <output folder> [--limit 5]');
-    process.exitCode = 1;
-    return;
-  }
+  const args = crawlArguments('cz', process.argv.slice(2));
+  if (args === undefined) return;
+  const { folder, limit } = args;
   const sitemap = await fetchText(SITEMAP);
   const pages = [...sitemap.matchAll(/<loc>([^<]*)<\/loc>/g)]
     .map(([, url]) => url!)
@@ -224,23 +201,17 @@ async function main(): Promise<void> {
         skipped.push(`${url}: ${variant.title}: no cartridge or no barrel length`);
         continue;
       }
-      // Written through the format's own reader, so nothing invalid is ever produced.
-      const text = serializeFirearm(firearm);
-      const check = parseFirearm(text);
-      if (!check.ok) {
-        skipped.push(`${url}: ${check.issues.map((issue) => issue.message).join('; ')}`);
+      const json = firearmJson(firearm);
+      if ('problem' in json) {
+        skipped.push(`${url}: ${json.problem}`);
         continue;
       }
       const file = fileName(firearm);
       if (names.has(file)) continue; // a series page lists what the product pages list too
       names.add(file);
-      writeFileSync(join(folder, file), text);
+      writeFileSync(join(folder, file), json.text);
       written++;
-      console.log(
-        `${firearm.name.padEnd(34)} ${firearm.cartridge?.padEnd(16)} ${(firearm.barrel.length * 1000).toFixed(0)} mm` +
-          `${firearm.barrel.twistLength === undefined ? '' : `  1:${(firearm.barrel.twistLength / units.INCH).toFixed(1)}"`}` +
-          `${firearm.barrel.gunMass === undefined ? '' : `  ${(firearm.barrel.gunMass * 1000).toFixed(0)} g`}`,
-      );
+      console.log(summaryLine(firearm));
     }
   }
   console.log(`\n${written} guns written to ${folder}`);

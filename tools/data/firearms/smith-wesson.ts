@@ -2,7 +2,7 @@
  * Reads Smith & Wesson's published firearm specifications into gun files (issue #30). Maintainer tool,
  * written like glock.ts.
  *
- *     node tools/data/firearms/smith-wesson.ts <output folder> [--limit 5]
+ *     deno run -A tools/data/firearms/smith-wesson.ts <output folder> [--limit 5]
  *
  * It takes the product pages the maker's own sitemap lists, waits a second between them, and keeps only
  * the figures the simulation needs: the cartridge, the barrel length, the mass of the gun, and the
@@ -26,13 +26,11 @@
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, parseFirearm, serializeFirearm, units, type Firearm } from '@gordons-legacy/formats';
+import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
+import { crawlArguments, DELAY, fetchText, fileName, firearmJson, sleep, summaryLine } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const SITEMAP = 'https://www.smith-wesson.com/sitemap.xml';
-const AGENT = 'gordons-legacy-research/1.0 (+https://github.com/AnnoyingTechnology/gordons-legacy)';
-/** A second between pages: their robots.txt allows everything, which is no reason to be rude. */
-const DELAY = 1000;
 
 /** One avoirdupois ounce, kg: a sixteenth of the pound, exact by definition. */
 const OUNCE = units.POUND / 16;
@@ -281,16 +279,6 @@ export function firearmFrom(page: string, url: string, retrieved: string): Firea
   };
 }
 
-async function fetchText(url: string): Promise<string> {
-  const response = await fetch(url, { headers: { 'user-agent': AGENT } });
-  if (!response.ok) throw new Error(`${response.status} for ${url}`);
-  return response.text();
-}
-
-function sleep(milliseconds: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, milliseconds));
-}
-
 /** The addresses a sitemap lists; a sitemap index lists sitemaps, which are read in turn. */
 async function sitemapAddresses(url: string): Promise<string[]> {
   const addresses = [...(await fetchText(url)).matchAll(/<loc>([^<]*)<\/loc>/g)].map(([, address]) => address!);
@@ -308,21 +296,10 @@ function sameFigures(a: Firearm, b: Firearm): boolean {
   return a.cartridge === b.cartridge && a.barrel.length === b.barrel.length && a.barrel.gunMass === b.barrel.gunMass;
 }
 
-/** A file name from a gun's name: lower case, words joined by hyphens. */
-function fileName(firearm: Firearm): string {
-  return `${firearm.name.toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.firearm.json`;
-}
-
 async function main(): Promise<void> {
-  const args = process.argv.slice(2);
-  const folder = args.find((argument) => !argument.startsWith('--'));
-  const limitIndex = args.indexOf('--limit');
-  const limit = limitIndex >= 0 ? Number(args[limitIndex + 1]) : Infinity;
-  if (!folder) {
-    console.error('usage: node tools/data/firearms/smith-wesson.ts <output folder> [--limit 5]');
-    process.exitCode = 1;
-    return;
-  }
+  const args = crawlArguments('smith-wesson', process.argv.slice(2));
+  if (args === undefined) return;
+  const { folder, limit } = args;
   const products = (await sitemapAddresses(SITEMAP)).filter((url) => /\/product\/[a-z0-9.-]+$/.test(url)).slice(0, limit);
   console.log(`${products.length} product pages`);
   mkdirSync(folder, { recursive: true });
@@ -344,11 +321,9 @@ async function main(): Promise<void> {
       skipped.push(`${url}: not a complete gun with a loadable cartridge and a barrel length`);
       continue;
     }
-    // Written through the format's own reader, so nothing invalid is ever produced.
-    const text = serializeFirearm(firearm);
-    const check = parseFirearm(text);
-    if (!check.ok) {
-      skipped.push(`${url}: ${check.issues.map((issue) => issue.message).join('; ')}`);
+    const json = firearmJson(firearm);
+    if ('problem' in json) {
+      skipped.push(`${url}: ${json.problem}`);
       continue;
     }
     // Two pages sometimes give one name: the same gun listed twice, or one model in two cartridges.
@@ -368,14 +343,9 @@ async function main(): Promise<void> {
       }
     }
     writtenFiles.set(file, firearm);
-    writeFileSync(join(folder, file), text);
+    writeFileSync(join(folder, file), json.text);
     written++;
-    console.log(
-      `${firearm.name.padEnd(56)} ${firearm.cartridge?.padEnd(14)} ` +
-        `${(firearm.barrel.length * 1000).toFixed(1)} mm` +
-        `${firearm.barrel.gunMass === undefined ? '' : `  ${(firearm.barrel.gunMass * 1000).toFixed(0)} g`}` +
-        `${firearm.barrel.twistLength === undefined ? '' : `  1:${(firearm.barrel.twistLength / units.INCH).toFixed(2)} in`}`,
-    );
+    console.log(summaryLine(firearm));
   }
   console.log(`\n${written} guns written to ${folder}`);
   if (skipped.length > 0) {

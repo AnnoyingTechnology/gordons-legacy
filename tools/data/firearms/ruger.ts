@@ -2,7 +2,7 @@
  * Reads Ruger's published firearm specifications into gun files (issue #30). Maintainer tool, built like
  * the Glock one (glock.ts).
  *
- *     node tools/data/firearms/ruger.ts <output folder> [--limit 5]
+ *     deno run -A tools/data/firearms/ruger.ts <output folder> [--limit 5]
  *
  * Ruger publishes no sitemap (and no robots.txt), so the walk starts at the home page: it follows the
  * product family pages (`/products/<family>/models.html` and `overview.html`), collects the links to the
@@ -20,12 +20,10 @@
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, parseFirearm, serializeFirearm, units, type Firearm } from '@gordons-legacy/formats';
+import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
+import { crawlArguments, DELAY, fetchText, fileName, firearmJson, sleep, summaryLine } from './maker-site.ts';
 
 const SITE = 'https://ruger.com';
-const AGENT = 'gordons-legacy-research/1.0 (+https://github.com/AnnoyingTechnology/gordons-legacy)';
-/** A second between pages, whatever the site would let us do. */
-const DELAY = 1000;
 const OUNCE = units.POUND / 16; // kg
 
 /** One line of a sheet's data: its title and its value, with the markup of the value kept. */
@@ -215,21 +213,6 @@ export function links(page: string, pageUrl: string): { families: string[]; shee
   return { families: families.map(absolute), sheets: sheets.map(absolute) };
 }
 
-async function fetchText(url: string): Promise<string> {
-  const response = await fetch(url, { headers: { 'user-agent': AGENT } });
-  if (!response.ok) throw new Error(`${response.status} for ${url}`);
-  return response.text();
-}
-
-function sleep(milliseconds: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, milliseconds));
-}
-
-/** A file name from a gun's name: lower case, words joined by hyphens. */
-function fileName(firearm: Firearm): string {
-  return `${firearm.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.firearm.json`;
-}
-
 /**
  * The addresses of the specification sheets, found from the home page through the family pages. A sheet
  * page is linked from its family's models page by a relative address, so the family it belongs to is
@@ -264,15 +247,9 @@ async function findSheets(limit: number): Promise<string[]> {
 }
 
 async function main(): Promise<void> {
-  const args = process.argv.slice(2);
-  const folder = args.find((argument) => !argument.startsWith('--'));
-  const limitIndex = args.indexOf('--limit');
-  const limit = limitIndex >= 0 ? Number(args[limitIndex + 1]) : Infinity;
-  if (!folder) {
-    console.error('usage: node tools/data/firearms/ruger.ts <output folder> [--limit 5]');
-    process.exitCode = 1;
-    return;
-  }
+  const args = crawlArguments('ruger', process.argv.slice(2));
+  if (args === undefined) return;
+  const { folder, limit } = args;
   const sheets = await findSheets(limit);
   mkdirSync(folder, { recursive: true });
   const retrieved = new Date().toISOString().slice(0, 10);
@@ -294,11 +271,9 @@ async function main(): Promise<void> {
       skipped.push(`${url}: ${caliber === '' ? 'no cartridge' : loadable(caliber) ? 'no barrel length' : `not loadable (${caliber})`}`);
       continue;
     }
-    // Written through the format's own reader, so nothing invalid is ever produced.
-    const text = serializeFirearm(firearm);
-    const check = parseFirearm(text);
-    if (!check.ok) {
-      skipped.push(`${url}: ${check.issues.map((issue) => issue.message).join('; ')}`);
+    const json = firearmJson(firearm);
+    if ('problem' in json) {
+      skipped.push(`${url}: ${json.problem}`);
       continue;
     }
     const file = fileName(firearm);
@@ -307,14 +282,9 @@ async function main(): Promise<void> {
       continue;
     }
     names.add(file);
-    writeFileSync(join(folder, file), text);
+    writeFileSync(join(folder, file), json.text);
     written++;
-    console.log(
-      `${firearm.name.padEnd(40)} ${firearm.cartridge?.padEnd(16)} ` +
-        `${(firearm.barrel.length * 1000).toFixed(1)} mm` +
-        `${firearm.barrel.twistLength === undefined ? '' : `  1:${(firearm.barrel.twistLength / units.INCH).toFixed(1)}"`}` +
-        `${firearm.barrel.gunMass === undefined ? '' : `  ${(firearm.barrel.gunMass * 1000).toFixed(0)} g`}`,
-    );
+    console.log(summaryLine(firearm));
   }
   console.log(`\n${written} guns written to ${folder}`);
   if (skipped.length > 0) {
