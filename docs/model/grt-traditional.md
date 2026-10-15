@@ -257,8 +257,31 @@ OBT_n = d + n c + L (b + n a) ms,
 
 with (a, b, c, d) = (0.00440803571, 0.0268380952, −0.002401881, 0.0439015873) when trunc(n) is even and
 (0.00442642857, 0.0284942857, −0.00318785714, 0.0291180952) when it is odd. The node kept is the one
-with the smallest |1 − t_L / OBT_n|, if below 1; GRT shows it as "#15" or "#15 ½". GRT doesn't say where
-the coefficients come from; to be checked against the published OBT work (Chris Long) after parity.
+with the smallest |1 − t_L / OBT_n|, if below 1; GRT shows it as "#15" or "#15 ½".
+
+### Where the coefficients come from (2026-10-15)
+
+GRT does not say, but they are not arbitrary. The spacing between nodes is ∂OBT/∂n = c + a·L, and the
+time it gives is what a longitudinal wave takes to travel the barrel's length **once**:
+
+| Barrel | Node spacing | Implied speed |
+|---|---|---|
+| 16 in | 0.0681 ms | 5,965 m/s |
+| 20 in | 0.0858 ms | 5,924 m/s |
+| 24 in | 0.1034 ms | 5,896 m/s |
+| 28 in | 0.1210 ms | 5,877 m/s |
+| 32 in | 0.1387 ms | 5,862 m/s |
+
+5,860 to 6,010 m/s over every length and both parities: the longitudinal (dilatational) wave speed in
+steel, about 5,900 m/s. So a node is half a round trip of the pressure wave, which is the physical
+picture Chris Long's optimal-barrel-time work rests on, and the small drift with length comes from the
+constant c — a fit artefact or an end correction, GRT doesn't say which. What this does **not** show is
+that a load landing on a node shoots better: that is the claim users dispute, and it needs group sizes
+against barrel times, which no data we hold can supply. The node stays labelled unvalidated in the
+application.
+
+A simple n·2L/c round trip is ruled out: it would need a speed that rises with the node number
+(7,080 m/s at n = 10, 8,848 m/s at n = 20 for a 24-inch barrel).
 
 ## OBT tool (read; not capturable through the IPC)
 
