@@ -2071,13 +2071,16 @@ dialog.component-picker {
   white-space: nowrap;
 }
 
-/* Unit converter (converter-dialog.ts): a floating window at the bottom right. */
+/* Unit converter (converter-dialog.ts): in the middle of the screen, over a light mask (issue #28). */
 dialog.converter-dialog {
-  position: fixed;
-  inset: auto 1.5rem 1.5rem auto;
-  margin: 0;
-  z-index: 10;
-  box-shadow: 0 4px 18px rgb(0 0 0 / 0.25);
+  width: min(26rem, calc(100vw - 2rem));
+  border-radius: 0.75rem;
+  box-shadow: 0 1.5rem 3rem rgb(0 0 0 / 0.3);
+}
+
+dialog.converter-dialog::backdrop {
+  background: rgb(0 0 0 / 0.25);
+  backdrop-filter: blur(2px);
 }
 
 dialog.converter-dialog h2 {
@@ -2086,24 +2089,99 @@ dialog.converter-dialog h2 {
 
 .converter-input {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.converter-input select {
+  font: inherit;
+  height: 2.2rem;
+  padding: 0 0.4rem;
+  border: 1px solid var(--rule);
+  border-radius: 0.3rem;
+  background: var(--panel);
+  color: var(--fg);
+}
+
+/* The value and its unit read as one field. */
+.converter-value {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--rule);
+  border-radius: 0.4rem;
+  background: var(--panel);
+  overflow: hidden;
+}
+
+.converter-value:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.converter-value input {
+  flex: 1 1 auto;
+  min-width: 0;
+  font: inherit;
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-align: right;
+  padding: 0.3rem 0.6rem;
+  border: 0;
+  background: none;
+  color: var(--fg);
+  outline: none;
+}
+
+.converter-value select {
+  border: 0;
+  border-left: 1px solid var(--rule);
+  border-radius: 0;
+  height: auto;
+  min-width: 5rem;
+}
+
+.converter-results {
+  list-style: none;
+  margin: 1rem 0 0.6rem;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.3rem 1rem;
+}
+
+.converter-results li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  border-bottom: 1px solid var(--grid);
+}
+
+.converter-results .converted {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.converter-results .unit {
+  color: var(--muted);
+}
+
+.converter-decimals {
+  display: flex;
   align-items: center;
   gap: 0.4rem;
+  color: var(--muted);
 }
 
-.converter-input input[type='text'] {
-  width: 8rem;
-  font: inherit;
-  text-align: right;
-}
-
-.converter-input input[type='number'] {
+.converter-decimals input {
   width: 3.5rem;
   font: inherit;
-}
-
-.converter-results th {
-  text-align: left;
+  padding: 0.2rem 0.4rem;
+  border: 1px solid var(--rule);
+  border-radius: 0.3rem;
+  background: var(--panel);
+  color: var(--fg);
 }
 
 .synthesis-criteria label.invalid input {
