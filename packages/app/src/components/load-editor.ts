@@ -217,10 +217,11 @@ export class LoadEditor extends LitElement {
   }
 }
 
-/** A gun in the chooser: its name, then what tells it apart when the name alone wouldn't. */
+/** A gun in the chooser: its name, the maker when the name doesn't already carry it, the cartridge. */
 function firearmOption(firearm: Firearm): string {
-  const parts = [firearm.name, [firearm.maker, firearm.model].filter(Boolean).join(' '), firearm.cartridge];
-  return parts.filter((part) => part !== undefined && part.trim() !== '').join(' · ');
+  const maker = firearm.maker ?? '';
+  const named = maker !== '' && firearm.name.toLowerCase().includes(maker.toLowerCase());
+  return [firearm.name, named ? '' : maker, firearm.cartridge ?? ''].filter((part) => part.trim() !== '').join(' · ');
 }
 
 customElements.define('gl-load-editor', LoadEditor);

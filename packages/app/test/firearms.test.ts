@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { importGrtLoad, parseFirearm, serializeFirearm, type Load } from '@gordons-legacy/formats';
 import { describe, expect, test } from 'vitest';
-import { choosableFirearms, FirearmLibrary, firearmFromLoad, newFirearm, withFirearm, type FirearmEntry } from '../src/state/firearms.ts';
+import { chamberedFor, choosableFirearms, FirearmLibrary, firearmFromLoad, newFirearm, withFirearm, type FirearmEntry } from '../src/state/firearms.ts';
 import { memoryStore } from '../src/state/indexed-db.ts';
 
 const fixture = new URL('../../formats/test/fixtures/maintainer/glock17_eng5_n340_115grain_xtp_PLUS-P.grtload', import.meta.url).pathname;
@@ -45,6 +45,20 @@ describe('the gun library', () => {
   test('a file that is not a gun is refused', () => {
     expect(parseFirearm('{"format":"gordons-legacy.load"}').ok).toBe(false);
     expect(parseFirearm('not json').ok).toBe(false);
+  });
+
+  test('the guns chambered for the load come first', () => {
+    const entries: FirearmEntry[] = [
+      { id: '1', updatedAt: '2026-10-15T00:00:00Z', firearm: { ...newFirearm(), name: 'Zeta .45', cartridge: '.45 Auto' } },
+      { id: '2', updatedAt: '2026-10-15T00:00:00Z', firearm: { ...newFirearm(), name: 'Alpha 9', cartridge: '9x19 mm' } },
+    ];
+    // The two names are written by different people; both strip to the same letters and digits.
+    const ordered = choosableFirearms(entries, [], '9 mm Luger (9 mm Para(bellum), 9 x 19 (mm))');
+    expect(ordered.map((firearm) => firearm.name)).toEqual(['Alpha 9', 'Zeta .45']);
+    expect(chamberedFor(entries[1]!.firearm, '9 mm Luger (9 x 19)')).toBe(true);
+    expect(chamberedFor(entries[0]!.firearm, '9 mm Luger (9 x 19)')).toBe(false);
+    // Without a cartridge they are simply in order of name.
+    expect(choosableFirearms(entries, []).map((firearm) => firearm.name)).toEqual(['Alpha 9', 'Zeta .45']);
   });
 
   test('the barrels of saved loads are offered until a gun of that name is described', () => {

@@ -321,6 +321,7 @@ export const es: Messages = {
   'toolbar.library': "Biblioteca",
   'library.title': "Sus cargas",
   'library.filter': "Filtrar: cartucho, arma, pólvora, bala…",
+  'library.noMatch': 'Ninguna arma coincide con el filtro.',
   'library.import': "Importar archivos",
   'library.importFolder': "Importar una carpeta",
   'library.backup': "Copia de seguridad",

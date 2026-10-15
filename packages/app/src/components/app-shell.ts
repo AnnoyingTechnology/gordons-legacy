@@ -206,7 +206,7 @@ export class AppShell extends LitElement {
       <gl-load-editor
         .load=${active.load}
         .context=${this.context}
-        .firearms=${choosableFirearms(this.firearms.entries, this.library.entries)}
+        .firearms=${choosableFirearms(this.firearms.entries, this.library.entries, active.load.cartridge.name)}
         .components=${this.components}
         .componentEntries=${this.components.entries}
         .foldedGroups=${this.settings.foldedGroups}

@@ -92,10 +92,31 @@ export function withFirearm(load: Load, firearm: Firearm): Load {
 }
 
 /**
- * The guns to choose from: those described in the library first, then the barrels named in saved loads
- * that no described gun covers (the most recently saved load gives their specifications).
+ * Letters and digits only, and without `mm`, so that the same cartridge written by two people compares
+ * equal: `9x19 mm` and `9 mm Luger (9 x 19)` both hold `9x19`.
  */
-export function choosableFirearms(firearms: readonly FirearmEntry[], loads: readonly LibraryEntry[]): Firearm[] {
+function normalise(text: string): string {
+  return text.toLowerCase().replace(/[^a-z0-9]/g, '').replaceAll('mm', '');
+}
+
+/**
+ * Whether a gun is chambered for a cartridge, as far as two names written by different people can say:
+ * one contains the other once both are stripped to letters and digits. Only used to put the likely
+ * guns first, so a miss costs nothing.
+ */
+export function chamberedFor(firearm: Firearm, cartridge: string): boolean {
+  const gun = normalise(firearm.cartridge ?? '');
+  const load = normalise(cartridge);
+  if (gun === '' || load === '') return false;
+  return load.includes(gun) || gun.includes(load);
+}
+
+/**
+ * The guns to choose from: those described in the library first, then the barrels named in saved loads
+ * that no described gun covers (the most recently saved load gives their specifications). With a
+ * cartridge, the guns chambered for it come first: a published database holds hundreds.
+ */
+export function choosableFirearms(firearms: readonly FirearmEntry[], loads: readonly LibraryEntry[], cartridge?: string): Firearm[] {
   const described = firearms.map((entry) => entry.firearm);
   const names = new Set(described.map((firearm) => firearm.name.trim().toLowerCase()));
   const latest = new Map<string, LibraryEntry>();
@@ -106,7 +127,12 @@ export function choosableFirearms(firearms: readonly FirearmEntry[], loads: read
     if (!known || known.updatedAt < entry.updatedAt) latest.set(name, entry);
   }
   const fromLoads = [...latest.values()].map((entry) => firearmFromLoad(entry.load));
-  return [...described, ...fromLoads].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  const byName = (a: Firearm, b: Firearm) => a.name.localeCompare(b.name, undefined, { numeric: true });
+  const all = [...described, ...fromLoads];
+  if (cartridge === undefined) return all.sort(byName);
+  const matching = all.filter((firearm) => chamberedFor(firearm, cartridge)).sort(byName);
+  const rest = all.filter((firearm) => !chamberedFor(firearm, cartridge)).sort(byName);
+  return [...matching, ...rest];
 }
 
 /** What a gun is called in a list: its name, or its maker and model when it has no name yet. */

@@ -111,6 +111,10 @@ export class LibraryView extends LitElement {
   /** The guns the user has described, with what the simulation takes from each (issue #24). */
   private renderFirearms() {
     const { t, quantity } = this.context;
+    const words = this.filter.toLowerCase().split(/\s+/).filter(Boolean);
+    const shown = this.firearms.filter(({ firearm }) =>
+      words.every((word) => `${firearm.name} ${firearm.maker ?? ''} ${firearm.model ?? ''} ${firearm.cartridge ?? ''}`.toLowerCase().includes(word)),
+    );
     return html`
       <section class="firearms">
         <header class="library-head">
@@ -122,14 +126,14 @@ export class LibraryView extends LitElement {
           </label>
           <button @click=${() => this.fire('edit-firearm', { firearm: newFirearm() })}>${icon('add')} ${t('firearm.add')}</button>
         </header>
-        ${this.firearms.length === 0
-          ? html`<p class="empty">${t('firearm.empty')}</p>`
+        ${shown.length === 0
+          ? html`<p class="empty">${t(this.firearms.length === 0 ? 'firearm.empty' : 'library.noMatch')}</p>`
           : html`<table class="data-table firearm-table">
               <thead>
                 ${headerRow([t('field.name'), t('firearm.maker'), t('firearm.cartridge'), t('field.barrelLength'), t('field.twistLength'), t('field.gunMass'), ''])}
               </thead>
               <tbody>
-                ${[...this.firearms]
+                ${[...shown]
                   .sort((a, b) => a.firearm.name.localeCompare(b.firearm.name, undefined, { numeric: true }))
                   .map(({ id, firearm }) => {
                     const name = firearmLabel(firearm);

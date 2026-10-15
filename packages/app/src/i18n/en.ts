@@ -323,6 +323,7 @@ export const en = {
   'toolbar.library': "Library",
   'library.title': "Your loads",
   'library.filter': "Filter: cartridge, firearm, powder, bullet…",
+  'library.noMatch': 'No gun matches the filter.',
   'library.import': "Import files",
   'library.importFolder': "Import a folder",
   'library.backup': "Back up",
