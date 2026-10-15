@@ -30,6 +30,11 @@ export type ComponentEntry =
   | { id: string; kind: 'projectile'; source: ComponentSource; value: Projectile }
   | { id: string; kind: 'caliber'; source: ComponentSource; value: CaliberDefinition };
 
+/** "community" or "yours": the label of a component's origin, as lists show it. */
+export function originLabel(source: ComponentSource): 'components.community' | 'components.yours' {
+  return source.origin === 'community' ? 'components.community' : 'components.yours';
+}
+
 /** The bundled snapshot of the community corpus (tools/data/build-community.ts). */
 interface CommunitySnapshot {
   powders: Array<{ source: { file: string; author: string; date: string }; propellant: unknown }>;

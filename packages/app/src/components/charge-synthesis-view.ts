@@ -5,13 +5,16 @@ import { assessLoad, pressureLimits } from '../analysis/load-assessment.ts';
 import { powderFactors } from '../analysis/powder-factors.ts';
 import { withPropellant } from '../editor/components.ts';
 import { synthesisCandidate } from '../editor/synthesis-candidate.ts';
-import type { ComponentEntry } from '../state/components.ts';
+import { originLabel, type ComponentEntry } from '../state/components.ts';
 import { displayUnit, parseNumber } from '../units/units.ts';
 import type { UiContext } from './context.ts';
 import { findingMessage } from './assessment-view.ts';
 import { limitName } from './gauges.ts';
 
 type PowderEntry = Extract<ComponentEntry, { kind: 'propellant' }>;
+
+/** The powder scopes offered: within 10, 30 or 50 % of the load's Brp. */
+const SCOPES = [0.1, 0.3, 0.5];
 
 /** A run: everything it was run with, so that any change makes it stale. */
 interface Run {
@@ -102,7 +105,11 @@ export class ChargeSynthesisView extends LitElement {
               const value = (event.target as HTMLSelectElement).value;
               this.scope = value === 'all' ? 'all' : Number(value);
             }}>
-              ${[0.1, 0.3, 0.5].map((share) => html`<option value=${share} ?selected=${this.scope === share}>${t('synthesis.near', { percent: String(share * 100) })}</option>`)}
+              ${SCOPES.map(
+                (share) => html`<option value=${share} ?selected=${this.scope === share}>
+                  ${t('synthesis.near', { percent: String(share * 100) })}
+                </option>`,
+              )}
               <option value="all" ?selected=${this.scope === 'all'}>${t('synthesis.all')}</option>
             </select>
             (${candidates.length})
@@ -154,7 +161,7 @@ export class ChargeSynthesisView extends LitElement {
     const { value, source } = entry;
     return html`${`${value.maker} ${value.product}`.trim()}
       <div class="note">
-        <span class="level-badge ${source.origin === 'community' ? 'note' : ''}">${t(source.origin === 'community' ? 'components.community' : 'components.yours')}</span>
+        <span class="level-badge ${source.origin === 'community' ? 'note' : ''}">${t(originLabel(source))}</span>
         ${source.author} ${source.date}${value.lot ? ` · ${value.lot}` : ''}
         ${value.calibration
           ? html`<div class="warning-text">${t(value.calibration.reached ? 'synthesis.fitted' : 'synthesis.fitNotReached')} ${t('synthesis.fitCaveat')}</div>`
@@ -172,12 +179,15 @@ export class ChargeSynthesisView extends LitElement {
     return html`<strong>${quantity(point.charge, 'chargeMass')}</strong>
       <span class="level-badge ${assessment.level}">${t(`assessment.level.${assessment.level}`)}</span>
       <div class="note">
-        ${quantity(maxPressure, 'pressure')} (${number((maxPressure / limit) * 100, 0)} %) · ${quantity(muzzleVelocity, 'velocity')} · ${number(caseFill * 100, 0)} %
+        ${quantity(maxPressure, 'pressure')} (${number((maxPressure / limit) * 100, 0)} %)
+        · ${quantity(muzzleVelocity, 'velocity')} · ${number(caseFill * 100, 0)} %
         ${warnings.map((warning) => html` · <span class="error">${t(`warning.${warning}`)}</span>`)}
       </div>
       ${assessment.findings.length > 0
         ? html`<ul class="end-findings">
-            ${assessment.findings.map((finding) => html`<li class=${finding.level}>${finding.level === 'note' ? '•' : '▲'} ${findingMessage(finding, this.context)}</li>`)}
+            ${assessment.findings.map(
+              (finding) => html`<li class=${finding.level}>${finding.level === 'note' ? '•' : '▲'} ${findingMessage(finding, this.context)}</li>`,
+            )}
           </ul>`
         : nothing}`;
   }
@@ -204,7 +214,13 @@ export class ChargeSynthesisView extends LitElement {
   }
 
   private isStale(run: Run): boolean {
-    return run.load !== this.load || run.entries !== this.entries || run.criteria !== this.criteria || run.scope !== this.scope || run.chargeUnit !== displayUnit('chargeMass', this.context.units).id;
+    return (
+      run.load !== this.load ||
+      run.entries !== this.entries ||
+      run.criteria !== this.criteria ||
+      run.scope !== this.scope ||
+      run.chargeUnit !== displayUnit('chargeMass', this.context.units).id
+    );
   }
 
   private start = () => {
@@ -232,7 +248,7 @@ export class ChargeSynthesisView extends LitElement {
       original: run.load.title || '—',
       date: new Date().toISOString().slice(0, 10),
       powder,
-      source: `${t(entry.source.origin === 'community' ? 'components.community' : 'components.yours')} ${entry.source.author} ${entry.source.date} (${entry.source.file})`,
+      source: `${t(originLabel(entry.source))} ${entry.source.author} ${entry.source.date} (${entry.source.file})`,
       pressure: `${Math.round(run.criteria.pressureShare.min * 100)}–${Math.round(run.criteria.pressureShare.max * 100)} %`,
       fill: `${Math.round(run.criteria.fill.min * 100)}–${Math.round(run.criteria.fill.max * 100)} %`,
     });

@@ -226,6 +226,8 @@ export class ComponentPicker extends LitElement {
       .filter((entry) => matches(this.filter, `${entry.value.name} ${entry.value.alternativeNames} ${entry.value.standard} ${entry.source.author}`))
       .sort((a, b) => a.value.name.localeCompare(b.value.name, undefined, { numeric: true }));
     const lengthUnit = displayUnit('length', this.context.units);
+    /** A length in the user's unit, without the symbol (the column header has it); empty when not given. */
+    const lengthCell = (metres: number | undefined) => (metres ? number(lengthUnit.fromSi(metres), lengthUnit.decimals) : '');
     return html`
       <div class="picker-options">
         <label>
@@ -256,9 +258,9 @@ export class ComponentPicker extends LitElement {
                 <td>${this.sourceText(entry.source)}</td>
                 <td>${entry.value.standard}</td>
                 <td>${entry.value.maxPressure > 0 ? quantity(entry.value.maxPressure, 'pressure') : ''}</td>
-                <td>${entry.value.rifling ? number(lengthUnit.fromSi(entry.value.rifling.grooveDiameter), lengthUnit.decimals) : ''}</td>
-                <td>${entry.value.caseDimensions ? number(lengthUnit.fromSi(entry.value.caseDimensions.caseLength), lengthUnit.decimals) : ''}</td>
-                <td>${entry.value.caseDimensions?.maximumOverallLength ? number(lengthUnit.fromSi(entry.value.caseDimensions.maximumOverallLength), lengthUnit.decimals) : ''}</td>
+                <td>${lengthCell(entry.value.rifling?.grooveDiameter)}</td>
+                <td>${lengthCell(entry.value.caseDimensions?.caseLength)}</td>
+                <td>${lengthCell(entry.value.caseDimensions?.maximumOverallLength)}</td>
               </tr>`,
             )}
           </tbody>

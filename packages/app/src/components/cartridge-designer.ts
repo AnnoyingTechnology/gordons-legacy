@@ -49,7 +49,10 @@ const RIFLING_FIELDS: NumberEntry<keyof Rifling>[] = [
   { key: 'grooveWidth', letter: 'b', label: 'designer.grooveWidth', kind: 'length' },
 ];
 
-const TEXT_FIELDS: Array<{ key: 'name' | 'alternativeNames' | 'standard' | 'countryOfOrigin' | 'caseType' | 'standardDate' | 'specificationUrl'; label: MessageKey }> = [
+/** The definition's text values the designer edits. */
+type TextKey = 'name' | 'alternativeNames' | 'standard' | 'countryOfOrigin' | 'caseType' | 'standardDate' | 'specificationUrl';
+
+const TEXT_FIELDS: Array<{ key: TextKey; label: MessageKey }> = [
   { key: 'name', label: 'field.name' },
   { key: 'alternativeNames', label: 'designer.alternativeNames' },
   { key: 'standard', label: 'components.standard' },
@@ -128,28 +131,28 @@ export class CartridgeDesigner extends LitElement {
             <table class="property-table"><tbody>
               ${TEXT_FIELDS.map(({ key, label }) => html`<tr>
                 <th>${t(label)}</th>
-                <td colspan="2"><input type="text" .value=${draft[key]} @change=${(event: Event) => this.edit({ [key]: (event.target as HTMLInputElement).value })} /></td>
+                <td colspan="2">
+                  <input type="text" .value=${draft[key]} @change=${(event: Event) => this.edit({ [key]: (event.target as HTMLInputElement).value })} />
+                </td>
               </tr>`)}
               ${this.numberRow('Pmax', 'field.maxPressure', 'pressure', draft.maxPressure, (value) => this.edit({ maxPressure: value }))}
               ${this.numberRow('', 'field.sebertFactor', 'count', draft.sebertFactor, (value) => this.edit({ sebertFactor: value }), 2)}
             </tbody></table>
             <h3>${t('designer.rifling')}</h3>
             <table class="property-table"><tbody>
-              ${RIFLING_FIELDS.map((field) =>
-                this.numberRow(field.letter, field.label, field.kind, draft.rifling?.[field.key] ?? 0, (value) => this.editRifling(field.key, value), field.kind === 'count' ? 0 : undefined),
-              )}
+              ${this.numberRows(RIFLING_FIELDS, draft.rifling, (key, value) => this.editRifling(key, value))}
             </tbody></table>
           </section>
           <section>
             <h3>${t('designer.case')}</h3>
             <table class="property-table"><tbody>
-              ${CASE_FIELDS.map((field) => this.numberRow(field.letter, field.label, field.kind, draft.caseDimensions?.[field.key] ?? 0, (value) => this.editCase(field.key, value)))}
+              ${this.numberRows(CASE_FIELDS, draft.caseDimensions, (key, value) => this.editCase(key, value))}
             </tbody></table>
           </section>
           <section>
             <h3>${t('designer.chamber')}</h3>
             <table class="property-table"><tbody>
-              ${CHAMBER_FIELDS.map((field) => this.numberRow(field.letter, field.label, field.kind, draft.chamberDimensions?.[field.key] ?? 0, (value) => this.editChamber(field.key, value)))}
+              ${this.numberRows(CHAMBER_FIELDS, draft.chamberDimensions, (key, value) => this.editChamber(key, value))}
             </tbody></table>
           </section>
         </div>
@@ -161,6 +164,13 @@ export class CartridgeDesigner extends LitElement {
         </footer>
       </dialog>
     `;
+  }
+
+  /** One row per field of a group, read from `values` (0 when the group isn't given yet). */
+  private numberRows<Key extends string>(fields: NumberEntry<Key>[], values: Partial<Record<Key, number>> | undefined, set: (key: Key, value: number) => void) {
+    return fields.map((field) =>
+      this.numberRow(field.letter, field.label, field.kind, values?.[field.key] ?? 0, (value) => set(field.key, value), field.kind === 'count' ? 0 : undefined),
+    );
   }
 
   private numberRow(letter: string, label: MessageKey, kind: QuantityKind | 'count', value: number, set: (value: number) => void, decimals?: number) {
@@ -235,7 +245,13 @@ export function startingDefinition(load: Load): CaliberDefinition {
   const body = load.projectile.diameter * 1.2;
   return {
     ...base,
-    caseDimensions: { ...emptyCase(), caseLength: cartridge.caseLength, bodyBaseDiameter: body, mouthDiameter: body, projectileDiameter: load.projectile.diameter },
+    caseDimensions: {
+      ...emptyCase(),
+      caseLength: cartridge.caseLength,
+      bodyBaseDiameter: body,
+      mouthDiameter: body,
+      projectileDiameter: load.projectile.diameter,
+    },
   };
 }
 

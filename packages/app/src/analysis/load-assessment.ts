@@ -127,11 +127,16 @@ export const FAR_FROM_TYPICAL_CAPACITY = 0.1;
 export const EARLY_BURNOUT_SHARE = 0.2;
 export const LONG_EXPANSION = 10;
 /**
- * Common monolithic (all-copper or brass) bullet lines, recognised by name: projectile files rarely say
- * what a bullet is made of.
+ * Common monolithic (all-copper or brass) bullet lines and words, recognised in a bullet's name:
+ * projectile files rarely say what a bullet is made of. Barnes, Hornady, Nosler, Lapua, Hammer, Cutting
+ * Edge, Lehigh Defense, Peregrine, Sako, Norma, Federal, Winchester, GS Custom, Badlands, Warner.
  */
-const MONOLITHIC_NAMES =
-  /\b(TSX|TTSX|LRX|TAC-?X|XPB|GMX|CX|Monoflex|E-?Tip|Naturalis|Hammer|Cutting Edge|Raptor|Lehigh|Peregrine|Powerhead|Ecostrike|Trophy Copper|Copper Impact|GS Custom|Bulldozer|Flatline|Monolithic|all[- ]copper|solid copper)\b/i;
+const MONOLITHIC_LINES = [
+  'TSX', 'TTSX', 'LRX', 'TAC-?X', 'XPB', 'GMX', 'CX', 'Monoflex', 'E-?Tip', 'Naturalis', 'Hammer',
+  'Cutting Edge', 'Raptor', 'Lehigh', 'Peregrine', 'Powerhead', 'Ecostrike', 'Trophy Copper',
+  'Copper Impact', 'GS Custom', 'Bulldozer', 'Flatline', 'Monolithic', 'all[- ]copper', 'solid copper',
+];
+const MONOLITHIC_NAMES = new RegExp(`\\b(${MONOLITHIC_LINES.join('|')})\\b`, 'i');
 
 /** Below this share of the lowest maximum, the pressure is low for the powder to burn evenly. */
 export const LOW_PRESSURE_SHARE = 0.35;
