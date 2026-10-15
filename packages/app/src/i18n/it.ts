@@ -442,4 +442,7 @@ export const it: Messages = {
   'finding.caseCapacityFarFromTypical': "La capacità del bossolo differisce del {share} % dal valore tipico del file di calibro: bossoli di marche diverse differiscono di pochi punti percentuali, non tanto. Controllate il dato e la sua unità.",
   'finding.monolithicBullet': "Palla monolitica (tutta rame o ottone), dal nome: più dura da forzare e più lunga per il suo peso delle palle incamiciate con nucleo di piombo con cui sono stati fatti la resistenza al forzamento di GRT e la maggior parte dei modelli di polvere. I produttori pubblicano dati separati per queste palle e raccomandano un salto fino alle righe (Barnes: almeno 0,050″). Usate i dati del produttore della palla.",
   'finding.earlyBurnoutLongBarrel': "La polvere brucia del tutto nel primo {share} % della corsa, in una canna lunga. Su cariche misurate di questo tipo (polveri vivaci in 300 BLK subsonico e carabine 9 mm), il modello di GRT ha sovrastimato la velocità di circa il 15 % (dal 4 al 29 %): aspettatevi meno e adattate la polvere al vostro cronografo.",
+  'components.source.repository': "Dati della comunità: repository gordons-legacy-data, aggiornato, ogni file verificato con il suo SHA-256.",
+  'components.source.cache': "Dati della comunità: la copia del repository gordons-legacy-data conservata da una visita precedente (offline o non ancora aggiornata).",
+  'components.source.bundled': "Dati della comunità: la copia fornita con questa versione dell’applicazione (il repository non è ancora stato raggiunto).",
 };

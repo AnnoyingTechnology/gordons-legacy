@@ -23,6 +23,7 @@ import { firearms, Library } from '../state/library.ts';
 import { indexedDbStorage } from '../state/library-storage.ts';
 import { ComponentLibrary, type ComponentEntry } from '../state/components.ts';
 import { indexedDbStore } from '../state/indexed-db.ts';
+import type { CachedFile, DataCache } from '@gordons-legacy/data';
 import './converter-dialog.ts';
 import './units-dialog.ts';
 
@@ -75,6 +76,7 @@ export class AppShell extends LitElement {
     this.store.subscribe(() => this.requestUpdate());
     this.library.subscribe(() => this.requestUpdate());
     this.components.subscribe(() => this.requestUpdate());
+    void this.components.useRepository(dataCache(), (url) => fetch(url));
     // Ask the browser not to clear the library under storage pressure; it may still refuse.
     void navigator.storage?.persist?.();
     document.documentElement.lang = this.settings.language;
@@ -421,6 +423,16 @@ export class AppShell extends LitElement {
     saveSettings(window.localStorage, this.settings);
     this.context = createContext(this.settings.language, this.settings.units);
   }
+}
+
+/** The data repository's files, kept in IndexedDB by path. */
+function dataCache(): DataCache {
+  const store = indexedDbStore<CachedFile & { id: string }>('data');
+  return {
+    list: () => store.list(),
+    put: (file) => store.put({ ...file, id: file.path }),
+    remove: (path) => store.remove(path),
+  };
 }
 
 /** Downloads text as a JSON file. */

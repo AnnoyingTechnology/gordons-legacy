@@ -90,6 +90,7 @@ export class ComponentPicker extends LitElement {
           <button @click=${this.close}>${icon('close')}</button>
         </header>
         <p class="warning">${t(NOTICES[this.kind])}</p>
+        <p class="note">${t(`components.source.${this.library.communitySource}`)}</p>
         ${this.importErrors.length > 0 ? html`<ul class="issues">${this.importErrors.map((message) => html`<li class="error">${message}</li>`)}</ul>` : nothing}
         ${this.kind === 'propellant' ? this.renderPowders() : this.kind === 'projectile' ? this.renderProjectiles() : this.renderCalibers()}
       </dialog>

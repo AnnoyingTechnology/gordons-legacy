@@ -9,6 +9,7 @@ import {
   type Projectile,
   type Propellant,
 } from '@gordons-legacy/formats';
+import { cachedDocuments, DATA_REPOSITORY_URL, synchronise, type ComponentDocument, type DataCache } from '@gordons-legacy/data';
 import community from '../data/community-components.json' with { type: 'json' };
 import type { RecordStore } from './indexed-db.ts';
 
@@ -54,12 +55,28 @@ export function communityComponents(snapshot: CommunitySnapshot = community as C
   return entries;
 }
 
+/** The data repository's documents as component entries, identified by their path in the repository. */
+export function repositoryComponents(documents: ReadonlyArray<{ path: string; document: ComponentDocument }>): ComponentEntry[] {
+  return documents.map(({ path, document }) => {
+    const source: ComponentSource = { origin: 'community', file: document.provenance.file, author: document.provenance.author, date: document.provenance.date };
+    const id = `repository:${path}`;
+    if (document.kind === 'powder') return { id, kind: 'propellant', source, value: document.value };
+    if (document.kind === 'projectile') return { id, kind: 'projectile', source, value: document.value };
+    return { id, kind: 'caliber', source, value: document.value };
+  });
+}
+
+/** Where the community's components came from this time: the repository, its cache, or the bundled copy. */
+export type CommunitySource = 'repository' | 'cache' | 'bundled';
+
 /**
  * Powders, projectiles and calibers to choose from: the community's, bundled with the app, and the user's own,
  * imported from GRT files and kept in the browser. Listeners are told after every change.
  */
 export class ComponentLibrary {
   entries: ComponentEntry[];
+  /** Where the community's entries come from now. */
+  communitySource: CommunitySource = 'bundled';
   readonly ready: Promise<void>;
   private readonly store: RecordStore<ComponentEntry>;
   private readonly listeners = new Set<() => void>();
@@ -71,6 +88,29 @@ export class ComponentLibrary {
       this.entries = [...this.entries, ...stored.flatMap(checked)];
       this.changed();
     });
+  }
+
+  /**
+   * Takes the community's components from the data repository (docs/PLAN.md, Data): first from the
+   * cache of an earlier visit, then, when online, from the repository itself, each file checked against
+   * its SHA-256 and the load format. Until either succeeds, the bundled copy stays.
+   */
+  async useRepository(cache: DataCache, fetch: (url: string) => Promise<{ ok: boolean; text(): Promise<string> }>): Promise<void> {
+    await this.ready;
+    const cached = await cachedDocuments(cache);
+    if (cached.length > 0) this.replaceCommunity(repositoryComponents(cached), 'cache');
+    try {
+      const report = await synchronise(DATA_REPOSITORY_URL, cache, fetch);
+      if (report.documents.length > 0) this.replaceCommunity(repositoryComponents(report.documents), 'repository');
+    } catch {
+      // Offline or the repository unreachable: keep what we have.
+    }
+  }
+
+  private replaceCommunity(community: ComponentEntry[], source: CommunitySource): void {
+    this.entries = [...community, ...this.entries.filter((entry) => entry.source.origin === 'user')];
+    this.communitySource = source;
+    this.changed();
   }
 
   subscribe(listener: () => void): () => void {

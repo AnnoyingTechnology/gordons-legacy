@@ -2,10 +2,13 @@
   "name": "@gordons-legacy/data",
   "version": "0.0.0",
   "private": true,
-  "description": "Data-repository client: index fetch, hash verification, offline cache.",
+  "description": "Client of the data repository: index, SHA-256 checks, cache.",
   "license": "GPL-3.0-only",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@gordons-legacy/formats": "0.0.0"
   }
 }

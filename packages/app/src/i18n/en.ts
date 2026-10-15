@@ -444,6 +444,9 @@ export const en = {
   'finding.caseCapacityFarFromTypical': "Case capacity differs from the caliber file's typical value by {share} %: cases of different makes differ by a few percent, not this much. Check the entry and its unit.",
   'finding.monolithicBullet': "Monolithic bullet (all copper or brass), by its name: harder to engrave and longer for its weight than the jacketed lead-core bullets GRT's bore resistance and most powder fits were made with. Bullet makers publish separate data for these bullets and recommend a jump to the lands (Barnes: start at least 0.050″ off). Use the bullet maker's data.",
   'finding.earlyBurnoutLongBarrel': "The powder burns out in the first {share} % of the travel, in a long barrel. In measured loads like this (fast powders in 300 BLK subsonic and 9 mm carbine loads), GRT's model over-predicted the velocity by about 15 % (4 to 29 %): expect less, and fit the powder to your chronograph.",
+  'components.source.repository': "Community data: the gordons-legacy-data repository, up to date, every file checked against its SHA-256.",
+  'components.source.cache': "Community data: the copy of the gordons-legacy-data repository kept from an earlier visit (offline or not yet updated).",
+  'components.source.bundled': "Community data: the copy bundled with this version of the application (the repository has not been reached yet).",
 } as const;
 
 export type MessageKey = keyof typeof en;

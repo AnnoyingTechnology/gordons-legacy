@@ -442,4 +442,7 @@ export const es: Messages = {
   'finding.caseCapacityFarFromTypical': "La capacidad de vaina difiere en {share} % del valor típico del archivo de calibre: vainas de distintas marcas difieren unos pocos por ciento, no tanto. Compruebe el dato y su unidad.",
   'finding.monolithicBullet': "Bala monolítica (toda de cobre o latón), por su nombre: más difícil de forzar y más larga para su peso que las balas encamisadas de núcleo de plomo con las que se hicieron la resistencia al forzamiento de GRT y la mayoría de los modelos de pólvora. Los fabricantes publican datos aparte para estas balas y recomiendan un salto hasta las estrías (Barnes: al menos 0,050″). Use los datos del fabricante de la bala.",
   'finding.earlyBurnoutLongBarrel': "La pólvora se quema por completo en el primer {share} % del recorrido, en un cañón largo. En cargas medidas de este tipo (pólvoras rápidas en 300 BLK subsónico y carabinas 9 mm), el modelo de GRT sobreestimó la velocidad en torno a un 15 % (4 a 29 %): espere menos y ajuste la pólvora a su cronógrafo.",
+  'components.source.repository': "Datos de la comunidad: repositorio gordons-legacy-data, al día, cada archivo comprobado con su SHA-256.",
+  'components.source.cache': "Datos de la comunidad: la copia del repositorio gordons-legacy-data guardada de una visita anterior (sin conexión o aún sin actualizar).",
+  'components.source.bundled': "Datos de la comunidad: la copia incluida en esta versión de la aplicación (aún no se ha alcanzado el repositorio).",
 };

@@ -11,6 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@gordons-legacy/data": "0.0.0",
     "@gordons-legacy/engine": "0.0.0",
     "@gordons-legacy/formats": "0.0.0",
     "lit": "3.3.3"
