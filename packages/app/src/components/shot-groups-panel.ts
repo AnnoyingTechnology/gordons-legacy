@@ -1,6 +1,7 @@
 import type { Load } from '@gordons-legacy/formats';
 import { html, LitElement } from 'lit';
 import { groupStatistics } from '../analysis/shot-group.ts';
+import { icon } from '../icons/icons.ts';
 import type { UiContext } from './context.ts';
 import './shot-group-dialog.ts';
 
@@ -31,7 +32,7 @@ export class ShotGroupsPanel extends LitElement {
     const groups = this.load.shotGroups ?? [];
     return html`
       <section class="shot-groups-panel">
-        <h3>${t('shotGroups.title')}</h3>
+        <h3>${icon('target')} ${t('shotGroups.title')}</h3>
         <ul class="shot-groups">
           ${groups.map((group, index) => {
             const statistics = groupStatistics(group.hits);

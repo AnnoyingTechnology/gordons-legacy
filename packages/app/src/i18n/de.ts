@@ -445,4 +445,6 @@ export const de: Messages = {
   'components.source.repository': "Community-Daten: Repository gordons-legacy-data, aktuell, jede Datei per SHA-256 geprüft.",
   'components.source.cache': "Community-Daten: die von einem früheren Besuch gespeicherte Kopie des Repositorys gordons-legacy-data (offline oder noch nicht aktualisiert).",
   'components.source.bundled': "Community-Daten: die mit dieser Version der Anwendung gelieferte Kopie (das Repository wurde noch nicht erreicht).",
+  'components.chooseShort': "Wählen…",
+  'designer.short': "Entwerfen…",
 };

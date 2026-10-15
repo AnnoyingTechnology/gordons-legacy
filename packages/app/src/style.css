@@ -395,6 +395,15 @@ code {
   stroke-width: 1;
 }
 
+.line-chart .limit-hatch {
+  stroke: var(--critical);
+  stroke-width: 2;
+}
+
+.line-chart .limit-zone {
+  opacity: 0.35;
+}
+
 .line-chart .limit-label {
   fill: var(--fg);
   font-size: 11px;
@@ -695,13 +704,25 @@ main {
 }
 
 .property-group h3,
-.notes-panel h3 {
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--muted);
-  margin: 0.8rem 0 0.2rem;
-  border-bottom: 1px solid var(--rule);
+.notes-panel h3,
+.shot-groups-panel h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 650;
+  color: var(--fg);
+  margin: 1.2rem 0 0.4rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 2px solid var(--rule);
+}
+
+.property-group h3 .icon,
+.notes-panel h3 .icon,
+.shot-groups-panel h3 .icon {
+  width: 24px;
+  height: 24px;
+  color: var(--accent);
 }
 
 .property-table {
@@ -1151,15 +1172,6 @@ button[aria-pressed='true'] {
 .cartridge-drawing figcaption {
   color: var(--muted);
   font-size: 0.8rem;
-}
-
-.shot-groups-panel h3 {
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--muted);
-  margin: 0.8rem 0 0.2rem;
-  border-bottom: 1px solid var(--rule);
 }
 
 .shot-groups {
@@ -2173,4 +2185,28 @@ dialog.cartridge-designer {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
+}
+
+/* Buttons in a group's header, right-aligned (choose a powder, use a firearm's barrel…). */
+.group-action {
+  display: flex;
+  gap: 0.4rem;
+  margin-left: auto;
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+.group-action .component-choice,
+.group-action .firearm-choice {
+  margin: 0;
+}
+
+.group-action .component-choice {
+  height: 1.8rem;
+  padding: 0 0.6rem;
+}
+
+.group-action .icon {
+  width: 16px !important;
+  height: 16px !important;
 }

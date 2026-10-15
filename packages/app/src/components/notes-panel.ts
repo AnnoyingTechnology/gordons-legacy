@@ -1,5 +1,6 @@
 import type { Load, Note } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
+import { icon } from '../icons/icons.ts';
 import type { UiContext } from './context.ts';
 
 /** Image types shown from a load's pictures; others (SVG among them) are not displayed. */
@@ -29,7 +30,7 @@ export class NotesPanel extends LitElement {
     const pictures = this.load.pictures.filter((picture) => SHOWN_IMAGE_TYPES.has(picture.mediaType));
     return html`
       <section class="notes-panel">
-        <h3>${t('notes.title')}</h3>
+        <h3>${icon('notes')} ${t('notes.title')}</h3>
         ${notes.map(
           ({ note, index }) => html`
             <div class="note">

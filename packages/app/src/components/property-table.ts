@@ -2,9 +2,18 @@ import type { SimulationProblem } from '@gordons-legacy/engine';
 import type { Load } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
 import { fieldConcerns, type Field, type FieldGroup, type NumberField } from '../editor/fields.ts';
-import { icon } from '../icons/icons.ts';
+import { icon, type IconName } from '../icons/icons.ts';
 import { displayUnit, formatNumber, parseNumber } from '../units/units.ts';
 import type { UiContext } from './context.ts';
+
+/** The icon heading each group of inputs (issue #17). */
+const GROUP_ICONS: Partial<Record<string, IconName>> = {
+  'group.cartridge': 'cartridge',
+  'group.barrel': 'barrel',
+  'group.projectile': 'projectile',
+  'group.propellant': 'propellant',
+  'group.charge': 'charge',
+};
 
 /**
  * One group of a load's inputs (cartridge, barrel…) as a table of label, value and unit. Fires
@@ -16,6 +25,7 @@ export class PropertyTable extends LitElement {
     load: { attribute: false },
     context: { attribute: false },
     problems: { attribute: false },
+    action: { attribute: false },
     drafts: { state: true },
   };
 
@@ -24,6 +34,8 @@ export class PropertyTable extends LitElement {
   declare context: UiContext;
   /** Why the engine can't simulate the load; the fields concerned are marked. */
   declare problems: SimulationProblem[];
+  /** Buttons shown at the right of the group's header (choose a powder, use a firearm's barrel…). */
+  declare action: unknown;
   /** Text being typed, by field index, kept until the field loses focus. */
   declare drafts: Map<number, string>;
 
@@ -42,7 +54,10 @@ export class PropertyTable extends LitElement {
     const { t } = this.context;
     return html`
       <section class="property-group">
-        <h3>${t(this.group.title)}</h3>
+        <h3>
+          ${icon(GROUP_ICONS[this.group.title] ?? 'settings')} ${t(this.group.title)}
+          ${this.action ? html`<span class="group-action">${this.action}</span>` : nothing}
+        </h3>
         <table class="property-table">
           <tbody>
             ${this.group.fields.map((field, index) =>

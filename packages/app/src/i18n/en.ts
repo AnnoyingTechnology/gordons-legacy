@@ -447,6 +447,8 @@ export const en = {
   'components.source.repository': "Community data: the gordons-legacy-data repository, up to date, every file checked against its SHA-256.",
   'components.source.cache': "Community data: the copy of the gordons-legacy-data repository kept from an earlier visit (offline or not yet updated).",
   'components.source.bundled': "Community data: the copy bundled with this version of the application (the repository has not been reached yet).",
+  'components.chooseShort': "Choose…",
+  'designer.short': "Design…",
 } as const;
 
 export type MessageKey = keyof typeof en;

@@ -9,7 +9,8 @@ export type IconName =
   | 'compare' | 'chart' | 'table' | 'harmonics'
   | 'temperature' | 'calculator' | 'language' | 'units' | 'pressure' | 'velocity'
   | 'database' | 'search' | 'undo' | 'redo'
-  | 'energy' | 'recoil' | 'sound' | 'cold' | 'hot';
+  | 'energy' | 'recoil' | 'sound' | 'cold' | 'hot'
+  | 'charge' | 'notes' | 'target';
 
 /** Inner markup of each icon (no <svg> wrapper). Dots use `fill="currentColor"` and no stroke. */
 export const ICONS: Record<IconName, SVGTemplateResult> = {
@@ -72,6 +73,12 @@ export const ICONS: Record<IconName, SVGTemplateResult> = {
   // Snowflake: three crossing lines with tips on the vertical one.
   cold: svg`<path d="M12 2.5v19M3.8 7.25l16.4 9.5M3.8 16.75l16.4-9.5"/><path d="M9.5 4L12 6.5 14.5 4M9.5 20L12 17.5 14.5 20"/>`,
   // Sun over dunes: the desert.
+  // A balance: the charge is weighed.
+  charge: svg`<path d="M12 4v15M7.5 19h9M5 7.5h14"/><path d="M5 7.5L2.5 13a2.5 2.5 0 0 0 5 0zM19 7.5L16.5 13a2.5 2.5 0 0 0 5 0z"/><circle cx="12" cy="4" r="1" fill="currentColor" stroke="none"/>`,
+  // A page with a folded corner and lines of text.
+  notes: svg`<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 11h7M9 14.5h7M9 18h4"/>`,
+  // A target with three hits.
+  target: svg`<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="11" cy="11" r="1.1" fill="currentColor" stroke="none"/><circle cx="13.6" cy="12.4" r="1.1" fill="currentColor" stroke="none"/><circle cx="11.8" cy="14" r="1.1" fill="currentColor" stroke="none"/>`,
   hot: svg`<circle cx="15" cy="8" r="3"/><path d="M15 2.5V3.5M20.5 8h1M19 4l-.7.7M11 4l.7.7"/><path d="M2.5 19.5c3-3 6-3 9 0s6 2.5 10-1"/><path d="M2.5 15.5c2-1.5 4-1.5 6 0"/>`,
 };
 

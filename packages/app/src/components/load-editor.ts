@@ -87,7 +87,8 @@ export class LoadEditor extends LitElement {
       <div class="load-editor concern-${assessment?.level ?? 'none'}" @assistant=${(event: CustomEvent<'boreArea'>) => (this.assistant = event.detail)}>
         <div class="inputs">
           ${FIELD_GROUPS.map(
-            (group) => html`${group.title === 'group.barrel' ? this.renderFirearmChoice() : nothing}${this.renderComponentChoice(group.title)}<gl-property-table
+            (group) => html`<gl-property-table
+              .action=${group.title === 'group.barrel' ? this.renderFirearmChoice() : this.renderComponentChoice(group.title)}
               .group=${group}
               .load=${this.load}
               .context=${this.context}
@@ -146,13 +147,15 @@ export class LoadEditor extends LitElement {
     if (!kind || !this.components) return nothing;
     const { t } = this.context;
     const label = { propellant: 'components.choosePowder', projectile: 'components.chooseProjectileTitle', caliber: 'components.chooseCaliber' } as const;
-    const choose = html`<button class="component-choice" @click=${() => (this.picking = kind)}>
-      ${icon(kind === 'caliber' ? 'cartridge' : kind)} ${t(label[kind])}…
+    const choose = html`<button class="component-choice" title=${t(label[kind])} aria-label=${t(label[kind])} @click=${() => (this.picking = kind)}>
+      ${icon('search')} ${t('components.chooseShort')}
     </button>`;
     if (kind !== 'caliber') return choose;
     return html`<div class="component-choices">
       ${choose}
-      <button class="component-choice" @click=${() => (this.designing = true)}>${icon('calculator')} ${t('designer.open')}…</button>
+      <button class="component-choice" title=${t('designer.open')} aria-label=${t('designer.open')} @click=${() => (this.designing = true)}>
+        ${icon('calculator')} ${t('designer.short')}
+      </button>
     </div>`;
   }
 

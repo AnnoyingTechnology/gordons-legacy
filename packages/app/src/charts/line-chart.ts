@@ -141,6 +141,21 @@ export class LineChart {
 
   private drawLimits(): void {
     const limits = [...(this.options.limits ?? [])].sort((a, b) => b.value - a.value);
+    const lowest = limits[limits.length - 1];
+    if (lowest) {
+      // Above the lowest maximum, the plot is hatched red, as on the pressure gauge (issue #16).
+      const id = `limit-hatch-${++hatchCount}`;
+      const pattern = svg('pattern', { id, width: 7, height: 7, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(-45)' });
+      pattern.append(svg('line', { x1: 0, y1: 0, x2: 0, y2: 7, class: 'limit-hatch' }));
+      const defs = svg('defs', {});
+      defs.append(pattern);
+      const top = MARGIN.top;
+      const y = Math.max(top, this.yScale(lowest.value));
+      this.element.append(
+        defs,
+        svg('rect', { x: MARGIN.left, y: top, width: this.width - MARGIN.left - MARGIN.right, height: y - top, fill: `url(#${id})`, class: 'limit-zone' }),
+      );
+    }
     let previousY = -Infinity;
     for (const limit of limits) {
       const y = this.yScale(limit.value);
@@ -186,6 +201,9 @@ export class LineChart {
     }
   }
 }
+
+/** Hatch patterns need ids unique in the page, across charts. */
+let hatchCount = 0;
 
 function svg<Tag extends keyof SVGElementTagNameMap>(
   tag: Tag,
