@@ -18,6 +18,12 @@ GRT's `method` field can't tell which standard a value comes from: it says `Piez
 SAAMI 3,792 bar (55,000 psi) of a .223 Rem. load. The two bodies measure differently (CIP through a
 drilled case, SAAMI with a conformal transducer), so their values don't convert into each other.
 
+CIP also defines, and GRT's cartridge designer shows, two pressures above Pmax: PK, the highest
+permitted single statistical pressure (Pmax + 15 %), and PE, the mean proof pressure (Pmax + 25 %).
+**Neither is shown here, deliberately.** They are criteria for testing a lot of factory ammunition
+against a proof barrel, not headroom for a handload; beside a simulated peak they would read as
+permission to go 15 % over the maximum. A future agent reaching for parity should leave them out.
+
 ## Findings
 
 | Finding | Level | Rule |
