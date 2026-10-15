@@ -1969,18 +1969,6 @@ dialog.shot-group-dialog {
   font-weight: 600;
 }
 
-/* The gun chooser, in the barrel's header: its first option names it, so it carries no label. */
-select.firearm-choice {
-  max-width: 14rem;
-  height: 1.9rem;
-  font: inherit;
-  font-size: 0.9rem;
-  border: 1px solid var(--rule);
-  border-radius: 0.2rem;
-  background: var(--panel);
-  color: var(--fg);
-}
-
 .component-choice.icon-only {
   padding: 0.2rem 0.4rem;
 }
@@ -2420,8 +2408,7 @@ dialog.cartridge-designer {
   font-weight: 400;
 }
 
-.group-action .component-choice,
-.group-action .firearm-choice {
+.group-action .component-choice {
   margin: 0;
 }
 

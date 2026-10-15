@@ -24,9 +24,11 @@ import './load-editor.ts';
 import { Library } from '../state/library.ts';
 import { indexedDbStorage } from '../state/library-storage.ts';
 import { ComponentLibrary, type ComponentEntry } from '../state/components.ts';
-import { choosableFirearms, FirearmLibrary, firearmFromLoad, type FirearmEntry } from '../state/firearms.ts';
+import { choosableFirearms, FirearmLibrary, firearmFromLoad, withFirearm, type FirearmEntry } from '../state/firearms.ts';
+import { cachedFirearms, fetchFirearms } from '../state/published-firearms.ts';
 import { readBackup, writeBackup } from '../state/backup.ts';
 import './firearm-dialog.ts';
+import './firearm-picker.ts';
 import { indexedDbStore } from '../state/indexed-db.ts';
 import './converter-dialog.ts';
 import './units-dialog.ts';
@@ -48,6 +50,8 @@ export class AppShell extends LitElement {
     view: { state: true },
     chronograph: { state: true },
     editedFirearm: { state: true },
+    firearmPickerOpen: { state: true },
+    publishedGuns: { state: true },
   };
 
   declare context: UiContext;
@@ -61,6 +65,10 @@ export class AppShell extends LitElement {
   declare chronograph: { csv: ChronographCsv; fileName: string } | undefined;
   /** The gun being described, with the id of the entry it replaces when it is an edit (issue #24). */
   declare editedFirearm: { firearm: Firearm; id?: string } | undefined;
+  /** True while the user is choosing the gun of the active load (issue #30). */
+  declare firearmPickerOpen: boolean;
+  /** The makers' published guns, read when the user first looks for one; undefined until then. */
+  declare publishedGuns: Firearm[] | undefined;
   declare unitsOpen: boolean;
   declare aboutOpen: boolean;
   declare converterOpen: boolean;
@@ -80,6 +88,8 @@ export class AppShell extends LitElement {
     this.view = 'editor';
     this.chronograph = undefined;
     this.editedFirearm = undefined;
+    this.firearmPickerOpen = false;
+    this.publishedGuns = undefined;
     // The dedication and safety notice open on a browser's first visit, over an example load, so that the
     // tool shows what it does instead of an empty page (#29).
     this.aboutOpen = window.localStorage.getItem(WELCOME_SEEN_KEY) === null;
@@ -165,6 +175,17 @@ export class AppShell extends LitElement {
             @close=${() => (this.chronograph = undefined)}
           ></gl-chronograph-dialog>`
         : nothing}
+      ${this.store.active === undefined
+        ? nothing
+        : html`<gl-firearm-picker
+            .open=${this.firearmPickerOpen}
+            .load=${this.store.active.load}
+            .firearms=${choosableFirearms(this.firearms.entries, this.library.entries, this.publishedGuns ?? [], this.store.active.load.cartridge.name)}
+            .loading=${this.publishedGuns === undefined}
+            .context=${this.context}
+            @choose-firearm=${(event: CustomEvent<Firearm>) => this.useFirearm(event.detail)}
+            @close=${() => (this.firearmPickerOpen = false)}
+          ></gl-firearm-picker>`}
       <gl-firearm-dialog
         .firearm=${this.editedFirearm?.firearm}
         .context=${this.context}
@@ -212,12 +233,12 @@ export class AppShell extends LitElement {
       <gl-load-editor
         .load=${active.load}
         .context=${this.context}
-        .firearms=${choosableFirearms(this.firearms.entries, this.library.entries, active.load.cartridge.name)}
         .components=${this.components}
         .componentEntries=${this.components.entries}
         .foldedGroups=${this.settings.foldedGroups}
         @fold-group=${(event: CustomEvent<string>) => this.foldGroup(event.detail)}
         @save-firearm=${() => (this.editedFirearm = { firearm: firearmFromLoad(active.load) })}
+        @pick-firearm=${() => this.pickFirearm()}
         @load-change=${(event: CustomEvent<Load>) => this.store.update(active.id, event.detail)}
         @calibrated=${(event: CustomEvent<CalibratedLoad>) => this.openCalibrated(active.name, event.detail)}
         @open-load=${(event: CustomEvent<{ name: string; load: Load }>) => this.store.openNew(`${event.detail.name}.json`, event.detail.load)}
@@ -355,6 +376,30 @@ export class AppShell extends LitElement {
   }
 
   /** Saves a gun, or removes it when there is none to save; storage can refuse, so it is reported. */
+  /** Opens the gun chooser, and reads the published database the first time it is asked for (#30). */
+  private pickFirearm(): void {
+    this.firearmPickerOpen = true;
+    if (this.publishedGuns === undefined) void this.readPublishedGuns();
+  }
+
+  /**
+   * The published guns: what an earlier visit cached shows at once, then the repository's own, which is
+   * usually only its index. An empty list means there are none to be had, not that none were looked for.
+   */
+  private async readPublishedGuns(): Promise<void> {
+    const cache = indexedDbDataCache();
+    const cached = await cachedFirearms(cache);
+    if (cached.length > 0) this.publishedGuns = cached;
+    const fetched = await fetchFirearms(cache, (url) => fetch(url));
+    this.publishedGuns = fetched.length > 0 ? fetched : (this.publishedGuns ?? []);
+  }
+
+  /** The gun the user picked: the load is fired in it, under its name. */
+  private useFirearm(firearm: Firearm): void {
+    const active = this.store.active;
+    if (active) this.store.update(active.id, withFirearm(active.load, firearm));
+  }
+
   private async keepFirearm(firearm: Firearm | undefined, id: string | undefined): Promise<void> {
     try {
       if (firearm) await this.firearms.save(firearm, id);

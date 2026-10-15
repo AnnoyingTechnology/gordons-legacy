@@ -1,9 +1,7 @@
 
-import type { CaliberDefinition, Firearm, Load, Projectile, Propellant } from '@gordons-legacy/formats';
+import type { CaliberDefinition, Load, Projectile, Propellant } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
-import type { MessageKey } from '../i18n/i18n.ts';
 import { icon } from '../icons/icons.ts';
-import { chamberedFor, withFirearm } from '../state/firearms.ts';
 import type { ComponentEntry, ComponentLibrary } from '../state/components.ts';
 import { withCaliber, withProjectile, withPropellant } from '../editor/components.ts';
 import './charge-synthesis-view.ts';
@@ -29,7 +27,6 @@ export class LoadEditor extends LitElement {
   static override properties = {
     load: { attribute: false },
     context: { attribute: false },
-    firearms: { attribute: false },
     components: { attribute: false },
     componentEntries: { attribute: false },
     foldedGroups: { attribute: false },
@@ -43,7 +40,6 @@ export class LoadEditor extends LitElement {
   declare load: Load;
   declare context: UiContext;
   /** The guns to choose from: those described in the library, and the barrels named in saved loads. */
-  declare firearms: Firearm[];
   /** Powders and projectiles to choose from, and their entries (passed apart to re-render on import). */
   declare components: ComponentLibrary | undefined;
   declare componentEntries: ComponentEntry[];
@@ -66,7 +62,6 @@ export class LoadEditor extends LitElement {
     super();
     this.axis = 'travel';
     this.assistant = undefined;
-    this.firearms = [];
     this.componentEntries = [];
     this.foldedGroups = [];
     this.picking = undefined;
@@ -199,40 +194,14 @@ export class LoadEditor extends LitElement {
    * becomes the barrel's, so that the load says which gun it was worked up in.
    */
   /**
-   * The chooser's two groups: the guns whose maker lists this cartridge, then the rest. The label says
-   * it is the maker's word — a catalogue match is not a statement that the load suits the gun.
+   * The barrel group's two buttons: choose a gun — the user's own and the makers' published ones, in a
+   * dialog that searches, since the database holds thousands — and keep this barrel as a gun.
    */
-  private firearmGroups(): { label: MessageKey; guns: { firearm: Firearm; index: number }[] }[] {
-    const cartridge = this.load.cartridge.name;
-    const numbered = this.firearms.map((firearm, index) => ({ firearm, index }));
-    const chambered = numbered.filter(({ firearm }) => chamberedFor(firearm, cartridge));
-    const others = numbered.filter(({ firearm }) => !chamberedFor(firearm, cartridge));
-    return [
-      ...(chambered.length > 0 ? [{ label: 'firearm.chambered' as MessageKey, guns: chambered }] : []),
-      ...(others.length > 0 ? [{ label: 'firearm.otherGuns' as MessageKey, guns: others }] : []),
-    ];
-  }
-
   private renderFirearmChoice() {
     const { t } = this.context;
-    return html`<select
-        class="firearm-choice"
-        aria-label=${t('firearm.use')}
-        ?disabled=${this.firearms.length === 0}
-        @change=${(event: Event) => {
-          const select = event.target as HTMLSelectElement;
-          const firearm = this.firearms[Number(select.value)];
-          select.value = '';
-          if (firearm) this.emit(withFirearm(this.load, firearm));
-        }}
-      >
-        <option value="">${this.firearms.length === 0 ? t('firearm.none') : t('firearm.choose')}</option>
-        ${this.firearmGroups().map(
-          ({ label, guns }) => html`<optgroup label=${t(label)}>
-            ${guns.map(({ firearm, index }) => html`<option value=${index}>${firearmOption(firearm)}</option>`)}
-          </optgroup>`,
-        )}
-      </select>
+    return html`<button class="component-choice" @click=${() => this.dispatchEvent(new CustomEvent('pick-firearm', { bubbles: true }))}>
+        ${icon('barrel')} ${t('firearm.choose')}
+      </button>
       <button
         class="component-choice icon-only"
         aria-label=${t('firearm.save')}
@@ -242,13 +211,6 @@ export class LoadEditor extends LitElement {
         ${icon('save')}
       </button>`;
   }
-}
-
-/** A gun in the chooser: its name, the maker when the name doesn't already carry it, the cartridge. */
-function firearmOption(firearm: Firearm): string {
-  const maker = firearm.maker ?? '';
-  const named = maker !== '' && firearm.name.toLowerCase().includes(maker.toLowerCase());
-  return [firearm.name, named ? '' : maker, firearm.cartridge ?? ''].filter((part) => part.trim() !== '').join(' · ');
 }
 
 customElements.define('gl-load-editor', LoadEditor);

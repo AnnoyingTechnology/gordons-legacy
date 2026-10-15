@@ -129,10 +129,19 @@ export function chamberedFor(firearm: Firearm, cartridge: string): boolean {
 
 /**
  * The guns to choose from: those described in the library first, then the barrels named in saved loads
- * that no described gun covers (the most recently saved load gives their specifications). With a
- * cartridge, the guns chambered for it come first: a published database holds hundreds.
+ * that no described gun covers (the most recently saved load gives their specifications), then the
+ * makers' published ones (issue #30).
+ *
+ * The user's own always wins: a published gun of a name they have already described is left out, so that
+ * a maker's nominal figures never push aside the gun they measured. With a cartridge, the guns whose
+ * maker lists it come first — the maker's word, not a statement that the load suits the gun.
  */
-export function choosableFirearms(firearms: readonly FirearmEntry[], loads: readonly LibraryEntry[], cartridge?: string): Firearm[] {
+export function choosableFirearms(
+  firearms: readonly FirearmEntry[],
+  loads: readonly LibraryEntry[],
+  published: readonly Firearm[] = [],
+  cartridge?: string,
+): Firearm[] {
   const described = firearms.map((entry) => entry.firearm);
   const names = new Set(described.map((firearm) => firearm.name.trim().toLowerCase()));
   const latest = new Map<string, LibraryEntry>();
@@ -143,12 +152,13 @@ export function choosableFirearms(firearms: readonly FirearmEntry[], loads: read
     if (!known || known.updatedAt < entry.updatedAt) latest.set(name, entry);
   }
   const fromLoads = [...latest.values()].map((entry) => firearmFromLoad(entry.load));
+  const own = [...described, ...fromLoads];
+  const ownNames = new Set(own.map((firearm) => firearm.name.trim().toLowerCase()));
   const byName = (a: Firearm, b: Firearm) => a.name.localeCompare(b.name, undefined, { numeric: true });
-  const all = [...described, ...fromLoads];
-  if (cartridge === undefined) return all.sort(byName);
-  const matching = all.filter((firearm) => chamberedFor(firearm, cartridge)).sort(byName);
-  const rest = all.filter((firearm) => !chamberedFor(firearm, cartridge)).sort(byName);
-  return [...matching, ...rest];
+  const all = [...own.sort(byName), ...published.filter((firearm) => !ownNames.has(firearm.name.trim().toLowerCase())).sort(byName)];
+  if (cartridge === undefined) return all;
+  // A stable sort keeps the user's guns ahead of the published ones within each of the two groups.
+  return [...all.filter((firearm) => chamberedFor(firearm, cartridge)), ...all.filter((firearm) => !chamberedFor(firearm, cartridge))];
 }
 
 /** What a gun is called in a list: its name, or its maker and model when it has no name yet. */

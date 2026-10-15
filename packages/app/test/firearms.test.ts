@@ -53,7 +53,7 @@ describe('the gun library', () => {
       { id: '2', updatedAt: '2026-10-15T00:00:00Z', firearm: { ...newFirearm(), name: 'Alpha 9', cartridge: '9x19 mm' } },
     ];
     // The two names are written by different people; both strip to the same letters and digits.
-    const ordered = choosableFirearms(entries, [], '9 mm Luger (9 mm Para(bellum), 9 x 19 (mm))');
+    const ordered = choosableFirearms(entries, [], [], '9 mm Luger (9 mm Para(bellum), 9 x 19 (mm))');
     expect(ordered.map((firearm) => firearm.name)).toEqual(['Alpha 9', 'Zeta .45']);
     expect(chamberedFor(entries[1]!.firearm, '9 mm Luger (9 x 19)')).toBe(true);
     expect(chamberedFor(entries[0]!.firearm, '9 mm Luger (9 x 19)')).toBe(false);
@@ -70,6 +70,22 @@ describe('the gun library', () => {
     expect(chamberedFor({ ...newFirearm(), name: 'Ruger', cartridge: '.357 Magnum' }, '.357 Magnum')).toBe(true);
     // Without a cartridge they are simply in order of name.
     expect(choosableFirearms(entries, []).map((firearm) => firearm.name)).toEqual(['Alpha 9', 'Zeta .45']);
+  });
+
+  test('the published guns come after the user\u2019s own, and never instead of one', () => {
+    const own: FirearmEntry[] = [
+      { id: '1', updatedAt: '2026-10-15T00:00:00Z', firearm: { ...newFirearm(), name: 'Glock 17 Gen5', cartridge: '9x19 mm', barrel: { name: 'mine', length: 0.1138, gasLeaks: [] } } },
+    ];
+    const published: Firearm[] = [
+      { ...newFirearm(), name: 'Glock 17 Gen5', cartridge: '9x19 mm', barrel: { name: 'published', length: 0.114, gasLeaks: [] }, source: { kind: 'published' } },
+      { ...newFirearm(), name: 'Glock 19 Gen5', cartridge: '9x19 mm', source: { kind: 'published' } },
+      { ...newFirearm(), name: 'Ruger American Rifle', cartridge: '6.5 Creedmoor', source: { kind: 'published' } },
+    ];
+    const offered = choosableFirearms(own, [], published, '9 mm Luger (9 x 19)');
+    // The gun they measured, then the maker's other 9 mm, then what the cartridge does not fit.
+    expect(offered.map((firearm) => firearm.name)).toEqual(['Glock 17 Gen5', 'Glock 19 Gen5', 'Ruger American Rifle']);
+    // Their own barrel, not the maker's nominal one: a published figure never replaces a measurement.
+    expect(offered[0]!.barrel.length).toBeCloseTo(0.1138, 12);
   });
 
   test('the barrels of saved loads are offered until a gun of that name is described', () => {
