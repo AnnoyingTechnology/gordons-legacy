@@ -42,6 +42,18 @@ export const NEW_LOAD_FIELDS: ReadonlyArray<{ name: keyof NewLoadValues; label: 
   { name: 'temperature', label: 'field.temperature', kind: 'temperature' },
 ];
 
+/** Values supplied by the chosen catalogue record; capacity is a labelled reference, not a measurement. */
+export function caliberValues(definition: CaliberDefinition): Partial<Record<keyof NewLoadValues, number | undefined>> {
+  return {
+    caseCapacity: definition.typicalCaseCapacity,
+    caseLength: definition.caseDimensions?.caseLength,
+    maxPressure: definition.maxPressure,
+    grooveDiameter: definition.rifling?.grooveDiameter,
+    effectiveBoreArea: definition.rifling?.effectiveBoreArea,
+    sebertFactor: definition.sebertFactor,
+  };
+}
+
 /** Build and validate a new document from explicit selections and inputs, without measurements. */
 export function createLoad(title: string, caliber: CaliberDefinition | string, projectile: Projectile, propellant: Propellant, values: Partial<NewLoadValues>, firearm?: Firearm) {
   return parseLoad(JSON.stringify({

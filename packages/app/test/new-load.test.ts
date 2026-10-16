@@ -4,7 +4,7 @@ import { communityComponents } from '../src/state/components.ts';
 import { DocumentStore } from '../src/state/documents.ts';
 import { exampleLoad } from '../src/state/example-load.ts';
 import { cloneSources } from '../src/state/load-copy.ts';
-import { createLoad, type NewLoadValues } from '../src/state/new-load.ts';
+import { caliberValues, createLoad, type NewLoadValues } from '../src/state/new-load.ts';
 import { loadSettings } from '../src/state/settings.ts';
 
 const fixture = exampleLoad({ title: 'Fixture', note: '' })!;
@@ -21,6 +21,15 @@ const values: NewLoadValues = {
 };
 
 describe('new document creation', () => {
+  it('uses the selected catalogue capacity without treating maximum overall length as a load setting', () => {
+    const selected = { ...definition, typicalCaseCapacity: 2e-6 };
+    expect(caliberValues(selected).caseCapacity).toBe(selected.typicalCaseCapacity);
+    expect(caliberValues(selected).overallLength).toBeUndefined();
+    expect(caliberValues(selected).chargeMass).toBeUndefined();
+    expect(caliberValues(selected).temperature).toBeUndefined();
+    const { typicalCaseCapacity: _missing, ...withoutCapacity } = selected;
+    expect(caliberValues(withoutCapacity).caseCapacity).toBeUndefined();
+  });
   it('accepts a named cartridge without inventing a detailed specification', () => {
     const result = createLoad('From gun', '9x19 mm', fixture.projectile, fixture.propellant, values);
     expect(result.ok).toBe(true);

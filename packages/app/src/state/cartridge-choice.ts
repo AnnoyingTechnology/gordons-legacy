@@ -18,16 +18,35 @@ function identity(name: string): string {
   const aliases: Record<string, string> = {
     '9x19mm': '9x19', '9mmluger': '9x19', '9luger': '9x19',
     '9mmparabellum': '9x19', '9parabellum': '9x19', '9mmpara': '9x19',
+    '308winchester': '308win',
   };
   // Parenthesized synonyms appear in imported GRT names; an explicit +P suffix stays distinct.
   if (normalized.includes('+p')) return normalized;
   return aliases[normalized] ?? aliases[normalize(name.split('(')[0]!)] ?? normalized;
 }
 
+/** Catalogued alternative names connect a gun's cartridge to case-specific definitions. */
+export function caliberChoices(cartridge: string, entries: readonly ComponentEntry[]): CaliberEntry[] {
+  if (!cartridge.trim()) return [];
+  const wanted = identity(cartridge);
+  const matches = entries.filter((entry): entry is CaliberEntry => {
+    if (entry.kind !== 'caliber') return false;
+    // A +P definition cannot become an ordinary cartridge through an unqualified alternate name.
+    if (identity(entry.value.name).includes('+p') !== wanted.includes('+p')) return false;
+    return [entry.value.name, ...entry.value.alternativeNames.split(/[,;]/)]
+      .some((name) => identity(name) === wanted);
+  });
+  const distinct = new Map<string, CaliberEntry>();
+  for (const entry of matches) {
+    const key = JSON.stringify(entry.value);
+    if (!distinct.has(key) || entry.source.origin === 'user') distinct.set(key, entry);
+  }
+  return [...distinct.values()];
+}
+
 /** Prefer a user's exact definition; conflicting matches leave the gun's named cartridge selected. */
 export function matchingCaliber(cartridge: string, entries: readonly ComponentEntry[]): CaliberEntry | undefined {
-  if (!cartridge.trim()) return undefined;
-  const matches = entries.filter((entry): entry is CaliberEntry => entry.kind === 'caliber' && identity(entry.value.name) === identity(cartridge));
+  const matches = caliberChoices(cartridge, entries);
   const own = matches.filter((entry) => entry.source.origin === 'user');
   const candidates = own.length ? own : matches;
   const distinct = new Map(candidates.map((entry) => [JSON.stringify(entry.value), entry]));

@@ -1,6 +1,14 @@
 import type { Messages } from './en.ts';
 
 export const fr: Messages = {
+  "documents.loadDetails": "Votre chargement",
+  "documents.caseBarrel": "Étui et canon",
+  "documents.technicalDetails": "Données de la cartouche et du modèle",
+  "documents.missingCount": "{count} à compléter",
+  "documents.cartridgeData": "Données de cartouche",
+  "documents.chooseCase": "Choisir une variante d’étui",
+  "documents.caseVariantsHelp": "Choisissez une variante d’étui pour reprendre ses données, ou saisissez vos valeurs.",
+  "documents.capacityReference": "Capacité de référence du catalogue ; remplacez-la par votre mesure si disponible.",
   'documents.choiceCount': '{count} choix',
   'documents.exportFailed': "Le fichier n’a pas pu être exporté. Vérifiez la destination et les droits d’écriture, puis réessayez. Le chargement reste ouvert.",
   'documents.continue': "Continuer",

@@ -189,11 +189,11 @@ export class AppShell extends LitElement {
         ${this.renderView()}
       </main>
       <footer class="status-footer">
-        <p class="warning">${t('app.development')}</p>
-        <p>
+        <span>${t('app.development')}</span>
+        <span class="build-details">
           ${t('about.version')} <a href="${REPOSITORY}/commit/${__BUILD_COMMIT__}">${__BUILD_COMMIT__.slice(0, 7)}</a>,
           ${__BUILD_DATE__}
-        </p>
+        </span>
       </footer>
       <gl-about-dialog .open=${this.aboutOpen} .context=${this.context} @close=${this.closeAbout}></gl-about-dialog>
       <gl-choice-dialog

@@ -9,6 +9,7 @@
   --error-fg: #a1121b;
   --accent: #2f5d8a;
   --panel: #ffffff;
+  --page-gutter: 1rem;
   --series-pressure: #2a78d6;
   --series-velocity: #eb6834;
   --critical: #d03b3b;
@@ -513,13 +514,15 @@ code {
 
 /* Application shell */
 
+gl-app { display: flex; flex-direction: column; min-height: 100dvh; }
+
 .toolbar {
   display: flex;
   align-items: stretch;
   /* The groups wrap rather than run off a narrow screen: this is used on a phone at the bench. */
   flex-wrap: wrap;
   gap: 0;
-  padding: 0 0.5rem;
+  padding: 0 var(--page-gutter);
   min-height: 3.6rem;
   border-bottom: 1px solid var(--rule);
   background: var(--panel);
@@ -531,7 +534,7 @@ code {
   gap: 0.55rem;
   align-self: center;
   font-size: 1.05rem;
-  margin: 0 1rem 0 0.5rem;
+  margin: 0 1rem 0 0;
 }
 
 .toolbar .logo {
@@ -625,7 +628,7 @@ button:disabled {
 .tabs {
   display: flex;
   gap: 0.25rem;
-  padding: 0.5rem 1rem 0;
+  padding: 0.5rem var(--page-gutter) 0;
   border-bottom: 1px solid var(--rule);
   overflow-x: auto;
 }
@@ -732,8 +735,9 @@ button:disabled {
 }
 
 main {
-  padding: 0.8rem 1rem 1.5rem;
-  min-height: 60vh;
+  position: relative;
+  flex: 1;
+  padding: var(--page-gutter);
 }
 
 /* A page with nothing in it yet: the library before a first load, the editor before a document. Not
@@ -800,22 +804,34 @@ dialog.new-load-dialog {
 .new-load-choices { max-height: 24rem; overflow-y: auto; padding: 0.25rem; }
 .new-load-dialog .dialog-actions { display: flex; gap: 0.5rem; margin-top: 1.5rem; }
 
-.new-load-dialog form > label {
-  display: block;
-  margin-top: 0.6rem;
-}
-
-.new-load-dialog form > input,
-.new-load-values input {
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.new-load-values {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
-  gap: 0.6rem 1rem;
-  margin-top: 1rem;
+.new-load-name-field { display: block; max-width: 42rem; font-weight: 600; }
+.new-load-name-field input { display: block; width: 100%; box-sizing: border-box; margin-top: 0.4rem; padding: 0.7rem 0.85rem; font-size: 1.1rem; }
+.new-load-review-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.75rem; margin-top: 1.4rem; }
+.new-load-review-section { min-width: 0; }
+.new-load-review-section h4 { font-size: 1rem; margin: 0 0 0.7rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--rule); }
+.new-load-cartridge-source { display: block; max-width: 42rem; margin: 0.7rem 0 1rem; }
+.new-load-cartridge-source select { display: block; width: 100%; box-sizing: border-box; min-height: 2.8rem; margin-top: 0.4rem; padding: 0.5rem 0.7rem; font-size: 1rem; }
+.new-load-cartridge-source small { display: block; margin-top: 0.4rem; color: var(--muted); line-height: 1.4; }
+.new-load-value-field { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0.3rem 1rem; padding: 0.4rem 0; }
+.new-load-value-field label { line-height: 1.4; }
+.new-load-number { display: flex; align-items: center; gap: 0.5rem; }
+.new-load-number input { width: 10ch; box-sizing: border-box; padding: 0.6rem 0.7rem; font-size: 1.05rem; font-variant-numeric: tabular-nums; text-align: right; }
+.new-load-name-field input, .new-load-number input, .new-load-cartridge-source select { border: 1px solid var(--rule); border-radius: 0; background: var(--panel); color: var(--fg); }
+.new-load-number[data-kind="caseCapacity"] input { width: 14ch; }
+.new-load-number[data-kind="plain"] input { width: 7ch; }
+.new-load-number[data-kind="temperature"] input { width: 8ch; }
+.new-load-number[data-kind="area"] input { width: 11ch; }
+.new-load-number span { width: 4.5rem; color: var(--muted); font-size: 0.9rem; }
+.new-load-value-field.is-missing input { border-color: var(--muted); }
+.new-load-value-field small { grid-column: 1 / -1; max-width: 33rem; color: var(--muted); line-height: 1.4; }
+.new-load-technical { margin-top: 1.25rem; padding-top: 0.8rem; border-top: 1px solid var(--rule); }
+.new-load-technical summary { cursor: pointer; font-weight: 600; }
+.new-load-technical summary span { margin-left: 0.75rem; font-size: 0.85rem; font-weight: 400; color: var(--muted); }
+.new-load-technical-values { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 1.75rem; margin-top: 0.7rem; }
+@media (max-width: 720px) {
+  .new-load-review-columns, .new-load-technical-values { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+  .new-load-number span { width: 3.4rem; }
+  .new-load-value-field { column-gap: 0.6rem; }
 }
 
 /* Load editor */
@@ -953,21 +969,27 @@ dialog.new-load-dialog {
 }
 
 .results .load-heading {
-  margin-top: 1.2rem;
+  margin-top: 0;
   font-size: 1.05rem;
   font-weight: 650;
 }
 
+.inputs > gl-property-table:first-child .property-group h2 { margin-top: 0; }
+
 .status-footer {
-  border-top: 1px solid var(--rule);
-  padding: 0.8rem 1rem;
-  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.4rem 1.5rem;
+  margin: 0;
+  border-top: 1px solid var(--warn-border);
+  padding: 0.65rem var(--page-gutter);
+  color: var(--warn-fg);
+  background: var(--warn-bg);
   font-size: 0.85rem;
 }
 
-.status-footer .warning {
-  margin-top: 0;
-}
+.status-footer .build-details { white-space: nowrap; }
 
 .measurements caption {
   text-align: left;
@@ -1679,9 +1701,12 @@ dialog.shot-group-dialog {
   font-size: 0.85rem;
 }
 
-/* A load the review finds dangerous: a striped red frame around the whole editor. */
-.load-editor.concern-danger {
-  padding: 0.8rem;
+/* The warning frame follows the tab panel's edges without moving its content. */
+main:has(.load-editor.concern-danger)::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
   border: 8px solid transparent;
   border-image: repeating-linear-gradient(-45deg, var(--critical) 0 10px, transparent 10px 20px) 8;
 }
@@ -2562,13 +2587,12 @@ dialog.cartridge-designer {
 /* A phone: the toolbar's groups wrap, the title keeps its logo alone, and nothing is cut off. */
 @media (max-width: 640px) {
   .toolbar {
-    padding: 0 0.25rem;
     min-height: 0;
   }
 
   .toolbar h1 {
     font-size: 0;
-    margin: 0 0.4rem 0 0.2rem;
+    margin: 0 0.4rem 0 0;
   }
 
   .toolbar .tool {

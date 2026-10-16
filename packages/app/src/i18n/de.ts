@@ -1,6 +1,14 @@
 import type { Messages } from './en.ts';
 
 export const de: Messages = {
+  "documents.loadDetails": "Ladedaten",
+  "documents.caseBarrel": "Hülse und Lauf",
+  "documents.technicalDetails": "Patronen- und Modelldaten",
+  "documents.missingCount": "{count} noch auszufüllen",
+  "documents.cartridgeData": "Patronendaten",
+  "documents.chooseCase": "Hülsenvariante wählen",
+  "documents.caseVariantsHelp": "Wählen Sie eine Hülsenvariante, um deren Daten zu übernehmen, oder geben Sie eigene Werte ein.",
+  "documents.capacityReference": "Referenzvolumen aus dem Katalog; durch den eigenen Messwert ersetzen, sobald verfügbar.",
   'documents.choiceCount': '{count} Einträge',
   'documents.exportFailed': "Die Datei konnte nicht exportiert werden. Ziel und Schreibrechte prüfen und erneut versuchen. Die Ladung bleibt geöffnet.",
   'documents.continue': "Weiter",

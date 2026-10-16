@@ -101,7 +101,10 @@ test/                   Vitest tests of the parts without a DOM
 
 New offers cloning from open or saved loads, or a guided component selection starting from a gun or
 cartridge. A chosen gun preselects its cartridge; Continue accepts it, with existing load definitions
-used when available and missing details left for review. The load name heads the results column; click it to rename, or press F2 on its tab.
+used when available and missing details left for review. Catalog aliases expose matching case variants
+for explicit selection, including a labelled reference capacity. Review groups load details and
+case/barrel fields, with technical details expanded when incomplete. Manually entered values survive
+a case-variant change; missing required inputs still prevent creation. The load name heads the results column; click it to rename, or press F2 on its tab.
 Enter confirms, Escape cancels, and leaving the field commits. Cloning stays under New, without a
 separate document-actions row. The Shortcuts button explains local tab keys and enables application shortcuts. Edited tabs ask before
 closing. See [the UI audit](../../docs/ui-audit.md) for coverage and remaining work.

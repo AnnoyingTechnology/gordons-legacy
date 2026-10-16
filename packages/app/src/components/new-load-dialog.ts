@@ -2,10 +2,10 @@ import type { Firearm } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
 import type { MessageKey } from '../i18n/i18n.ts';
 import { originLabel, type ComponentEntry } from '../state/components.ts';
-import { calibersFromLoads, matchingCaliber } from '../state/cartridge-choice.ts';
+import { caliberChoices, calibersFromLoads, matchingCaliber } from '../state/cartridge-choice.ts';
 import { firearmLabel } from '../state/firearms.ts';
 import { copyLoadInputs, type CloneSource } from '../state/load-copy.ts';
-import { createLoad, NEW_LOAD_FIELDS, type NewLoadValues } from '../state/new-load.ts';
+import { caliberValues, createLoad, NEW_LOAD_FIELDS, type NewLoadValues } from '../state/new-load.ts';
 import { displayUnit, parseNumber } from '../units/units.ts';
 import type { UiContext } from './context.ts';
 
@@ -16,6 +16,9 @@ const STEP_LABELS: Record<Step, MessageKey> = {
   projectile: 'group.projectile', propellant: 'group.propellant', review: 'documents.review',
 };
 const MOST_CHOICES = 100;
+const LOAD_FIELDS: Array<keyof NewLoadValues> = ['chargeMass', 'overallLength', 'temperature'];
+const CASE_FIELDS: Array<keyof NewLoadValues> = ['caseCapacity', 'caseLength', 'barrelLength'];
+const TECHNICAL_FIELDS: Array<keyof NewLoadValues> = ['grooveDiameter', 'effectiveBoreArea', 'maxPressure', 'sebertFactor', 'shotStartPressure'];
 
 /** New → clone an open/saved load, or choose a gun/cartridge and work through the components. */
 export class NewLoadDialog extends LitElement {
@@ -25,6 +28,7 @@ export class NewLoadDialog extends LitElement {
     step: { state: true }, filter: { state: true }, title: { state: true },
     selected: { state: true }, values: { state: true }, error: { state: true },
     changingCartridge: { state: true },
+    technicalOpen: { state: true },
   };
 
   declare open: boolean;
@@ -40,6 +44,8 @@ export class NewLoadDialog extends LitElement {
   declare values: Partial<Record<keyof NewLoadValues, string>>;
   declare error: string;
   declare changingCartridge: boolean;
+  declare technicalOpen: boolean;
+  private enteredValues = new Set<keyof NewLoadValues>();
   // Keep component identities stable across background repository refreshes while choosing.
   private choices: ComponentEntry[] = [];
   private firearm: Firearm | undefined;
@@ -61,6 +67,7 @@ export class NewLoadDialog extends LitElement {
     this.values = {};
     this.error = '';
     this.changingCartridge = false;
+    this.technicalOpen = false;
   }
 
   protected override createRenderRoot(): HTMLElement { return this; }
@@ -75,6 +82,7 @@ export class NewLoadDialog extends LitElement {
       this.clone = undefined;
       this.gunCartridge = undefined;
       this.changingCartridge = false;
+      this.enteredValues.clear();
       this.go('start');
     }
   }
@@ -140,6 +148,7 @@ export class NewLoadDialog extends LitElement {
         this.gunCartridge = undefined;
         this.selected = {};
         this.values = {};
+        this.enteredValues.clear();
         this.go('caliber');
       })}
     </div>`;
@@ -156,7 +165,7 @@ export class NewLoadDialog extends LitElement {
   private picker() {
     const { t, quantity } = this.context;
     if (this.step === 'caliber' && (this.selected.caliber || this.gunCartridge) && !this.changingCartridge) {
-      return html`${this.summary()}<p>${t('documents.acceptCartridge')}</p>
+      return html`${this.summary()}${this.cartridgeSource()}<p>${t('documents.acceptCartridge')}</p>
         <button @click=${() => { this.changingCartridge = true; }}>${t('documents.changeCartridge')}</button>`;
     }
     const matches = (text: string) => this.filter.toLocaleLowerCase().trim().split(/\s+/)
@@ -175,6 +184,7 @@ export class NewLoadDialog extends LitElement {
         origin: firearm.source?.kind === 'published' ? `${t('firearm.published')} · ${firearm.source.publisher ?? ''}` : t('components.yours'),
         choose: () => {
           this.firearm = firearm; this.selected = {}; this.values = {};
+          this.enteredValues.clear();
           this.gunCartridge = firearm.cartridge?.trim() || undefined;
           this.changingCartridge = false;
           this.fill({ barrelLength: firearm.barrel.length });
@@ -236,25 +246,81 @@ export class NewLoadDialog extends LitElement {
     return html`
       ${this.summary()}
       <p>${t(this.step === 'clone-name' ? 'documents.copyHelp' : 'documents.reviewHelp')}</p>
-      <form id="new-load-form" @submit=${this.create}>
-        <label for="new-load-name">${t('documents.name')}</label>
-        <input id="new-load-name" name="title" required autocomplete="off" .value=${this.title}
-          @input=${(event: Event) => {
-            const input = event.target as HTMLInputElement;
-            input.setCustomValidity(''); this.title = input.value;
-          }} />
-        ${this.step === 'clone-name' ? nothing : html`<div class="new-load-values">
-          ${NEW_LOAD_FIELDS.map((field) => html`<label for=${`new-load-${field.name}`}>
-            ${t(field.label)} ${field.kind === 'plain' ? '' : `(${displayUnit(field.kind, this.context.units).symbol})`}
-            <input id=${`new-load-${field.name}`} name=${field.name} required inputmode="decimal" autocomplete="off"
-              .value=${this.values[field.name] ?? ''} @input=${(event: Event) => {
-                const input = event.target as HTMLInputElement;
-                input.setCustomValidity(''); this.values = { ...this.values, [field.name]: input.value };
-              }} />
-          </label>`)}
-        </div>`}
+      <form id="new-load-form" novalidate @submit=${this.create}>
+        <label class="new-load-name-field" for="new-load-name">${t('documents.name')}
+          <input id="new-load-name" name="title" required autocomplete="off" .value=${this.title}
+            @input=${(event: Event) => {
+              const input = event.target as HTMLInputElement;
+              input.setCustomValidity(''); this.title = input.value;
+            }} />
+        </label>
+        ${this.step === 'clone-name' ? nothing : html`
+          <div class="new-load-review-columns">
+            <section class="new-load-review-section">
+              <h4>${t('documents.loadDetails')}</h4>
+              ${LOAD_FIELDS.map((name) => this.valueField(name))}
+            </section>
+            <section class="new-load-review-section">
+              <h4>${t('documents.caseBarrel')}</h4>
+              ${this.cartridgeSource()}
+              ${CASE_FIELDS.map((name) => this.valueField(name))}
+            </section>
+          </div>
+          <details class="new-load-technical" .open=${this.technicalOpen}
+            @toggle=${(event: Event) => { this.technicalOpen = (event.target as HTMLDetailsElement).open; }}>
+            <summary>${t('documents.technicalDetails')}${this.missing(TECHNICAL_FIELDS)
+              ? html`<span>${t('documents.missingCount', { count: String(this.missing(TECHNICAL_FIELDS)) })}</span>` : nothing}</summary>
+            <div class="new-load-technical-values">${TECHNICAL_FIELDS.map((name) => this.valueField(name))}</div>
+          </details>`}
         ${this.error ? html`<p class="error" role="alert">${this.error}</p>` : nothing}
       </form>`;
+  }
+
+  /** Keep catalogue variants beside the cartridge, rather than asking users to retype their fields. */
+  private cartridgeSource() {
+    const selected = this.choices.find((entry) => entry.id === this.selected.caliber);
+    const names = [this.gunCartridge ?? '', ...(selected?.kind === 'caliber'
+      ? [selected.value.name, ...selected.value.alternativeNames.split(/[,;]/)] : [])];
+    const entries = [...new Map(names.flatMap((name) => caliberChoices(name, this.choices)).map((entry) => [entry.id, entry])).values()];
+    if (entries.length === 0) return nothing;
+    const { t } = this.context;
+    return html`<label class="new-load-cartridge-source">${t('documents.cartridgeData')}
+      <select .value=${this.selected.caliber ?? ''} @change=${(event: Event) => {
+        const id = (event.target as HTMLSelectElement).value;
+        const entry = entries.find((entry) => entry.id === id);
+        if (!entry) return;
+        this.selected = { ...this.selected, caliber: id };
+        this.fill(caliberValues(entry.value), true);
+        if (this.step === 'review') this.technicalOpen = this.missing(TECHNICAL_FIELDS) > 0;
+      }}>
+        <option value="" disabled>${t('documents.chooseCase')}</option>
+        ${entries.map((entry) => html`<option value=${entry.id}>${entry.value.name}</option>`)}
+      </select>
+      ${!this.selected.caliber ? html`<small>${t('documents.caseVariantsHelp')}</small>` : nothing}
+    </label>`;
+  }
+
+  private valueField(name: keyof NewLoadValues) {
+    const field = NEW_LOAD_FIELDS.find((field) => field.name === name)!;
+    const { t } = this.context;
+    const unit = field.kind === 'plain' ? '' : displayUnit(field.kind, this.context.units).symbol;
+    const value = this.values[name] ?? '';
+    const reference = name === 'caseCapacity' && value !== '' && !this.enteredValues.has(name);
+    return html`<div class="new-load-value-field ${value.trim() === '' ? 'is-missing' : ''}">
+      <label for=${`new-load-${name}`}>${t(field.label)}</label>
+      <div class="new-load-number" data-kind=${field.kind}><input id=${`new-load-${name}`} name=${name} required inputmode="decimal" autocomplete="off"
+        aria-describedby=${reference ? 'new-load-capacity-reference' : nothing}
+        placeholder="—" .value=${value} @input=${(event: Event) => {
+          const input = event.target as HTMLInputElement;
+          input.setCustomValidity(''); this.enteredValues.add(name);
+          this.values = { ...this.values, [name]: input.value };
+        }} /><span>${unit}</span></div>
+      ${reference ? html`<small id="new-load-capacity-reference">${t('documents.capacityReference')}</small>` : nothing}
+    </div>`;
+  }
+
+  private missing(names: readonly (keyof NewLoadValues)[]): number {
+    return names.filter((name) => !(this.values[name] ?? '').trim()).length;
   }
 
   private choose(entry: ComponentEntry): void {
@@ -263,9 +329,8 @@ export class NewLoadDialog extends LitElement {
       if (this.selected.caliber !== entry.id) {
         this.selected = {};
         this.values = {};
-        this.fill({ barrelLength: this.firearm?.barrel.length, caseLength: entry.value.caseDimensions?.caseLength,
-          maxPressure: entry.value.maxPressure, grooveDiameter: entry.value.rifling?.grooveDiameter,
-          effectiveBoreArea: entry.value.rifling?.effectiveBoreArea, sebertFactor: entry.value.sebertFactor });
+        this.enteredValues.clear();
+        this.fill({ barrelLength: this.firearm?.barrel.length, ...caliberValues(entry.value) });
       }
     } else if (entry.kind === 'projectile' && this.selected.projectile !== entry.id) {
       this.fill({ shotStartPressure: entry.value.shotStartPressure });
@@ -275,10 +340,11 @@ export class NewLoadDialog extends LitElement {
   }
 
   /** Only a selected source supplies values; missing fields never inherit another component's data. */
-  private fill(values: Partial<Record<keyof NewLoadValues, number | undefined>>): void {
+  private fill(values: Partial<Record<keyof NewLoadValues, number | undefined>>, preserveEntered = false): void {
     const updated = { ...this.values };
     for (const field of NEW_LOAD_FIELDS) {
       if (!(field.name in values)) continue;
+      if (preserveEntered && this.enteredValues.has(field.name)) continue;
       const value = values[field.name];
       const shown = value === undefined ? undefined : field.kind === 'plain' ? value : displayUnit(field.kind, this.context.units).fromSi(value);
       updated[field.name] = shown === undefined ? '' : String(Number(shown.toPrecision(12)));
@@ -286,7 +352,10 @@ export class NewLoadDialog extends LitElement {
     this.values = updated;
   }
 
-  private go(step: Step): void { this.step = step; this.filter = ''; this.error = ''; }
+  private go(step: Step): void {
+    this.step = step; this.filter = ''; this.error = '';
+    if (step === 'review') this.technicalOpen = this.missing(TECHNICAL_FIELDS) > 0;
+  }
   private close = (): void => { this.querySelector('dialog')?.close(); };
   private back = (): void => {
     const previous: Record<Step, Step> = { start: 'start', clone: 'start', 'clone-name': 'clone',
@@ -295,13 +364,13 @@ export class NewLoadDialog extends LitElement {
     this.go(previous[this.step]);
   };
 
-  private create = (event: SubmitEvent): void => {
+  private create = async (event: SubmitEvent): Promise<void> => {
     event.preventDefault();
     const form = event.target as HTMLFormElement;
     const title = form.elements.namedItem('title') as HTMLInputElement;
     title.setCustomValidity(title.value.trim() ? '' : this.context.t('field.invalid'));
-    if (!form.reportValidity()) return;
     if (this.step === 'clone-name' && this.clone) {
+      if (!form.reportValidity()) return;
       this.dispatchEvent(new CustomEvent('create-load', { detail: copyLoadInputs(this.clone.load, title.value.trim()) }));
       return;
     }
@@ -313,6 +382,10 @@ export class NewLoadDialog extends LitElement {
       const valid = si !== undefined && Number.isFinite(si) && (field.name === 'sebertFactor' ? si >= 0 : si > 0);
       input.setCustomValidity(valid ? '' : this.context.t('field.invalid'));
       if (valid) numbers[field.name] = si;
+    }
+    if (TECHNICAL_FIELDS.some((name) => !(form.elements.namedItem(name) as HTMLInputElement).validity.valid)) {
+      this.technicalOpen = true;
+      await this.updateComplete;
     }
     if (!form.reportValidity()) return;
     const caliber = this.choices.find((entry) => entry.id === this.selected.caliber);

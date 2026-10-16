@@ -3,6 +3,14 @@
  * compiler checks it). `{name}` placeholders are filled by `t()`.
  */
 export const en = {
+  "documents.loadDetails": "Load details",
+  "documents.caseBarrel": "Case and barrel",
+  "documents.technicalDetails": "Cartridge and model details",
+  "documents.missingCount": "{count} to complete",
+  "documents.cartridgeData": "Cartridge data",
+  "documents.chooseCase": "Choose a case variant",
+  "documents.caseVariantsHelp": "Choose a case variant to fill its data, or enter your own values.",
+  "documents.capacityReference": "Catalog capacity reference; replace with your measured value when available.",
   'documents.choiceCount': '{count} choices',
   'documents.exportFailed': "The file could not be exported. Check the destination and write permissions, then try again. Your load is still open.",
   'documents.continue': "Continue",

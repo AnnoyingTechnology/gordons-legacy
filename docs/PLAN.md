@@ -73,11 +73,17 @@ A serious engineering tool, not a consumer app.
 - New load offers cloning an open/saved load, or a large guided selector starting from a gun or
   cartridge, then projectile and powder, followed by the remaining inputs and a name. A selected gun
   preselects its cartridge for confirmation; missing detailed cartridge data does not block that step.
+  Offer matching case variants explicitly, reuse their available fields, and label reference values.
+  Group the final review into load details, case/barrel and collapsible technical details; missing
+  required values remain mandatory, with the relevant section opened for validation.
 - Application shortcuts are opt-in and documented in the toolbar; focused load tabs also support
   arrow/Home/End navigation and guarded Delete.
 - The load name heads the results column and edits in place on demand. Keep cloning under New;
   no permanent name field or separate document-actions row. The simulation notice belongs inside
   the load review, without a second banner.
+- Use one page gutter and align the input/results headings. The development warning and build details
+  share one footer strip touching the page edges and bottom; the danger hatch follows the tab-panel
+  edges without changing the content layout.
 - Dense layout, aligned tabular figures, explicit units, metric/imperial switch. A clear hierarchy of
   results: velocity and pressure first, on scales against the speed of sound and the CIP and SAAMI
   maxima; then energy and recoil; then the rest.

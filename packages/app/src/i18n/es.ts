@@ -1,6 +1,14 @@
 import type { Messages } from './en.ts';
 
 export const es: Messages = {
+  "documents.loadDetails": "Datos de la carga",
+  "documents.caseBarrel": "Vaina y cañón",
+  "documents.technicalDetails": "Datos del cartucho y del modelo",
+  "documents.missingCount": "{count} por completar",
+  "documents.cartridgeData": "Datos del cartucho",
+  "documents.chooseCase": "Elegir una variante de vaina",
+  "documents.caseVariantsHelp": "Elija una variante de vaina para usar sus datos o introduzca sus propios valores.",
+  "documents.capacityReference": "Capacidad de referencia del catálogo; sustitúyala por su medición cuando esté disponible.",
   'documents.choiceCount': '{count} opciones',
   'documents.exportFailed': "No se pudo exportar el archivo. Compruebe el destino y los permisos de escritura e inténtelo de nuevo. La carga sigue abierta.",
   'documents.continue': "Continuar",

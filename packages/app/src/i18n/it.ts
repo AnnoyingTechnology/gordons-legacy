@@ -1,6 +1,14 @@
 import type { Messages } from './en.ts';
 
 export const it: Messages = {
+  "documents.loadDetails": "Dati della carica",
+  "documents.caseBarrel": "Bossolo e canna",
+  "documents.technicalDetails": "Dati della cartuccia e del modello",
+  "documents.missingCount": "{count} da completare",
+  "documents.cartridgeData": "Dati della cartuccia",
+  "documents.chooseCase": "Scegli una variante del bossolo",
+  "documents.caseVariantsHelp": "Scegli una variante del bossolo per usarne i dati oppure inserisci i tuoi valori.",
+  "documents.capacityReference": "Capacità di riferimento del catalogo; sostituirla con il valore misurato quando disponibile.",
   'documents.choiceCount': '{count} opzioni',
   'documents.exportFailed': "Impossibile esportare il file. Verifica la destinazione e i permessi di scrittura, poi riprova. La carica resta aperta.",
   'documents.continue': "Continua",

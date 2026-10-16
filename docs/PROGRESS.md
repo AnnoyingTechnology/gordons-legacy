@@ -38,10 +38,12 @@ pushed; Undo/Redo and reopen-closed history remain in the #34 audit. R2 (#35) is
    (`docs/model/validation.md`, chronograph study done); next, published pressure data, then OBT, the
    energy terms and the covolume handling against the published science.
 
-Open issues (GitHub, `AnnoyingTechnology/gordons-legacy`), 2026-10-15:
+Open issues (GitHub, `AnnoyingTechnology/gordons-legacy`), 2026-10-16:
 
 | Issue | What | State |
 |---|---|---|
+| #37 / #38 | Move the speed legend to the card’s top right and shorten the blast annotation. | Next UI step |
+| #39 | Overflow tab fade/hover suggestion filed at Julien’s request; existing scrolling already works well for him. | Suggestion; no implementation planned now |
 | #19 | Full GRT database import and default/offline distribution are required (updated issue, 2026-10-16). Resume on the original development machine; current session has not verified access. | Deferred by Julien to lunch/tonight |
 | #22 | Pressure validation: published loads with measured pressures, or pressure traces. Blocks M7 and any claim about pressure accuracy. | Needs data |
 | #24 | User library of guns: done 2026-10-15. Crawled database split into #30. | Done |
@@ -67,6 +69,9 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 
 | Date | Decision | By |
 |---|---|---|
+| 2026-10-16 | Keep strict input validation while helping the creation funnel use existing catalog records. Offer case variants explicitly and label catalog capacity as a reference. Use larger, grouped controls sized for their content. | Julien, chat; implementation detail |
+| 2026-10-16 | One consistent page gutter, less space above load contents, and a single development/build warning flush with the page edges and bottom. The danger hatch must touch all tab-panel edges without shifting its content. | Julien, chat |
+| 2026-10-16 | File the fade/hover tab idea as #39. Julien subsequently confirmed the current dev tab overflow works well; retain it as a suggestion. | Julien, chat |
 | 2026-10-16 | Validate the complete data manifest before cache changes, and component content before replacing an offline copy. Invalid remote data must not destroy a valid cached version. | Implementation, #32 |
 | 2026-10-16 | Full converted GRT database must ship by default, including offline use; this supersedes the earlier local-only data scope. Resume on the original development machine. Julien deferred that work to lunch or tonight; community coverage remains a fallback, not completion. | Julien, updated #19 and chat |
 | 2026-10-16 | Desert Tech data PR #1 approved for merge after reviewing the 83 configurations and validation evidence. | Julien, chat |
@@ -163,6 +168,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 
 | Date | Entry |
 |---|---|
+| 2026-10-16 | #34 review/layout: cartridge aliases now expose the seven existing .308 case variants instead of treating the common cartridge as missing. Explicit selection fills the record’s available fields, labels reference capacity, and retains manually entered values. Grouped review fields are larger and content-sized, with technical details expanded when incomplete. Consistent page gutters, reduced heading gaps, one edge-to-edge development/build footer, and a danger frame on the tab-panel edges. All 714 tests, typecheck/build and desktop/phone Chromium checks pass, including the reported Sako flow, manual-value preservation, missing-field validation, footer geometry and danger-frame layout stability. #39 filed; #37/#38 picked up next. |
 | 2026-10-16 | #32 persistence/data audit: reproduced malformed JSON crashes and invalid component updates overwriting the last valid cache. Added shared index-shape checks, duplicate-index rejection before cache mutation, and content validation before cache writes. Invalid cached entries are skipped offline. Three regression tests cover malformed manifests/components, cache preservation and validator reporting. All 712 tests, typecheck/build and the 463-file published repository validation pass. Next: IndexedDB transaction completion and backup envelope handling; see `docs/code-audit.md`. |
 | 2026-10-16 | #33: added a Desert Tech extractor and five invented-page tests; corrected the surveyed host to `deserttech.com`. Prepared 83 configurations from 10 public product pages, including seven SRS M2 configurations. Every record round-trips and passes the corpus audit; 463 repository files validate, all 709 tests and typecheck/build pass. Browser verified the candidate index/hash path, all 83 records and SRS M2 → Continue. Bare twist ratios and missing WLVRN figures stay absent; SKU, source URL, date and printed strings are preserved. Data [PR #1](https://github.com/AnnoyingTechnology/gordons-legacy-data/pull/1) approved and merged as `ea531cc`; published-index browser check passed. #34 cartridge-preselection fix `1ffdf09` passed CI and deployed. |
 | 2026-10-16 | #34 gun funnel correction: Glock 43X MOS already carries `9x19 mm`, but the bundled 48 cartridge definitions contain no 9 mm Luger. A gun now preselects its named cartridge and Continue accepts it; the full list appears only on Change cartridge. Exact names/explicit synonyms use a unique definition from open/saved loads or the database; missing definitions remain optional, with no invented numeric defaults. Browser verification used the actual published Glock record and checked absent/existing-load definitions, Continue, Back and Change cartridge. All 704 tests, typecheck and build pass. |
