@@ -79,6 +79,50 @@ describe('Library', () => {
     const guns = new FirearmLibrary(memoryStore<FirearmEntry>());
     expect(await readBackup('{"loads": []}', library, guns)).toEqual({ added: 0, failed: 1 });
   });
+
+  test('malformed or unsupported backup envelopes add nothing', async () => {
+    const library = new Library(memoryStorage());
+    const guns = new FirearmLibrary(memoryStore<FirearmEntry>());
+    const validLoad = { name: 'A', load: JSON.parse(serializeLoad(glock)) };
+    for (const document of [null, [], 4,
+      { format: 'gordons-legacy.library', loads: [validLoad] },
+      { format: 'gordons-legacy.library', version: 3, loads: [validLoad], firearms: [] },
+      { format: 'gordons-legacy.library', version: 2, loads: [validLoad], firearms: null },
+    ]) {
+      expect(await readBackup(JSON.stringify(document), library, guns)).toEqual({ added: 0, failed: 1 });
+    }
+    expect(library.entries).toEqual([]);
+    expect(guns.entries).toEqual([]);
+  });
+
+  test('invalid entries do not interrupt restoration of the remaining records', async () => {
+    const library = new Library(memoryStorage());
+    const guns = new FirearmLibrary(memoryStore<FirearmEntry>());
+    const backup = JSON.stringify({ format: 'gordons-legacy.library', version: 2,
+      loads: [null, { name: 'Broken' }, { name: 'A', load: JSON.parse(serializeLoad(glock)) }],
+      firearms: [null, { firearm: null }, { firearm: { ...newFirearm(), name: 'Test record' } }],
+    });
+    expect(await readBackup(backup, library, guns)).toEqual({ added: 2, failed: 4 });
+    expect(library.entries.map(entry => entry.name)).toEqual(['A']);
+    expect(guns.entries.map(entry => entry.firearm.name)).toEqual(['Test record']);
+  });
+
+  test('restore counts only committed writes and reports storage failures', async () => {
+    const storage = memoryStorage();
+    const library = new Library({ ...storage, put: async (entry) => {
+      if (entry.name === 'Rejected') throw new DOMException('Storage full', 'QuotaExceededError');
+      await storage.put(entry);
+    } });
+    const guns = new FirearmLibrary({ ...memoryStore<FirearmEntry>(), put: async () => { throw new Error('Write failed'); } });
+    const load = JSON.parse(serializeLoad(glock));
+    const backup = JSON.stringify({ format: 'gordons-legacy.library', version: 2,
+      loads: [{ name: 'First', load }, { name: 'Rejected', load }, { name: 'Last', load }],
+      firearms: [{ firearm: { ...newFirearm(), name: 'Test record' } }],
+    });
+    expect(await readBackup(backup, library, guns)).toEqual({ added: 2, failed: 2 });
+    expect(library.entries.map(entry => entry.name)).toEqual(['First', 'Last']);
+    expect(guns.entries).toEqual([]);
+  });
 });
 
 describe('browsing', () => {

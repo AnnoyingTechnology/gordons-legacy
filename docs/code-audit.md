@@ -8,9 +8,16 @@ boundaries and persistence, where a small failure can lose work or prevent an of
 | Repository manifest | Only its envelope was checked. Malformed entries could reach cache mutations; duplicate paths could produce competing downloads. | Fixed: shared complete shape checks, path validation and duplicate rejection before sync changes. The CLI validator reports malformed manifests instead of throwing. |
 | Component cache | A file with a valid hash but invalid content replaced the last valid cached copy before its fields were checked. | Fixed: content validation precedes cache writes. Regression tests preserve the previous copy. |
 | Offline reading | JSON `null` crashed the component reader and interrupted the entire cache read. | Fixed: malformed JSON values are rejected independently; valid entries remain available. |
-| IndexedDB writes | The wrapper resolves at request success, before transaction completion. A subsequent abort can be reported as a successful save. | Next: reproduce and wait for commit. |
-| Backup restore | The envelope is accessed without checking JSON `null`; version is not checked, and null entries interrupt restore. | Next: reject unsupported envelopes and count invalid entries independently. |
+| IndexedDB writes | The wrapper resolves at request success, before transaction completion. A subsequent abort can be reported as a successful save. | Fixed: resolve on transaction completion, reject an abort even after request success. Failed opens can retry; version changes close and discard the old connection. |
+| Backup restore | The envelope is accessed without checking JSON `null`; version is not checked, and null entries interrupt restore. | Fixed: validate supported v1/v2 envelopes before writes; reject malformed records independently, count committed records and failed writes, and report unreadable files in the UI. |
 
-Validation for the first fixes: 712 tests, typecheck and production build pass. The published data
+Validation: 721 tests, typecheck and production build pass. Native Chromium reproduced an IndexedDB
+request succeeding and then aborting; the save previously resolved with no stored record and now
+rejects with `AbortError`. Browser checks also cover unreadable files and partial backup recovery. The published data
 repository's 463 files also validate. This is an ongoing audit, not a claim that every module has been
 reviewed. Document workflow findings and remaining history work are in [ui-audit.md](ui-audit.md).
+
+Next pass: persisted document/record shape validation and storage-access failures at startup.
+
+The IndexedDB distinction follows the [transaction lifecycle](https://w3c.github.io/IndexedDB/#transaction-lifecycle):
+a successful request precedes the transaction commit.

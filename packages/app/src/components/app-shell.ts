@@ -598,7 +598,13 @@ export class AppShell extends LitElement {
   }
 
   private async restoreBackup(file: File): Promise<void> {
-    const { added, failed } = await readBackup(await file.text(), this.library, this.firearms);
+    let text: string;
+    try { text = await file.text(); }
+    catch {
+      this.openErrors = [this.context.t('library.restoreFailed', { added: '0', failed: '1' })];
+      return;
+    }
+    const { added, failed } = await readBackup(text, this.library, this.firearms);
     this.openErrors = failed > 0 ? [this.context.t('library.restoreFailed', { added: String(added), failed: String(failed) })] : [];
   }
 

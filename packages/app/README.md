@@ -109,6 +109,10 @@ Enter confirms, Escape cancels, and leaving the field commits. Cloning stays und
 separate document-actions row. The Shortcuts button explains local tab keys and enables application shortcuts. Edited tabs ask before
 closing. See [the UI audit](../../docs/ui-audit.md) for coverage and remaining work.
 
+Local writes are reported as saved only after IndexedDB commits the transaction. Backup restore
+accepts supported v1/v2 envelopes, adds records independently, and reports failed entries/writes
+without discarding successful additions.
+
 ## Conventions
 
 - Values are SI everywhere in the code. Conversion to display units happens only in `units/units.ts`,

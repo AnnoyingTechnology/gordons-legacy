@@ -23,37 +23,53 @@ export function writeBackup(loads: readonly LibraryEntry[], firearms: readonly F
 
 /** What a restore did: everything is added as new entries, nothing is overwritten. */
 export interface RestoreResult {
+  /** Records successfully committed to storage. */
   added: number;
+  /** Invalid records or failed writes; one for an unreadable/unsupported envelope. */
   failed: number;
 }
 
 export async function readBackup(text: string, library: Library, firearms: FirearmLibrary): Promise<RestoreResult> {
-  let parsed: { format?: unknown; loads?: unknown; firearms?: unknown };
+  let parsed: unknown;
   try {
-    parsed = JSON.parse(text) as typeof parsed;
+    parsed = JSON.parse(text);
   } catch {
     return { added: 0, failed: 1 };
   }
-  if (parsed.format !== BACKUP_FORMAT || !Array.isArray(parsed.loads)) return { added: 0, failed: 1 };
+  // Validate the whole envelope before any writes, including the fields required by its version.
+  if (!record(parsed) || parsed.format !== BACKUP_FORMAT || (parsed.version !== 1 && parsed.version !== BACKUP_VERSION)
+    || !Array.isArray(parsed.loads) || (parsed.version === 2 && !Array.isArray(parsed.firearms))) {
+    return { added: 0, failed: 1 };
+  }
   let added = 0;
   let failed = 0;
-  for (const item of parsed.loads as Array<{ name?: unknown; load?: unknown }>) {
+  for (const item of parsed.loads) {
+    if (!record(item)) { failed++; continue; }
     const result = parseLoad(JSON.stringify(item.load));
     if (result.ok && typeof item.name === 'string') {
-      await library.save(item.name, result.value);
-      added++;
+      try {
+        await library.save(item.name, result.value);
+        added++;
+      } catch { failed++; }
     } else {
       failed++;
     }
   }
-  for (const item of (Array.isArray(parsed.firearms) ? parsed.firearms : []) as Array<{ firearm?: unknown }>) {
+  for (const item of (parsed.version === 2 && Array.isArray(parsed.firearms) ? parsed.firearms : [])) {
+    if (!record(item)) { failed++; continue; }
     const result = checkFirearm(item.firearm);
     if (result.ok) {
-      await firearms.save(result.value);
-      added++;
+      try {
+        await firearms.save(result.value);
+        added++;
+      } catch { failed++; }
     } else {
       failed++;
     }
   }
   return { added, failed };
+}
+
+function record(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

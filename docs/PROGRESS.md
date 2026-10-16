@@ -42,7 +42,7 @@ Open issues (GitHub, `AnnoyingTechnology/gordons-legacy`), 2026-10-16:
 
 | Issue | What | State |
 |---|---|---|
-| #37 / #38 | Speed legend at the upper right; short blast note beside the value. Details stay in the tooltip. | Implemented; CI verification |
+| #37 / #38 | Speed legend at the upper right; short blast note beside the value. Details stay in the tooltip. | Done; deployed and closed |
 | #39 | Overflow tab fade/hover suggestion filed at Julien’s request; existing scrolling already works well for him. | Suggestion; no implementation planned now |
 | #19 | Full GRT database import and default/offline distribution are required (updated issue, 2026-10-16). Resume on the original development machine; current session has not verified access. | Deferred by Julien to lunch/tonight |
 | #22 | Pressure validation: published loads with measured pressures, or pressure traces. Blocks M7 and any claim about pressure accuracy. | Needs data |
@@ -69,6 +69,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 
 | Date | Decision | By |
 |---|---|---|
+| 2026-10-16 | Report a local save only after its IndexedDB transaction commits. Backup restore rejects unsupported envelopes before writes and reports per-record failures while retaining successful additions. | Implementation, #32 |
 | 2026-10-16 | Move the transonic/sound-speed legend to the velocity card’s upper right. Reduce the blast annotation to a short note beside the value; keep assumptions and model uncertainty in the existing tooltip. | Julien, #37/#38; implementation detail |
 | 2026-10-16 | Keep strict input validation while helping the creation funnel use existing catalog records. Offer case variants explicitly and label catalog capacity as a reference. Use larger, grouped controls sized for their content. | Julien, chat; implementation detail |
 | 2026-10-16 | One consistent page gutter, less space above load contents, and a single development/build warning flush with the page edges and bottom. The danger hatch must touch all tab-panel edges without shifting its content. | Julien, chat |
@@ -169,6 +170,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 
 | Date | Entry |
 |---|---|
+| 2026-10-16 | #32 persistence follow-up: native Chromium reproduced a save resolving before a subsequent transaction abort, leaving no saved record. The wrapper now waits for commit, rejects aborts, retries failed opens, and closes outdated connections. Backup v1/v2 envelopes are checked before writes; malformed entries and failed writes are counted independently, with file-read failures shown in the UI. Seven new tests, all 721 tests, typecheck/build, native abort and backup-error browser checks pass. #37/#38 commit `af2b379` passed CI and deployed; both issues closed. Next: persisted document/record validation and startup storage failures. |
 | 2026-10-16 | #37/#38: speed legend moved above the scale at the card’s upper right; blast note is short and right-aligned beside the value. Full explanation/model uncertainty stays in its tooltip. Narrow layouts give blast, case drawing and result details full width; this also fixes the details card overflowing on phones. Typecheck/build and Chromium checks pass in all five languages at desktop/phone widths; light/dark screenshots inspected. Prior #34 layout commit `6e18a2d` passed CI and deployed. |
 | 2026-10-16 | #34 review/layout: cartridge aliases now expose the seven existing .308 case variants instead of treating the common cartridge as missing. Explicit selection fills the record’s available fields, labels reference capacity, and retains manually entered values. Grouped review fields are larger and content-sized, with technical details expanded when incomplete. Consistent page gutters, reduced heading gaps, one edge-to-edge development/build footer, and a danger frame on the tab-panel edges. All 714 tests, typecheck/build and desktop/phone Chromium checks pass, including the reported Sako flow, manual-value preservation, missing-field validation, footer geometry and danger-frame layout stability. #39 filed; #37/#38 picked up next. |
 | 2026-10-16 | #32 persistence/data audit: reproduced malformed JSON crashes and invalid component updates overwriting the last valid cache. Added shared index-shape checks, duplicate-index rejection before cache mutation, and content validation before cache writes. Invalid cached entries are skipped offline. Three regression tests cover malformed manifests/components, cache preservation and validator reporting. All 712 tests, typecheck/build and the 463-file published repository validation pass. Next: IndexedDB transaction completion and backup envelope handling; see `docs/code-audit.md`. |

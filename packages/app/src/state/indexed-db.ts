@@ -25,20 +25,31 @@ function open(factory: IDBFactory): Promise<IDBDatabase> {
       request.onupgradeneeded = () => {
         for (const name of STORES) if (!request.result.objectStoreNames.contains(name)) request.result.createObjectStore(name, { keyPath: 'id' });
       };
-      request.onsuccess = () => resolve(request.result);
+      request.onsuccess = () => {
+        const connection = request.result;
+        const forget = () => { if (opened.get(factory) === database) opened.delete(factory); };
+        connection.onversionchange = () => { connection.close(); forget(); };
+        connection.onclose = forget;
+        resolve(connection);
+      };
       request.onerror = () => reject(request.error);
     });
     opened.set(factory, database);
+    // A temporary denial must not make every subsequent operation reuse a rejected promise.
+    void database.catch(() => { if (opened.get(factory) === database) opened.delete(factory); });
   }
   return database;
 }
 
 export function indexedDbStore<T extends { id: string }>(name: StoreName, factory: IDBFactory = indexedDB): RecordStore<T> {
   const run = async <R>(mode: IDBTransactionMode, action: (store: IDBObjectStore) => IDBRequest<R>): Promise<R> => {
-    const store = (await open(factory)).transaction(name, mode).objectStore(name);
+    const database = await open(factory);
     return new Promise((resolve, reject) => {
-      const request = action(store);
-      request.onsuccess = () => resolve(request.result);
+      const transaction = database.transaction(name, mode);
+      const request = action(transaction.objectStore(name));
+      // Request success only means the operation ran; its transaction can still abort afterward.
+      transaction.oncomplete = () => resolve(request.result);
+      transaction.onabort = () => reject(transaction.error ?? new DOMException('Transaction aborted', 'AbortError'));
       request.onerror = () => reject(request.error);
     });
   };
