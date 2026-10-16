@@ -56,14 +56,15 @@ describe('reading a published specification', () => {
   it('reads millimetres with a comma decimal and grams written gr.', () => {
     expect(length('101,5mm')).toBeCloseTo(0.1015, 12);
     expect(length('4 in')).toBeUndefined();
-    expect(mass('1100')).toBeCloseTo(1.1, 12);
+    expect(mass('1100 gr.')).toBeCloseTo(1.1, 12);
+    expect(mass('1100')).toBeUndefined();
   });
 
   it('gives one weight to a whole model, or one per chambering when they are annotated', () => {
-    expect(weights('1125gr.').whole).toBe('1125');
+    expect(weights('1125gr.').whole).toBe('1125gr.');
     const annotated = weights('1090 gr. (CAL.45ACP) - 1120 gr. (CAL.9mm)');
     expect(annotated.whole).toBeUndefined();
-    expect([...annotated.perCartridge]).toEqual([['45ACP', '1090'], ['9MM', '1120']]);
+    expect([...annotated.perCartridge]).toEqual([['45ACP', '1090 gr.'], ['9MM', '1120 gr.']]);
   });
 
   it('knows the chamberings it maps and sets aside the variants with words it does not', () => {
@@ -89,7 +90,7 @@ describe('reading a published specification', () => {
       url: 'https://example.invalid/it_IT/prodotti/EXF/example-f',
       retrieved: '2026-10-16',
       massBasis: 'unstated',
-      published: { caliber: 'EXAMPLE F CAL. 9X19 BLACK', barrelLength: '101,5mm', weight: '1100 g' },
+      published: { caliber: 'EXAMPLE F CAL. 9X19 BLACK', barrelLength: '101,5mm', weight: '1100gr.' },
     });
   });
 

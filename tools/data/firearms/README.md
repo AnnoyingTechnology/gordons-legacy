@@ -39,19 +39,22 @@ whose page shape is closest, then a test with a fixture in that page's shape, th
 | How do their rifle pages print a configuration table | `rifle-figures.ts`, `rifle-crawl.ts` |
 | How do the German-speaking makers print a figure (comma decimal, metric with the inch beside) | `german-speaking-makers.ts` |
 | Is this corpus fit to publish | `check-corpus.ts` |
+| Are the strings a record quotes the maker's own | `quoted-figures.ts` |
 | What changed since the last crawl | `compare-corpus.ts` |
 
 Three of these came out of a maker's module when a second maker needed the same answer, and one —
 `loadable-cartridge.ts` — came out of sixteen of them, each of which had a different part of the answer.
 That is the rule for this folder: a reader stays in the maker's module until a second maker needs it.
 
-## The three tools a refresh uses
+## The four tools a refresh uses
 
 1. `survey-site.ts` — what the site says about being read, before anything is fetched.
-2. `check-corpus.ts` — four questions of every record: do its figures agree with the maker's own
-   strings, can a gun have them, does it say where it comes from, and is its cartridge one a reloader
-   loads for.
-3. `compare-corpus.ts` — the diff against what is published: new guns, guns not read this time (kept,
+2. `check-corpus.ts` — five questions of every record: do its figures agree with the maker's own
+   strings, can a gun have them, does it say where it comes from, is its cartridge one a reloader loads
+   for, and does the maker's string leave the figure to a choice.
+3. `quoted-figures.ts` — whether those strings are the maker's words at all, read back out of the page
+   cache. The checker compares a figure with its string; only this compares the string with the page.
+4. `compare-corpus.ts` — the diff against what is published: new guns, guns not read this time (kept,
    never deleted), and figures that changed, which means one of the two readings is wrong.
 
 ## Keeping a page to read again

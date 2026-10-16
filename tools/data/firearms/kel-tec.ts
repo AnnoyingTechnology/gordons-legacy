@@ -14,6 +14,9 @@
  * one gun with its own figures; finishes of one model are separate records because the page lists them
  * separately, and none borrows from another.
  *
+ * The two paragraphs of an entry are two strings, printed one under the other, so `source.published`
+ * writes them with a `|` between them (`16.1" | 409mm`) rather than choosing one of them.
+ *
  * The weight read is `Weight (Unloaded)`, the gun before its cartridges; the page does not say whether
  * the magazine is in, so the basis is `unstated`. A model with only a `Weight (Loaded)` is recorded as
  * `loaded`. The finer of the two printed steps wins (`9.66 oz` or `273.9 g`).

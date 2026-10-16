@@ -53,10 +53,15 @@ export function headings(page: string): string[] {
   return [...page.matchAll(/<h2 class="elementor-heading-title[^>]*>([\s\S]*?)<\/h2>/g)].map(([, text]) => plainText(text!));
 }
 
+/** The label a page actually printed and the value under it, from the page's headings. */
+function labelled(texts: string[], label: RegExp): { label: string; value: string | undefined } | undefined {
+  const index = texts.findIndex((text) => label.test(text));
+  return index < 0 ? undefined : { label: texts[index]!, value: texts[index + 1] };
+}
+
 /** The value that follows a label in the page's headings. */
 function valueOf(texts: string[], label: RegExp): string | undefined {
-  const index = texts.findIndex((text) => label.test(text));
-  return index < 0 ? undefined : texts[index + 1];
+  return labelled(texts, label)?.value;
 }
 
 /** `120.5 mm` → metres. A length with another unit, or none, is not read. */
@@ -78,7 +83,8 @@ export function readPage(page: string, url: string, retrieved: string): PageRead
   const texts = headings(page);
   const caliber = valueOf(texts, /^Caliber$/i);
   const barrelText = valueOf(texts, /^Barrel Length$/i);
-  const weightText = valueOf(texts, /^Weight\b/i);
+  const weightHeading = labelled(texts, /^Weight\b/i);
+  const weightText = weightHeading?.value;
   const name = readableName(plainText(title));
   if (caliber === undefined) return [{ skipped: `${name}: no caliber` }];
   const cartridge = CARTRIDGE_NAMES[caliber.toUpperCase()] ?? caliber;
@@ -96,7 +102,9 @@ export function readPage(page: string, url: string, retrieved: string): PageRead
         cartridge,
         barrelLength: length,
         gunMass: mass,
-        massBasis: 'without-magazine',
+        // Their label says what the figure covers — `Weight (Empty, without magazine)` — and a page
+        // that only says `Weight` is taken at its word, which is that it does not say.
+        massBasis: /without\s+magazine/i.test(weightHeading?.label ?? '') ? 'without-magazine' : 'unstated',
         url,
         retrieved,
         // `740 gr.` is the page's own wording for 740 grams, and it is kept as printed: the checker

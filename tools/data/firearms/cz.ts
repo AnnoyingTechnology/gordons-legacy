@@ -8,6 +8,10 @@
  * `self.__next_f.push([1,"..."])` script chunks: one record per variant (one per cartridge), each with
  * a list of attributes that carry a metric value, an imperial value and a unit.
  *
+ * The value and its unit are two fields of one attribute (`508` and `mm`), so no string on the page
+ * reads `508 mm`: `source.published` writes the pair, which is the closest thing to the maker's words
+ * that this page has (see published-figures.ts).
+ *
  * Only the German pages are read. The sitemap lists English (`/en-us/...`) addresses, but those
  * redirect to an address without a language that answers 404 for pistols; the German pages answer 200
  * for every product and carry the same figures. The attribute keys are German (`lauflange`, ...).

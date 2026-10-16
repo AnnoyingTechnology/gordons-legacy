@@ -16,8 +16,10 @@
  *    on the same variant prints a length too (`10.35"`) that is not the barrel's.
  *  - A page that sells one gun lists `Caliber : 45 ACP` and `Barrel Length : 4.25"` in its text.
  *
- * Lengths are printed in inches with the metric figure beside them (`16.1" (408.9 mm)`), and the finer
- * step wins. Weights are printed in pounds with kilograms beside them; the page gives one weight and
+ * Lengths are printed in inches with the metric figure beside them (`16.1” (408.9 mm)`), and the finer
+ * step wins. The pages set the inch mark as a typographic quote; `source.published` keeps the figure as
+ * printed with that one character written `"`, which is the same mark in the spelling every other
+ * maker's pages use. Weights are printed in pounds with kilograms beside them; the page gives one weight and
  * does not say what it includes, so the mass basis is `unstated`.
  *
  * Left out, and counted in the skip list:

@@ -8,6 +8,10 @@
  * barrel length in millimetres, twist, and mass in kilograms. That data is part of the HTML the server
  * sends, not something added by script afterwards.
  *
+ * Those fields are numbers, with the unit in the field's name, so no string on the page reads `508 mm`:
+ * `source.published` writes the number with the unit of its field, and `massVaries` lists the masses of
+ * the variants that were folded into one gun (see published-figures.ts).
+ *
  * A rifle page lists the same rifle many times over (left and right handed, finishes, markets), and the
  * mass differs by a hundred grams or so between them. Variants with the same model, cartridge, barrel
  * and twist therefore become one gun, carrying the figures of the **first** variant listed. Not the mean

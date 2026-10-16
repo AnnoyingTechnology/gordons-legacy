@@ -20,7 +20,9 @@
  * A product page lists one specification block per chambering (`<div class="tab-pane" id="riflesoption0">`
  * holding `<b class="spec-key">Caliber</b> <span class="spec-val">308 Win</span>` cells), each with its
  * own barrel length, weight and twist. One record is built per block. The twist is printed as the
- * inches per turn alone (`10"`, `18 3/4"`), and lengths may carry a fraction.
+ * inches per turn alone (`10"`, `18 3/4"`), and lengths may carry a fraction (`16 1/2"`). Both are kept
+ * in `source.published` as the cell prints them, fraction and all: a string there is the maker's words,
+ * and the corpus checker reads a fraction and a bare turn on its own.
  *
  * Only the cartridge, the barrel length, the twist and the weight are taken. The weight is printed
  * without saying what it includes (`6 lbs 12 oz`), so the record says `unstated`.
@@ -151,33 +153,11 @@ export function firearmsFrom(page: string, url: string, retrieved: string): { fi
         retrieved,
         // One Weight, with no word on what it includes.
         ...(gunMass === undefined ? {} : { massBasis: 'unstated' as const }),
-        published: publishedFigures({ caliber: cartridge, barrelLength: withDecimalFraction(block['barrel length']), weight: block['weight'], twist: publishedTwist(block['twist rate']) }),
+        published: publishedFigures({ caliber: cartridge, barrelLength: block['barrel length'], weight: block['weight'], twist: block['twist rate'] }),
       },
     });
   }
   return { firearms, skipped };
-}
-
-/**
- * A printed measure with its fraction written as a decimal when that is exact (`18 1/2"` is `18.5"`,
- * `9 3/4"` is `9.75"`): the corpus checker reads a number and a unit, not a fraction, and the figure is
- * the same. A fraction that is not exact in decimals is left as printed.
- */
-export function withDecimalFraction(printed: string | undefined): string | undefined {
-  return printed?.replace(/(\d+)\s+(\d+)\/(\d+)/, (whole, integer: string, numerator: string, denominator: string) => {
-    const fraction = Number(numerator) / Number(denominator);
-    return Number.isFinite(fraction) && Number.isInteger(fraction * 1024) ? String(Number(integer) + fraction) : whole;
-  });
-}
-
-/**
- * The twist as `source.published` keeps it. The page prints the inches per turn alone (`10"`), under a
- * label that says Twist Rate; the record writes it the way every other maker's twist is written and the
- * corpus checker reads it, `1:10"`, so that the figure and its string can be compared. Anything else
- * stays as it is.
- */
-export function publishedTwist(printed: string | undefined): string | undefined {
-  return printed !== undefined && twistLength(printed) !== undefined && !/^\s*1\s*:/.test(printed) ? `1:${withDecimalFraction(printed)!.trim()}` : printed;
 }
 
 /**

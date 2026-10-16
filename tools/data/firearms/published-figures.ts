@@ -24,6 +24,14 @@ export type MassBasis = 'without-magazine' | 'empty-magazine' | 'loaded' | 'unst
  * string we have touched cannot contradict us. Where a spelling is hard to read — `3.250 g` for three
  * thousand grams, `10"` for one turn in ten inches, `16 1/2"` — the checker learns to read it; the
  * record does not learn to rewrite it.
+ *
+ * Some pages print no single string for a figure, and then a string has to be assembled. That is
+ * allowed only where the page's own parts are kept whole, and the module that does it says so in its
+ * header: a figure whose unit the page holds in another field or another column (`508` under a
+ * `metricUnit` of `mm`, Kel-Tec's two columns written `16.1" | 409mm`), or several of the page's strings
+ * listed together (`massVaries`). Nothing is converted, rounded, reworded or re-spelled on the way in.
+ * `quoted-figures.ts` finds every string that is not on its page, so an assembled one has to be
+ * explained rather than noticed by a user.
  */
 export interface PublishedStrings {
   /** The barrel length as printed: `20.00" | 50.8 cm`, `610 mm (Magnum)`, `16 1/2"`. */

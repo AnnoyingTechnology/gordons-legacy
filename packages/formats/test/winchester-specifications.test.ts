@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { firearmsFrom, length, mass, modelFromHeadline, notLoadable, publishedTwist, rifleAddresses, settleNames, specificationBlocks, twistLength, withDecimalFraction } from '../../../tools/data/firearms/winchester.ts';
+import { firearmsFrom, length, mass, modelFromHeadline, notLoadable, rifleAddresses, settleNames, specificationBlocks, twistLength } from '../../../tools/data/firearms/winchester.ts';
 
 /**
  * The reading of a maker's published specifications (tools/data/firearms/winchester.ts, issue #30). The
@@ -97,7 +97,7 @@ describe('reading a published specification', () => {
       url: 'https://example.invalid/products/rifles/model-99/example.html',
       retrieved: '2026-10-16',
       massBasis: 'unstated',
-      published: { caliber: '308 Win', barrelLength: '22"', weight: '6 lbs 12 oz', twist: '1:12"' },
+      published: { caliber: '308 Win', barrelLength: '22"', weight: '6 lbs 12 oz', twist: '12"' },
     });
   });
 
@@ -114,13 +114,12 @@ describe('reading a published specification', () => {
     expect(firearmsFrom(page, 'u', '2026-10-16').firearms.map((gun) => gun.name)).toEqual(['Winchester Model 1 45 Colt 20"', 'Winchester Model 1 45 Colt 24"']);
   });
 
-  it('writes the twist as 1:N beside the figure, the way the checker reads it, and leaves anything else alone', () => {
-    expect(publishedTwist('18 3/4"')).toBe('1:18.75"');
-    expect(withDecimalFraction('18 1/2"')).toBe('18.5"');
-    expect(withDecimalFraction('22"')).toBe('22"');
-    expect(withDecimalFraction('9 1/3"')).toBe('9 1/3"');
-    expect(publishedTwist('1:10"')).toBe('1:10"');
-    expect(publishedTwist('N/A')).toBe('N/A');
+  it('quotes the cells as the page prints them, fraction and bare turn included', () => {
+    const page = `<h1>Model 3</h1>${pane(0, { caliber: '308 Win', barrel: '16 1/2&#34;', weight: '7 lbs 4 oz', twist: '10&#34;' })}`;
+    const gun = firearmsFrom(page, 'u', '2026-10-16').firearms[0]!;
+    expect(gun.source?.published).toEqual({ caliber: '308 Win', barrelLength: '16 1/2"', weight: '7 lbs 4 oz', twist: '10"' });
+    expect(gun.barrel.length).toBeCloseTo(16.5 * 0.0254, 6);
+    expect(gun.barrel.twistLength).toBeCloseTo(10 * 0.0254, 6);
   });
 
   it('keeps one of several listings with the same figures, and none of listings that differ', () => {

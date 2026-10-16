@@ -68,11 +68,14 @@ export function length(text: string | undefined): number | undefined {
   return match ? Number(match[1]!.replace(',', '.')) * units.MILLIMETRE : undefined;
 }
 
-/** The weights a `Peso` cell gives: one for the model, or one per chambering when annotated. */
+/**
+ * The weights a `Peso` cell gives: one for the model, or one per chambering when annotated. Each is
+ * kept as the cell prints it, unit and all, so that a record quotes the page's own words.
+ */
 export interface Weights {
-  /** The grams printed for the model as a whole (`1125`), when the cell has a single unannotated figure. */
+  /** The weight printed for the model as a whole (`1125gr.`), when the cell has one unannotated figure. */
   whole?: string;
-  /** The grams printed for a named chambering: `1090 gr. (CAL.45ACP)` is `{ '45ACP': '1090' }`. */
+  /** The weight printed for a named chambering: `1090 gr. (CAL.45ACP)` is `{ '45ACP': '1090 gr.' }`. */
   perCartridge: Map<string, string>;
 }
 
@@ -80,19 +83,24 @@ export interface Weights {
 export function weights(text: string | undefined): Weights {
   const result: Weights = { perCartridge: new Map() };
   const figures = [...(text ?? '').matchAll(/([0-9]+(?:[.,][0-9]+)?)\s*gr\.?\s*(?:\(([^)]*)\))?/gi)];
-  for (const [, printed, annotation] of figures) {
+  for (const [whole, , annotation] of figures) {
+    const printed = whole.replace(/\s*\([^)]*\)\s*$/, '').trim();
     if (annotation === undefined) {
-      if (figures.length === 1) result.whole = printed!.trim();
+      if (figures.length === 1) result.whole = printed;
     } else {
-      result.perCartridge.set(annotation.replace(/cal\.*|[\s.]/gi, '').toUpperCase(), printed!.trim());
+      result.perCartridge.set(annotation.replace(/cal\.*|[\s.]/gi, '').toUpperCase(), printed);
     }
   }
   return result;
 }
 
-/** A mass in kilograms from the grams a `Peso` cell printed (`1125`; the unit is `gr.`, grams). */
+/**
+ * A mass in kilograms from what a `Peso` cell printed (`1125gr.`). The unit is grams: these are Italian
+ * pages, where `gr.` abbreviates `grammi`, and no maker gives a gun's weight in grains — a grain is for
+ * a bullet or a charge, and 1,125 of them would be 73 g.
+ */
 export function mass(printed: string | undefined): number | undefined {
-  const match = /^([0-9]+(?:[.,][0-9]+)?)$/.exec(printed ?? '');
+  const match = /^([0-9]+(?:[.,][0-9]+)?)\s*gr\.?$/i.exec(printed ?? '');
   return plausibleGunMass(match ? Number(match[1]!.replace(',', '.')) * units.GRAM : undefined);
 }
 
@@ -187,12 +195,12 @@ export function firearmsFrom(page: string, url: string, retrieved: string): Fire
         retrieved,
         // `Peso` does not say what it includes.
         ...(gunMass === undefined ? {} : { massBasis: 'unstated' as const }),
-        // The weight kept is the figure for this chambering, not the whole cell with its other figures;
-        // the page's `gr.` is written `g` so that the corpus checker, which knows `kg` and `g`, can read it.
+        // The weight kept is the figure printed for this chambering, with its unit, and not the whole
+        // cell with the other chamberings' figures in it.
         published: publishedFigures({
           caliber: variant.printed,
           barrelLength: barrelText,
-          weight: printedWeight === undefined ? undefined : `${printedWeight} g`,
+          ...(printedWeight === undefined ? {} : { weight: printedWeight }),
         }),
       },
     });

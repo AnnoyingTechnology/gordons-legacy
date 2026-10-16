@@ -31,7 +31,9 @@
  * - a twist where one line gives several cartridges' twists in prose (the RS8): left out of the record.
  *
  * The mass is `unstated`: `ca. 5 kg (ohne Anbauteile)` says what is not on it (accessories), not what
- * it includes. `Drall` is the maker's German word for the twist; the record keeps their string as
+ * it includes. The RS8 Subsonic's `ca. 7,65 kg (inkl. Schalldämpfer)` is the rifle with the suppressor
+ * that is part of it, which is the gun the user holds and the mass that recoils; the record carries it
+ * with the maker's words beside it, so that what the figure covers is on the screen. `Drall` is the maker's German word for the twist; the record keeps their string as
  * printed (a bare `12"`, which the corpus checker reads as one turn in twelve inches) under the shared
  * key `twist`, since a key no checker looks for is a figure nobody checks.
  *
