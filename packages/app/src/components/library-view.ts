@@ -155,7 +155,7 @@ export class LibraryView extends LitElement {
                           class="remove"
                           aria-label=${t('firearm.remove', { name })}
                           title=${t('firearm.remove', { name })}
-                          @click=${() => this.fire('remove-firearm', id)}
+                          @click=${() => { if (window.confirm(t('library.confirmRemove', { name }))) this.fire('remove-firearm', id); }}
                         >
                           ${icon('close')}
                         </button>

@@ -38,6 +38,7 @@ import './new-load-dialog.ts';
 import './shortcuts-dialog.ts';
 import { cloneSources, copyLoadInputs } from '../state/load-copy.ts';
 import { documentShortcut } from '../state/keyboard-shortcuts.ts';
+import { documentSaver } from '../state/document-saving.ts';
 
 /**
  * The application: toolbar, one tab per open load, and the active load's editor. Owns the document
@@ -91,6 +92,7 @@ export class AppShell extends LitElement {
   declare shortcutsOpen: boolean;
   private readonly store = new DocumentStore(window.localStorage);
   private readonly library = new Library(indexedDbStorage());
+  private readonly saveDocument = documentSaver(this.store, this.library);
   private readonly components = new ComponentLibrary(indexedDbStore<ComponentEntry>('components'));
   private readonly firearms = new FirearmLibrary(indexedDbStore<FirearmEntry>('firearms'));
   private settings: Settings = loadSettings(window.localStorage, navigator.languages);
@@ -285,6 +287,7 @@ export class AppShell extends LitElement {
       <div class="document-actions">
         <label for="document-name">${t('documents.name')}</label>
         <input id="document-name" .value=${active.name.replace(/\.json$/i, '')}
+          @keydown=${(event: KeyboardEvent) => { if (event.key === 'Enter' && !event.isComposing) (event.target as HTMLInputElement).blur(); }}
           @change=${(event: Event) => {
             const input = event.target as HTMLInputElement;
             this.store.rename(active.id, input.value);
@@ -423,14 +426,11 @@ export class AppShell extends LitElement {
 
   /** Saves the load in the library: no file to choose; the tab stays linked to its entry. */
   private async saveToLibrary(id: number): Promise<boolean> {
-    const document = this.store.documents.find((candidate) => candidate.id === id);
-    if (!document) return false;
-    const name = document.name.replace(/\.json$/i, '');
-    const savedText = serializeLoad(document.load);
+    this.commitName(id);
     try {
-      const libraryId = await this.library.save(name, document.load, document.libraryId);
-      this.store.markSaved(id, savedText, libraryId);
-      return true;
+      const saved = await this.saveDocument(id);
+      if (saved) this.openErrors = this.openErrors.filter((message) => message !== this.context.t('library.saveFailed'));
+      return saved;
     } catch {
       this.openErrors = [this.context.t('library.saveFailed')];
       return false;
@@ -438,6 +438,7 @@ export class AppShell extends LitElement {
   }
 
   private requestClose(id: number): void {
+    this.commitName(id);
     const document = this.store.documents.find((candidate) => candidate.id === id);
     if (!document) return;
     if (!this.store.isDirty(document)) {
@@ -489,6 +490,7 @@ export class AppShell extends LitElement {
   }
 
   private copyDocument(): void {
+    if (this.store.activeId !== undefined) this.commitName(this.store.activeId);
     const active = this.store.active;
     if (!active) return;
     const title = this.context.t('documents.copyName', { name: active.name.replace(/\.json$/i, '') });
@@ -505,6 +507,13 @@ export class AppShell extends LitElement {
     else if (action === 'close') this.requestClose(active!.id);
     else void this.saveToLibrary(active!.id);
   };
+
+  /** Keyboard commands do not blur the name input before saving or asking whether to discard it. */
+  private commitName(id: number): void {
+    if (this.store.activeId !== id) return;
+    const input = this.querySelector<HTMLInputElement>('#document-name');
+    if (input && input.value !== this.store.active?.name.replace(/\.json$/i, '')) this.store.rename(id, input.value);
+  }
 
   /** Arrow/Home/End navigation and Delete apply only while a load-tab button has focus. */
   private navigateTabs(event: KeyboardEvent, id: number): void {
@@ -600,8 +609,15 @@ export class AppShell extends LitElement {
 
   /** Writes the load to a file of the user's choice, or downloads it: a copy to share or archive. */
   private async exportFile(id: number): Promise<void> {
+    this.commitName(id);
     const document = this.store.documents.find((candidate) => candidate.id === id);
-    if (document) await saveTextFile(serializeLoad(document.load), document.name);
+    if (!document) return;
+    try {
+      const exported = await saveTextFile(serializeLoad(document.load), document.name);
+      if (exported) this.openErrors = this.openErrors.filter((message) => message !== this.context.t('documents.exportFailed'));
+    } catch {
+      this.openErrors = [this.context.t('documents.exportFailed')];
+    }
   }
 
   private setUnits(system: UnitSystem): void {

@@ -2,6 +2,7 @@ import type { Messages } from './en.ts';
 
 export const de: Messages = {
   'documents.choiceCount': '{count} Einträge',
+  'documents.exportFailed': "Die Datei konnte nicht exportiert werden. Ziel und Schreibrechte prüfen und erneut versuchen. Die Ladung bleibt geöffnet.",
   'documents.new': 'Neue Laborierung',
   'documents.clone': "Ladung klonen",
   'documents.guided': "Geführte Erstellung",

@@ -24,7 +24,8 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 ## Next steps
 
 Current pickup, 2026-10-16: #34 everyday document UI audit and fixes; #33 Desert Tech intake and #32
-code audit follow. R2 (#35) is explicitly excluded by Julien. Working checkout:
+code audit follow. New/clone/funnel, guarded close, rename, shortcuts and save/export/delete fixes are
+pushed; Undo/Redo and reopen-closed history remain in the #34 audit. R2 (#35) is explicitly excluded by Julien. Working checkout:
 `/home/julien/Documents/gordons-legacy`; earlier research checkout remains in `/tmp`.
 
 1. Native review of the five translations; M4 (data repository, once the maintainer agrees to create
@@ -154,6 +155,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 
 | Date | Entry |
 |---|---|
+| 2026-10-16 | #34 follow-up: serialized per-document saves prevent duplicate first-save entries and preserve later edits; keyboard Save/Close commits a focused name field. Export distinguishes cancellation from permission/write failures, sanitizes the suggested file name and clears a recovered error. Saved-gun deletion now confirms. 700 tests, typecheck/build and Chromium workflows pass, including failure/retry and deletion cancel/confirm. New/clone UI deployment `cd628f4` passed CI. Remaining history/platform checks are recorded in `docs/ui-audit.md`; #34 stays open. |
 | 2026-10-16 | #34: added New with clone/open/saved sources and gun/cartridge → projectile → powder → review flow, searchable large choices, Rename/Copy inputs, opt-in shortcut help and local tab keys. No example values fill missing inputs; cartridge selection stays explicit after choosing a gun. Five languages, desktop/mobile and light/dark checks; 696 tests, typecheck and build pass. Browser workflow checks cover both routes, invalid/missing fields, Back, clones, rename, shortcuts and reload. Audit and remaining save/export/delete/history work: `docs/ui-audit.md`. |
 | 2026-10-16 | #34 pickup audit: no New, Rename or Duplicate actions, no documented application shortcuts; closing an edited tab immediately discards it. Save completion also marked the current document clean instead of the snapshot actually written. Fixed with Save / Discard / Cancel and snapshot-aware save completion. 687 tests, typecheck and build pass. Headless Chromium checked cancellation/Escape, save-and-close, discard, focus restoration, edits during a pending save, failed-save retention and reload recovery; no page errors. Next: named document creation and discoverable keyboard actions. |
 | 2026-10-13 | M0: repository, README, GPL-3.0 licence, plan, agent instructions, progress record, `.grtload` format notes. |

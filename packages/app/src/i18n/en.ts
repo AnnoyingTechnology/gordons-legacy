@@ -4,6 +4,7 @@
  */
 export const en = {
   'documents.choiceCount': '{count} choices',
+  'documents.exportFailed': "The file could not be exported. Check the destination and write permissions, then try again. Your load is still open.",
   'documents.new': 'New load',
   'documents.clone': "Clone a load",
   'documents.guided': "Guided setup",

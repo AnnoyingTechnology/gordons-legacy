@@ -79,7 +79,7 @@ src/
                         the data repository's cache (data-cache.ts); saving files (file-saving.ts);
                         the example load of a first visit (example-load.ts); validated document creation
                         (new-load.ts), independent input copies (load-copy.ts), shortcut matching
-                        (keyboard-shortcuts.ts)
+                        (keyboard-shortcuts.ts), ordered snapshot saves (document-saving.ts)
   data/                 community-components.json: the CC0 community components bundled for a first
                         offline visit (tools/data/build-community.ts); online, the app takes them from
                         the data repository through @gordons-legacy/data
