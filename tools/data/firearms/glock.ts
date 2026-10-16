@@ -16,7 +16,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, DELAY, fetchText, fileName, firearmJson, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
+import { crawlArguments, DELAY, fetchText, fileName, firearmJson, plainText, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
 
 const SITEMAP = 'https://us.glock.com/sitemap.xml';
 
@@ -30,18 +30,10 @@ interface Specification {
 export function specifications(page: string): Specification[] {
   const items = page.matchAll(/item-title__[^"]*">([^<]*)<\/h3>\s*<h4[^>]*>\s*([^<]*)<\/h4>\s*<p[^>]*>([^<]*)<\/p>/g);
   return [...items].map(([, title, subtitle, value]) => ({
-    title: decode(title ?? ''),
-    subtitle: decode(subtitle ?? '').trim(),
-    value: decode(value ?? '').trim(),
+    title: plainText(title ?? ''),
+    subtitle: plainText(subtitle ?? ''),
+    value: plainText(value ?? ''),
   }));
-}
-
-function decode(text: string): string {
-  return text
-    .replaceAll('&amp;', '&')
-    .replaceAll('&quot;', '"')
-    .replaceAll('&#x27;', "'")
-    .replaceAll('&nbsp;', ' ');
 }
 
 /** `114 mm  | 4.49 inch` → metres; `630 g | 22.22 oz` → kilograms. The metric value is the first. */

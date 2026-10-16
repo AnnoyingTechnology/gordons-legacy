@@ -14,7 +14,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, DELAY, fetchText, fileName, firearmJson, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
+import { crawlArguments, DELAY, fetchText, fileName, firearmJson, plainText, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const SITEMAP = 'https://www.bergara.online/en/page-sitemap.xml';
@@ -25,22 +25,11 @@ export interface Table {
   rows: string[][];
 }
 
-function decode(text: string): string {
-  return text
-    .replace(/<[^>]*>/g, ' ')
-    .replaceAll('&quot;', '"')
-    .replaceAll('&#8243;', '"')
-    .replaceAll('&amp;', '&')
-    .replaceAll('&nbsp;', ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
 /** Every table of a page whose header mentions a twist and a barrel. */
 export function configurationTables(page: string): Table[] {
   const tables: Table[] = [];
   for (const [, body] of page.matchAll(/<table[^>]*>(.*?)<\/table>/gs)) {
-    const rows = [...body!.matchAll(/<tr[^>]*>(.*?)<\/tr>/gs)].map(([, row]) => [...row!.matchAll(/<td[^>]*>(.*?)<\/td>/gs)].map(([, cell]) => decode(cell!)));
+    const rows = [...body!.matchAll(/<tr[^>]*>(.*?)<\/tr>/gs)].map(([, row]) => [...row!.matchAll(/<td[^>]*>(.*?)<\/td>/gs)].map(([, cell]) => plainText(cell!)));
     const header = rows[0];
     if (header && header.some((cell) => /twist/i.test(cell)) && header.some((cell) => /barrel/i.test(cell))) tables.push({ header, rows: rows.slice(1) });
   }
@@ -50,7 +39,7 @@ export function configurationTables(page: string): Table[] {
 /** The model from a page's title: `B14 Hunter - Rifles Bergara International`. */
 export function modelFromTitle(page: string): string | undefined {
   const title = /<title>([^<]*)<\/title>/.exec(page)?.[1];
-  const model = title === undefined ? undefined : decode(title).split(/\s[-–|]\s/)[0]?.trim();
+  const model = title === undefined ? undefined : plainText(title).split(/\s[-–|]\s/)[0]?.trim();
   return model ? model.replace(/^Bergara\s+/i, '') : undefined;
 }
 

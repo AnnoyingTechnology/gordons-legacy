@@ -27,7 +27,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, DELAY, fetchText, fileName, firearmJson, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
+import { crawlArguments, DELAY, fetchText, fileName, firearmJson, plainText, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const SITEMAP = 'https://www.smith-wesson.com/sitemap.xml';
@@ -72,7 +72,7 @@ export function productPage(page: string): ProductPage | undefined {
     if (typeof title === 'string' && typeof value === 'string') specifications.set(title.toUpperCase(), value.trim());
   }
   return {
-    name: decode(name),
+    name: plainText(name),
     description: properties.data?.description ?? '',
     specifications,
     dimensions: properties.customfields?.object?.customDimensions ?? '',
@@ -86,24 +86,6 @@ interface PageProperties {
     array?: { data?: { name?: unknown; value?: unknown }[] };
     object?: { customDimensions?: string };
   };
-}
-
-/** Text out of the page's HTML: tags dropped, entities read, spaces collapsed. */
-export function plainText(html: string): string {
-  return decode(html.replace(/<[^>]*>/g, ' ')).replace(/\s+/g, ' ').trim();
-}
-
-function decode(text: string): string {
-  return text
-    .replaceAll('&nbsp;', ' ')
-    .replaceAll('&rdquo;', '”')
-    .replaceAll('&ldquo;', '“')
-    .replaceAll('&reg;', '®')
-    .replaceAll('&trade;', '™')
-    .replaceAll('&quot;', '"')
-    .replaceAll('&#x27;', "'")
-    .replaceAll('&#39;', "'")
-    .replaceAll('&amp;', '&');
 }
 
 /**
@@ -254,7 +236,7 @@ export function firearmFrom(page: string, url: string, retrieved: string): Firea
     schemaVersion: FIREARM_SCHEMA_VERSION,
     name: `Smith & Wesson ${name}`,
     maker: 'Smith & Wesson',
-    ...(model ? { model: decode(model) } : {}),
+    ...(model ? { model: plainText(model) } : {}),
     cartridge: CARTRIDGE_NAMES[caliber.toUpperCase()] ?? readableName(caliber),
     barrel: {
       name: `Smith & Wesson ${name}`,

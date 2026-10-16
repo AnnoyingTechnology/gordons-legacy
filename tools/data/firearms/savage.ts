@@ -14,7 +14,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, DELAY, fetchText, fileName, firearmJson, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
+import { crawlArguments, DELAY, fetchText, fileName, firearmJson, plainText, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const SITEMAP = 'https://savagearms.com/site-map';
@@ -29,14 +29,10 @@ export interface SkuRow {
   barrelLength: string;
 }
 
-function decode(text: string): string {
-  return text.replaceAll('&quot;', '"').replaceAll('&amp;', '&').replaceAll('&#039;', "'").replaceAll('&nbsp;', ' ').replace(/\s+/g, ' ').trim();
-}
-
 /** The first part of a page's title, which is the model: `110 Apex Hunter XP Rifle Package | Savage Arms`, without the trailing word that says how it is sold. */
 export function modelFromTitle(page: string): string | undefined {
   const title = /<title>([^<|]*)/.exec(page)?.[1];
-  return title === undefined ? undefined : decode(title).replace(/\s+(Rifle\s+)?Package$|\s+Rifle$/i, '');
+  return title === undefined ? undefined : plainText(title).replace(/\s+(Rifle\s+)?Package$|\s+Rifle$/i, '');
 }
 
 /** The SKUs a model page lists, once each (the page lists them for a narrow and a wide screen). */
@@ -48,7 +44,7 @@ export function skuRows(page: string): SkuRow[] {
     const cartridge = /CALIBER:\s*([^<]*)</.exec(block)?.[1];
     const barrelLength = /BARREL LENGTH:\s*([^<]*)</.exec(block)?.[1];
     if (sku === undefined || cartridge === undefined || barrelLength === undefined || rows.has(sku)) continue;
-    rows.set(sku, { sku, cartridge: decode(cartridge), barrelLength: decode(barrelLength) });
+    rows.set(sku, { sku, cartridge: plainText(cartridge), barrelLength: plainText(barrelLength) });
   }
   return [...rows.values()];
 }
@@ -57,7 +53,7 @@ export function skuRows(page: string): SkuRow[] {
 export function properties(page: string): Map<string, string> {
   const table = new Map<string, string>();
   for (const [, name, value] of page.matchAll(/<td[^>]*scope="row"[^>]*>\s*([^<]*?)\s*<\/td>\s*<td[^>]*>\s*([^<]*?)\s*<\/td>/g)) {
-    if (!table.has(decode(name!))) table.set(decode(name!), decode(value!));
+    if (!table.has(plainText(name!))) table.set(plainText(name!), plainText(value!));
   }
   return table;
 }

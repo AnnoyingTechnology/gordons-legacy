@@ -14,7 +14,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, fetchText, fileName, firearmJson, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
+import { crawlArguments, fetchText, fileName, firearmJson, plainText, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const SITEMAP = 'https://www.henryusa.com/firearm-sitemap.xml';
@@ -27,27 +27,14 @@ export interface Specification {
   values: Map<string, string>;
 }
 
-function decode(text: string): string {
-  return text
-    .replace(/<[^>]*>/g, ' ')
-    .replaceAll('&quot;', '"')
-    .replaceAll('&#8243;', '"')
-    .replaceAll('&#8221;', '"')
-    .replaceAll('&amp;', '&')
-    .replaceAll('&#038;', '&')
-    .replaceAll('&nbsp;', ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
 /** The specification blocks of a page, one per chambering. */
 export function specifications(page: string): Specification[] {
   const blocks = page.split('class="firearm-specification').slice(1);
   return blocks.map((block) => {
-    const title = decode(/<h2[^>]*>(.*?)<\/h2>/s.exec(block)?.[1] ?? '');
+    const title = plainText(/<h2[^>]*>(.*?)<\/h2>/s.exec(block)?.[1] ?? '');
     const values = new Map<string, string>();
     for (const [, label, value] of block.matchAll(/<div class="[^"]*\bfw-bold\b[^"]*">([^<]*)<\/div>\s*<div[^>]*>(.*?)<\/div>/gs)) {
-      if (!values.has(decode(label!))) values.set(decode(label!), decode(value!));
+      if (!values.has(plainText(label!))) values.set(plainText(label!), plainText(value!));
     }
     return { title, values };
   });

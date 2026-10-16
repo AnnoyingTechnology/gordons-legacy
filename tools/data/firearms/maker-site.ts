@@ -31,6 +31,76 @@ export function sleep(milliseconds: number): Promise<void> {
 }
 
 /**
+ * The named entities a maker's pages actually write. Anything numeric is read from its code point, so
+ * this table only has to hold the names; a name that is not here is left as it stands, which shows up
+ * in a record instead of disappearing silently.
+ */
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: '&',
+  apos: "'",
+  copy: '©',
+  deg: '°',
+  gt: '>',
+  hellip: '…',
+  ldquo: '“',
+  lsquo: '‘',
+  lt: '<',
+  mdash: '—',
+  nbsp: ' ',
+  ndash: '–',
+  prime: '′',
+  quot: '"',
+  rdquo: '”',
+  reg: '®',
+  rsquo: '’',
+  times: '×',
+  trade: '™',
+};
+
+/**
+ * A page's text with its entities as the characters a reader sees: `6.5&#215;55` is `6.5×55`.
+ *
+ * Numeric references are decoded first and named ones after, so that a page writing `&amp;#215;` —
+ * which displays the text `&#215;`, not a multiplication sign — is decoded once and not twice.
+ */
+export function decodeEntities(text: string): string {
+  return text
+    .replace(/&#x([0-9a-f]+);/gi, (whole, hex: string) => codePoint(Number.parseInt(hex, 16), whole))
+    .replace(/&#([0-9]+);/g, (whole, digits: string) => codePoint(Number(digits), whole))
+    .replace(/&([a-z][a-z0-9]*);/gi, (whole, name: string) => NAMED_ENTITIES[name.toLowerCase()] ?? whole);
+}
+
+/** The character of a code point, or the reference as written when it is not one. */
+function codePoint(value: number, whole: string): string {
+  return value > 0 && value <= 0x10ffff ? String.fromCodePoint(value) : whole;
+}
+
+/**
+ * A stretch of markup as the text a reader sees: tags out, entities decoded, runs of space collapsed,
+ * and two spellings settled the way a specification is compared rather than the way it is typeset.
+ *
+ * - A typographic quote is the plain inch or foot mark: `1:10”` is `1:10"`, and every figure reader in
+ *   this folder looks for `"`.
+ * - A multiplication sign is `x`: the calibre database writes `5.45 x 39`, and a gun whose cartridge
+ *   reads `8×57 JRS` would be chambered for nothing the application can compare it to.
+ * - A registered trademark or trademark mark is dropped. It is branding, not part of a gun's identity,
+ *   and the same maker prints it on one page and leaves it out on the next — which would otherwise put
+ *   the same gun in the corpus twice under two names.
+ *
+ * A published string read through this function keeps the maker's figure and their wording; only the
+ * typesetting is settled, so `source.published` still says what the page states.
+ */
+export function plainText(markup: string): string {
+  return decodeEntities(markup.replace(/<[^>]*>/g, ' '))
+    .replace(/[“”″]/g, '"')
+    .replace(/[‘’′]/g, "'")
+    .replace(/×/g, 'x')
+    .replace(/[®™]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
  * A file name from a gun's name: lower case, words joined by hyphens. An ampersand becomes `and`, so
  * that a Smith & Wesson M&P reads as `smith-and-wesson-m-and-p` instead of losing the word altogether.
  */

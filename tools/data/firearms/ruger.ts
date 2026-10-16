@@ -21,7 +21,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, DELAY, fetchText, fileName, firearmJson, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
+import { crawlArguments, DELAY, decodeEntities, fetchText, fileName, firearmJson, plainText, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
 
 const SITE = 'https://ruger.com';
 const OUNCE = units.POUND / 16; // kg
@@ -32,21 +32,9 @@ interface Specification {
   value: string;
 }
 
-export function decode(text: string): string {
-  return text
-    .replaceAll('&amp;', '&')
-    .replaceAll('&quot;', '"')
-    .replaceAll('&#x27;', "'")
-    .replaceAll('&#39;', "'")
-    .replaceAll('&nbsp;', ' ')
-    .replaceAll('&#160;', ' ')
-    .replaceAll('&reg;', '')
-    .replaceAll('&trade;', '');
-}
-
-/** The text of some markup: tags dropped, entities decoded, spaces collapsed. */
-function plainText(markup: string): string {
-  return decode(markup.replace(/<sup>.*?<\/sup>/g, '').replace(/<[^>]*>/g, '')).replace(/\s+/g, ' ').trim();
+/** A sheet's text, without the superscripts Ruger wraps its trademark marks in. */
+function readable(markup: string): string {
+  return plainText(markup.replace(/<sup>.*?<\/sup>/g, ''));
 }
 
 /**
@@ -57,14 +45,14 @@ function plainText(markup: string): string {
 export function specifications(page: string): Specification[] {
   const headline = [...page.matchAll(/<li>\s*([A-Za-z][A-Za-z ]*?):\s*<span[^>]*>([^<]*)<\/span>\s*<\/li>/g)];
   const small = [...page.matchAll(/<li>\s*<em>([^<]*)<\/em>\s*<span[^>]*>(.*?)<\/span>\s*<\/li>/gs)];
-  return [...headline, ...small].map(([, title, value]) => ({ title: decode(title ?? '').trim(), value: value ?? '' }));
+  return [...headline, ...small].map(([, title, value]) => ({ title: readable(title ?? ''), value: value ?? '' }));
 }
 
 /** The two renderings of a measure: the inch or ounce one, and the metric one; either may be absent. */
 function renderings(value: string): { imperial: string; metric: string } {
   const imperial = /class=['"]measureI['"][^>]*>([^<]*)</.exec(value)?.[1];
   const metric = /class=['"]measureM[^'"]*['"][^>]*>([^<]*)</.exec(value)?.[1];
-  return { imperial: decode(imperial ?? ''), metric: decode(metric ?? '') };
+  return { imperial: readable(imperial ?? ''), metric: readable(metric ?? '') };
 }
 
 /**
@@ -128,12 +116,12 @@ export function mass(value: string): number | undefined {
 function printed(value: string): string {
   const { imperial, metric } = renderings(value);
   const both = [imperial, metric].map((text) => text.trim()).filter((text) => text !== '');
-  return both.length > 0 ? both.join(' | ') : plainText(value);
+  return both.length > 0 ? both.join(' | ') : readable(value);
 }
 
 /** `1:16" RH` → 0.4064 m, the length of barrel per turn. Anything else, such as `Varies`, is nothing. */
 export function twistLength(value: string): number | undefined {
-  const match = /^1\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*("|&quot;|in)/i.exec(decode(plainText(value)).replace(/^\s+/, ''));
+  const match = /^1\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*("|&quot;|in)/i.exec(readable(value).replace(/^\s+/, ''));
   if (!match) return undefined;
   return Number(match[1]) * units.INCH;
 }
@@ -158,7 +146,7 @@ export function loadable(caliber: string): boolean {
 export function modelFrom(page: string, modelNumber: string): string | undefined {
   const headline = /<h1>(.*?)<\/h1>/s.exec(page)?.[1];
   if (headline === undefined) return undefined;
-  const family = plainText(headline.replace(/<sup>.*?<\/sup>/g, '')).replace(/\bRuger[\s-]+/gi, '').trim();
+  const family = readable(headline.replace(/<sup>.*?<\/sup>/g, '')).replace(/\bRuger[\s-]+/gi, '').trim();
   return family === '' ? undefined : `${family} ${modelNumber}`;
 }
 
@@ -166,8 +154,8 @@ export function modelFrom(page: string, modelNumber: string): string | undefined
 export function firearmFrom(page: string, url: string, retrieved: string): Firearm | undefined {
   const items = specifications(page);
   const find = (title: string) => items.find((item) => item.title.toLowerCase() === title)?.value;
-  const modelNumber = plainText(find('model number') ?? '');
-  const caliber = plainText(find('caliber') ?? '');
+  const modelNumber = readable(find('model number') ?? '');
+  const caliber = readable(find('caliber') ?? '');
   const model = modelNumber === '' ? undefined : modelFrom(page, modelNumber);
   const barrelValue = find('barrel length') ?? '';
   const weightValue = find('weight') ?? '';
@@ -206,7 +194,7 @@ export function firearmFrom(page: string, url: string, retrieved: string): Firea
  * models page links its sheets by relative address (`specSheets/5801.html`, sometimes with `?buy=1`).
  */
 export function links(page: string, pageUrl: string): { families: string[]; sheets: string[] } {
-  const hrefs = [...page.matchAll(/href="([^"]*)"/g)].map(([, href]) => decode(href!).replace(/[?#].*$/, ''));
+  const hrefs = [...page.matchAll(/href="([^"]*)"/g)].map(([, href]) => decodeEntities(href!).replace(/[?#].*$/, ''));
   const absolute = (href: string) => new URL(href, pageUrl).href;
   const families = hrefs.filter((href) => /^\/products\/[A-Za-z0-9-]+\/(models|overview)\.html$/.test(href));
   const sheets = hrefs.filter((href) => /^(\/products\/[A-Za-z0-9-]+\/)?specSheets\/[0-9A-Za-z-]+\.html$/.test(href));
@@ -267,7 +255,7 @@ async function main(): Promise<void> {
     }
     const firearm = firearmFrom(page, url, retrieved);
     if (!firearm) {
-      const caliber = plainText(specifications(page).find((item) => item.title.toLowerCase() === 'caliber')?.value ?? '');
+      const caliber = readable(specifications(page).find((item) => item.title.toLowerCase() === 'caliber')?.value ?? '');
       skipped.push(`${url}: ${caliber === '' ? 'no cartridge' : loadable(caliber) ? 'no barrel length' : `not loadable (${caliber})`}`);
       continue;
     }

@@ -7,7 +7,6 @@ import {
   firearmFrom,
   gunMass,
   loadable,
-  plainText,
   productPage,
   readableName,
   twistLength,
@@ -63,7 +62,8 @@ const URL = 'https://example.invalid/product/test-pistol';
 describe('reading a published specification', () => {
   it('finds the product in the JSON the page embeds', () => {
     const product = productPage(pageWith(PISTOL));
-    expect(product!.name).toBe('TEST&P®9 SAMPLE 2.0® FULL SIZE 15RD');
+    // The marks the maker prints are left out of the record (tools/data/firearms/maker-site.ts).
+    expect(product!.name).toBe('TEST&P9 SAMPLE 2.0 FULL SIZE 15RD');
     expect(product!.specifications.get('CALIBER')).toBe('9MM');
     expect(product!.specifications.get('BARREL LENGTH')).toBe('4.2');
     expect(productPage('<html>no data here</html>')).toBeUndefined();
@@ -148,7 +148,7 @@ describe('reading a published specification', () => {
       // One weight, with nothing said about what it covers; and their own words for the cartridge,
       // kept beside the conventional name the record carries.
       massBasis: 'unstated',
-      published: { caliber: '9MM', barrelLength: '4.2', weight: '29 oz', twist: '1:10” twist' },
+      published: { caliber: '9MM', barrelLength: '4.2', weight: '29 oz', twist: '1:10" twist' },
     });
   });
 
@@ -178,9 +178,5 @@ describe('reading a published specification', () => {
       `, where the two pages disagree: weight ${(first.barrel.gunMass! * 1000).toFixed(1)} g in the record, 567.0 g on this page`,
     );
     expect(difference(first, first)).toBe('');
-  });
-
-  it('reads text out of HTML', () => {
-    expect(plainText('<span>WEIGHT</span>&nbsp;&nbsp;29 oz<br />')).toBe('WEIGHT 29 oz');
   });
 });

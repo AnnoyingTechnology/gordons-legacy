@@ -39,7 +39,7 @@ describe('reading a published specification', () => {
   it('finds every line of the technical data', () => {
     const items = specifications(PAGE);
     expect(items.map((item) => item.title)).toEqual(['Caliber', 'Barrel Length', 'Weight', 'Weight']);
-    expect(items[3]).toEqual({ title: 'Weight', subtitle: 'with empty magazine', value: '700 g  | 24.69 oz' });
+    expect(items[3]).toEqual({ title: 'Weight', subtitle: 'with empty magazine', value: '700 g | 24.69 oz' });
   });
 
   it('takes the metric value, never the imperial one beside it', () => {
