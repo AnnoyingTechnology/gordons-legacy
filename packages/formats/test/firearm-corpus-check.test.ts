@@ -105,5 +105,6 @@ describe('checking a crawl before it is published', () => {
     expect(printedTwists('1:9,5"')[0]).toBeCloseTo(0.2413, 12);
     expect(printedTwists('1 : 9,5 / 4')[0]).toBeCloseTo(0.2413, 12);
     expect(printedTwists('1:203 mm')[0]).toBeCloseTo(0.203, 12);
+    expect(printedTwists('1 in 12"')[0]).toBeCloseTo(0.3048, 12);
   });
 });

@@ -68,7 +68,7 @@ export function printedMasses(text: string): number[] {
 
 /** The turns of rifling a printed string can mean, in metres: `1:9,5"`, `1:203 mm`, or a bare `1:10`. */
 export function printedTwists(text: string): number[] {
-  return [...text.matchAll(new RegExp(`1\\s*[:-]\\s*${NUMBER}\\s*(mm|cm|in\\b|inch(?:es)?|"|”)?`, 'gi'))].map(([, number, unit]) => {
+  return [...text.matchAll(new RegExp(`1\\s*(?:[:-]|in\\b)\\s*${NUMBER}\\s*(mm|cm|in\\b|inch(?:es)?|"|”)?`, 'gi'))].map(([, number, unit]) => {
     const metres = { mm: units.MILLIMETRE, cm: 10 * units.MILLIMETRE }[unit?.toLowerCase() ?? ''] ?? units.INCH;
     return value(number!) * metres;
   });

@@ -120,6 +120,7 @@ for gun except Ruger, where the catalogue itself changed (below).
 | Bergara | `bergara.ts` | configuration table, columns in any order | 118 | 32 pages have no table (rimfire and limited editions); model names come out in capitals |
 | Henry | `henry.ts` | specification block per chambering | 149 | inch and pound only; their `robots.txt` asks for ten seconds between pages |
 | Smith & Wesson | `smith-wesson.ts` | `__NEXT_DATA__` JSON inside the product page | 630 of 1,278 pages | the sitemap mixes guns with slides, uppers, barrels and apparel, so a page counts as a gun only if it has an `ACTION` and a `CAPACITY`; barrel lengths carry no unit and are read as inches; the twist is only in the description prose; their calibers (`9MM`) are mapped to conventional names, with the maker's own word kept in `published.caliber`; **some guns are listed twice with different weights** — four here — and the second listing is skipped with the disagreement printed, while a second listing of *another cartridge* (the Model 1854 America 250 in .44 Magnum and .45-70) is a different gun and keeps the cartridge in its name |
+| Desert Tech | `desert-tech.ts` | per-configuration specifications in the public product page’s Angular `ng-state` | 83 prepared for review (10 product pages, 2026-10-16) | SKU keeps configurations distinct; `weightLb` is shipping weight and is ignored. Only labelled gun Weight is used; unitless twists remain absent, with their printed string retained. WLVRN pages omit weight and twist. |
 | SIG Sauer | — | — | refused | 403 to any request |
 | Beretta | — | — | refused | every product page answers with an Imperva challenge |
 | Howa | — | nothing published on the pages | none | the figures are in catalogue PDFs |
@@ -127,6 +128,30 @@ for gun except Ruger, where the catalogue itself changed (below).
 | Weatherby | — | a tech-specs table per product page | not read | no product URL in any sitemap, so it needs a link crawl; the WooCommerce `weight` is a shipping weight and must never be used as the gun's mass |
 
 A refusal is a final answer: a 403 or a bot challenge is not something to work around.
+
+### Desert Tech intake, 2026-10-16 (#33)
+
+The current official site is [deserttech.com](https://deserttech.com), not the
+`deserttechnology.com` host in the earlier survey. Its `robots.txt` allows the public pages and
+blocks `/api/`; this intake reads only the sitemap and public product HTML. The HTML embeds the
+same per-configuration specifications the page displays when a configuration is selected.
+
+Prepared records: SRS M2 7, SRS A2 Covert 4, HTI 4, MDRx 31, WLVRN 27, WLVRN Micron 6,
+Quattro-15 Rifle/Pistol and Lite Rifle/Pistol 1 each. Each record retains its SKU, source page and
+printed figures. Colours and compliance configurations remain separate; no conflicting values are
+averaged or resolved by crawl order. These are the complete centre-fire products currently listed
+in the sitemap; conversion kits, receivers, airsoft and the rimfire Trek-22 are excluded.
+
+The SRS M2 and A2 Covert pages state twist units. Other product pages print bare ratios, which stay
+in `source.published` without a converted `twistLength`. WLVRN and Micron product pages give no gun
+weight or twist. The separate WLVRN marketing table uses different chambering names; its figures
+have not been silently joined to product SKUs. Likewise, the generic SRS landing table does not
+identify a submodel, so it is not a source of M2/A2 variant figures.
+
+`Weight` is used only from the individual variant’s specification list. `Shipping weight` and the
+machine field `weightLb` describe the parcel and are ignored. A missing variant value never inherits
+from the selected product. The maker does not specify what its gun weights include, so their basis
+is `unstated`. All 83 records round-trip and pass `check-corpus.ts`; publication awaits data review.
 
 ### The survey of 2026-10-16
 

@@ -62,6 +62,7 @@ src/
     component-import.ts  .caliber, .projectile and .propellant importers
 test/
   fixtures/            real GRT files (see fixtures/README.md)
+  *-specifications.test.ts  maker-page parsers in tools/data/firearms; invented figures in real page shapes
 ```
 
 ## Format documentation
