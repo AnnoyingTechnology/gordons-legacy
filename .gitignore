@@ -2,3 +2,5 @@ node_modules/
 dist/
 .cache/
 *.log
+# Scratch folders an extractor run leaves beside the crawlers; never part of the tool.
+tools/data/firearms/.*/
