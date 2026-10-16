@@ -17,7 +17,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, DELAY, fetchText, fileName, firearmJson, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
+import { crawlArguments, DELAY, fetchText, fileName, firearmJson, plainText, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const SITEMAP = 'https://www.czfirearms.com/sitemap.xml';
@@ -135,7 +135,9 @@ export function loadable(caliber: string): boolean {
 /** The gun a variant describes, or nothing when it lacks a cartridge or a barrel length. */
 export function firearmFrom(variant: Variant, url: string, retrieved: string): Firearm | undefined {
   const find = (key: string) => variant.attributes.find((attribute) => attribute.key === key);
-  const cartridge = find('kaliber')?.text?.trim();
+  // Their data writes `9 × 19`; a record carries the spelling a cartridge is compared by (maker-site.ts).
+  const cartridgeText = find('kaliber')?.text;
+  const cartridge = cartridgeText === undefined ? undefined : plainText(cartridgeText);
   const length = metricValue(find('lauflange'));
   // A pistol is weighed with its empty magazine: the gun as it recoils. Their rifles give one weight
   // and do not say what it covers, so the record says `unstated` instead of claiming that basis.
@@ -145,7 +147,7 @@ export function firearmFrom(variant: Variant, url: string, retrieved: string): F
   const twistText = find('dralllange-anzahl-der-zuge')?.text;
   const twist = twistLength(twistText);
   if (!cartridge || !loadable(cartridge) || length === undefined) return undefined;
-  const name = variant.title.replace(/\s+/g, ' ').trim();
+  const name = plainText(variant.title);
   return {
     format: FIREARM_FORMAT,
     schemaVersion: FIREARM_SCHEMA_VERSION,

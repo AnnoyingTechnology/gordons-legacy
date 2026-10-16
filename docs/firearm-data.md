@@ -43,6 +43,10 @@ These are not optional. They are what makes this intake defensible.
 
 1. **`robots.txt` first**, and respect it. A 403 or bot protection is a final answer: record it and move
    on. Never use an undocumented API, a cached copy, or any other route round a block.
+   A site that names an **AI crawler** in a `Disallow` block — `ClaudeBot`, `GPTBot`, `CCBot`,
+   `Google-Extended` and the rest of the list Cloudflare now ships by default — is refusing this intake
+   too, even though our user agent is not on its list: these crawls are run by an agent. Seven makers
+   were left unread for this reason (below). The operator's signal decides, not the letter of the name.
 2. **One second between pages**, with a user agent naming the project and its repository.
 3. **Only the facts the simulation needs.** Everything else on the page is theirs.
 4. **Every record cites its page** and the date it was read.
@@ -113,6 +117,31 @@ for gun except Ruger, where the catalogue itself changed (below).
 | Weatherby | — | a tech-specs table per product page | not read | no product URL in any sitemap, so it needs a link crawl; the WooCommerce `weight` is a shipping weight and must never be used as the gun's mass |
 
 A refusal is a final answer: a 403 or a bot challenge is not something to work around.
+
+### The survey of 2026-10-16
+
+The ten makers above were the ones the issue named. The maintainer asked what else could be read — "for
+ex. I don't even see chiappa" — so every maker we could think of was surveyed the cheap way first:
+`robots.txt`, then the sitemap it names, then one product page. `/tmp/gl/recon2/survey.sh` does it, one
+host at a time, a second apart; its output is a line per host saying what answered and how large the
+catalogue is. Eighty-eight hosts were examined.
+
+What that survey settles, before any extractor is written:
+
+| Outcome | Hosts |
+|---|---|
+| **Refused outright** (403 to `robots.txt` itself) | chiappafirearms.com, mossberg.com, taurususa.com, remarms.com (Remington), rossiusa.com, danwessonfirearms.com, hk-usa.com |
+| **Refuses AI crawlers by name** — read as a refusal of this intake | kimberamerica.com, waltherarms.com, staccato2011.com, rockriverarms.com, benelli.it, verney-carron.com, johnrigbyandco.com (which also disallows everything) |
+| **Nothing answers** (no TLS handshake, repeatedly) | strasser.at, roessler-waffen.at, unique-alpine.com, victrixarms.com, deserttechnology.com, fiercefirearms.com |
+| **Asks a delay we cannot pay** | springfield-armory.com: `Crawl-delay: 300`, five minutes a page — their catalogue would take a fortnight of continuous requests, so it stays unread rather than be read impolitely |
+| **Read, or being read** | the makers in the table above, and those added by the run of 2026-10-16 |
+
+So Chiappa is not missing through laziness: their server answers 403 to `robots.txt`, which under rule 1
+ends the matter. The same goes for Remington, Mossberg and Taurus. Walther, Kimber, Staccato, Rock River,
+Benelli Italy, Verney-Carron and Rigby answer fine but their `robots.txt` disallows `ClaudeBot` among a
+list of AI crawlers; our crawler carries its own name, but it *is* run by an agent, so that block is
+honoured. Each of these is worth re-checking in a later run: a 403 can be a misconfiguration, and the
+Cloudflare default can be turned off as easily as it was turned on.
 
 Where a maker writes a cartridge in a form no reloader uses (`9MM`, `45 ACP`), the extractor maps it to
 the conventional name **in a table, one entry per form**, and keeps the maker's own word in

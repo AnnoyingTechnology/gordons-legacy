@@ -75,6 +75,19 @@ describe('reading a published specification', () => {
     expect(loadable('22 WMR')).toBe(false);
   });
 
+  it('carries a cartridge in the spelling it is compared by', () => {
+    // Their own data writes `9 × 19`, which as it stands matches no load (see maker-site.ts).
+    const page = pageWith(
+      `{"title":"CZ SHADOW 2 OR","variants":[${variant('CZ SHADOW 2 OR 9 × 19 19r.', [
+        attribute('kaliber', { text: '9 × 19' }),
+        attribute('lauflange', { metric: '120', unit: 'mm' }),
+      ])}]}`,
+    );
+    const firearm = firearmFrom(variantsOf(page)[0]!, 'https://example.invalid/pistol', '2026-10-15');
+    expect(firearm!.cartridge).toBe('9 x 19');
+    expect(firearm!.name).toBe('CZ SHADOW 2 OR 9 x 19 19r.');
+  });
+
   it('builds a gun with its twist, its mass and where the figures come from', () => {
     const firearm = firearmFrom(variantsOf(PAGE)[0]!, 'https://example.invalid/rifle', '2026-10-15');
     expect(firearm!.name).toBe('CZ 600+ EXAMPLE 308 Win.');

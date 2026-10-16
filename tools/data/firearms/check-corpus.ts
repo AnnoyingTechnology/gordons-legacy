@@ -11,6 +11,12 @@
  * 2. Can the figure be a gun's at all? A page's placeholder (Savage prints `9999 lbs` where it holds
  *    no weight) or a shipping weight must never become the mass the engine recoils.
  *
+ * 3. Does the record say where it comes from? A figure nobody can trace back to a page and a date is
+ *    not a published figure, and a mass whose basis is unsaid must say so (`unstated`) rather than
+ *    leave the field out.
+ * 4. Is it a gun a reloader can load for? A rimfire or a shotgun gauge in the corpus means an extractor's
+ *    filter has a hole — the chooser would offer a .22 LR rifle for a cartridge nobody can load it with.
+ *
  * It reads the files only — no page is fetched — so it costs a maker's site nothing and can be run
  * after every crawl. Two guns of one name in one folder are reported too: that is an extractor reading
  * two pages as one gun, and the export would publish whichever it read last.
@@ -73,11 +79,51 @@ function agrees(figure: number, printed: number[], absolute: number): boolean {
   return printed.some((candidate) => Math.abs(figure - candidate) <= Math.max(absolute, TOLERANCE.relative * figure));
 }
 
+/**
+ * What a reloader cannot load for, and what must therefore never reach a record: the rimfire cartridges
+ * and the shotgun gauges. Written out one by one rather than as a clever pattern, because the names that
+ * look alike are the ones that matter — `.22 LR` is rimfire, `.22 Hornet`, `.22-250` and `.223` are not.
+ */
+const UNLOADABLE = [
+  /\b\.?22\s*(lr|l\.r\.|long\s+rifle|short|wmr|win\s*mag|wrf|bb|cb)\b/i,
+  /\b\.?22\s*(magnum|mag)\b/i,
+  /\b\.?17\s*(hmr|hm2|mach\s*2|wsm)\b/i,
+  /\b5\s*mm\s*(rem(ington)?\s*)?(rimfire|magnum)\b/i,
+  /\b(12|16|20|24|28|32|36)\s*(ga|gauge|gaugé|bore)\b/i,
+  /\b\.?410\s*(ga|gauge|bore)\b/i,
+  /\bairgun|air\s*rifle|\b177\b|\b4\.5\s*mm\b/i,
+];
+
+/** Whether a cartridge is one a reloader can load, as far as its name says. */
+export function loadableCartridge(cartridge: string | undefined): boolean {
+  return cartridge !== undefined && cartridge !== '' && !UNLOADABLE.some((pattern) => pattern.test(cartridge));
+}
+
+/** A date as a record must carry it: the day a page was read, which is a day that has happened. */
+function readableDate(date: string | undefined): boolean {
+  return date !== undefined && /^\d{4}-\d{2}-\d{2}$/.test(date) && date <= new Date().toISOString().slice(0, 10);
+}
+
 /** What is wrong with a record, in words; empty when nothing is. */
 export function auditFirearm(firearm: Firearm): string[] {
   const problems: string[] = [];
   const { length, gunMass, twistLength } = firearm.barrel;
-  const published = firearm.source?.published ?? {};
+  const source = firearm.source;
+  const published = source?.published ?? {};
+  if (source?.kind !== 'published') {
+    problems.push('no published source, so no page and no date say where the figures come from');
+  } else {
+    if (source.url === undefined || !source.url.startsWith('http')) problems.push(`the source names no page (${source.url ?? 'nothing'})`);
+    if (!readableDate(source.retrieved)) problems.push(`read on "${source.retrieved ?? 'nothing'}", which is not a day that has passed`);
+    if (source.publisher === undefined || source.publisher === '') problems.push('the source names no publisher');
+    if (gunMass !== undefined && source.massBasis === undefined) {
+      problems.push('a mass that does not say what it includes; `unstated` is the honest value, not a missing field');
+    }
+    if (Object.keys(published).length === 0) problems.push("none of the maker's own strings were kept, so no figure can be checked");
+  }
+  if (!loadableCartridge(firearm.cartridge)) {
+    problems.push(`"${firearm.cartridge ?? 'no cartridge'}" is not a cartridge a reloader loads`);
+  }
   if (length < BARREL_LENGTH_RANGE.shortest || length > BARREL_LENGTH_RANGE.longest) {
     problems.push(`a barrel of ${(length * 1000).toFixed(1)} mm is not a barrel`);
   }
