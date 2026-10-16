@@ -7,7 +7,6 @@ import type { UiContext } from './context.ts';
 export function renderProblems(problems: SimulationProblem[], context: UiContext): HTMLElement {
   const { t } = context;
   return element('section', { class: 'simulation' }, [
-    element('h2', {}, [t('results.title')]),
     element('p', { class: 'error' }, [t('results.cannotSimulate')]),
     element('ul', { class: 'issues' }, problems.map((problem) => {
       const field = fieldAt(problem.path);

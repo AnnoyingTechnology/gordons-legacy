@@ -1,6 +1,6 @@
 import type { Simulation } from '@gordons-legacy/engine';
 import type { Load } from '@gordons-legacy/formats';
-import { render } from 'lit';
+import { html, render } from 'lit';
 import { pressureLimits } from '../analysis/load-assessment.ts';
 import type { Review } from '../analysis/review.ts';
 import { element } from '../dom.ts';
@@ -37,13 +37,15 @@ export function renderResults(
   onAxis: (axis: ChartAxis) => void,
 ): HTMLElement {
   const { t } = context;
-  const container = element('section', { class: 'simulation' }, [element('h2', {}, [t('results.title')])]);
-  container.append(element('p', { class: 'warning' }, [t('safety.simulated')]));
+  const container = element('section', { class: 'simulation' });
   const fit = load.propellant.calibration;
   if (fit) container.append(renderFitNotice(fit, context));
   const reviewPanel = element('div', stale ? { class: 'updating', 'aria-busy': 'true' } : {});
   if (review) render(assessmentView(review.assessment, load.charge.temperature, context), reviewPanel);
-  else reviewPanel.append(element('p', { class: 'note' }, [t('assessment.updating')]));
+  else render(html`<section class="assessment">
+    <p class="assessment-disclaimer">${t('safety.simulated')}</p>
+    <p class="note">${t('assessment.updating')}</p>
+  </section>`, reviewPanel);
   const figures = element('div');
   render(keyFigures(load, shot, pressureLimits(load), context, renderDetails(load, shot, context)), figures);
   container.append(reviewPanel, figures);

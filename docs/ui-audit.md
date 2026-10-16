@@ -9,14 +9,15 @@ model. R2 is outside this work.
 | Start from a gun | Own guns and barrels from saved loads precede published records. Published guns load on demand. The user explicitly chooses a cartridge; a text match is not a chambering decision. |
 | Complete missing inputs | Only values present in selected records are filled. Remaining required values are entered before a valid document is created; no example charge or case capacity is silently copied. Changing the cartridge clears the previous component choices and their values. |
 | Clone | Open edits take precedence over their saved library snapshot. The copy is independent and unsaved, with no library id, measurements, targets, notes, pictures or imported-file metadata. Powder calibration metadata stays with its parameters. The UI explains this before creation. |
-| Rename | Editable load name above the editor updates the title and tab/file name together. It preserves the library identity and marks the load dirty. |
+| Rename | The results heading is the load name. Click it (or F2 on its tab) to edit in place; Enter/blur confirms and Escape cancels. No extra toolbar row or permanent input. This updates the title and tab/file name together. It preserves the library identity and marks the load dirty. |
 | Save / Export | Save writes to the local library; Export writes a shareable JSON file. Tooltips distinguish them. Saves of one document run in order and share its library identity. Completion records the exact written snapshot, so subsequent edits remain dirty. Keyboard actions commit a still-focused name input first. |
 | Export errors | Picker cancellation stays quiet; permission/write failures are reported and leave the document open. Export names replace path separators and invalid filename characters without changing the load title. A successful retry clears the error. |
 | Remove saved data | Saved loads and guns both require confirmation before removal. |
 | Close a load | Edited documents ask Save and close / Discard changes / Cancel. A failed save retains the document. Focus moves to the surviving active tab, or New when none remain. Comparison returns to the editor if fewer than two loads remain. |
 | Open from another view | Imported loads become visible in the editor even when opened from Library or Compare. |
 | Shortcuts | Toolbar help has an explicit, persisted opt-in: Alt/Option+Shift+N for New, Alt/Option+Shift+W for Close, Ctrl/Cmd+S for Save. Modal dialogs suspend these shortcuts. Ctrl/Cmd+W and Ctrl/Cmd+N remain browser commands. |
-| Local tab navigation | While a tab button has focus, Left/Right, Home/End navigate; Delete requests its guarded close. These keys do not capture editing in other controls. |
+| Local tab navigation | While a tab button has focus, Left/Right, Home/End navigate; F2 edits its name; Delete requests its guarded close. These keys do not capture editing in other controls. |
+| Compact results | The load name replaces the redundant simulation heading. The simulation notice is inside the review box, including its loading state, instead of a separate banner. |
 | Reload recovery | Open documents persist in localStorage, including their saved snapshots and library identities. Existing storage-full warning remains visible. Library/guns have backup and restore. |
 
 ## Remaining work

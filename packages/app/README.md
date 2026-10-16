@@ -36,6 +36,7 @@ src/
     shot-groups-panel.ts  <gl-shot-groups-panel>: the load's shot groups
     shot-group-dialog.ts  marks hits on a target photo and measures the group
     load-badges.ts        cartridge, projectile and powder badges of a tab
+    document-heading.ts   load name above the results; click to rename in place
     results-view.ts       the simulated shot: composes the sections below
     assessment-view.ts    the load's review: level of concern, findings, cold and hot days
     key-figures.ts        velocity and pressure on their scales, energy, recoil, the case filled to scale
@@ -98,8 +99,9 @@ test/                   Vitest tests of the parts without a DOM
 ## Document actions
 
 New offers cloning from open or saved loads, or a guided component selection starting from a gun or
-cartridge. Rename is above the editor; Copy inputs creates an independent unsaved document. The
-Shortcuts button explains local tab keys and enables application shortcuts. Edited tabs ask before
+cartridge. The load name heads the results column; click it to rename, or press F2 on its tab.
+Enter confirms, Escape cancels, and leaving the field commits. Cloning stays under New, without a
+separate document-actions row. The Shortcuts button explains local tab keys and enables application shortcuts. Edited tabs ask before
 closing. See [the UI audit](../../docs/ui-audit.md) for coverage and remaining work.
 
 ## Conventions

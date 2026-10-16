@@ -16,6 +16,7 @@ import './bore-area-dialog.ts';
 import './notes-panel.ts';
 import './shot-groups-panel.ts';
 import './property-table.ts';
+import './document-heading.ts';
 import { renderProblems, renderResults, type ChartAxis } from './results-view.ts';
 import { onChartLayoutChange } from './charts-view.ts';
 
@@ -26,6 +27,8 @@ import { onChartLayoutChange } from './charts-view.ts';
 export class LoadEditor extends LitElement {
   static override properties = {
     load: { attribute: false },
+    documentName: { attribute: false },
+    documentId: { attribute: false },
     context: { attribute: false },
     components: { attribute: false },
     componentEntries: { attribute: false },
@@ -38,6 +41,8 @@ export class LoadEditor extends LitElement {
   };
 
   declare load: Load;
+  declare documentName: string;
+  declare documentId: number;
   declare context: UiContext;
   /** The guns to choose from: those described in the library, and the barrels named in saved loads. */
   /** Powders and projectiles to choose from, and their entries (passed apart to re-render on import). */
@@ -155,6 +160,8 @@ export class LoadEditor extends LitElement {
           ></gl-bore-area-dialog>
         </div>
         <div class="results">
+          <gl-document-heading .name=${this.documentName ?? this.load.title} .documentId=${this.documentId}
+            .context=${this.context}></gl-document-heading>
           ${result.ok
             ? renderResults(this.load, result.simulation, review, stale, this.context, this.axis, (axis) => (this.axis = axis))
             : html`${cartridgeDrawing(this.load, undefined, this.context)}${renderProblems(problems, this.context)}`}

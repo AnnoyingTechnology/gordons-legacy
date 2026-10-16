@@ -74,6 +74,9 @@ A serious engineering tool, not a consumer app.
   cartridge, then projectile and powder, followed by the remaining inputs and a name.
 - Application shortcuts are opt-in and documented in the toolbar; focused load tabs also support
   arrow/Home/End navigation and guarded Delete.
+- The load name heads the results column and edits in place on demand. Keep cloning under New;
+  no permanent name field or separate document-actions row. The simulation notice belongs inside
+  the load review, without a second banner.
 - Dense layout, aligned tabular figures, explicit units, metric/imperial switch. A clear hierarchy of
   results: velocity and pressure first, on scales against the speed of sound and the CIP and SAAMI
   maxima; then energy and recoil; then the rest.

@@ -745,19 +745,26 @@ main {
   max-width: 40rem;
 }
 
-.document-actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+.load-heading .load-title,
+.load-heading .load-title-input {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  text-align: left;
 }
 
-.document-actions input {
-  flex: 1;
-  min-width: 8rem;
-  max-width: 32rem;
-}
+.load-heading .load-title { width: fit-content; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.load-heading .load-title:hover { color: var(--accent); }
+.load-heading .load-title:focus-visible { outline: none; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.2em; }
+.load-heading .load-title-input { outline: none; box-shadow: 0 1px 0 var(--accent); }
 
 dialog.new-load-dialog {
   width: min(68rem, calc(100vw - 2rem));
@@ -809,10 +816,6 @@ dialog.new-load-dialog {
   grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
   gap: 0.6rem 1rem;
   margin-top: 1rem;
-}
-
-@media print {
-  .document-actions { display: none; }
 }
 
 /* Load editor */
@@ -949,6 +952,12 @@ dialog.new-load-dialog {
   padding-bottom: 0;
 }
 
+.results .load-heading {
+  margin-top: 1.2rem;
+  font-size: 1.05rem;
+  font-weight: 650;
+}
+
 .status-footer {
   border-top: 1px solid var(--rule);
   padding: 0.8rem 1rem;
@@ -1031,6 +1040,12 @@ dialog.new-load-dialog {
 
   .print-header {
     display: block !important;
+  }
+
+  .load-heading .load-title {
+    display: block !important;
+    color: inherit;
+    text-decoration: none;
   }
 
   /* Text values in full: an input would clip a long name. */
@@ -1502,6 +1517,13 @@ dialog.shot-group-dialog {
   gap: 0.4rem;
   margin: 0;
   font-size: 1rem;
+}
+
+.assessment-disclaimer {
+  margin: 0.4rem 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.35;
 }
 
 .assessment.level-danger h3 {

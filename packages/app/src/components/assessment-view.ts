@@ -27,6 +27,7 @@ export function assessmentView(assessment: Assessment, ownTemperature: number, c
           )}
         </ol>
       </div>
+      <p class="assessment-disclaimer">${t('safety.simulated')}</p>
       ${general.length === 0
         ? html`<p class="assessment-none">${t('assessment.none')}</p>`
         : html`<ul class="findings">

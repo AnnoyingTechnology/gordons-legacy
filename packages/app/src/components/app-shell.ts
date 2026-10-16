@@ -36,7 +36,8 @@ import './close-document-dialog.ts';
 import type { CloseDocumentAction } from './close-document-dialog.ts';
 import './new-load-dialog.ts';
 import './shortcuts-dialog.ts';
-import { cloneSources, copyLoadInputs } from '../state/load-copy.ts';
+import { cloneSources } from '../state/load-copy.ts';
+import type { DocumentHeading } from './document-heading.ts';
 import { documentShortcut } from '../state/keyboard-shortcuts.ts';
 import { documentSaver } from '../state/document-saving.ts';
 
@@ -284,23 +285,14 @@ export class AppShell extends LitElement {
     if (!active) return html`<div class="empty-message"><p>${t('documents.empty')}</p>
       <button @click=${() => (this.newLoadOpen = true)}>${t('documents.new')}</button></div>`;
     return html`
-      <div class="document-actions">
-        <label for="document-name">${t('documents.name')}</label>
-        <input id="document-name" .value=${active.name.replace(/\.json$/i, '')}
-          @keydown=${(event: KeyboardEvent) => { if (event.key === 'Enter' && !event.isComposing) (event.target as HTMLInputElement).blur(); }}
-          @change=${(event: Event) => {
-            const input = event.target as HTMLInputElement;
-            this.store.rename(active.id, input.value);
-            input.value = this.store.active!.name.replace(/\.json$/i, '');
-          }} />
-        <button title=${t('documents.copyHelp')} @click=${() => this.copyDocument()}>${t('documents.copy')}</button>
-      </div>
       <header class="print-header">
         <h1>${t('app.title')}: ${active.name.replace(/\.json$/i, '')}</h1>
         <p>${new Date().toLocaleString(this.settings.language)} · ${t('about.version')} ${__BUILD_COMMIT__.slice(0, 7)}</p>
       </header>
       <gl-load-editor
         .load=${active.load}
+        .documentName=${active.name.replace(/\.json$/i, '')}
+        .documentId=${active.id}
         .context=${this.context}
         .components=${this.components}
         .componentEntries=${this.components.entries}
@@ -309,6 +301,7 @@ export class AppShell extends LitElement {
         @save-firearm=${() => (this.editedFirearm = { firearm: firearmFromLoad(active.load) })}
         @pick-firearm=${() => this.pickFirearm()}
         @load-change=${(event: CustomEvent<Load>) => this.store.update(active.id, event.detail)}
+        @rename-document=${(event: CustomEvent<string>) => this.store.rename(active.id, event.detail)}
         @calibrated=${(event: CustomEvent<CalibratedLoad>) => this.openCalibrated(active.name, event.detail)}
         @open-load=${(event: CustomEvent<{ name: string; load: Load }>) => this.store.openNew(`${event.detail.name}.json`, event.detail.load)}
       ></gl-load-editor>
@@ -486,15 +479,7 @@ export class AppShell extends LitElement {
     this.newLoadOpen = false;
     this.openErrors = [];
     this.view = 'editor';
-    void this.updateComplete.then(() => this.querySelector<HTMLInputElement>('#document-name')?.focus());
-  }
-
-  private copyDocument(): void {
-    if (this.store.activeId !== undefined) this.commitName(this.store.activeId);
-    const active = this.store.active;
-    if (!active) return;
-    const title = this.context.t('documents.copyName', { name: active.name.replace(/\.json$/i, '') });
-    this.createDocument(copyLoadInputs(active.load, title));
+    void this.updateComplete.then(() => this.querySelector<HTMLButtonElement>('.tab.active .tab-name')?.focus());
   }
 
   private handleShortcut = (event: KeyboardEvent): void => {
@@ -511,8 +496,7 @@ export class AppShell extends LitElement {
   /** Keyboard commands do not blur the name input before saving or asking whether to discard it. */
   private commitName(id: number): void {
     if (this.store.activeId !== id) return;
-    const input = this.querySelector<HTMLInputElement>('#document-name');
-    if (input && input.value !== this.store.active?.name.replace(/\.json$/i, '')) this.store.rename(id, input.value);
+    this.querySelector<HTMLInputElement>('.load-title-input')?.blur();
   }
 
   /** Arrow/Home/End navigation and Delete apply only while a load-tab button has focus. */
@@ -521,6 +505,17 @@ export class AppShell extends LitElement {
     const documents = this.store.documents;
     const index = documents.findIndex((document) => document.id === id);
     if (index < 0) return;
+    if (event.key === 'F2') {
+      event.preventDefault();
+      this.showDocument(id);
+      void this.updateComplete.then(async () => {
+        await this.querySelector<LitElement>('gl-load-editor')?.updateComplete;
+        const heading = this.querySelector<DocumentHeading>('gl-document-heading');
+        await heading?.updateComplete;
+        heading?.start();
+      });
+      return;
+    }
     if (event.key === 'Delete') {
       event.preventDefault();
       if (!event.repeat) this.requestClose(id);
