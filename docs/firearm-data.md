@@ -133,7 +133,7 @@ What that survey settles, before any extractor is written:
 | **Refused outright** (403 to `robots.txt` itself) | chiappafirearms.com, mossberg.com, taurususa.com, remarms.com (Remington), rossiusa.com, danwessonfirearms.com, hk-usa.com |
 | **Refuses AI crawlers by name** — read as a refusal of this intake | kimberamerica.com, waltherarms.com, staccato2011.com, rockriverarms.com, benelli.it, verney-carron.com, johnrigbyandco.com (which also disallows everything) |
 | **Nothing answers** (no TLS handshake, repeatedly) | strasser.at, roessler-waffen.at, unique-alpine.com, victrixarms.com, deserttechnology.com, fiercefirearms.com |
-| **Asks a delay we cannot pay** | springfield-armory.com: `Crawl-delay: 300`, five minutes a page — their catalogue would take a fortnight of continuous requests, so it stays unread rather than be read impolitely |
+| **Asks a delay we cannot pay** | springfield-armory.com: `User-agent: *` has no delay, but `ChatGPT-User` and `bingbot` are each asked for `Crawl-delay: 300` — five minutes a page. Read as the delay meant for an agent-run crawl, their catalogue would take a fortnight of continuous requests, so it stays unread rather than read impolitely. Their sitemap also answered 503 on the day of the survey |
 | **Read, or being read** | the makers in the table above, and those added by the run of 2026-10-16 |
 
 So Chiappa is not missing through laziness: their server answers 403 to `robots.txt`, which under rule 1

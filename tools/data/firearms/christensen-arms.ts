@@ -164,7 +164,33 @@ export function firearmsFrom(page: string, url: string, retrieved: string): { fi
   return { firearms, skipped };
 }
 
-/** The product pages of the product sitemap, as full addresses; the shop page and the images are left out. */
+/**
+ * Of guns that share a name, the one they all agree on. Pages list one cartridge and barrel length
+ * more than once when they stand for several production runs (a discontinued page can hold three
+ * `223 Rem` at 24 inches with three different weights), and a record built from any one of them would
+ * be a pick, while an average would be a figure no one printed. Where the figures agree the first is
+ * kept; where they differ, none is, and the disagreement is reported.
+ */
+export function settleNames(firearms: Firearm[]): { kept: Firearm[]; skipped: string[] } {
+  const byName = new Map<string, Firearm[]>();
+  for (const firearm of firearms) byName.set(firearm.name, [...(byName.get(firearm.name) ?? []), firearm]);
+  const kept: Firearm[] = [];
+  const skipped: string[] = [];
+  for (const [name, candidates] of byName) {
+    const first = candidates[0]!;
+    const figures = (firearm: Firearm) => JSON.stringify([firearm.barrel.length, firearm.barrel.twistLength, firearm.barrel.gunMass]);
+    if (candidates.every((candidate) => figures(candidate) === figures(first))) {
+      kept.push(first);
+      skipped.push(...candidates.slice(1).map((candidate) => `${candidate.source?.url}: ${name} is listed again with the same figures`));
+    } else {
+      const printed = candidates.map((candidate) => Object.values(candidate.source?.published ?? {}).join(' / ')).join(' | ');
+      skipped.push(`${first.source?.url}: ${name} is listed ${candidates.length} times with different figures, none kept (${printed})`);
+    }
+  }
+  return { kept, skipped };
+}
+
+/** The product pages of the sitemap, as full addresses; the shop page and the images are left out. */
 export function productAddresses(sitemap: string): string[] {
   return [...sitemap.matchAll(/<loc>([^<]*)<\/loc>/g)].map(([, address]) => address!.trim()).filter((address) => /\/product\/[a-z0-9-]+\/$/.test(address));
 }
@@ -177,10 +203,9 @@ async function main(): Promise<void> {
   console.log(`${pages.length} product pages in the sitemap`);
   mkdirSync(folder, { recursive: true });
   const retrieved = new Date().toISOString().slice(0, 10);
-  let written = 0;
   let pagesRead = 0;
   const skipped: string[] = [];
-  const writtenGuns = new Map<string, Firearm>();
+  const found: Firearm[] = [];
   for (const url of pages) {
     await sleep(DELAY);
     let page: string;
@@ -191,25 +216,23 @@ async function main(): Promise<void> {
       continue;
     }
     pagesRead++;
-    const found = firearmsFrom(page, url, retrieved);
-    skipped.push(...found.skipped);
-    for (const firearm of found.firearms) {
-      const json = firearmJson(firearm);
-      if ('problem' in json) {
-        skipped.push(`${url}: ${json.problem}`);
-        continue;
-      }
-      const file = fileName(firearm);
-      const kept = writtenGuns.get(file);
-      if (kept !== undefined) {
-        skipped.push(`${url}: ${firearm.name} is already written from ${kept.source?.url}`);
-        continue;
-      }
-      writtenGuns.set(file, firearm);
-      writeFileSync(join(folder, file), json.text);
-      written++;
-      console.log(summaryLine(firearm));
+    const read = firearmsFrom(page, url, retrieved);
+    found.push(...read.firearms);
+    skipped.push(...read.skipped);
+  }
+  // Names are settled over the whole crawl, before anything is serialised.
+  const settled = settleNames(found);
+  skipped.push(...settled.skipped);
+  let written = 0;
+  for (const firearm of settled.kept) {
+    const json = firearmJson(firearm);
+    if ('problem' in json) {
+      skipped.push(`${firearm.source?.url}: ${json.problem}`);
+      continue;
     }
+    writeFileSync(join(folder, fileName(firearm)), json.text);
+    written++;
+    console.log(summaryLine(firearm));
   }
   console.log(`\n${pagesRead} pages read, ${written} guns written to ${folder}`);
   if (skipped.length > 0) {

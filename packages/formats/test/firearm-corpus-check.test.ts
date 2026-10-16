@@ -82,11 +82,14 @@ describe('checking a crawl before it is published', () => {
     ]);
     const { cartridge: _noCartridge, ...withoutCartridge } = record({ length: 0.56 }, { barrelLength: '56 cm' });
     expect(auditFirearm(withoutCartridge)).toEqual(['"no cartridge" is not a cartridge a reloader loads']);
-    // The names that look alike are the point: these are centrefire, and stay.
-    for (const cartridge of ['.22 Hornet', '.22-250 Rem', '.223 Rem', '.17 Remington', '.410 Win Mag Example']) {
+    // The names that look alike are the point: these are centrefire, and stay. Every one of them is a
+    // string a maker in this corpus prints, and the 232 others it holds pass.
+    for (const cartridge of ['.22 Hornet', '.22-250 Rem', '.223 Rem', '.22 CRDMR', '.17 Remington', '204 Ruger', '.50/95']) {
       expect(loadableCartridge(cartridge)).toBe(true);
     }
-    for (const cartridge of ['22 LR', '.22 Long Rifle', '22 WMR', '.22 Magnum', '17 HMR', '20 GA', '.410 Bore']) {
+    // These too are printed as they stand: Browning writes .17 Mach 2 as `17 M 2` and sells rifles for
+    // Winchester's .21 Sharp, a rimfire of 2024 that no list of the old names would have caught.
+    for (const cartridge of ['22 LR', '.22 Long Rifle', '22 S L LR', '22 WMR', '.22 Magnum', '17 HMR', '17 M 2', '21 SHARP', '20 GA', '.410 Bore']) {
       expect(loadableCartridge(cartridge)).toBe(false);
     }
   });

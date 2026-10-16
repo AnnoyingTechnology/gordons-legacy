@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cartridgeName, chamberingTables, firearmsFrom, length, mass, modelFromHeadline, notLoadable, productAddresses, startingWeight, twistLength } from '../../../tools/data/firearms/christensen-arms.ts';
+import { cartridgeName, chamberingTables, firearmsFrom, length, mass, modelFromHeadline, notLoadable, productAddresses, settleNames, startingWeight, twistLength } from '../../../tools/data/firearms/christensen-arms.ts';
 
 /**
  * The reading of a maker's published specifications (tools/data/firearms/christensen-arms.ts, issue #30).
@@ -101,6 +101,14 @@ describe('reading a published specification', () => {
   it('names a cartridge listed twice by its barrel length', () => {
     const twice = page('Example', '6 LBS', [['7MM BACKCOUNTRY', '16 in.', '1:8'], ['7MM BACKCOUNTRY', '20 in.', '1:8']]);
     expect(firearmsFrom(twice, 'u', '2026-10-16').firearms.map((gun) => gun.name)).toEqual(['Christensen Arms Example 7MM BACKCOUNTRY 16 in.', 'Christensen Arms Example 7MM BACKCOUNTRY 20 in.']);
+  });
+
+  it('keeps one of several listings with the same figures, and none of listings that differ', () => {
+    const listing = (twist: string, url: string) => firearmsFrom(page('Example', '6 LBS', [['.308 WIN', '22 in.', twist]]), url, '2026-10-16').firearms[0]!;
+    expect(settleNames([listing('1:10', 'a'), listing('1:10', 'b')]).kept.map((gun) => gun.source?.url)).toEqual(['a']);
+    const different = settleNames([listing('1:10', 'a'), listing('1:12', 'b')]);
+    expect(different.kept).toEqual([]);
+    expect(different.skipped[0]).toContain('listed 2 times with different figures, none kept');
   });
 
   it('skips a page with no chambering table, such as a gift card', () => {

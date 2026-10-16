@@ -89,12 +89,12 @@ export function mass(text: string | undefined): number | undefined {
 /**
  * Why a cartridge is not one a reloader loads for, or `undefined` when it is: no figure in it, a
  * rimfire (22 LR, 22 WMR, 17 HMR, 17 WSM, 17 Mach 2), or several cartridges named at once (`357-38`
- * is the .357 Magnum and the .38 Special, `/` and `&` join two others).
+ * is the .357 Magnum and the .38 Special, `/` joins two others; `300 H&H MAG` is one).
  */
 export function notLoadable(cartridge: string): string | undefined {
   if (!/[0-9]/.test(cartridge)) return 'no cartridge';
   if (/(^|[^0-9])(22|17)\s*(lr|long rifle|wmr|win\.? mag|hmr|short|wsm|mach 2|hm2)\b/i.test(cartridge)) return 'rimfire';
-  if (/^357-38$/.test(cartridge.trim()) || /[/&]|\bor\b/i.test(cartridge)) return 'several cartridges';
+  if (/^357-38$/.test(cartridge.trim()) || /\/|\bor\b/i.test(cartridge)) return 'several cartridges';
   return undefined;
 }
 
@@ -150,11 +150,46 @@ export function firearmsFrom(page: string, url: string, retrieved: string): { fi
         retrieved,
         // One Weight, with no word on what it includes.
         ...(gunMass === undefined ? {} : { massBasis: 'unstated' as const }),
-        published: publishedFigures({ caliber: cartridge, barrelLength: block['barrel length'], weight: block['weight'], twist: block['twist rate'] }),
+        published: publishedFigures({ caliber: cartridge, barrelLength: block['barrel length'], weight: block['weight'], twist: publishedTwist(block['twist rate']) }),
       },
     });
   }
   return { firearms, skipped };
+}
+
+/**
+ * The twist as `source.published` keeps it. The page prints the inches per turn alone (`10"`), under a
+ * label that says Twist Rate; the record writes it the way every other maker and the corpus checker
+ * read a twist, `1:10"`, so that the figure and its string can be compared. Anything else stays as it is.
+ */
+export function publishedTwist(printed: string | undefined): string | undefined {
+  return printed !== undefined && twistLength(printed) !== undefined && !/^\s*1\s*:/.test(printed) ? `1:${printed.trim()}` : printed;
+}
+
+/**
+ * Of guns that share a name, the one they all agree on. Pages list one cartridge and barrel length
+ * more than once when they stand for several production runs (a discontinued page can hold three
+ * `223 Rem` at 24 inches with three different weights), and a record built from any one of them would
+ * be a pick, while an average would be a figure no one printed. Where the figures agree the first is
+ * kept; where they differ, none is, and the disagreement is reported.
+ */
+export function settleNames(firearms: Firearm[]): { kept: Firearm[]; skipped: string[] } {
+  const byName = new Map<string, Firearm[]>();
+  for (const firearm of firearms) byName.set(firearm.name, [...(byName.get(firearm.name) ?? []), firearm]);
+  const kept: Firearm[] = [];
+  const skipped: string[] = [];
+  for (const [name, candidates] of byName) {
+    const first = candidates[0]!;
+    const figures = (firearm: Firearm) => JSON.stringify([firearm.barrel.length, firearm.barrel.twistLength, firearm.barrel.gunMass]);
+    if (candidates.every((candidate) => figures(candidate) === figures(first))) {
+      kept.push(first);
+      skipped.push(...candidates.slice(1).map((candidate) => `${candidate.source?.url}: ${name} is listed again with the same figures`));
+    } else {
+      const printed = candidates.map((candidate) => Object.values(candidate.source?.published ?? {}).join(' / ')).join(' | ');
+      skipped.push(`${first.source?.url}: ${name} is listed ${candidates.length} times with different figures, none kept (${printed})`);
+    }
+  }
+  return { kept, skipped };
 }
 
 /** The product pages of the sitemap: current and discontinued rifles, family overviews left out. */
@@ -182,16 +217,6 @@ async function readPage(url: string): Promise<{ page: string } | { problem: stri
   }
 }
 
-/** How a record differs from another of the same name, for the log. */
-function disagreement(kept: Firearm, other: Firearm): string {
-  const differences = [
-    kept.barrel.length === other.barrel.length ? '' : `barrel ${kept.barrel.length * 1000} mm / ${other.barrel.length * 1000} mm`,
-    kept.barrel.gunMass === other.barrel.gunMass ? '' : `mass ${kept.barrel.gunMass} kg / ${other.barrel.gunMass} kg`,
-    kept.barrel.twistLength === other.barrel.twistLength ? '' : `twist ${kept.barrel.twistLength} m / ${other.barrel.twistLength} m`,
-  ].filter((text) => text !== '');
-  return differences.length === 0 ? 'the same figures' : differences.join(', ');
-}
-
 async function main(): Promise<void> {
   const args = crawlArguments('winchester', process.argv.slice(2));
   if (args === undefined) return;
@@ -200,10 +225,9 @@ async function main(): Promise<void> {
   console.log(`${pages.length} rifle pages in the sitemap`);
   mkdirSync(folder, { recursive: true });
   const retrieved = new Date().toISOString().slice(0, 10);
-  let written = 0;
   let pagesRead = 0;
   const skipped: string[] = [];
-  const writtenGuns = new Map<string, Firearm>();
+  const found: Firearm[] = [];
   for (const url of pages) {
     await sleep(DELAY);
     const result = await readPage(url);
@@ -212,25 +236,23 @@ async function main(): Promise<void> {
       continue;
     }
     pagesRead++;
-    const found = firearmsFrom(result.page, url, retrieved);
-    skipped.push(...found.skipped);
-    for (const firearm of found.firearms) {
-      const json = firearmJson(firearm);
-      if ('problem' in json) {
-        skipped.push(`${url}: ${json.problem}`);
-        continue;
-      }
-      const file = fileName(firearm);
-      const kept = writtenGuns.get(file);
-      if (kept !== undefined) {
-        skipped.push(`${url}: ${firearm.name} is already written from ${kept.source?.url} (${disagreement(kept, firearm)})`);
-        continue;
-      }
-      writtenGuns.set(file, firearm);
-      writeFileSync(join(folder, file), json.text);
-      written++;
-      console.log(summaryLine(firearm));
+    const read = firearmsFrom(result.page, url, retrieved);
+    found.push(...read.firearms);
+    skipped.push(...read.skipped);
+  }
+  // Names are settled over the whole crawl, before anything is serialised.
+  const settled = settleNames(found);
+  skipped.push(...settled.skipped);
+  let written = 0;
+  for (const firearm of settled.kept) {
+    const json = firearmJson(firearm);
+    if ('problem' in json) {
+      skipped.push(`${firearm.source?.url}: ${json.problem}`);
+      continue;
     }
+    writeFileSync(join(folder, fileName(firearm)), json.text);
+    written++;
+    console.log(summaryLine(firearm));
   }
   console.log(`\n${pagesRead} pages read, ${written} guns written to ${folder}`);
   if (skipped.length > 0) {

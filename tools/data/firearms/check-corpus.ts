@@ -85,9 +85,11 @@ function agrees(figure: number, printed: number[], absolute: number): boolean {
  * look alike are the ones that matter — `.22 LR` is rimfire, `.22 Hornet`, `.22-250` and `.223` are not.
  */
 const UNLOADABLE = [
-  /\b\.?22\s*(lr|l\.r\.|long\s+rifle|short|wmr|win\s*mag|wrf|bb|cb)\b/i,
-  /\b\.?22\s*(magnum|mag)\b/i,
-  /\b\.?17\s*(hmr|hm2|mach\s*2|wsm)\b/i,
+  // .22 rimfire, in every spelling the makers print, `22 S L LR` (short, long and long rifle) included.
+  /\b\.?22\s*(s\s*l\s*lr|lr|l\.r\.|l\b|long|short|wmr|wrf|win\s*mag|magnum|mag\b|bb|cb)\b/i,
+  // .17 rimfire: HMR, Mach 2 (which Browning prints `17 M 2`) and the .17 Winchester Super Magnum.
+  /\b\.?17\s*(hmr|hm2|m\s*2|mach\s*2|wsm)\b/i,
+  /\b\.?21\s*sharp\b/i,
   /\b5\s*mm\s*(rem(ington)?\s*)?(rimfire|magnum)\b/i,
   /\b(12|16|20|24|28|32|36)\s*(ga|gauge|gaugé|bore)\b/i,
   /\b\.?410\s*(ga|gauge|bore)\b/i,

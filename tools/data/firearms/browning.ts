@@ -61,11 +61,36 @@ export function length(text: string | undefined): number | undefined {
   return value === undefined ? undefined : value * units.INCH;
 }
 
-/** The twist in metres per turn from `10"` or `7 1/2"` (Browning leaves out the `1:`; `1:10"` is read too). */
+/**
+ * The shortest and longest turn of rifling a page may state, m: a 1:6" pistol barrel to a 1:40"
+ * muzzle-loader, with room. One page prints `101"` for a rifle, which is a typing slip nobody can undo.
+ */
+const TWIST_RANGE = { shortest: 0.1, longest: 1.2 };
+
+/**
+ * The twist in metres per turn from `10"` or `7 1/2"` (Browning leaves out the `1:`; `1:10"` is read
+ * too). A figure outside any rifle's range is nothing, not a guess at what was meant.
+ */
 export function twistLength(text: string | undefined): number | undefined {
   if (text === undefined || !/"|\bin\b/.test(text)) return undefined;
   const value = inches(text.replace(/^\s*1\s*:\s*/, ''));
-  return value === undefined ? undefined : value * units.INCH;
+  const metres = value === undefined ? undefined : value * units.INCH;
+  return metres !== undefined && metres >= TWIST_RANGE.shortest && metres <= TWIST_RANGE.longest ? metres : undefined;
+}
+
+/**
+ * A printed string as the record keeps it: the maker's own words, and when they are a fraction of an
+ * inch or a bare twist, the same figure written the way the corpus check reads it, after them. The page
+ * says `16 1/2"` and `10"` (meaning 1:10"); the check reads `16.5"` and `1:10"`.
+ */
+export function printedForRecord(kind: 'length' | 'twist', text: string | undefined): string | undefined {
+  if (text === undefined || text.trim() === '') return text;
+  const value = kind === 'length' ? length(text) : twistLength(text);
+  if (value === undefined) return text;
+  const decimal = Number((value / units.INCH).toFixed(4));
+  const reading = kind === 'length' ? `${decimal}"` : `1:${decimal}"`;
+  const plain = kind === 'length' ? !text.includes('/') : /^\s*1\s*:/.test(text);
+  return plain ? text : `${text} (${reading})`;
 }
 
 /** A mass in kilograms from `6 lbs 7 oz`, `7 lbs.` or `9 oz`. Anything not in pounds or ounces is nothing. */
@@ -77,15 +102,15 @@ export function mass(text: string | undefined): number | undefined {
 
 /**
  * A cartridge a reloader loads for: it has a figure in it, names one cartridge only, and is no rimfire
- * (22 LR, 22 WMR, 17 HMR, 17 HM2), shotgun gauge or air gun.
+ * (`22 LR`, `22 S L LR`, `22 S`, `22 WMR`, `17 HMR`, `17 M 2`), shotgun gauge or air gun. `300 H&H MAG`
+ * is one cartridge; only an ampersand with spaces around it joins two.
  */
 export function loadable(cartridge: string): boolean {
   return (
     /[0-9]/.test(cartridge) &&
-    !/\s(\/|and|or)\s|,|;|&/i.test(cartridge) &&
+    !/\s(\/|and|or|&)\s|,|;/i.test(cartridge) &&
     !/gauge|\bga\b|pellet|air/i.test(cartridge) &&
-    !/(^|[^0-9])(22|17)\s*(lr|long rifle|wmr|win\.? mag|magnum|hmr|hm2|short|mach 2)\b/i.test(cartridge) &&
-    !/^\.?(22|17)\s*(rimfire)?$/i.test(cartridge)
+    !/^\.?(22|17)\s*(s|l|lr|long rifle|wmr|win\.? mag|magnum|mag|hmr|hm2|m ?2|mach 2|short|rimfire)\b/i.test(cartridge)
   );
 }
 
@@ -134,7 +159,9 @@ export function firearmsFrom(page: string, url: string, retrieved: string): { gu
     }
     const twist = twistLength(block.twist);
     const gunMass = mass(block.weight);
-    const published = publishedFigures({ barrelLength: block.barrel, weight: block.weight, twist: block.twist });
+    if (twist === undefined && block.twist !== undefined) skipped.push({ what: `${model} ${block.cartridge}`, why: `twist left out (${block.twist})` });
+    if (gunMass === undefined && block.weight !== undefined) skipped.push({ what: `${model} ${block.cartridge}`, why: `mass left out (${block.weight})` });
+    const published = publishedFigures({ barrelLength: printedForRecord('length', block.barrel), weight: block.weight, twist: printedForRecord('twist', block.twist) });
     const lengths = new Set(sameCartridge(block.cartridge).map((other) => other.barrel));
     const name = `Browning ${model} ${block.cartridge}${lengths.size > 1 ? ` ${block.barrel}` : ''}`;
     const existing = guns.find((gun) => gun.name === name);

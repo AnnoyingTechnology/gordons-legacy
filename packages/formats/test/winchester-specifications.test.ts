@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { firearmsFrom, length, mass, modelFromHeadline, notLoadable, rifleAddresses, specificationBlocks, twistLength } from '../../../tools/data/firearms/winchester.ts';
+import { firearmsFrom, length, mass, modelFromHeadline, notLoadable, publishedTwist, rifleAddresses, settleNames, specificationBlocks, twistLength } from '../../../tools/data/firearms/winchester.ts';
 
 /**
  * The reading of a maker's published specifications (tools/data/firearms/winchester.ts, issue #30). The
@@ -70,6 +70,7 @@ describe('reading a published specification', () => {
     expect(notLoadable('22 LR')).toBe('rimfire');
     expect(notLoadable('17 HMR')).toBe('rimfire');
     expect(notLoadable('22 WMR')).toBe('rimfire');
+    expect(notLoadable('300 H&H MAG')).toBeUndefined();
     expect(notLoadable('357-38')).toBe('several cartridges');
     expect(notLoadable('')).toBe('no cartridge');
   });
@@ -94,7 +95,7 @@ describe('reading a published specification', () => {
       url: 'https://example.invalid/products/rifles/model-99/example.html',
       retrieved: '2026-10-16',
       massBasis: 'unstated',
-      published: { caliber: '308 Win', barrelLength: '22"', weight: '6 lbs 12 oz', twist: '12"' },
+      published: { caliber: '308 Win', barrelLength: '22"', weight: '6 lbs 12 oz', twist: '1:12"' },
     });
   });
 
@@ -109,6 +110,22 @@ describe('reading a published specification', () => {
   it('names a cartridge listed twice by its barrel length', () => {
     const page = `<h1>Model 1</h1>${pane(0, { caliber: '45 Colt', barrel: '20&#34;', weight: '7 lbs 0 oz', twist: '26&#34;' })}${pane(1, { caliber: '45 Colt', barrel: '24&#34;', weight: '7 lbs 8 oz', twist: '26&#34;' })}`;
     expect(firearmsFrom(page, 'u', '2026-10-16').firearms.map((gun) => gun.name)).toEqual(['Winchester Model 1 45 Colt 20"', 'Winchester Model 1 45 Colt 24"']);
+  });
+
+  it('writes the twist as 1:N beside the figure, the way the checker reads it, and leaves anything else alone', () => {
+    expect(publishedTwist('18 3/4"')).toBe('1:18 3/4"');
+    expect(publishedTwist('1:10"')).toBe('1:10"');
+    expect(publishedTwist('N/A')).toBe('N/A');
+  });
+
+  it('keeps one of several listings with the same figures, and none of listings that differ', () => {
+    const listing = (weight: string, url: string) => firearmsFrom(`<h1>Model 2</h1>${pane(0, { caliber: '223 Rem', barrel: '24&#34;', weight, twist: '9&#34;' })}`, url, '2026-10-16').firearms[0]!;
+    const same = settleNames([listing('9 lbs 0 oz', 'a'), listing('9 lbs 0 oz', 'b')]);
+    expect(same.kept.map((gun) => gun.source?.url)).toEqual(['a']);
+    expect(same.skipped).toEqual(['b: Winchester Model 2 223 Rem is listed again with the same figures']);
+    const different = settleNames([listing('9 lbs 0 oz', 'a'), listing('8 lbs 12 oz', 'b')]);
+    expect(different.kept).toEqual([]);
+    expect(different.skipped[0]).toContain('listed 2 times with different figures, none kept');
   });
 
   it('takes the rifle pages of the sitemap, current and discontinued, and no overview, shotgun or stray page', () => {
