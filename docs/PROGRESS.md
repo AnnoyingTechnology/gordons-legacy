@@ -23,12 +23,17 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 
 ## Next steps
 
-Current pickup, 2026-10-16: #34 everyday document UI audit and fixes; #33 Desert Tech intake and #32
-code audit follow. Desert Tech: 83 configurations published after Julien’s approval in data PR #1.
-#32 now checks persistence and data boundaries. #19 full database coverage is required; Julien deferred
-original-machine extraction to lunch or tonight on 2026-10-16. New/clone/funnel, guarded close, rename, shortcuts and save/export/delete fixes are
-pushed; Undo/Redo and reopen-closed history remain in the #34 audit. R2 (#35) is explicitly excluded by Julien. Working checkout:
-`/home/julien/Documents/gordons-legacy`; earlier research checkout remains in `/tmp`.
+Current pickup, 2026-10-16: #34 document workflow audit and #32 code audit. The requested guided
+review, compact name/review notice, consistent page spacing, full-width footer and edge-touching
+danger frame are implemented. #37/#38 card annotations are deployed and closed; #39 stays a suggestion
+because Julien confirmed current tab overflow works well. Desert Tech: 83 configurations published
+after Julien’s approval in data PR #1; #33 is closed. #32 has fixed repository cache validation,
+transaction completion, backup failures, and saved-tab/preferences recovery; remaining checks are in
+`docs/code-audit.md`. Undo/Redo and reopen-closed history remain in the #34 audit.
+#19 full database coverage is required; Julien deferred original-machine extraction to lunch or tonight
+on 2026-10-16. R2 (#35) is explicitly excluded. Working checkout:
+`/home/julien/Documents/gordons-legacy`; local server `http://127.0.0.1:5173/`.
+Earlier research checkout remains in `/tmp`.
 
 1. Native review of the five translations; M4 (data repository, once the maintainer agrees to create
    it; GRT database import, approach to choose, see Open questions). Every GRT tool of M5 now exists
