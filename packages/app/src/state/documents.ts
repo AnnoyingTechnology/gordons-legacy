@@ -25,6 +25,8 @@ export class DocumentStore {
   activeId: number | undefined;
   /** True when the open loads no longer fit in the browser's storage and must be saved to files. */
   storageFull = false;
+  /** Some saved tabs were unreadable; keep this visible while the recovered session is open. */
+  recoveryFailed = false;
   private nextId = 1;
   private readonly listeners = new Set<() => void>();
   private readonly storage: Storage | undefined;
@@ -138,19 +140,30 @@ export class DocumentStore {
   }
 
   private restore(): void {
-    const text = this.storage?.getItem(STORAGE_KEY);
-    if (!text) return;
     try {
-      const saved = JSON.parse(text) as { documents: { name: string; load: Load; savedText: string; libraryId?: string }[]; active: number };
-      for (const { name, load, savedText, libraryId } of saved.documents) {
-        const checked = parseLoad(JSON.stringify(load));
-        if (checked.ok) {
-          this.documents.push({ id: this.nextId++, name, load: checked.value, savedText, issues: [], ...(libraryId ? { libraryId } : {}) });
-        }
+      const text = this.storage?.getItem(STORAGE_KEY);
+      if (!text) return;
+      const saved: unknown = JSON.parse(text);
+      if (!record(saved) || !Array.isArray(saved.documents)) { this.recoveryFailed = true; return; }
+      for (const [index, entry] of saved.documents.entries()) {
+        if (!record(entry) || typeof entry.name !== 'string') { this.recoveryFailed = true; continue; }
+        const checked = parseLoad(JSON.stringify(entry.load));
+        if (!checked.ok) { this.recoveryFailed = true; continue; }
+        const document: OpenDocument = {
+          id: this.nextId++, name: entry.name, load: checked.value, issues: [],
+          savedText: typeof entry.savedText === 'string' ? entry.savedText : '',
+          ...(typeof entry.libraryId === 'string' && entry.libraryId ? { libraryId: entry.libraryId } : {}),
+        };
+        this.documents.push(document);
+        if (index === saved.active) this.activeId = document.id;
       }
-      this.activeId = this.documents[saved.active]?.id ?? this.documents[0]?.id;
+      this.activeId ??= this.documents[0]?.id;
     } catch {
-      // Unreadable storage: start empty rather than fail.
+      this.recoveryFailed = true;
     }
   }
+}
+
+function record(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

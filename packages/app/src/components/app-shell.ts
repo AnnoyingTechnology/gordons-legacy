@@ -183,6 +183,7 @@ export class AppShell extends LitElement {
           ? html`<p class="warning">${t('engine.researchWarning', { name: this.context.engine.name })}</p>`
           : nothing}
         ${this.store.storageFull ? html`<p class="warning">${t('documents.storageFull')}</p>` : nothing}
+        ${this.store.recoveryFailed ? html`<p class="warning" role="alert">${t('documents.recoveryFailed')}</p>` : nothing}
         ${this.openErrors.length > 0
           ? html`<ul class="issues">${this.openErrors.map((message) => html`<li class="error"><span class="severity">!</span> ${message}</li>`)}</ul>`
           : nothing}

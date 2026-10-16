@@ -1,5 +1,5 @@
-import { preferredLanguage, type Language } from '../i18n/i18n.ts';
-import { presetPreferences, type UnitPreferences, type UnitSystem } from '../units/units.ts';
+import { LANGUAGES, preferredLanguage, type Language } from '../i18n/i18n.ts';
+import { CHOOSABLE_KINDS, presetPreferences, unitsFor, type UnitPreferences, type UnitSystem } from '../units/units.ts';
 import { DEFAULT_ENGINE } from './engine-choice.ts';
 
 export interface Settings {
@@ -28,8 +28,25 @@ export function loadSettings(storage: Storage | undefined, browserLanguages: rea
     keyboardShortcuts: false,
   };
   try {
-    const saved = JSON.parse(storage?.getItem(STORAGE_KEY) ?? '{}') as Partial<Settings>;
-    return { ...defaults, ...saved, keyboardShortcuts: saved.keyboardShortcuts === true };
+    const saved: unknown = JSON.parse(storage?.getItem(STORAGE_KEY) ?? '{}');
+    if (typeof saved !== 'object' || saved === null || Array.isArray(saved)) return defaults;
+    const fields = saved as Record<string, unknown>;
+    const unitSystem = fields.unitSystem === 'imperial' ? 'imperial' : 'metric';
+    const units = presetPreferences(unitSystem);
+    if (typeof fields.units === 'object' && fields.units !== null && !Array.isArray(fields.units)) {
+      const storedUnits = fields.units as Record<string, unknown>;
+      for (const kind of CHOOSABLE_KINDS) {
+        const id = storedUnits[kind];
+        if (typeof id === 'string' && unitsFor(kind).some(unit => unit.id === id)) units[kind] = id;
+      }
+    }
+    return {
+      language: typeof fields.language === 'string' && Object.hasOwn(LANGUAGES, fields.language) ? fields.language as Language : defaults.language,
+      unitSystem, units,
+      foldedGroups: Array.isArray(fields.foldedGroups) ? fields.foldedGroups.filter((group): group is string => typeof group === 'string') : [],
+      engine: typeof fields.engine === 'string' ? fields.engine : defaults.engine,
+      keyboardShortcuts: fields.keyboardShortcuts === true,
+    };
   } catch {
     return defaults;
   }

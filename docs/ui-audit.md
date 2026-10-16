@@ -20,7 +20,7 @@ model. R2 is outside this work.
 | Compact results | The load name replaces the redundant simulation heading. The simulation notice is inside the review box, including its loading state, instead of a separate banner. |
 | Result cards | Speed legend is at the velocity card’s upper right. Blast annotation sits beside its value, with the full explanation and model uncertainty retained in the tooltip. On phones the blast, case drawing and secondary details span the available width. |
 | Page spacing | One page gutter aligns the toolbar, tabs and load contents; input/results headings have no extra top gap. Development notice and build/date share a full-width footer flush with the bottom. The danger hatch follows the panel edges without moving content. |
-| Reload recovery | Open documents persist in localStorage, including their saved snapshots and library identities. Existing storage-full warning remains visible. Library/guns have backup and restore. |
+| Reload recovery | Open documents persist in localStorage, including their saved snapshots and library identities. Invalid entries are skipped independently with a recovery warning; valid tabs and their active selection survive. Invalid display preferences fall back independently. Existing storage-full warning remains visible. Library/guns have backup and restore. |
 
 ## Remaining work
 

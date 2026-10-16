@@ -103,6 +103,7 @@ export const fr: Messages = {
   'documents.empty': 'Ouvrez une charge : un fichier GRT .grtload ou une charge Gordon’s Legacy enregistrée (.json). Les fichiers restent sur cet ordinateur.',
   'example.title': 'Chargement d’exemple',
   'example.note': 'Un exemple, pour que l’outil ne soit pas vide à la première visite : une .308 Winchester tirée des fichiers CC0 de la communauté, avec une charge que la simulation place bien sous le maximum. Ce ne sont pas des données de rechargement, et rien ici n’a été mesuré : vérifiez chaque charge dans les données publiées du fabricant de poudre ou de balle. Ouvrez votre propre fichier, ou modifiez celui-ci.',
+  'documents.recoveryFailed': "Certains onglets enregistrés n’ont pas pu être restaurés. Les onglets récupérés restent disponibles ; recherchez les autres dans votre bibliothèque ou sauvegarde.",
   'documents.storageFull': 'Les chargements ouverts ne tiennent plus dans le stockage du navigateur (grandes images ?) : enregistrez-les dans des fichiers, sinon ils seront perdus à la fermeture de la page.',
   'documents.close': 'Fermer {name}',
   'documents.open': 'Chargements ouverts',
