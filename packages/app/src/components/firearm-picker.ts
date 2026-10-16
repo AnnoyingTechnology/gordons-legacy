@@ -59,19 +59,29 @@ export class FirearmPicker extends LitElement {
     if (!this.open && dialog?.open) dialog.close();
   }
 
-  /** The guns that match the search, and how many there are before the list is cut. */
-  private matching(): { rows: Firearm[]; total: number } {
-    const cartridge = this.load.cartridge.name;
-    const found = this.firearms
-      .filter((firearm) => !this.chamberedOnly || chamberedFor(firearm, cartridge))
-      .filter((firearm) => matches(this.filter, `${firearm.name} ${firearm.maker ?? ''} ${firearm.model ?? ''} ${firearm.cartridge ?? ''}`));
-    return { rows: found.slice(0, MOST_ROWS), total: found.length };
+  /**
+   * The guns that match the search, how many there are before the list is cut, and how many the
+   * cartridge filter is holding back — a search for `glock` on a .308 load matches 86 pistols that no
+   * maker lists for it, and saying "no gun matches" would be a lie about what the database holds.
+   *
+   * A load that names no cartridge filters nothing: there would be nothing to compare against, and
+   * every gun would disappear.
+   */
+  private matching(): { rows: Firearm[]; total: number; hidden: number } {
+    const cartridge = this.load.cartridge.name.trim();
+    const searched = this.firearms.filter((firearm) =>
+      matches(this.filter, `${firearm.name} ${firearm.maker ?? ''} ${firearm.model ?? ''} ${firearm.cartridge ?? ''}`),
+    );
+    if (!this.chamberedOnly || cartridge === '') return { rows: searched.slice(0, MOST_ROWS), total: searched.length, hidden: 0 };
+    const found = searched.filter((firearm) => chamberedFor(firearm, cartridge));
+    return { rows: found.slice(0, MOST_ROWS), total: found.length, hidden: searched.length - found.length };
   }
 
   protected override render() {
     if (!this.open) return html`<dialog class="component-picker"></dialog>`;
     const { t, quantity } = this.context;
-    const { rows, total } = this.matching();
+    const { rows, total, hidden } = this.matching();
+    const cartridge = this.load.cartridge.name.trim();
     return html`
       <dialog class="component-picker" @close=${this.close}>
         <header class="picker-head">
@@ -92,12 +102,19 @@ export class FirearmPicker extends LitElement {
             <input
               type="checkbox"
               .checked=${this.chamberedOnly}
+              ?disabled=${cartridge === ''}
               @change=${(event: Event) => (this.chamberedOnly = (event.target as HTMLInputElement).checked)}
             />
             ${t('firearm.chambered')}
           </label>
           <span class="note">${this.loading ? t('firearm.databaseLoading') : t('firearm.database', { count: String(this.firearms.length) })}</span>
         </div>
+        ${hidden === 0
+          ? nothing
+          : html`<p class="note">
+              ${t('firearm.otherCartridges', { count: String(hidden), cartridge })}
+              <button @click=${() => (this.chamberedOnly = false)}>${t('firearm.showThem')}</button>
+            </p>`}
         <div class="table-scroll">
           <table class="data-table picker-table">
             <thead>

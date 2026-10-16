@@ -94,9 +94,12 @@ export function withFirearm(load: Load, firearm: Firearm): Load {
 /**
  * Letters and digits only, and without `mm`, so that the same cartridge written by two people compares
  * equal: `9x19 mm` and `9 mm Luger (9 x 19)` both hold `9x19`.
+ *
+ * A multiplication sign is a letter `x` first: `8×57` is `8x57`, and dropping it with the punctuation
+ * would leave `857`, which is a case length no comparison could find.
  */
 function normalise(text: string): string {
-  return text.toLowerCase().replace(/[^a-z0-9]/g, '').replaceAll('mm', '');
+  return text.toLowerCase().replace(/×/g, 'x').replace(/[^a-z0-9]/g, '').replaceAll('mm', '');
 }
 
 /** The `9x19` of a name, when it has one: what two namings of the same cartridge share. */

@@ -68,6 +68,9 @@ describe('the gun library', () => {
     expect(chamberedFor({ ...newFirearm(), name: 'Makarov', cartridge: '9x18 mm' }, '9 mm Luger (9 x 19)')).toBe(false);
     // The same cartridge spelled the same way still matches, calibre-only names included.
     expect(chamberedFor({ ...newFirearm(), name: 'Ruger', cartridge: '.357 Magnum' }, '.357 Magnum')).toBe(true);
+    // A maker typesetting the case with a multiplication sign names the same cartridge.
+    expect(chamberedFor({ ...newFirearm(), name: 'Bergara', cartridge: '6.5×55 SE' }, '6.5 x 55 Swedish')).toBe(true);
+    expect(chamberedFor({ ...newFirearm(), name: 'Bergara', cartridge: '8×57 JRS' }, '6.5 x 55 Swedish')).toBe(false);
     // Without a cartridge they are simply in order of name.
     expect(choosableFirearms(entries, []).map((firearm) => firearm.name)).toEqual(['Alpha 9', 'Zeta .45']);
   });
