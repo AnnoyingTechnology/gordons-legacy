@@ -25,13 +25,13 @@ cannot be built from the facts is not built at all.
 
 An extractor writes one file per gun; the data repository holds **one file per maker** (`firearms/
 glock.json`), holding that maker's records. The application downloads a whole catalogue to search it, and
-the makers read so far hold about 3,100 guns — that many single files would be that many requests on a
+the makers read so far hold about 8,800 guns — that many single files would be that many requests on a
 first search. `tools/data/export-repository.ts --firearms <folder>` does the grouping.
 
-Nine maker files are 2.5 MB of JSON, which GitHub serves gzipped at 101 kB. They are downloaded when a
-user first searches for their gun, never on a first visit, and cached afterwards: in a headless browser
-the whole database arrives and is searchable in 520 ms over a local server, and a keystroke filters all
-3,123 guns in about a millisecond.
+Twenty-eight maker files are 7.2 MB of JSON, which GitHub serves gzipped at 246 kB. They are downloaded
+when a user first searches for their gun, never on a first visit, and cached afterwards: in a headless
+browser the whole database arrives and is searchable in 523 ms over a local server, and a keystroke
+filters all 8,790 guns in under a millisecond.
 
 Three values the simulation wants are **never** published and stay absent: the jump to the lands, the
 gas leaks, and the real chamber-to-muzzle length (see below). The application shows a published barrel
@@ -88,12 +88,20 @@ What every extractor shares sits beside them, and nothing of it is written twice
   typographic quote as the inch mark every figure reader looks for, `×` as `x`, trademark marks left out.
   Six extractors each had their own partial list of entities before, and two of those lists had holes
   that reached the published data.
-- `published-figures.ts`: the maker's own strings, and what a published mass includes.
+- `published-figures.ts`: the maker's own strings, and what a published mass includes. A string there is
+  the maker's words verbatim; where a page prints no single string for a figure, the module that
+  assembles one says so in its header.
+- `loadable-cartridge.ts`: whether a caliber cell names one cartridge a reloader can load for. Sixteen
+  extractors each had a part of that answer before.
+- `page-cache.ts`: with `FIREARM_PAGE_CACHE` set, the pages a crawl read are kept on disk and an
+  extractor can be run again over them in seconds. A correction used to cost the site a second crawl;
+  the pages are scratch data and no record cites them.
 
-Three tools serve every maker, and none of them fetches a product page:
+Four tools serve every maker, and only one of them reads a page — out of the cache, never from the site:
 
 - `survey-site.ts` — what a host says about being read, before an extractor is written for it.
 - `check-corpus.ts` — whether a crawl's own output is believable.
+- `quoted-figures.ts` — whether the strings a record quotes are on the page it cites.
 - `compare-corpus.ts` — what a refresh changes against what is published.
 
 Everything else is the maker's own shape — which pages to read, and how to read a figure out of one —
@@ -105,10 +113,14 @@ this repository, and the invented figures make it obvious that a test checks the
 
 ## Makers
 
-One extractor per maker, all read on 2026-10-15, and **these counts are what is published**: every
-corpus was read again after `massBasis` and `source.published` existed, Savage once more after the
-weight gate and Smith & Wesson once more after the naming fix. Each re-read matched the first run gun
-for gun except Ruger, where the catalogue itself changed (below).
+One extractor per maker: the first nine read on 2026-10-15, the rest on 2026-10-16. The count is what
+the **last run read**, which is not always what the maker's published file holds: a gun that has left a
+catalogue is kept (Bergara has 125 published for 118 read, CZ 101 for 88, Henry 155 for 149).
+
+Every corpus of 2026-10-16 was read out of the page cache after each correction and then passed
+`check-corpus.ts` and `quoted-figures.ts` with nothing to report. Of the earlier nine, Savage was read
+again after the weight gate and Smith & Wesson after the naming fix; each re-read matched the first run
+gun for gun except Ruger, where the catalogue itself changed (below).
 
 | Maker | Extractor | Where the figures are | Guns read | Watch out for |
 |---|---|---|---|---|
@@ -121,11 +133,28 @@ for gun except Ruger, where the catalogue itself changed (below).
 | Henry | `henry.ts` | specification block per chambering | 149 | inch and pound only; their `robots.txt` asks for ten seconds between pages |
 | Smith & Wesson | `smith-wesson.ts` | `__NEXT_DATA__` JSON inside the product page | 630 of 1,278 pages | the sitemap mixes guns with slides, uppers, barrels and apparel, so a page counts as a gun only if it has an `ACTION` and a `CAPACITY`; barrel lengths carry no unit and are read as inches; the twist is only in the description prose; their calibers (`9MM`) are mapped to conventional names, with the maker's own word kept in `published.caliber`; **some guns are listed twice with different weights** — four here — and the second listing is skipped with the disagreement printed, while a second listing of *another cartridge* (the Model 1854 America 250 in .44 Magnum and .45-70) is a different gun and keeps the cartridge in its name |
 | Desert Tech | `desert-tech.ts` | per-configuration specifications in the public product page’s Angular `ng-state` | 83 (10 product pages, 2026-10-16) | SKU keeps configurations distinct; `weightLb` is shipping weight and is ignored. Only labelled gun Weight is used; unitless twists remain absent, with their printed string retained. WLVRN pages omit weight and twist. |
+| Browning | `browning.ts` | one `riflesoption` block per chambering, titled cells | 2,642 | the largest catalogue read, discontinued rifles included; inches and pounds only, with fractions (`7 1/2"`, `6 lbs 7 oz`) and the twist as a bare turn (`10"` is 1:10") |
+| Winchester | `winchester.ts` | the same CMS as Browning, one block per chambering | 1,170 | `robots.txt` answers 404, so nothing is forbidden; some sitemap addresses redirect to themselves forever and are skipped; one cartridge listed twice with different weights settles to nothing |
+| Weatherby | `weatherby.ts` | a tech-specs table per product page | 662 | no product URL in any sitemap, so the pages are reached by a link crawl; the WooCommerce `weight` is a shipping weight and is never read; **their own spelling is `muzzle break`**, which had nine barrels two inches too long until the brake rule learned it |
+| Christensen Arms | `christensen-arms.ts` | a `CALIBER \| LENGTH \| TWIST` table per rifle | 228 | the page's one *Starting Weight* is the lightest configuration's, so it is taken only where the table has a single row; accessories and apparel pages have no table |
+| FN America | `fn-america.ts` | titled specification lines | 135 | a page that prints `20" or 24"`, or a rifle that *converts* to another cartridge, leaves the figure to a choice and is left out |
+| Tanfoglio | `tanfoglio.ts` | an Italian `Peso` / `Canna` table, one cell per chambering | 110 | `gr.` is the Italian *grammi*, not grains; one cell can hold a weight per chambering (`1090 gr. (CAL.45ACP)`) and a record keeps only its own |
+| Girsan | `girsan.ts` | Elementor headings in label/value pairs | 100 | `740 gr.` is grams again (Turkish); a length printed without a unit is not read; the heading itself says whether the magazine is in, which gives the mass basis |
+| Uberti | `uberti.ts` | one row per variant in a family table | 92 | cap-and-ball replicas have no cartridge and are not read; a revolver's barrel length excludes its cylinder |
+| Davide Pedersoli | `pedersoli.ts` | a "Specifiche tecniche" list, metric and imperial | 73 | muzzle-loaders are most of the catalogue and are left out; the two renderings are compared, and a gun whose figures disagree (a 5,670 mm barrel beside 22 inches) is left out, not guessed |
+| Haenel | `haenel.ts` | German labelled lines, `Drall` for the twist | 70 | a page pairs a Standard and a Magnum barrel and each cartridge takes its own; a weight given as a range is left out; the RS8 Subsonic's weight includes the suppressor that is part of it, and says so |
+| Steyr Arms | `steyr.ts` | a specification block, one tab per variant | 66 | the tab number ties a variant's name to its figures, so no pairing is guessed by position; one tab's caliber list shares one barrel and one weight |
+| Kel-Tec | `kel-tec.ts` | a model block of label and two columns | 42 | **their metric twists contradict their inches** (`1:7" \| 1:178 mm` is one turn in 7" beside one in 14"), so those twists are dropped and the page's words kept; the integrally suppressed SUB CQB prints a barrel and a suppressor as one figure and is left out |
+| Colt | `colt.ts` | a WooCommerce `data-product_variations` JSON, one entry per variant | 41 | a `Handguard` field prints a length too, which is not the barrel's; most pistol pages print no barrel length at all; the WooCommerce `weight` is a shipping weight |
+| Oberland Arms | `oberland-arms.ts` | a bilingual specification in the product description | 37 | the label says the magazine is in, which gives the basis; `Wechselsystem` pages are an upper and a barrel, not a gun |
+| Grand Power | `grand-power.ts` | a list of labelled values, mostly metric | 36 | `Trigger pull weight` is a force and is never read; a page listing several barrels has one weight that belongs to none of them and is left out; `.32 ACP (7,65 Browning)` is one cartridge under two names |
+| Sabatti | `sabatti.ts` | a "Specifiche" list and a "Calibri" list | 25 | one barrel and one weight serve the whole cartridge list, so a page with several of either is left out; the finer-step rendering of a measure wins |
+| Ed Brown | `ed-brown.ts` | a spec box of label and value | 16 | the weight says `Approximately 35 oz. with unloaded magazine`, so the basis is `empty-magazine` and the `Approximately` is kept |
+| Schmeisser | `schmeisser.ts` | a "Technical data" block | 13 | `3.250 g` is 3,250 grams, the dot being a thousands separator, and the string is published as printed; a page pairing two cartridges with two twists by position is left out |
 | SIG Sauer | — | — | refused | 403 to any request |
 | Beretta | — | — | refused | every product page answers with an Imperva challenge |
 | Howa | — | nothing published on the pages | none | the figures are in catalogue PDFs |
 | Marlin | — | nothing published on the pages | none | the sitemap is a 2021 stub |
-| Weatherby | — | a tech-specs table per product page | not read | no product URL in any sitemap, so it needs a link crawl; the WooCommerce `weight` is a shipping weight and must never be used as the gun's mass |
 
 A refusal is a final answer: a 403 or a bot challenge is not something to work around.
 
@@ -203,9 +232,19 @@ Refresh one maker at a time:
        deno run -A tools/data/firearms/check-corpus.ts /tmp/gl/guns-glock
 
    It compares every SI figure with the maker's own printed string in `source.published`, refuses a
-   figure no gun can have, and reports two files that hold one gun name. A clean run is necessary, not
-   sufficient: it cannot see a figure that is wrong in the same way in both the string and the value.
-5. **Read the diff against what is published**, rather than swapping the folder:
+   figure no gun can have, reports two files that hold one gun name, and reports a figure the maker's
+   string leaves to a choice (`20" or 24"`). A clean run is necessary, not sufficient: it cannot see a
+   figure that is wrong in the same way in both the string and the value.
+5. Where the pages were kept (`FIREARM_PAGE_CACHE`), ask whether the strings are the maker's at all:
+
+       FIREARM_PAGE_CACHE=/tmp/gl/pages deno run -A tools/data/firearms/quoted-figures.ts /tmp/gl/guns-glock
+
+   Every `source.published` string that its page does not print is reported. Five makers print no single
+   string for a figure — CZ and Sako hold the value and its unit in separate fields, Kel-Tec, Pedersoli
+   and Ruger print the two unit systems in two columns — and their modules say so in their headers.
+   Anything else in that list is an extractor rewriting what it read, which the checker above cannot
+   see, because the value is usually right: Winchester's `16 1/2"` had become `16.5"`.
+6. **Read the diff against what is published**, rather than swapping the folder:
 
        deno run -A tools/data/firearms/compare-corpus.ts <clone>/firearms/bergara.json /tmp/gl/guns-bergara
 
@@ -214,7 +253,7 @@ Refresh one maker at a time:
    guns that were not read this time, and the guns whose figures **changed**, with the maker's own string
    beside both values. A changed barrel length is either a correction to publish or a reading to fix, and
    the printed string usually says which; a changed count is a bug to find before anything is published.
-   This is what makes the rule below more than a sentence: over three thousand guns, nobody reads a diff
+   This is what makes the rule below more than a sentence: over eight thousand guns, nobody reads a diff
    by hand, and the refresh of 2026-10-15 was in fact judged on the counts alone.
 
 **A gun that has left the catalogue is not deleted.** Discontinued guns stay in use for decades, and
