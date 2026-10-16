@@ -31,8 +31,9 @@
  * - a twist where one line gives several cartridges' twists in prose (the RS8): left out of the record.
  *
  * The mass is `unstated`: `ca. 5 kg (ohne Anbauteile)` says what is not on it (accessories), not what
- * it includes. `Drall` is the maker's German word for the twist and the key under which the printed
- * twist is kept, since a bare `12"` is not the ratio the corpus checker reads.
+ * it includes. `Drall` is the maker's German word for the twist; the record keeps their string as
+ * printed (a bare `12"`, which the corpus checker reads as one turn in twelve inches) under the shared
+ * key `twist`, since a key no checker looks for is a figure nobody checks.
  *
  * The pages of the NXT repeat each other's variants (`/jaeger-nxt/` and `/jaeger-nxt-composite/` hold
  * the same seven blocks): a name seen twice with the same figures is kept once, one with different

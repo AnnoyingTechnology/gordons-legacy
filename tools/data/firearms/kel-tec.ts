@@ -19,7 +19,12 @@
  * `loaded`. The finer of the two printed steps wins (`9.66 oz` or `273.9 g`).
  *
  * Left out, and counted in the skip list: shotguns (`12 Gauge`, `.410 Bore`), rimfire (`.22 WMR`), a
- * model that names two cartridges, and a model without a barrel length.
+ * model that names two cartridges, and a model without a barrel length. The integrally suppressed SUB
+ * CQB goes with them: its page prints `Barrel Length OAL 16.2", Rifled 4.25"`, a barrel and a suppressor
+ * as one unit, and neither figure is the barrel the engine means.
+ *
+ * Their metric column contradicts their inches on the twist — `1:7 | 1:356 mm` is one turn in 7" and
+ * one in 14" — so those twists are left out of the records and the page's words kept beside them.
  */
 import { fetchText, plainText } from './maker-site.ts';
 import { loadableCartridge } from './loadable-cartridge.ts';

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { loadableCartridge, namedCartridge, severalCartridges } from '../../../tools/data/firearms/loadable-cartridge.ts';
+import { bareBore, loadableCartridge, namedCartridge, severalCartridges } from '../../../tools/data/firearms/loadable-cartridge.ts';
 
 /**
  * The one rule for "is this a cartridge a reloader can load for?"
@@ -68,10 +68,14 @@ describe('one cartridge a reloader can load for', () => {
   });
 
   it('tells a cartridge name from a bore, for the makers who sell both', () => {
-    // Pedersoli's muzzle-loaders and Uberti's cap-and-ball revolvers: a bore is not something to load.
+    // Pedersoli sell muzzle-loaders, whose caliber is a bore: there is no cartridge to load for it.
     for (const bore of ['.45', '.54', '12', '17,5 mm', '.44']) expect(namedCartridge(bore), bore).toBe(false);
     for (const cartridge of ['.45 Colt', '.45-70 Gov.', '6,5x55', '9x19', '.38-55 WINCHESTER']) {
       expect(namedCartridge(cartridge), cartridge).toBe(true);
     }
+    // Uberti's pages mix cartridge revolvers with cap-and-ball ones, where the bore is bare and the
+    // cartridges are named in the maker's short way: both of these are guns to load for.
+    for (const bore of ['.44', '.36', '12', '.45']) expect(bareBore(bore), bore).toBe(true);
+    for (const cartridge of ['.45 LC', '9 mm', '.357 Mag', '.45/70']) expect(bareBore(cartridge), cartridge).toBe(false);
   });
 });

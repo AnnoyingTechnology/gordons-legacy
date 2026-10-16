@@ -111,6 +111,32 @@ function agrees(figure: number, printed: number[], absolute: number): boolean {
   return printed.some((candidate) => Math.abs(figure - candidate) <= Math.max(absolute, TOLERANCE.relative * figure));
 }
 
+/**
+ * Whether a printed string names two different figures of one unit, which a record has to choose
+ * between: FN prints `20" or 24"` for a rifle sold with either barrel, and `11.5 or 11.75 lb.` for its
+ * weight. A record that takes one of them is a guess, and it passes the comparison above — the figure
+ * does agree with one of the readings — so the choice itself has to be the question.
+ *
+ * One figure printed in two units is not a choice, however coarsely the maker rounded the second
+ * (`16.1" (408.9 mm)`, Kel-Tec's `4.36 lb | 1.9 kg`): the comparison above already asks whether the
+ * record agrees with one of them. Neither is a length that says which part of it is the barrel —
+ * Weatherby print `24" (22" barrel + 2" muzzle brake)`, and the 22" is the figure a record must take
+ * (`break` included: that is how Weatherby spell it).
+ */
+const UNIT_SPELLINGS = ['"|”|in\\b|inch(?:es)?\\b', 'mm\\b', 'cm\\b', 'lbs?\\b', 'oz\\b', 'kg\\b', 'gr?\\b'];
+
+function namesAChoice(text: string): boolean {
+  if (/\bbarrel\b/i.test(text) && /brakes?|breaks?|compensator|suppressor|silencer/i.test(text)) return false;
+  // The `1` of a ratio is not a figure of the measure: `1 in 12"` names one turn, not a 1" and a 12".
+  const measures = text.replace(/\b1\s*(?::|-|in\b|turn\s+(?:right|left)\s+in)\s*(?=[0-9])/gi, ' ');
+  return UNIT_SPELLINGS.some((unit) => {
+    const figures = [...measures.matchAll(new RegExp(`${NUMBER}\\s*(?:${unit})`, 'gi'))].map(([, number]) => Number(number!.replace(',', '.')));
+    const first = figures[0];
+    if (first === undefined) return false;
+    return !figures.every((figure) => Math.abs(figure - first) <= TOLERANCE.relative * first);
+  });
+}
+
 /** A date as a record must carry it: the day a page was read, which is a day that has happened. */
 function readableDate(date: string | undefined): boolean {
   return date !== undefined && /^\d{4}-\d{2}-\d{2}$/.test(date) && date <= new Date().toISOString().slice(0, 10);
@@ -146,16 +172,28 @@ export function auditFirearm(firearm: Firearm): string[] {
     problems.push(`a turn of ${(twistLength * 1000).toFixed(1)} mm is not a twist`);
   }
   const barrelLength = published['barrelLength'];
-  if (barrelLength !== undefined && !agrees(length, printedLengths(barrelLength), TOLERANCE.length)) {
-    problems.push(`barrel ${(length * 1000).toFixed(1)} mm, where the maker printed "${barrelLength}"`);
+  if (barrelLength !== undefined) {
+    const printed = printedLengths(barrelLength);
+    if (namesAChoice(barrelLength)) problems.push(`a barrel chosen out of the maker's "${barrelLength}"`);
+    else if (!agrees(length, printed, TOLERANCE.length)) {
+      problems.push(`barrel ${(length * 1000).toFixed(1)} mm, where the maker printed "${barrelLength}"`);
+    }
   }
   const weight = published['weight'];
-  if (gunMass !== undefined && weight !== undefined && !agrees(gunMass, printedMasses(weight), TOLERANCE.mass)) {
-    problems.push(`mass ${gunMass.toFixed(3)} kg, where the maker printed "${weight}"`);
+  if (gunMass !== undefined && weight !== undefined) {
+    const printed = printedMasses(weight);
+    if (namesAChoice(weight)) problems.push(`a mass chosen out of the maker's "${weight}"`);
+    else if (!agrees(gunMass, printed, TOLERANCE.mass)) {
+      problems.push(`mass ${gunMass.toFixed(3)} kg, where the maker printed "${weight}"`);
+    }
   }
   const twist = published['twist'];
-  if (twistLength !== undefined && twist !== undefined && !agrees(twistLength, printedTwists(twist), TOLERANCE.length)) {
-    problems.push(`twist ${(twistLength * 1000).toFixed(1)} mm, where the maker printed "${twist}"`);
+  if (twistLength !== undefined && twist !== undefined) {
+    const printed = printedTwists(twist);
+    if (namesAChoice(twist)) problems.push(`a twist chosen out of the maker's "${twist}"`);
+    else if (!agrees(twistLength, printed, TOLERANCE.length)) {
+      problems.push(`twist ${(twistLength * 1000).toFixed(1)} mm, where the maker printed "${twist}"`);
+    }
   }
   return problems;
 }

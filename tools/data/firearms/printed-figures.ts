@@ -75,12 +75,34 @@ interface Reading {
   step: number;
 }
 
-/** The first figure in `text` followed by one of `units` (a regular expression), as a reading. */
+/**
+ * Every figure in `text` followed by one of `unitPattern`'s spellings, as readings of that unit.
+ *
+ * All of them, not the first: a cell that gives a choice (`20" or 24"`, `11.3 lb. or 11.8 lb.`) looks
+ * exactly like one that gives a figure, and taking the first would be a guess about which configuration
+ * the page means — which is how FN's SPR A5M got a 20" barrel and an 11.3 lb weight on 2026-10-16.
+ */
+function readings(text: string, unitPattern: string, si: number): Reading[] {
+  const matches = text.matchAll(new RegExp(`(?<![0-9.])([0-9]+(?:\\.[0-9]+)?)\\s*(?:${unitPattern})(?![a-z])`, 'gi'));
+  return [...matches].map(([, printed]) => {
+    const decimals = printed!.split('.')[1]?.length ?? 0;
+    return { value: Number(printed) * si, step: 10 ** -decimals * si };
+  });
+}
+
+/**
+ * The one reading of a unit in `text`, or nothing when the text gives none — or gives two that differ,
+ * which is a choice and not a figure. Two equal readings are one figure printed twice.
+ */
 function reading(text: string, unitPattern: string, si: number): Reading | undefined {
-  const match = new RegExp(`(?<![0-9.])([0-9]+(?:\\.[0-9]+)?)\\s*(?:${unitPattern})(?![a-z])`, 'i').exec(text);
-  if (!match) return undefined;
-  const decimals = match[1]!.split('.')[1]?.length ?? 0;
-  return { value: Number(match[1]) * si, step: 10 ** -decimals * si };
+  const found = readings(text, unitPattern, si);
+  if (found.length === 0) return undefined;
+  return found.every((entry) => Math.abs(entry.value - found[0]!.value) < 1e-12) ? found[0] : undefined;
+}
+
+/** Whether a unit appears in `text` but names no single figure: `20" or 24"`. */
+function aChoice(text: string, unitPattern: string, si: number): boolean {
+  return readings(text, unitPattern, si).length > 0 && reading(text, unitPattern, si) === undefined;
 }
 
 /** Of several readings of one measure, the value of the one printed to the finest step. */
@@ -90,27 +112,43 @@ function finest(readings: (Reading | undefined)[]): number | undefined {
   return known.reduce((best, entry) => (entry.step < best.step ? entry : best)).value;
 }
 
+/** The three spellings of a length, as the makers print them. */
+const LENGTH_UNITS: Array<[string, number]> = [
+  ['mm', units.MILLIMETRE],
+  ['cm', 10 * units.MILLIMETRE],
+  ['"|in|inch|inches', units.INCH],
+];
+
 /**
  * `5"`, `5 inch`, `16.1" (408.9 mm)`, `120.5 mm` → metres. A number with no unit is not read: the
  * pages that print one say so in their own words, and a bare number is a guess.
+ *
+ * `16.1" (408.9 mm)` is one length in two units, and the finer of the two is kept; `20" or 24"` is two
+ * lengths in one unit, which is a choice the page does not resolve, and gives nothing.
  */
 export function length(text: string): number | undefined {
-  const value = finest([
-    reading(text, 'mm', units.MILLIMETRE),
-    reading(text, 'cm', 10 * units.MILLIMETRE),
-    reading(text, '"|in|inch|inches', units.INCH),
-  ]);
+  if (LENGTH_UNITS.some(([unit, si]) => aChoice(text, unit, si))) return undefined;
+  const value = finest(LENGTH_UNITS.map(([unit, si]) => reading(text, unit, si)));
   return value === undefined ? undefined : tidy(value);
 }
+
+/** The spellings of a mass. Pounds and ounces add up (`6 lbs 2 oz`); the rest are the same mass again. */
+const MASS_UNITS: Array<[string, number]> = [
+  ['lbs?\\.?|pounds?', units.POUND],
+  ['oz\\.?|ounces?', OUNCE],
+  ['kg', 1],
+  ['g|grams?', units.GRAM],
+];
 
 /**
  * `41 OZ`, `6.6lbs (3.0kg)`, `5 lbs 13.1oz`, `19 ounces` → kilograms, or nothing when the figure cannot
  * be a gun's (a placeholder, a parcel). `6 lbs 2 oz` is one figure in two words; its step is the
- * ounce's.
+ * ounce's. `11.3 lb. or 11.8 lb.` is two weights, and gives nothing.
  */
 export function mass(text: string): number | undefined {
-  const pounds = reading(text, 'lbs?\\.?|pounds?', units.POUND);
-  const ounces = reading(text, 'oz\\.?|ounces?', OUNCE);
+  if (MASS_UNITS.some(([unit, si]) => aChoice(text, unit, si))) return undefined;
+  const pounds = reading(text, MASS_UNITS[0]![0], units.POUND);
+  const ounces = reading(text, MASS_UNITS[1]![0], OUNCE);
   const customary =
     pounds === undefined && ounces === undefined
       ? undefined
@@ -123,13 +161,18 @@ export function mass(text: string): number | undefined {
  * `1:7 RH, 6 Groove`, `1-10 Twist`, `1 in 11"`, `1:16"` → metres of barrel per turn. These makers all
  * print it in inches and many leave the unit out (`1:7`), which is the convention of the trade; a turn
  * outside what rifling can be (3 to 40 inches) is another number and is not read.
+ *
+ * A cell holding two different turns — FN prints `1:10" RH (.300); 1:12" RH (.308)` for a rifle sold in
+ * two cartridges — names no one gun's twist and gives nothing.
  */
 export function twist(text: string): number | undefined {
-  const match = /(?<![0-9])1\s*(?::|-|\s+in\s+)\s*([0-9]+(?:\.[0-9]+)?)(?![0-9])\s*(mm)?/i.exec(text);
-  if (!match) return undefined;
-  const turn = Number(match[1]);
-  if (match[2] !== undefined) return tidy(turn * units.MILLIMETRE);
-  return turn >= 3 && turn <= 40 ? tidy(turn * units.INCH) : undefined;
+  const turns = [...text.matchAll(/(?<![0-9])1\s*(?::|-|\s+in\s+)\s*([0-9]+(?:\.[0-9]+)?)(?![0-9])\s*(mm)?/gi)];
+  if (turns.length === 0) return undefined;
+  const metres = turns.map(([, number, unit]) => Number(number) * (unit === undefined ? units.INCH : units.MILLIMETRE));
+  if (!metres.every((turn) => Math.abs(turn - metres[0]!) < 1e-12)) return undefined;
+  const turn = metres[0]!;
+  if (turns[0]![2] !== undefined) return tidy(turn);
+  return turn >= 3 * units.INCH && turn <= 40 * units.INCH ? tidy(turn) : undefined;
 }
 
 /** Three-letter words of the names that are words and not model codes (`MC`, `CCU`, `FDE`, `BOA`). */

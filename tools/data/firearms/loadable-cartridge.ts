@@ -83,21 +83,26 @@ function boreOf(name: string): number | undefined {
 const SAME_BORE = 0.08;
 
 /**
- * Whether a cell names cartridges of more than one bore.
+ * Whether a cell names two cartridges rather than one.
  *
- * One bore is one gun as far as a record goes. The three figures a record keeps — barrel length, twist
- * and mass — belong to the barrel and the gun, not to the chamber cut at the back of it, so a cell such
- * as `.357 Magnum/.38 Spl`, `.223 Rem/5.56 NATO` or `45 Colt / 45 Auto` describes one gun whose figures
- * the page gives, and the record keeps the cell exactly as printed. The application matches a load
- * against each of the names (packages/app/src/state/firearms.ts).
+ * A slash is the one join that can still be one gun: makers write `.357 Magnum/.38 Spl`, `.223 Rem/5.56
+ * NATO` or `45 Colt / 45 Auto` for one chamber under two names, and the three figures a record keeps —
+ * barrel length, twist and mass — belong to the barrel and the gun, not to the chamber cut behind it.
+ * Where every name is of one bore, the page's figures are that one gun's, and the record keeps the cell
+ * exactly as printed; the application matches a load against each of the names
+ * (packages/app/src/state/firearms.ts).
  *
- * Two bores are two different guns: a model offered in `.308 Win or 6.5 Creedmoor` under one weight, or
- * `9mm/.40 S&W`. The page does not say which of them its figures belong to, so the gun is skipped
- * rather than given figures that may be the other one's.
+ * Every other join is the maker offering a choice: `.308 Win or 6.5 Creedmoor`, `410,45 COLT,45 AUTO`,
+ * `.338 Lapua Mag (converts to .308 Win.)`. FN's SPR A5M says it plainly — `.300 WSM or .308 Winchester`,
+ * `20" or 24"`, `11.3 lb. or 11.8 lb.`: two guns, and nothing on the page says which figure is which.
+ * Those are refused even when the bores agree, because a choice of cartridge comes with a choice of
+ * figures (2026-10-16).
  */
 export function severalCartridges(caliber: string): boolean {
+  if (/\bconvert/i.test(caliber)) return true;
   const names = cartridgeNames(caliber);
   if (names.length <= 1) return false;
+  if (/[,;]|\s(?:or|and|&|\+)\s/i.test(caliber)) return true;
   const bores = names.map(boreOf);
   const first = bores[0];
   if (first === undefined) return true;
@@ -105,10 +110,20 @@ export function severalCartridges(caliber: string): boolean {
 }
 
 /**
- * Whether a caliber names a cartridge at all. A bare bore (`.45`, `.54`, `12`, `17,5 mm`) is what a
- * muzzle-loader's page gives (pedersoli.ts) and what a revolver sold as cap-and-ball carries
- * (uberti.ts): there is no cartridge to load. A cartridge has a word in its name (`.45 Colt`,
- * `.450 Nitro Express`) or is a pair of figures (`.45-70`, `6,5x55`, `9x19`).
+ * Whether a caliber is a bare bore and so names no cartridge: `.44`, `.36`, `12`. That is what a
+ * cap-and-ball revolver's page gives (uberti.ts), where every cartridge carries a word beside the
+ * figure — `.45 LC`, `9 mm`, `.357 Mag`.
+ */
+export function bareBore(caliber: string): boolean {
+  return /^\s*\.?[0-9]+(?:[.,][0-9]+)?\s*$/.test(caliber);
+}
+
+/**
+ * Whether a caliber names a cartridge rather than a muzzle-loader's bore. A muzzle-loader is sold by
+ * its bore — `.45`, `.54`, `12`, `17,5 mm` — and there is no cartridge to load for it; a cartridge has
+ * a word in its name (`.45 Colt`, `.450 Nitro Express`) or is a pair of figures (`.45-70`, `.45/70`,
+ * `6,5x55`, `9x19`). Only the makers who sell both ask this (pedersoli.ts): on a page of cartridge guns
+ * a bare metric name such as `9 mm` is a cartridge, and `bareBore` is the question to ask instead.
  */
 export function namedCartridge(caliber: string): boolean {
   const words = caliber.replace(/\bmm\b/gi, '');

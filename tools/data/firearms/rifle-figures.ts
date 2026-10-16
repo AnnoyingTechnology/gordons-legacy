@@ -79,7 +79,9 @@ export function metricLength(text: string): Reading | undefined {
  * without saying how much of the length is barrel gives nothing.
  */
 export function barrelLength(text: string): Reading | undefined {
-  if (/brake|compensator|suppressor|silencer/i.test(text)) {
+  // `break` is Weatherby's own spelling of it, on about a third of their pages: without it the brake
+  // was counted into the barrel, making a 22" barrel 24" long (2026-10-16).
+  if (/brakes?|breaks?|compensator|suppressor|silencer/i.test(text)) {
     const barrel = /([0-9]+(?:\.[0-9]+)?)\s*(?:"|in\b|inch(?:es)?)\s*barrel/i.exec(text);
     return barrel ? inches(`${barrel[1]}"`) : undefined;
   }

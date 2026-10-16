@@ -16,7 +16,7 @@
  * barrel length excludes its cylinder.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { loadableCartridge, namedCartridge } from './loadable-cartridge.ts';
+import { bareBore, loadableCartridge } from './loadable-cartridge.ts';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
 import { crawlArguments, fetchPage, fetchText, fileName, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
@@ -101,8 +101,9 @@ export function firearmsFrom(page: string, url: string, retrieved: string): Fire
     const cartridge = cell('cartridge');
     const length = barrelLength(cell('barrelLength'));
     const model = cell('model');
-    // A bare calibre (`.44`) is a cap-and-ball revolver's bore, not a cartridge: `namedCartridge` refuses it.
-    if (!cartridge || !loadableCartridge(cartridge) || !namedCartridge(cartridge) || length === undefined || !model) continue;
+    // A bare calibre (`.44`) is a cap-and-ball revolver's bore, not a cartridge; `9 mm` and `.45 LC` are
+    // cartridges, which is why the question here is the bore and not whether a word is spelled out.
+    if (!cartridge || !loadableCartridge(cartridge) || bareBore(cartridge) || length === undefined || !model) continue;
     const variant = cell('description');
     const gunMass = mass(cell('weight'));
     const twist = twistLength(cell('twist'));
