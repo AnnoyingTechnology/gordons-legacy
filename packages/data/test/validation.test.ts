@@ -20,6 +20,17 @@ test('a consistent repository has no problem', async () => {
   expect(await validateRepository(await index(['projectiles/a.json']), new Map([['projectiles/a.json', projectile]]))).toEqual([]);
 });
 
+test('malformed JSON shapes are reported instead of throwing during validation', async () => {
+  const valid = await index(['projectiles/a.json']);
+  for (const value of [null, {}, { ...valid, files: null }, { ...valid, files: [null] },
+    { ...valid, files: [{ ...valid.files[0], sha256: 'invalid' }] }]) {
+    expect(await validateRepository(value, new Map())).toEqual([{ path: 'index.json', problem: 'invalid index' }]);
+  }
+  expect(await validateRepository(await index(['projectiles/a.json'], 'null'), new Map([['projectiles/a.json', 'null']]))).toEqual([
+    { path: 'projectiles/a.json', problem: 'invalid component' },
+  ]);
+});
+
 test('unlisted, missing and duplicated files are reported', async () => {
   const problems = await validateRepository(
     await index(['projectiles/a.json', 'projectiles/a.json', 'projectiles/gone.json']),

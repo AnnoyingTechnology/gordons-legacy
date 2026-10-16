@@ -24,8 +24,9 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 ## Next steps
 
 Current pickup, 2026-10-16: #34 everyday document UI audit and fixes; #33 Desert Tech intake and #32
-code audit follow. Desert Tech: 83 configurations prepared from 10 public product pages,
-awaiting data review. New/clone/funnel, guarded close, rename, shortcuts and save/export/delete fixes are
+code audit follow. Desert Tech: 83 configurations published after Julien’s approval in data PR #1.
+#32 now checks persistence and data boundaries. #19 full database coverage is required; Julien deferred
+original-machine extraction to lunch or tonight on 2026-10-16. New/clone/funnel, guarded close, rename, shortcuts and save/export/delete fixes are
 pushed; Undo/Redo and reopen-closed history remain in the #34 audit. R2 (#35) is explicitly excluded by Julien. Working checkout:
 `/home/julien/Documents/gordons-legacy`; earlier research checkout remains in `/tmp`.
 
@@ -41,7 +42,7 @@ Open issues (GitHub, `AnnoyingTechnology/gordons-legacy`), 2026-10-15:
 
 | Issue | What | State |
 |---|---|---|
-| #19 | Import GRT's database: approach decided (local tool writing GRT component files); the agent's client blocks it from finishing, so it is the maintainer's to run. Not blocking: data comes from the CC0 repository and the user's files. | Maintainer |
+| #19 | Full GRT database import and default/offline distribution are required (updated issue, 2026-10-16). Resume on the original development machine; current session has not verified access. | Deferred by Julien to lunch/tonight |
 | #22 | Pressure validation: published loads with measured pressures, or pressure traces. Blocks M7 and any claim about pressure accuracy. | Needs data |
 | #24 | User library of guns: done 2026-10-15. Crawled database split into #30. | Done |
 | #30 | Gun database: published specifications (barrel length, twist, mass, cartridge) in the data repository. Licensing decided (publish); Wikidata has nothing. Glock and Ruger read, more makers in progress; the repository kind and a searchable picker are left. | In progress |
@@ -66,6 +67,9 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 
 | Date | Decision | By |
 |---|---|---|
+| 2026-10-16 | Validate the complete data manifest before cache changes, and component content before replacing an offline copy. Invalid remote data must not destroy a valid cached version. | Implementation, #32 |
+| 2026-10-16 | Full converted GRT database must ship by default, including offline use; this supersedes the earlier local-only data scope. Resume on the original development machine. Julien deferred that work to lunch or tonight; community coverage remains a fallback, not completion. | Julien, updated #19 and chat |
+| 2026-10-16 | Desert Tech data PR #1 approved for merge after reviewing the 83 configurations and validation evidence. | Julien, chat |
 | 2026-10-16 | Desert Tech intake uses public product HTML and per-configuration specifications, with SKU identities. Shipping weight and selected-product defaults never fill a variant; unspecified units stay absent. Publish through a data-repository PR for the required maintainer review. | Implementation, following #33 and data intake rules |
 | 2026-10-16 | A selected gun must preselect its cartridge and offer Continue; the Glock 43X MOS should carry 9x19 mm forward without searching for it manually. | Julien, chat |
 | 2026-10-16 | Remove the full-width Load name / Copy inputs row. Use the load name as the right-hand results heading, with discreet on-demand editing; merge the simulation notice into the review box. Keep the layout compact and consistent. | Julien, chat |
@@ -159,7 +163,8 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 
 | Date | Entry |
 |---|---|
-| 2026-10-16 | #33: added a Desert Tech extractor and five invented-page tests; corrected the surveyed host to `deserttech.com`. Prepared 83 configurations from 10 public product pages, including seven SRS M2 configurations. Every record round-trips and passes the corpus audit; 463 repository files validate, all 709 tests and typecheck/build pass. Browser verified the candidate index/hash path, all 83 records and SRS M2 → Continue. Bare twist ratios and missing WLVRN figures stay absent; SKU, source URL, date and printed strings are preserved. Data branch `add-desert-tech-specifications` awaits review. #34 cartridge-preselection fix `1ffdf09` passed CI and deployed. |
+| 2026-10-16 | #32 persistence/data audit: reproduced malformed JSON crashes and invalid component updates overwriting the last valid cache. Added shared index-shape checks, duplicate-index rejection before cache mutation, and content validation before cache writes. Invalid cached entries are skipped offline. Three regression tests cover malformed manifests/components, cache preservation and validator reporting. All 712 tests, typecheck/build and the 463-file published repository validation pass. Next: IndexedDB transaction completion and backup envelope handling; see `docs/code-audit.md`. |
+| 2026-10-16 | #33: added a Desert Tech extractor and five invented-page tests; corrected the surveyed host to `deserttech.com`. Prepared 83 configurations from 10 public product pages, including seven SRS M2 configurations. Every record round-trips and passes the corpus audit; 463 repository files validate, all 709 tests and typecheck/build pass. Browser verified the candidate index/hash path, all 83 records and SRS M2 → Continue. Bare twist ratios and missing WLVRN figures stay absent; SKU, source URL, date and printed strings are preserved. Data [PR #1](https://github.com/AnnoyingTechnology/gordons-legacy-data/pull/1) approved and merged as `ea531cc`; published-index browser check passed. #34 cartridge-preselection fix `1ffdf09` passed CI and deployed. |
 | 2026-10-16 | #34 gun funnel correction: Glock 43X MOS already carries `9x19 mm`, but the bundled 48 cartridge definitions contain no 9 mm Luger. A gun now preselects its named cartridge and Continue accepts it; the full list appears only on Change cartridge. Exact names/explicit synonyms use a unique definition from open/saved loads or the database; missing definitions remain optional, with no invented numeric defaults. Browser verification used the actual published Glock record and checked absent/existing-load definitions, Continue, Back and Change cartridge. All 704 tests, typecheck and build pass. |
 | 2026-10-16 | #34 layout correction: removed the document-actions row and duplicate Copy inputs button. The results heading is the load name, editable on click or F2 from its tab (Enter/blur confirms, Escape cancels). The notice now sits inside the review box, including while loading. Browser checks cover heading/filename persistence, keyboard Save while renaming, cancellation, inactive-tab F2, and phone wrapping; light/dark layouts inspected; 700 tests, typecheck and build pass. Local Vite server: `127.0.0.1:5173`. |
 | 2026-10-16 | #34 follow-up: serialized per-document saves prevent duplicate first-save entries and preserve later edits; keyboard Save/Close commits a focused name field. Export distinguishes cancellation from permission/write failures, sanitizes the suggested file name and clears a recovered error. Saved-gun deletion now confirms. 700 tests, typecheck/build and Chromium workflows pass, including failure/retry and deletion cancel/confirm. New/clone UI deployment `cd628f4` passed CI. Remaining history/platform checks are recorded in `docs/ui-audit.md`; #34 stays open. |

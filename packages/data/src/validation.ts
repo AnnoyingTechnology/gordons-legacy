@@ -1,4 +1,5 @@
-import type { DataIndex, DataIndexEntry } from './repository.ts';
+import { isDataIndex } from './index-shape.ts';
+import type { DataIndexEntry } from './repository.ts';
 import { readDocument, sha256 } from './sync.ts';
 
 /** A problem found in the data repository, with the file it concerns. */
@@ -13,8 +14,8 @@ export interface RepositoryProblem {
  *
  * `files` maps each component file's path (`powders/….json`) to its text.
  */
-export async function validateRepository(index: DataIndex, files: ReadonlyMap<string, string>): Promise<RepositoryProblem[]> {
-  if (index.format !== 'gordons-legacy.data-index' || index.version !== 1) {
+export async function validateRepository(index: unknown, files: ReadonlyMap<string, string>): Promise<RepositoryProblem[]> {
+  if (!isDataIndex(index)) {
     return [{ path: 'index.json', problem: 'invalid index' }];
   }
   const problems: RepositoryProblem[] = [];

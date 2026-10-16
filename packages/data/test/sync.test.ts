@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, importGrtPropellant } from '@gordons-legacy/formats';
 import { describe, expect, test } from 'vitest';
-import { cachedDocuments, sha256, synchronise, type CachedFile, type ComponentKind, type DataCache } from '../src/index.ts';
+import { cachedDocuments, readDocument, sha256, synchronise, type CachedFile, type ComponentKind, type DataCache } from '../src/index.ts';
 
 const BASE = 'https://data.example/';
 
@@ -60,6 +60,43 @@ async function index(entries: Array<{ path: string; text: string; kind?: Compone
 }
 
 describe('synchronise', () => {
+  test('a malformed component cannot break offline reading or replace a valid cached copy', async () => {
+    expect(readDocument('null')).toBeUndefined();
+    const cache = memoryCache();
+    const path = 'powders/red-dot.json';
+    const previous = powderFile();
+    const saved = { path, text: previous, sha256: await sha256(previous) };
+    await cache.put(saved);
+    for (const text of ['null', previous.replace(/"bulkDensity": [0-9.]+/, '"bulkDensity": -1')]) {
+      const report = await synchronise(BASE, cache, server({ [path]: text, 'index.json': await index([{ path, text }]) }).fetch);
+      expect(report).toMatchObject({ downloaded: 0, documents: [], failed: [{ path, reason: 'content' }] });
+      expect(cache.files.get(path)).toEqual(saved);
+    }
+    await cache.put({ path: 'powders/broken.json', text: 'null', sha256: await sha256('null') });
+    expect(await cachedDocuments(cache)).toHaveLength(1);
+  });
+
+  test('rejects malformed or duplicate index entries before any cache change', async () => {
+    const text = powderFile();
+    const path = 'powders/red-dot.json';
+    const valid = JSON.parse(await index([{ path, text }]));
+    const entry = valid.files[0];
+    const invalid = [null, { ...valid, files: null },
+      ...[null, {}, { ...entry, kind: 'unknown' }, { ...entry, sha256: 'bad' },
+        { ...entry, name: 4 }, { ...entry, path: '../outside.json' }].map((item) => ({ ...valid, files: [item] })),
+      { ...valid, files: [entry, entry] },
+    ];
+    for (const value of invalid) {
+      const cache = memoryCache();
+      const saved = { path, text, sha256: entry.sha256 };
+      await cache.put(saved);
+      const remote = server({ 'index.json': JSON.stringify(value) });
+      await expect(synchronise(BASE, cache, remote.fetch, ['firearm'])).rejects.toThrow(/index/i);
+      expect(remote.downloads).toEqual(['index.json']);
+      expect([...cache.files.values()]).toEqual([saved]);
+    }
+  });
+
   test('downloads what is new, keeps what is unchanged, and reads it offline afterwards', async () => {
     const text = powderFile();
     const files = { 'powders/red-dot.json': text, 'index.json': await index([{ path: 'powders/red-dot.json', text }]) };

@@ -1,5 +1,6 @@
 import { checkCaliber, checkFirearm, checkProjectile, checkPropellant } from '@gordons-legacy/formats';
-import type { ComponentDocument, ComponentKind, DataIndex, DataIndexEntry, Provenance } from './repository.ts';
+import { isDataIndex } from './index-shape.ts';
+import type { ComponentDocument, ComponentKind, DataIndexEntry, Provenance } from './repository.ts';
 
 /** A file kept from an earlier synchronisation: its text and the hash it was checked against. */
 export interface CachedFile {
@@ -55,9 +56,12 @@ async function inParallel<T>(items: readonly T[], limit: number, task: (item: T)
 export async function synchronise(baseUrl: string, cache: DataCache, fetch: Fetch, kinds?: readonly ComponentKind[]): Promise<SyncReport> {
   const response = await fetch(`${baseUrl}index.json`);
   if (!response.ok) throw new Error('index.json could not be downloaded');
-  const index = JSON.parse(await response.text()) as DataIndex;
-  if (index.format !== 'gordons-legacy.data-index' || index.version !== 1 || !Array.isArray(index.files)) {
+  const index: unknown = JSON.parse(await response.text());
+  if (!isDataIndex(index)) {
     throw new Error('index.json is not a data index of a version this application reads');
+  }
+  if (new Set(index.files.map((entry) => entry.path)).size !== index.files.length) {
+    throw new Error('index.json lists a file more than once');
   }
   const cached = new Map((await cache.list()).map((file) => [file.path, file]));
   const report: SyncReport = { documents: [], downloaded: 0, unchanged: 0, removed: 0, failed: [] };
@@ -125,6 +129,12 @@ async function download(baseUrl: string, entry: DataIndexEntry, fetch: Fetch, re
     report.failed.push({ path: entry.path, reason: 'hash' });
     return undefined;
   }
+  // A matching hash identifies bytes; it does not make them a valid component. Check before put()
+  // replaces the previous usable offline copy.
+  if (!readDocument(text, entry)) {
+    report.failed.push({ path: entry.path, reason: 'content' });
+    return undefined;
+  }
   return { path: entry.path, sha256: entry.sha256, text };
 }
 
@@ -136,6 +146,7 @@ export function readDocument(text: string, entry?: DataIndexEntry): ComponentDoc
   } catch {
     return undefined;
   }
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return undefined;
   if (parsed.format !== 'gordons-legacy.component' || parsed.version !== 1) return undefined;
   if (entry && parsed.kind !== entry.kind) return undefined;
   const provenance = readProvenance(parsed.provenance);
