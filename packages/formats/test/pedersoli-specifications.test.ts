@@ -76,7 +76,7 @@ describe('reading a published specification', () => {
       url: 'https://example.invalid/prodotto/example-32',
       retrieved: '2026-10-16',
       massBasis: 'unstated',
-      published: { caliber: '.45-70 Gov.', barrelLength: '813,00 mm | 32 in', weight: '4,800 kg | 10.58 lbs', twist: '1:460 mm | 1:18' },
+      published: { caliber: '.45-70 Gov.', barrelLength: '813,00 mm | 32 in', weight: '4,800 kg | 10.58 lbs', twist: '460 mm | 1:18' },
     });
   });
 

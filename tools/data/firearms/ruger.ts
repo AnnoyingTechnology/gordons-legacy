@@ -13,7 +13,8 @@
  *
  * A sheet gives each measure twice, in two spans, the metric one hidden by the page's own unit switch:
  * `<span class='measureI'>2.80"</span><span class='measureM hidden'>71 mm</span>`. The metric figure is
- * the one taken; the inch or ounce figure is the fallback.
+ * the one taken; the inch or ounce figure is the fallback. `source.published` keeps both spans, written
+ * with a `|` between them (`20.00" | 50.8 cm`), rather than choosing one of them.
  *
  * A published barrel length is nominal. For a rifle it is measured in different ways by different makers,
  * and Ruger does not say how; the files say `published` all the same, and the application shows that.

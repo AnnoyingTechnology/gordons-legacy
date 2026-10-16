@@ -97,14 +97,22 @@ export function printedMasses(text: string): number[] {
  * The turns of rifling a printed string can mean, in metres: `1:9,5"`, `1:203 mm`, a bare `1:10`, and —
  * since the field is the twist and nothing else — the turn on its own, which is how Browning prints it
  * (`10"` for one turn in ten inches, `9 1/2"` for one in nine and a half).
+ *
+ * Both readings are collected, not one or the other, because a page can print the two side by side in
+ * two spellings: Pedersoli's `360 mm | 1:14` is one turn in 360 mm beside one in 14 inches, and a
+ * record that holds either of them holds a figure its page printed.
  */
 export function printedTwists(text: string): number[] {
   const ratios = [...text.matchAll(new RegExp(`1\\s*(?:[:-]|in\\b)\\s*${NUMBER}\\s*(mm|cm|in\\b|inch(?:es)?|"|”)?`, 'gi'))].flatMap(([, number, unit]) => {
     const metres = { mm: units.MILLIMETRE, cm: 10 * units.MILLIMETRE }[unit?.toLowerCase() ?? ''] ?? units.INCH;
     return values(number!).map((figure) => figure * metres);
   });
-  return ratios.length > 0 ? ratios : printedLengths(text);
+  // The `1` of a ratio is not a turn of its own: `1 in 12"` names one turn, not a 1" turn and a 12" one.
+  return [...ratios, ...printedLengths(text.replace(RATIO_NUMERATOR, ' '))];
 }
+
+/** The `1 :`, `1 in` or `1-` that opens a ratio, where only the figure behind it is a measure. */
+const RATIO_NUMERATOR = /\b1\s*(?::|-|in\b|turn\s+(?:right|left)\s+in)\s*(?=[0-9])/gi;
 
 /** Whether a figure is one of the printed string's readings, to the tolerance above. */
 function agrees(figure: number, printed: number[], absolute: number): boolean {
@@ -128,7 +136,7 @@ const UNIT_SPELLINGS = ['"|”|in\\b|inch(?:es)?\\b', 'mm\\b', 'cm\\b', 'lbs?\\b
 function namesAChoice(text: string): boolean {
   if (/\bbarrel\b/i.test(text) && /brakes?|breaks?|compensator|suppressor|silencer/i.test(text)) return false;
   // The `1` of a ratio is not a figure of the measure: `1 in 12"` names one turn, not a 1" and a 12".
-  const measures = text.replace(/\b1\s*(?::|-|in\b|turn\s+(?:right|left)\s+in)\s*(?=[0-9])/gi, ' ');
+  const measures = text.replace(RATIO_NUMERATOR, ' ');
   return UNIT_SPELLINGS.some((unit) => {
     const figures = [...measures.matchAll(new RegExp(`${NUMBER}\\s*(?:${unit})`, 'gi'))].map(([, number]) => Number(number!.replace(',', '.')));
     const first = figures[0];

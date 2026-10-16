@@ -15,6 +15,10 @@
  * Kodiak Mark IV 22" page prints a barrel of `5670,00` mm beside `22` inches, and a gun whose two
  * renderings disagree is left out and reported, not guessed.
  *
+ * The cells hold bare numbers and the labels hold the units, so `source.published` writes both of the
+ * page's renderings with the unit of their label (`560,00 mm | 22 in`) — the page's figures, with
+ * nothing of ours between them (see published-figures.ts).
+ *
  * Left out: muzzle-loaders (most of the catalogue: their caliber is a bare bore such as `.45`, `.54`,
  * `12` or `17,5 mm`, never a cartridge), kits, shotgun and combination guns (a `410` in the
  * caliber), rimfire. The weight does not say what it includes, so the mass basis is `unstated`.
@@ -148,7 +152,7 @@ export function firearmFromBlock(block: Block, title: string, several: boolean, 
         caliber: cartridge,
         barrelLength: block.barrelInches === undefined ? `${block.barrelMillimetres} mm` : `${block.barrelMillimetres} mm | ${block.barrelInches} in`,
         weight: block.weightKilograms === undefined ? undefined : `${block.weightKilograms} kg${block.weightPounds === undefined ? '' : ` | ${block.weightPounds} lbs`}`,
-        twist: twistMillimetres === undefined ? undefined : `1:${block.twistMillimetres} mm${block.twistInches === undefined ? '' : ` | ${block.twistInches}`}`,
+        twist: twistMillimetres === undefined ? undefined : `${block.twistMillimetres} mm${block.twistInches === undefined ? '' : ` | ${block.twistInches}`}`,
       }),
     },
   };
