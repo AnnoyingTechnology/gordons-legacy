@@ -33,8 +33,10 @@ import { textLines } from './printed-figures.ts';
 /** A page or a quoted string with its encoding undone, for comparing one against the other. */
 export function comparable(text: string): string {
   return text
-    .replace(/&quot;|&#8221;|&#x201d;|&rdquo;|”|\\u201d/gi, '"')
-    .replace(/&nbsp;|&#160;|\\u00a0/gi, ' ')
+    // A page whose data is JSON writes `40 S&W` and `16.1”`; those are the page's characters.
+    .replace(/\\u([0-9a-f]{4})/gi, (_escape, code: string) => String.fromCharCode(Number.parseInt(code, 16)))
+    .replace(/&quot;|&#8221;|&#x201d;|&rdquo;|”/gi, '"')
+    .replace(/&nbsp;|&#160;/gi, ' ')  // a non-breaking space is whitespace below, where it is collapsed
     .replace(/&amp;/gi, '&')
     .replace(/\\(["/])/g, '$1')
     .replace(/\s+/g, ' ')
