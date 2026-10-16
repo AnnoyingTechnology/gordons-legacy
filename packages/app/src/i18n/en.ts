@@ -420,7 +420,7 @@ export const en = {
   'firearm.massUnstated': 'The maker does not say what this weight includes: treat it as a starting point and weigh the gun.',
   'library.review': "Review",
   'results.muzzleBlast': "Muzzle blast",
-  'results.muzzleBlastDetail': "estimated peak, 1 m beside the muzzle, prone (muzzle 20 cm over hard ground)",
+  'results.muzzleBlastDetail': "estimated peak · 1 m, prone",
   'results.muzzleBlastHelp': "Unweighted peak level of the muzzle blast, estimated from the energy left in the powder gas at the muzzle with Fansler's blast scaling (1998), fitted on measured 7.62 mm rifle blasts, plus the echo of hard ground 20 cm under the muzzle (prone; at a bench or standing the echo comes after the blast). Softer ground reflects less. Not included: the bullet's supersonic crack, a revolver's cylinder gap, muzzle brakes and other devices, walls and roofs. The air is taken at the powder's temperature. Gunfire is above 140 dB peak, the limit for impulse noise at work in EU law (Directive 2003/10/EC): wear hearing protection.",
   'library.blast': "Blast",
   'results.muzzleBlastWithin': "1.8 dB RMS in the model’s rifle data",

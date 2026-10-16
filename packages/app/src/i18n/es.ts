@@ -418,7 +418,7 @@ export const es: Messages = {
   'firearm.massUnstated': 'El fabricante no dice qué incluye este peso: tómelo como punto de partida y pese el arma.',
   'library.review': "Revisión",
   'results.muzzleBlast': "Estampido en boca",
-  'results.muzzleBlastDetail': "pico estimado, a 1 m al lado de la boca, tendido (boca a 20 cm de un suelo duro)",
+  'results.muzzleBlastDetail': "pico estimado · 1 m, tendido",
   'results.muzzleBlastHelp': "Nivel de pico sin ponderar del estampido en boca, estimado a partir de la energía que queda en los gases en la boca con el escalado de Fansler (1998), ajustado a estampidos medidos de rifles de 7,62 mm, más el eco de un suelo duro 20 cm bajo la boca (tendido; en mesa o de pie el eco llega después del estampido). Un suelo más blando refleja menos. No incluye: el chasquido supersónico de la bala, la holgura del tambor de un revólver, frenos de boca y otros dispositivos, paredes y techos. El aire se toma a la temperatura de la pólvora. Un disparo supera los 140 dB pico, el límite del ruido impulsivo en el trabajo en la legislación de la UE (Directiva 2003/10/CE): use protección auditiva.",
   'library.blast': "Estampido",
   'results.muzzleBlastWithin': "1,8 dB RMS en los datos de rifle del modelo",

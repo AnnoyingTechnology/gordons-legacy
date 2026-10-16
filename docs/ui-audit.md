@@ -18,6 +18,7 @@ model. R2 is outside this work.
 | Shortcuts | Toolbar help has an explicit, persisted opt-in: Alt/Option+Shift+N for New, Alt/Option+Shift+W for Close, Ctrl/Cmd+S for Save. Modal dialogs suspend these shortcuts. Ctrl/Cmd+W and Ctrl/Cmd+N remain browser commands. |
 | Local tab navigation | While a tab button has focus, Left/Right, Home/End navigate; F2 edits its name; Delete requests its guarded close. These keys do not capture editing in other controls. |
 | Compact results | The load name replaces the redundant simulation heading. The simulation notice is inside the review box, including its loading state, instead of a separate banner. |
+| Result cards | Speed legend is at the velocity card’s upper right. Blast annotation sits beside its value, with the full explanation and model uncertainty retained in the tooltip. On phones the blast, case drawing and secondary details span the available width. |
 | Page spacing | One page gutter aligns the toolbar, tabs and load contents; input/results headings have no extra top gap. Development notice and build/date share a full-width footer flush with the bottom. The danger hatch follows the panel edges without moving content. |
 | Reload recovery | Open documents persist in localStorage, including their saved snapshots and library identities. Existing storage-full warning remains visible. Library/guns have backup and restore. |
 

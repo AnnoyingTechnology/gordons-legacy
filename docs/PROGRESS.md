@@ -42,7 +42,7 @@ Open issues (GitHub, `AnnoyingTechnology/gordons-legacy`), 2026-10-16:
 
 | Issue | What | State |
 |---|---|---|
-| #37 / #38 | Move the speed legend to the card’s top right and shorten the blast annotation. | Next UI step |
+| #37 / #38 | Speed legend at the upper right; short blast note beside the value. Details stay in the tooltip. | Implemented; CI verification |
 | #39 | Overflow tab fade/hover suggestion filed at Julien’s request; existing scrolling already works well for him. | Suggestion; no implementation planned now |
 | #19 | Full GRT database import and default/offline distribution are required (updated issue, 2026-10-16). Resume on the original development machine; current session has not verified access. | Deferred by Julien to lunch/tonight |
 | #22 | Pressure validation: published loads with measured pressures, or pressure traces. Blocks M7 and any claim about pressure accuracy. | Needs data |
@@ -69,6 +69,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 
 | Date | Decision | By |
 |---|---|---|
+| 2026-10-16 | Move the transonic/sound-speed legend to the velocity card’s upper right. Reduce the blast annotation to a short note beside the value; keep assumptions and model uncertainty in the existing tooltip. | Julien, #37/#38; implementation detail |
 | 2026-10-16 | Keep strict input validation while helping the creation funnel use existing catalog records. Offer case variants explicitly and label catalog capacity as a reference. Use larger, grouped controls sized for their content. | Julien, chat; implementation detail |
 | 2026-10-16 | One consistent page gutter, less space above load contents, and a single development/build warning flush with the page edges and bottom. The danger hatch must touch all tab-panel edges without shifting its content. | Julien, chat |
 | 2026-10-16 | File the fade/hover tab idea as #39. Julien subsequently confirmed the current dev tab overflow works well; retain it as a suggestion. | Julien, chat |
@@ -168,6 +169,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 
 | Date | Entry |
 |---|---|
+| 2026-10-16 | #37/#38: speed legend moved above the scale at the card’s upper right; blast note is short and right-aligned beside the value. Full explanation/model uncertainty stays in its tooltip. Narrow layouts give blast, case drawing and result details full width; this also fixes the details card overflowing on phones. Typecheck/build and Chromium checks pass in all five languages at desktop/phone widths; light/dark screenshots inspected. Prior #34 layout commit `6e18a2d` passed CI and deployed. |
 | 2026-10-16 | #34 review/layout: cartridge aliases now expose the seven existing .308 case variants instead of treating the common cartridge as missing. Explicit selection fills the record’s available fields, labels reference capacity, and retains manually entered values. Grouped review fields are larger and content-sized, with technical details expanded when incomplete. Consistent page gutters, reduced heading gaps, one edge-to-edge development/build footer, and a danger frame on the tab-panel edges. All 714 tests, typecheck/build and desktop/phone Chromium checks pass, including the reported Sako flow, manual-value preservation, missing-field validation, footer geometry and danger-frame layout stability. #39 filed; #37/#38 picked up next. |
 | 2026-10-16 | #32 persistence/data audit: reproduced malformed JSON crashes and invalid component updates overwriting the last valid cache. Added shared index-shape checks, duplicate-index rejection before cache mutation, and content validation before cache writes. Invalid cached entries are skipped offline. Three regression tests cover malformed manifests/components, cache preservation and validator reporting. All 712 tests, typecheck/build and the 463-file published repository validation pass. Next: IndexedDB transaction completion and backup envelope handling; see `docs/code-audit.md`. |
 | 2026-10-16 | #33: added a Desert Tech extractor and five invented-page tests; corrected the surveyed host to `deserttech.com`. Prepared 83 configurations from 10 public product pages, including seven SRS M2 configurations. Every record round-trips and passes the corpus audit; 463 repository files validate, all 709 tests and typecheck/build pass. Browser verified the candidate index/hash path, all 83 records and SRS M2 → Continue. Bare twist ratios and missing WLVRN figures stay absent; SKU, source URL, date and printed strings are preserved. Data [PR #1](https://github.com/AnnoyingTechnology/gordons-legacy-data/pull/1) approved and merged as `ea531cc`; published-index browser check passed. #34 cartridge-preselection fix `1ffdf09` passed CI and deployed. |

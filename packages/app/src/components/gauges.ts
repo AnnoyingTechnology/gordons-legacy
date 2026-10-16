@@ -51,10 +51,7 @@ export function speedScale(velocity: number, temperature: number, context: UiCon
         ${ticks.map(({ value, si }) => html`<span style=${styleMap({ left: percent(si, from, to) })}>${number(value, 0)}</span>`)}
         <span class="scale-unit">${unit.symbol}</span>
       </div>
-      <div class="scale-caption">
-        <span class="swatch transonic"></span> ${t('speed.transonic')} · ${label}
-        ${outside ? html` · <strong>${t(outside === 'above' ? 'speed.above' : 'speed.below')}</strong>` : nothing}
-      </div>
+      ${outside ? html`<div class="scale-caption"><strong>${t(outside === 'above' ? 'speed.above' : 'speed.below')}</strong></div>` : nothing}
     </div>
   `;
 }

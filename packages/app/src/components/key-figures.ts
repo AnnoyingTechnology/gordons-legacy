@@ -25,10 +25,14 @@ export function keyFigures(load: Load, shot: Simulation, limits: PressureLimit[]
   const blast = muzzleBlast(load, shot);
   return html`
     <div class="key-figures">
-      <section class="key-card primary">
+      <section class="key-card primary speed-card">
         <h3>${icon('velocity')} ${t('results.muzzleVelocity')}</h3>
         <div class="key-value">${quantity(shot.muzzleVelocity, 'velocity')}</div>
         <div class="key-detail">${t('speed.mach', { mach: number(mach, 2), temperature: quantity(temperature, 'temperature', 0) })}</div>
+        <div class="speed-legend">
+          <span><span class="swatch transonic"></span> ${t('speed.transonic')}</span>
+          <span>${t('speed.soundAt', { temperature: quantity(temperature, 'temperature', 0), velocity: quantity(speedOfSound(temperature), 'velocity') })}</span>
+        </div>
         ${speedScale(shot.muzzleVelocity, temperature, context)}
       </section>
       <section class="key-card primary ${above ? 'critical' : ''}">
@@ -52,8 +56,8 @@ export function keyFigures(load: Load, shot: Simulation, limits: PressureLimit[]
             'sound',
             t('results.muzzleBlast'),
             `${blast.extrapolated ? '≈ ' : ''}${number(blast.level, 0)} dB`,
-            `${t('results.muzzleBlastDetail')}; ${t(blast.extrapolated ? 'results.muzzleBlastExtrapolated' : 'results.muzzleBlastWithin')}`,
-            t('results.muzzleBlastHelp'),
+            t('results.muzzleBlastDetail'),
+            `${t('results.muzzleBlastHelp')} ${t(blast.extrapolated ? 'results.muzzleBlastExtrapolated' : 'results.muzzleBlastWithin')}`,
           )
         : nothing}
       <section class="key-card fill-card">
@@ -67,7 +71,7 @@ export function keyFigures(load: Load, shot: Simulation, limits: PressureLimit[]
 
 function card(name: IconName, label: string, value: string, detail: string, help?: string): TemplateResult {
   return html`
-    <section class="key-card" title=${help ?? nothing}>
+    <section class="key-card ${name}" title=${help ?? nothing}>
       <h3>${icon(name)} ${label}</h3>
       <div class="key-value">${value}</div>
       ${detail ? html`<div class="key-detail">${detail}</div>` : nothing}

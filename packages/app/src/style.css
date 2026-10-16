@@ -1782,6 +1782,23 @@ main:has(.load-editor.concern-danger)::before {
   font-size: 0.85rem;
 }
 
+.speed-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 1rem;
+}
+.speed-card > h3, .speed-card > .key-value, .speed-card > .key-detail { grid-column: 1; }
+.speed-legend { grid-column: 2; grid-row: 1 / span 3; text-align: right; color: var(--muted); font-size: 0.8rem; }
+.speed-legend > span { display: block; }
+.speed-legend { overflow-wrap: anywhere; }
+.speed-card > .speed-scale { grid-column: 1 / -1; }
+.key-card.sound { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 0.75rem; align-content: start; }
+.key-card.sound h3 { grid-column: 1 / -1; }
+.key-card.sound .key-detail { align-self: center; text-align: right; }
+@media (max-width: 640px) {
+  .key-card.sound { grid-column: 1 / -1; }
+}
+
 @media (max-width: 1200px) {
   .key-card.primary,
   .key-card.fill-card,
@@ -2671,7 +2688,9 @@ dialog.cartridge-designer {
     grid-column: span 1;
   }
 
-  .key-card.primary {
+  .key-card.primary,
+  .key-card.fill-card,
+  .key-card.details-card {
     grid-column: span 2;
   }
 }

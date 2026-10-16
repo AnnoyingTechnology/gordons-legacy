@@ -418,7 +418,7 @@ export const fr: Messages = {
   'firearm.massUnstated': 'Le fabricant ne dit pas ce que ce poids comprend : prenez-le comme un point de départ et pesez l’arme.',
   'library.review': "Revue",
   'results.muzzleBlast': "Bruit de bouche",
-  'results.muzzleBlastDetail': "crête estimée, à 1 m à côté de la bouche, couché (bouche à 20 cm d’un sol dur)",
+  'results.muzzleBlastDetail': "crête estimée · 1 m, couché",
   'results.muzzleBlastHelp': "Niveau crête non pondéré du souffle de bouche, estimé à partir de l'énergie restant dans les gaz à la bouche avec la loi d'échelle de Fansler (1998), ajustée sur des souffles mesurés de carabines 7,62 mm, plus l'écho d'un sol dur à 20 cm sous la bouche (couché ; sur table ou debout, l'écho arrive après le souffle). Un sol plus meuble réfléchit moins. Non compris : le claquement supersonique de la balle, l'entrefer d'un revolver, les freins de bouche et autres dispositifs, les murs et toits. L'air est pris à la température de la poudre. Un tir dépasse 140 dB crête, limite du bruit impulsionnel au travail dans le droit européen (directive 2003/10/CE) : portez une protection auditive.",
   'library.blast': "Bruit",
   'results.muzzleBlastWithin': "1,8 dB RMS sur les données de carabines du modèle",
