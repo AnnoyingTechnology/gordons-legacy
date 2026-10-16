@@ -3,6 +3,9 @@ import type { Messages } from './en.ts';
 export const it: Messages = {
   'documents.choiceCount': '{count} opzioni',
   'documents.exportFailed': "Impossibile esportare il file. Verifica la destinazione e i permessi di scrittura, poi riprova. La carica resta aperta.",
+  'documents.continue': "Continua",
+  'documents.acceptCartridge': "Continua con la cartuccia preselezionata o cambiala.",
+  'documents.changeCartridge': "Cambia cartuccia",
   'documents.new': 'Nuova ricarica',
   'documents.clone': "Clona una carica",
   'documents.guided': "Creazione guidata",
@@ -17,7 +20,6 @@ export const it: Messages = {
   'documents.search': "Cerca per nome o descrizione",
   'documents.openSource': "Carica aperta (modifiche attuali)",
   'documents.noChoices': "Nessun risultato. Cancella la ricerca o torna indietro per scegliere un altro punto di partenza.",
-  'documents.confirmCartridge': "Cartuccia indicata per l’arma: {cartridge}. Sceglila esplicitamente; i nomi possono variare tra le banche dati.",
   'documents.newHelp': "Clona una carica esistente o segui la creazione guidata.",
   'documents.renameHelp': "Fai clic per rinominare. Invio conferma; Esc annulla.",
   'documents.name': 'Nome della ricarica',

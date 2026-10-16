@@ -3,6 +3,9 @@ import type { Messages } from './en.ts';
 export const de: Messages = {
   'documents.choiceCount': '{count} Einträge',
   'documents.exportFailed': "Die Datei konnte nicht exportiert werden. Ziel und Schreibrechte prüfen und erneut versuchen. Die Ladung bleibt geöffnet.",
+  'documents.continue': "Weiter",
+  'documents.acceptCartridge': "Mit der vorausgewählten Patrone fortfahren oder sie ändern.",
+  'documents.changeCartridge': "Patrone ändern",
   'documents.new': 'Neue Laborierung',
   'documents.clone': "Ladung klonen",
   'documents.guided': "Geführte Erstellung",
@@ -17,7 +20,6 @@ export const de: Messages = {
   'documents.search': "Nach Name oder Beschreibung suchen",
   'documents.openSource': "Geöffnete Ladung (aktuelle Änderungen)",
   'documents.noChoices': "Keine Treffer. Suche leeren oder einen anderen Ausgangspunkt wählen.",
-  'documents.confirmCartridge': "Für die Waffe angegeben: {cartridge}. Patrone ausdrücklich wählen; Datenbanken können unterschiedliche Namen verwenden.",
   'documents.newHelp': "Eine vorhandene Ladung klonen oder der geführten Erstellung folgen.",
   'documents.renameHelp': "Zum Umbenennen klicken. Eingabe bestätigt; Escape bricht ab.",
   'documents.name': 'Name der Laborierung',

@@ -21,6 +21,14 @@ const values: NewLoadValues = {
 };
 
 describe('new document creation', () => {
+  it('accepts a named cartridge without inventing a detailed specification', () => {
+    const result = createLoad('From gun', '9x19 mm', fixture.projectile, fixture.propellant, values);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.cartridge.name).toBe('9x19 mm');
+    expect(result.value.cartridge.definition).toBeUndefined();
+    expect(createLoad('From gun', '9x19 mm', fixture.projectile, fixture.propellant, {}).ok).toBe(false);
+  });
   it('requires the missing inputs instead of filling them from an example', () => {
     const result = createLoad('New', definition, fixture.projectile, fixture.propellant, {});
     expect(result.ok).toBe(false);

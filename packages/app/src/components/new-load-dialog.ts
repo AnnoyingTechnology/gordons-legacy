@@ -2,6 +2,7 @@ import type { Firearm } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
 import type { MessageKey } from '../i18n/i18n.ts';
 import { originLabel, type ComponentEntry } from '../state/components.ts';
+import { calibersFromLoads, matchingCaliber } from '../state/cartridge-choice.ts';
 import { firearmLabel } from '../state/firearms.ts';
 import { copyLoadInputs, type CloneSource } from '../state/load-copy.ts';
 import { createLoad, NEW_LOAD_FIELDS, type NewLoadValues } from '../state/new-load.ts';
@@ -23,6 +24,7 @@ export class NewLoadDialog extends LitElement {
     firearms: { attribute: false }, loading: { attribute: false }, context: { attribute: false },
     step: { state: true }, filter: { state: true }, title: { state: true },
     selected: { state: true }, values: { state: true }, error: { state: true },
+    changingCartridge: { state: true },
   };
 
   declare open: boolean;
@@ -37,10 +39,13 @@ export class NewLoadDialog extends LitElement {
   declare selected: Partial<Record<ComponentEntry['kind'], string>>;
   declare values: Partial<Record<keyof NewLoadValues, string>>;
   declare error: string;
+  declare changingCartridge: boolean;
   // Keep component identities stable across background repository refreshes while choosing.
   private choices: ComponentEntry[] = [];
   private firearm: Firearm | undefined;
   private clone: CloneSource | undefined;
+  /** A gun's named cartridge remains usable even when no detailed definition is in the database. */
+  private gunCartridge: string | undefined;
 
   constructor() {
     super();
@@ -55,18 +60,21 @@ export class NewLoadDialog extends LitElement {
     this.selected = {};
     this.values = {};
     this.error = '';
+    this.changingCartridge = false;
   }
 
   protected override createRenderRoot(): HTMLElement { return this; }
 
   protected override willUpdate(changed: Map<string, unknown>): void {
     if (changed.has('open') && this.open) {
-      this.choices = [...this.entries];
+      this.choices = [...calibersFromLoads(this.sources), ...this.entries];
       this.selected = {};
       this.values = {};
       this.title = '';
       this.firearm = undefined;
       this.clone = undefined;
+      this.gunCartridge = undefined;
+      this.changingCartridge = false;
       this.go('start');
     }
   }
@@ -95,6 +103,8 @@ export class NewLoadDialog extends LitElement {
           ${this.step === 'start' ? nothing : html`<button @click=${this.back}>${t('documents.back')}</button>`}
           <span class="spacer"></span>
           <button @click=${this.close}>${t('choice.cancel')}</button>
+          ${this.step === 'caliber' && (this.selected.caliber || this.gunCartridge)
+            ? html`<button @click=${() => this.go('projectile')}>${t('documents.continue')}</button>` : nothing}
           ${this.step === 'review' || this.step === 'clone-name'
             ? html`<button type="submit" form="new-load-form">${t('documents.create')}</button>` : nothing}
         </footer>
@@ -127,6 +137,7 @@ export class NewLoadDialog extends LitElement {
       })}
       ${this.path('documents.fromCartridge', 'documents.fromCartridgeHelp', () => {
         this.firearm = undefined;
+        this.gunCartridge = undefined;
         this.selected = {};
         this.values = {};
         this.go('caliber');
@@ -144,6 +155,10 @@ export class NewLoadDialog extends LitElement {
 
   private picker() {
     const { t, quantity } = this.context;
+    if (this.step === 'caliber' && (this.selected.caliber || this.gunCartridge) && !this.changingCartridge) {
+      return html`${this.summary()}<p>${t('documents.acceptCartridge')}</p>
+        <button @click=${() => { this.changingCartridge = true; }}>${t('documents.changeCartridge')}</button>`;
+    }
     const matches = (text: string) => this.filter.toLocaleLowerCase().trim().split(/\s+/)
       .every((word) => text.toLocaleLowerCase().includes(word));
     const rows: Array<{ name: string; detail: string; origin: string; choose: () => void }> = [];
@@ -160,7 +175,12 @@ export class NewLoadDialog extends LitElement {
         origin: firearm.source?.kind === 'published' ? `${t('firearm.published')} · ${firearm.source.publisher ?? ''}` : t('components.yours'),
         choose: () => {
           this.firearm = firearm; this.selected = {}; this.values = {};
-          this.fill({ barrelLength: firearm.barrel.length }); this.go('caliber');
+          this.gunCartridge = firearm.cartridge?.trim() || undefined;
+          this.changingCartridge = false;
+          this.fill({ barrelLength: firearm.barrel.length });
+          const matched = matchingCaliber(this.gunCartridge ?? '', this.choices);
+          if (matched) this.choose(matched);
+          this.go('caliber');
         },
       });
     } else {
@@ -176,7 +196,8 @@ export class NewLoadDialog extends LitElement {
     return html`
       ${this.summary()}
       ${this.step === 'gun' ? html`<p class="note">${t('firearm.publishedNote')}</p>` : nothing}
-      ${this.step === 'caliber' && this.firearm ? html`<p>${t('documents.confirmCartridge', { cartridge: this.firearm.cartridge ?? '—' })}</p>` : nothing}
+      ${this.step === 'caliber' && (this.selected.caliber || this.gunCartridge)
+        ? html`<p>${t('documents.acceptCartridge')}</p>` : nothing}
       <label class="new-load-search">${t('documents.search')}
         <input type="search" .value=${this.filter} @input=${(event: Event) => { this.filter = (event.target as HTMLInputElement).value; }} />
       </label>
@@ -200,6 +221,7 @@ export class NewLoadDialog extends LitElement {
     if (this.clone && this.step === 'clone-name') items.push(['documents.clone', this.clone.name]);
     else if (this.step !== 'clone') {
       if (this.firearm) items.push(['firearm.one', firearmLabel(this.firearm)]);
+      if (this.gunCartridge && !this.selected.caliber) items.push(['group.cartridge', this.gunCartridge]);
       for (const kind of ['caliber', 'projectile', 'propellant'] as const) {
         const entry = this.choices.find((entry) => entry.id === this.selected[kind]);
         if (entry) items.push([STEP_LABELS[kind], this.componentName(entry)]);
@@ -237,6 +259,7 @@ export class NewLoadDialog extends LitElement {
 
   private choose(entry: ComponentEntry): void {
     if (entry.kind === 'caliber') {
+      this.changingCartridge = false;
       if (this.selected.caliber !== entry.id) {
         this.selected = {};
         this.values = {};
@@ -295,8 +318,9 @@ export class NewLoadDialog extends LitElement {
     const caliber = this.choices.find((entry) => entry.id === this.selected.caliber);
     const projectile = this.choices.find((entry) => entry.id === this.selected.projectile);
     const propellant = this.choices.find((entry) => entry.id === this.selected.propellant);
-    if (caliber?.kind !== 'caliber' || projectile?.kind !== 'projectile' || propellant?.kind !== 'propellant') return;
-    const result = createLoad(title.value, caliber.value, projectile.value, propellant.value, numbers, this.firearm);
+    const cartridge = caliber?.kind === 'caliber' ? caliber.value : this.gunCartridge;
+    if (!cartridge || projectile?.kind !== 'projectile' || propellant?.kind !== 'propellant') return;
+    const result = createLoad(title.value, cartridge, projectile.value, propellant.value, numbers, this.firearm);
     if (!result.ok) { this.error = this.context.t('documents.checkInputs'); return; }
     this.dispatchEvent(new CustomEvent('create-load', { detail: result.value }));
   };

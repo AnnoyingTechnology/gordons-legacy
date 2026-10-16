@@ -79,7 +79,8 @@ src/
                         search (published-firearms.ts); the backup file holding them all (backup.ts);
                         the data repository's cache (data-cache.ts); saving files (file-saving.ts);
                         the example load of a first visit (example-load.ts); validated document creation
-                        (new-load.ts), independent input copies (load-copy.ts), shortcut matching
+                        (new-load.ts), cartridge preselection (cartridge-choice.ts), independent input copies
+                        (load-copy.ts), shortcut matching
                         (keyboard-shortcuts.ts), ordered snapshot saves (document-saving.ts)
   data/                 community-components.json: the CC0 community components bundled for a first
                         offline visit (tools/data/build-community.ts); online, the app takes them from
@@ -99,7 +100,8 @@ test/                   Vitest tests of the parts without a DOM
 ## Document actions
 
 New offers cloning from open or saved loads, or a guided component selection starting from a gun or
-cartridge. The load name heads the results column; click it to rename, or press F2 on its tab.
+cartridge. A chosen gun preselects its cartridge; Continue accepts it, with existing load definitions
+used when available and missing details left for review. The load name heads the results column; click it to rename, or press F2 on its tab.
 Enter confirms, Escape cancels, and leaving the field commits. Cloning stays under New, without a
 separate document-actions row. The Shortcuts button explains local tab keys and enables application shortcuts. Edited tabs ask before
 closing. See [the UI audit](../../docs/ui-audit.md) for coverage and remaining work.

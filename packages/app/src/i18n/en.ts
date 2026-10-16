@@ -5,6 +5,9 @@
 export const en = {
   'documents.choiceCount': '{count} choices',
   'documents.exportFailed': "The file could not be exported. Check the destination and write permissions, then try again. Your load is still open.",
+  'documents.continue': "Continue",
+  'documents.acceptCartridge': "Continue with the selected cartridge, or change it.",
+  'documents.changeCartridge': "Change cartridge",
   'documents.new': 'New load',
   'documents.clone': "Clone a load",
   'documents.guided': "Guided setup",
@@ -19,7 +22,6 @@ export const en = {
   'documents.search': "Search by name or description",
   'documents.openSource': "Open load (current edits)",
   'documents.noChoices': "No choices match. Clear the search, or go back to choose another starting point.",
-  'documents.confirmCartridge': "The gun lists: {cartridge}. Choose the cartridge explicitly; names in different databases can differ.",
   'documents.newHelp': "Clone an existing load, or follow the guided setup.",
   'documents.renameHelp': "Click to rename. Enter confirms; Escape cancels.",
   'documents.name': 'Load name',

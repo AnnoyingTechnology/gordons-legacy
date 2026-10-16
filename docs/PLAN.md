@@ -71,7 +71,8 @@ A serious engineering tool, not a consumer app.
   diagram (pressure and velocity against time or travel, side by side on wide screens, stacked on narrow ones); results table; measurements; ladder;
   powder search.
 - New load offers cloning an open/saved load, or a large guided selector starting from a gun or
-  cartridge, then projectile and powder, followed by the remaining inputs and a name.
+  cartridge, then projectile and powder, followed by the remaining inputs and a name. A selected gun
+  preselects its cartridge for confirmation; missing detailed cartridge data does not block that step.
 - Application shortcuts are opt-in and documented in the toolbar; focused load tabs also support
   arrow/Home/End navigation and guarded Delete.
 - The load name heads the results column and edits in place on demand. Keep cloning under New;

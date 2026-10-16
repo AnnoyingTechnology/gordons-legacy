@@ -43,11 +43,13 @@ export const NEW_LOAD_FIELDS: ReadonlyArray<{ name: keyof NewLoadValues; label: 
 ];
 
 /** Build and validate a new document from explicit selections and inputs, without measurements. */
-export function createLoad(title: string, caliber: CaliberDefinition, projectile: Projectile, propellant: Propellant, values: Partial<NewLoadValues>, firearm?: Firearm) {
+export function createLoad(title: string, caliber: CaliberDefinition | string, projectile: Projectile, propellant: Propellant, values: Partial<NewLoadValues>, firearm?: Firearm) {
   return parseLoad(JSON.stringify({
     format: LOAD_FORMAT, schemaVersion: LOAD_SCHEMA_VERSION, title: title.trim(),
     cartridge: {
-      name: caliber.name, definition: caliber, pressureMeasurementMethod: '', shotshell: false,
+      name: typeof caliber === 'string' ? caliber : caliber.name,
+      ...(typeof caliber === 'string' ? {} : { definition: caliber }),
+      pressureMeasurementMethod: '', shotshell: false,
       caseCapacity: values.caseCapacity, caseLength: values.caseLength, overallLength: values.overallLength,
       grooveDiameter: values.grooveDiameter, effectiveBoreArea: values.effectiveBoreArea,
       maxPressure: values.maxPressure, sebertFactor: values.sebertFactor,

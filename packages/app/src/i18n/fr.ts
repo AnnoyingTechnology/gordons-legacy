@@ -3,6 +3,9 @@ import type { Messages } from './en.ts';
 export const fr: Messages = {
   'documents.choiceCount': '{count} choix',
   'documents.exportFailed': "Le fichier n’a pas pu être exporté. Vérifiez la destination et les droits d’écriture, puis réessayez. Le chargement reste ouvert.",
+  'documents.continue': "Continuer",
+  'documents.acceptCartridge': "Continuez avec la cartouche présélectionnée ou changez-la.",
+  'documents.changeCartridge': "Changer de cartouche",
   'documents.new': 'Nouveau chargement',
   'documents.clone': "Cloner un chargement",
   'documents.guided': "Création guidée",
@@ -17,7 +20,6 @@ export const fr: Messages = {
   'documents.search': "Rechercher par nom ou description",
   'documents.openSource': "Chargement ouvert (modifications actuelles)",
   'documents.noChoices': "Aucun résultat. Effacez la recherche ou revenez choisir un autre point de départ.",
-  'documents.confirmCartridge': "Cartouche indiquée pour l’arme : {cartridge}. Choisissez-la explicitement ; les noms peuvent varier d’une base à l’autre.",
   'documents.newHelp': "Clonez un chargement existant ou suivez la création guidée.",
   'documents.renameHelp': "Cliquez pour renommer. Entrée confirme ; Échap annule.",
   'documents.name': 'Nom du chargement',
