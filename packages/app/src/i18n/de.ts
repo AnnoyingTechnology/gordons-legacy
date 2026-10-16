@@ -1,6 +1,9 @@
 import type { Messages } from './en.ts';
 
 export const de: Messages = {
+  'documents.saveBeforeClose': 'Diese Laborierung enthält ungespeicherte Änderungen. Vor dem Schließen in der Bibliothek speichern?',
+  'documents.saveAndClose': 'Speichern und schließen',
+  'documents.discard': 'Änderungen verwerfen',
   'app.title': "Gordon's Legacy",
   'app.close': 'Schließen',
   'app.development': 'In Entwicklung. Nichts hier eignet sich zur Entwicklung von Ladungen.',

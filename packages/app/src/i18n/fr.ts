@@ -1,6 +1,9 @@
 import type { Messages } from './en.ts';
 
 export const fr: Messages = {
+  'documents.saveBeforeClose': 'Ce chargement contient des modifications non enregistrées. L’enregistrer dans la bibliothèque avant de fermer ?',
+  'documents.saveAndClose': 'Enregistrer et fermer',
+  'documents.discard': 'Abandonner les modifications',
   'app.title': "Gordon's Legacy",
   'app.close': 'Fermer',
   'app.development': 'En développement. Rien ici n’est utilisable pour mettre au point une charge.',

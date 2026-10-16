@@ -1,6 +1,9 @@
 import type { Messages } from './en.ts';
 
 export const it: Messages = {
+  'documents.saveBeforeClose': 'Questa ricarica contiene modifiche non salvate. Salvarla nella libreria prima di chiudere?',
+  'documents.saveAndClose': 'Salva e chiudi',
+  'documents.discard': 'Scarta modifiche',
   'app.title': "Gordon's Legacy",
   'app.close': 'Chiudete',
   'app.development': 'In sviluppo. Niente di quanto qui presente è utilizzabile per sviluppare cariche.',

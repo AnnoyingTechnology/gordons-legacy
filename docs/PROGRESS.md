@@ -23,6 +23,10 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 
 ## Next steps
 
+Current pickup, 2026-10-16: #34 everyday document UI audit and fixes; #33 Desert Tech intake and #32
+code audit follow. R2 (#35) is explicitly excluded by Julien. Working checkout:
+`/home/julien/Documents/gordons-legacy`; earlier research checkout remains in `/tmp`.
+
 1. Native review of the five translations; M4 (data repository, once the maintainer agrees to create
    it; GRT database import, approach to choose, see Open questions). Every GRT tool of M5 now exists
    (2026-10-14): burning-rate table and powder search, tolerance synthesis, cartridge designer, unit
@@ -60,6 +64,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 
 | Date | Decision | By |
 |---|---|---|
+| 2026-10-16 | Resume development, excluding R2; follow the repository handoff and regular commit/push workflow. | Julien, chat |
 | 2026-10-13 | Rewrite GRT from scratch rather than port or wrap it: development ended, download removed 2026-07-27, NextGen never shipped, no public rewrite exists. | Julien |
 | 2026-10-13 | Name: Gordon's Legacy. | Julien |
 | 2026-10-13 | Code GPL-3.0, public on GitHub. Data CC0 1.0 in a separate repository. | Julien |
@@ -147,6 +152,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 
 | Date | Entry |
 |---|---|
+| 2026-10-16 | #34 pickup audit: no New, Rename or Duplicate actions, no documented application shortcuts; closing an edited tab immediately discards it. Save completion also marked the current document clean instead of the snapshot actually written. Fixed with Save / Discard / Cancel and snapshot-aware save completion. 687 tests, typecheck and build pass. Headless Chromium checked cancellation/Escape, save-and-close, discard, focus restoration, edits during a pending save, failed-save retention and reload recovery; no page errors. Next: named document creation and discoverable keyboard actions. |
 | 2026-10-13 | M0: repository, README, GPL-3.0 licence, plan, agent instructions, progress record, `.grtload` format notes. |
 | 2026-10-13 | M1: npm-workspace scaffold with TypeScript 7 and Vitest; decisions on pushing, fixtures and binary analysis recorded. |
 | 2026-10-13 | CI and GitHub Pages deployment; app status page with dedication dialog; README dedication. |

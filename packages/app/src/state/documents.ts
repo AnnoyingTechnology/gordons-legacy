@@ -85,11 +85,11 @@ export class DocumentStore {
     this.changed();
   }
 
-  /** Records that a document was saved with the given name, in the library when `libraryId` is given. */
-  markSaved(id: number, name: string, libraryId?: string): void {
+  /** Records the exact snapshot written, so an edit made while saving remains unsaved. */
+  markSaved(id: number, savedText: string, libraryId?: string): void {
     this.documents = this.documents.map((document) =>
       document.id === id
-        ? { ...document, name, savedText: serializeLoad(document.load), ...(libraryId === undefined ? {} : { libraryId }) }
+        ? { ...document, savedText, ...(libraryId === undefined ? {} : { libraryId }) }
         : document,
     );
     this.changed();

@@ -32,6 +32,8 @@ import './firearm-picker.ts';
 import { indexedDbStore } from '../state/indexed-db.ts';
 import './converter-dialog.ts';
 import './units-dialog.ts';
+import './close-document-dialog.ts';
+import type { CloseDocumentAction } from './close-document-dialog.ts';
 
 /**
  * The application: toolbar, one tab per open load, and the active load's editor. Owns the document
@@ -52,6 +54,9 @@ export class AppShell extends LitElement {
     editedFirearm: { state: true },
     firearmPickerOpen: { state: true },
     publishedGuns: { state: true },
+    closingDocument: { state: true },
+    savingBeforeClose: { state: true },
+    closeError: { state: true },
   };
 
   declare context: UiContext;
@@ -72,6 +77,10 @@ export class AppShell extends LitElement {
   declare unitsOpen: boolean;
   declare aboutOpen: boolean;
   declare converterOpen: boolean;
+  /** The edited tab waiting for Save, Discard or Cancel. */
+  declare closingDocument: number | undefined;
+  declare savingBeforeClose: boolean;
+  declare closeError: string;
   private readonly store = new DocumentStore(window.localStorage);
   private readonly library = new Library(indexedDbStorage());
   private readonly components = new ComponentLibrary(indexedDbStore<ComponentEntry>('components'));
@@ -90,6 +99,9 @@ export class AppShell extends LitElement {
     this.editedFirearm = undefined;
     this.firearmPickerOpen = false;
     this.publishedGuns = undefined;
+    this.closingDocument = undefined;
+    this.savingBeforeClose = false;
+    this.closeError = '';
     // The dedication and safety notice open on a browser's first visit, over an example load, so that the
     // tool shows what it does instead of an empty page (#29).
     this.aboutOpen = window.localStorage.getItem(WELCOME_SEEN_KEY) === null;
@@ -138,7 +150,7 @@ export class AppShell extends LitElement {
       )}
       ${tabBar(this.store.documents, active?.id, (document) => this.store.isDirty(document), {
         show: (id) => this.showDocument(id),
-        close: (id) => this.store.close(id),
+        close: (id) => this.requestClose(id),
       }, this.context)}
       <main @dragover=${(event: DragEvent) => event.preventDefault()} @drop=${this.openFromDrop}>
         ${isResearchEngine(this.context.engine)
@@ -194,6 +206,13 @@ export class AppShell extends LitElement {
         @close=${() => (this.editedFirearm = undefined)}
       ></gl-firearm-dialog>
       <gl-converter-dialog .open=${this.converterOpen} .context=${this.context} @close=${() => (this.converterOpen = false)}></gl-converter-dialog>
+      <gl-close-document-dialog
+        .name=${this.store.documents.find((document) => document.id === this.closingDocument)?.name}
+        .saving=${this.savingBeforeClose}
+        .error=${this.closeError}
+        .context=${this.context}
+        @close-document=${(event: CustomEvent<CloseDocumentAction>) => void this.resolveClose(event.detail)}
+      ></gl-close-document-dialog>
       <gl-units-dialog
         .open=${this.unitsOpen}
         .context=${this.context}
@@ -355,16 +374,62 @@ export class AppShell extends LitElement {
   }
 
   /** Saves the load in the library: no file to choose; the tab stays linked to its entry. */
-  private async saveToLibrary(id: number): Promise<void> {
+  private async saveToLibrary(id: number): Promise<boolean> {
     const document = this.store.documents.find((candidate) => candidate.id === id);
-    if (!document) return;
+    if (!document) return false;
     const name = document.name.replace(/\.json$/i, '');
+    const savedText = serializeLoad(document.load);
     try {
       const libraryId = await this.library.save(name, document.load, document.libraryId);
-      this.store.markSaved(id, document.name, libraryId);
+      this.store.markSaved(id, savedText, libraryId);
+      return true;
     } catch {
       this.openErrors = [this.context.t('library.saveFailed')];
+      return false;
     }
+  }
+
+  private requestClose(id: number): void {
+    const document = this.store.documents.find((candidate) => candidate.id === id);
+    if (!document) return;
+    if (!this.store.isDirty(document)) {
+      this.closeDocument(id);
+      return;
+    }
+    this.closeError = '';
+    this.closingDocument = id;
+  }
+
+  private async resolveClose(action: CloseDocumentAction): Promise<void> {
+    const id = this.closingDocument;
+    if (id === undefined || this.savingBeforeClose) return;
+    if (action === 'cancel') {
+      this.closingDocument = undefined;
+      return;
+    }
+    if (action === 'save') {
+      this.savingBeforeClose = true;
+      const saved = await this.saveToLibrary(id);
+      this.savingBeforeClose = false;
+      if (!saved) {
+        this.closeError = this.context.t('library.saveFailed');
+        return;
+      }
+      const document = this.store.documents.find((candidate) => candidate.id === id);
+      if (document && this.store.isDirty(document)) return;
+    }
+    this.closingDocument = undefined;
+    this.closeDocument(id);
+  }
+
+  /** Return keyboard focus to a surviving tab, or the Open control after the last tab. */
+  private closeDocument(id: number): void {
+    this.store.close(id);
+    if (this.view === 'compare' && this.store.documents.length < 2) this.view = 'editor';
+    void this.updateComplete.then(() => {
+      const target = this.querySelector<HTMLElement>('.tab.active .tab-name') ?? this.querySelector<HTMLElement>('.toolbar .file-input');
+      target?.focus();
+    });
   }
 
   /** A gun file, into the gun library: the same place "Save as a gun" puts one. */

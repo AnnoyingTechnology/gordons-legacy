@@ -1,6 +1,9 @@
 import type { Messages } from './en.ts';
 
 export const es: Messages = {
+  'documents.saveBeforeClose': 'Esta carga tiene cambios sin guardar. ¿Guardarla en la biblioteca antes de cerrar?',
+  'documents.saveAndClose': 'Guardar y cerrar',
+  'documents.discard': 'Descartar cambios',
   'app.title': "Gordon's Legacy",
   'app.close': 'Cerrar',
   'app.development': 'En desarrollo. Nada de lo que hay aquí sirve para desarrollar cargas.',

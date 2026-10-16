@@ -24,6 +24,7 @@ src/
     about-dialog.ts       dedication, safety notice and build; opens on a first visit
     units-dialog.ts       display unit of each kind of quantity
     choice-dialog.ts      pick one of several options (projectiles of a file)
+    close-document-dialog.ts Save / Discard / Cancel before closing an edited load
     bore-area-dialog.ts   GRT's effective-bore-area assistant
     chronograph-dialog.ts confirms a chronograph CSV import (column, unit, charge)
     load-editor.ts        <gl-load-editor>: inputs beside results, re-simulated on every edit
