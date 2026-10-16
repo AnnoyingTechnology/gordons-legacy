@@ -11,6 +11,8 @@ export interface Settings {
   foldedGroups: string[];
   /** Id of the engine that computes every figure shown (engine-choice.ts). */
   engine: string;
+  /** Application shortcuts are opt-in; browser window/tab commands are never claimed. */
+  keyboardShortcuts: boolean;
 }
 
 const STORAGE_KEY = 'gordons-legacy.settings';
@@ -23,10 +25,11 @@ export function loadSettings(storage: Storage | undefined, browserLanguages: rea
     units: presetPreferences('metric'),
     foldedGroups: [],
     engine: DEFAULT_ENGINE.id,
+    keyboardShortcuts: false,
   };
   try {
     const saved = JSON.parse(storage?.getItem(STORAGE_KEY) ?? '{}') as Partial<Settings>;
-    return { ...defaults, ...saved };
+    return { ...defaults, ...saved, keyboardShortcuts: saved.keyboardShortcuts === true };
   } catch {
     return defaults;
   }

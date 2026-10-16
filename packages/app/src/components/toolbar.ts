@@ -24,6 +24,7 @@ export interface ToolbarState {
 
 /** What the toolbar's buttons do; the application shell provides them. */
 export interface ToolbarActions {
+  newLoad: () => void;
   openFiles: (event: Event) => void;
   save: () => void;
   exportFile: () => void;
@@ -35,6 +36,7 @@ export interface ToolbarActions {
   /** Changes the engine; takes its id, since that is what the setting keeps. */
   setEngine: (id: string) => void;
   showAbout: () => void;
+  showShortcuts: () => void;
 }
 
 /** The files the Open button accepts: loads, components, pressure traces and chronograph exports. */
@@ -48,6 +50,7 @@ export function toolbar(state: ToolbarState, actions: ToolbarActions, context: U
     <header class="toolbar">
       <h1><img class="logo" src=${`data:image/svg+xml,${encodeURIComponent(logo)}`} alt="" />${t('app.title')}</h1>
       <div class="tool-group">
+        <button class="tool new-load" @click=${actions.newLoad}>${icon('new')}<span>${t('documents.new')}</span></button>
         <label class="tool">
           ${icon('open')}<span>${t('toolbar.open')}</span>
           <input type="file" accept=${OPENED_FILES} multiple class="file-input" @change=${actions.openFiles} />
@@ -94,6 +97,7 @@ export function toolbar(state: ToolbarState, actions: ToolbarActions, context: U
           </select>
         </label>
         <button class="tool" @click=${actions.showAbout}>${icon('info')}<span>${t('toolbar.about')}</span></button>
+        <button class="tool" @click=${actions.showShortcuts}>${icon('help')}<span>${t('shortcuts.title')}</span></button>
       </div>
     </header>
   `;

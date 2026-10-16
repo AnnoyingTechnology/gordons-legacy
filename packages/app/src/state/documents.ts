@@ -85,6 +85,16 @@ export class DocumentStore {
     this.changed();
   }
 
+  /** Changes the tab/file name and the title saved inside the load together. */
+  rename(id: number, title: string): void {
+    const trimmed = title.trim().replace(/\.json$/i, '').trim();
+    if (!trimmed) return;
+    this.documents = this.documents.map((document) => document.id === id
+      ? { ...document, name: `${trimmed}.json`, load: { ...document.load, title: trimmed } }
+      : document);
+    this.changed();
+  }
+
   /** Records the exact snapshot written, so an edit made while saving remains unsaved. */
   markSaved(id: number, savedText: string, libraryId?: string): void {
     this.documents = this.documents.map((document) =>

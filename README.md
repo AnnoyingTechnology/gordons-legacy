@@ -18,7 +18,8 @@ Gordon's Legacy is a from-scratch, GPL-licensed rewrite so that his work stays a
 
 ## What it does
 
-Open a `.grtload` file or start from the example load, and it simulates the shot as you type: pressure
+Create a load through the guided setup, clone an existing load, open a `.grtload` file, or start from
+the example load. It simulates the shot as you type: pressure
 and velocity along the barrel, the peak against the cartridge's maxima, the case fill, the recoil, the
 muzzle blast, and a review of the load in words — what is near a maximum, what ordinary bench
 variations would do to it, over what powder temperatures it stays within limits.

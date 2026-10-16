@@ -70,6 +70,10 @@ A serious engineering tool, not a consumer app.
 - GRT's organization: load files in tabs; inputs grouped as caliber, projectile, powder and barrel; main
   diagram (pressure and velocity against time or travel, side by side on wide screens, stacked on narrow ones); results table; measurements; ladder;
   powder search.
+- New load offers cloning an open/saved load, or a large guided selector starting from a gun or
+  cartridge, then projectile and powder, followed by the remaining inputs and a name.
+- Application shortcuts are opt-in and documented in the toolbar; focused load tabs also support
+  arrow/Home/End navigation and guarded Delete.
 - Dense layout, aligned tabular figures, explicit units, metric/imperial switch. A clear hierarchy of
   results: velocity and pressure first, on scales against the speed of sound and the CIP and SAAMI
   maxima; then energy and recoil; then the rest.

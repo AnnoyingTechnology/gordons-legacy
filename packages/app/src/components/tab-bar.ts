@@ -9,7 +9,7 @@ export function tabBar(
   documents: readonly OpenDocument[],
   activeId: number | undefined,
   isDirty: (document: OpenDocument) => boolean,
-  actions: { show: (id: number) => void; close: (id: number) => void },
+  actions: { show: (id: number) => void; close: (id: number) => void; key: (event: KeyboardEvent, id: number) => void },
   context: UiContext,
 ) {
   const { t } = context;
@@ -18,8 +18,9 @@ export function tabBar(
       ${documents.map((document) => {
         const active = document.id === activeId;
         return html`
-          <div class="tab ${active ? 'active' : ''}">
-            <button class="tab-name" title=${document.name} aria-current=${active ? 'true' : nothing} @click=${() => actions.show(document.id)}>
+          <div class="tab ${active ? 'active' : ''}" data-document-id=${document.id}>
+            <button class="tab-name" title=${document.name} aria-current=${active ? 'true' : nothing}
+              @keydown=${(event: KeyboardEvent) => actions.key(event, document.id)} @click=${() => actions.show(document.id)}>
               <span class="tab-title">
                 ${document.name.replace(/\.json$/i, '')}${isDirty(document) ? html`<span class="unsaved" title=${t('documents.unsaved')}> •</span>` : nothing}
               </span>

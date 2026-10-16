@@ -25,6 +25,8 @@ src/
     units-dialog.ts       display unit of each kind of quantity
     choice-dialog.ts      pick one of several options (projectiles of a file)
     close-document-dialog.ts Save / Discard / Cancel before closing an edited load
+    new-load-dialog.ts    clone a load or follow the gun/cartridge → projectile → powder guide
+    shortcuts-dialog.ts   keyboard help and the persisted opt-in for application shortcuts
     bore-area-dialog.ts   GRT's effective-bore-area assistant
     chronograph-dialog.ts confirms a chronograph CSV import (column, unit, charge)
     load-editor.ts        <gl-load-editor>: inputs beside results, re-simulated on every edit
@@ -75,7 +77,9 @@ src/
                         firearms.ts, components.ts); the published gun database, read on the first
                         search (published-firearms.ts); the backup file holding them all (backup.ts);
                         the data repository's cache (data-cache.ts); saving files (file-saving.ts);
-                        the example load of a first visit (example-load.ts)
+                        the example load of a first visit (example-load.ts); validated document creation
+                        (new-load.ts), independent input copies (load-copy.ts), shortcut matching
+                        (keyboard-shortcuts.ts)
   data/                 community-components.json: the CC0 community components bundled for a first
                         offline visit (tools/data/build-community.ts); online, the app takes them from
                         the data repository through @gordons-legacy/data
@@ -90,6 +94,13 @@ src/
   offline.ts, dom.ts
 test/                   Vitest tests of the parts without a DOM
 ```
+
+## Document actions
+
+New offers cloning from open or saved loads, or a guided component selection starting from a gun or
+cartridge. Rename is above the editor; Copy inputs creates an independent unsaved document. The
+Shortcuts button explains local tab keys and enables application shortcuts. Edited tabs ask before
+closing. See [the UI audit](../../docs/ui-audit.md) for coverage and remaining work.
 
 ## Conventions
 

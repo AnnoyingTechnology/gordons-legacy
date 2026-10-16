@@ -34,6 +34,10 @@ import './converter-dialog.ts';
 import './units-dialog.ts';
 import './close-document-dialog.ts';
 import type { CloseDocumentAction } from './close-document-dialog.ts';
+import './new-load-dialog.ts';
+import './shortcuts-dialog.ts';
+import { cloneSources, copyLoadInputs } from '../state/load-copy.ts';
+import { documentShortcut } from '../state/keyboard-shortcuts.ts';
 
 /**
  * The application: toolbar, one tab per open load, and the active load's editor. Owns the document
@@ -57,6 +61,8 @@ export class AppShell extends LitElement {
     closingDocument: { state: true },
     savingBeforeClose: { state: true },
     closeError: { state: true },
+    newLoadOpen: { state: true },
+    shortcutsOpen: { state: true },
   };
 
   declare context: UiContext;
@@ -81,6 +87,8 @@ export class AppShell extends LitElement {
   declare closingDocument: number | undefined;
   declare savingBeforeClose: boolean;
   declare closeError: string;
+  declare newLoadOpen: boolean;
+  declare shortcutsOpen: boolean;
   private readonly store = new DocumentStore(window.localStorage);
   private readonly library = new Library(indexedDbStorage());
   private readonly components = new ComponentLibrary(indexedDbStore<ComponentEntry>('components'));
@@ -102,6 +110,8 @@ export class AppShell extends LitElement {
     this.closingDocument = undefined;
     this.savingBeforeClose = false;
     this.closeError = '';
+    this.newLoadOpen = false;
+    this.shortcutsOpen = false;
     // The dedication and safety notice open on a browser's first visit, over an example load, so that the
     // tool shows what it does instead of an empty page (#29).
     this.aboutOpen = window.localStorage.getItem(WELCOME_SEEN_KEY) === null;
@@ -120,6 +130,16 @@ export class AppShell extends LitElement {
     return this;
   }
 
+  override connectedCallback(): void {
+    super.connectedCallback();
+    window.addEventListener('keydown', this.handleShortcut);
+  }
+
+  override disconnectedCallback(): void {
+    window.removeEventListener('keydown', this.handleShortcut);
+    super.disconnectedCallback();
+  }
+
   protected override render() {
     const { t } = this.context;
     const active = this.store.active;
@@ -135,6 +155,7 @@ export class AppShell extends LitElement {
           engine: this.context.engine,
         },
         {
+          newLoad: () => (this.newLoadOpen = true),
           openFiles: this.openFromInput,
           save: () => active && void this.saveToLibrary(active.id),
           exportFile: () => active && void this.exportFile(active.id),
@@ -145,12 +166,14 @@ export class AppShell extends LitElement {
           setLanguage: (language) => this.setLanguage(language),
           setEngine: (id) => this.setEngine(id),
           showAbout: () => (this.aboutOpen = true),
+          showShortcuts: () => (this.shortcutsOpen = true),
         },
         this.context,
       )}
       ${tabBar(this.store.documents, active?.id, (document) => this.store.isDirty(document), {
         show: (id) => this.showDocument(id),
         close: (id) => this.requestClose(id),
+        key: (event, id) => this.navigateTabs(event, id),
       }, this.context)}
       <main @dragover=${(event: DragEvent) => event.preventDefault()} @drop=${this.openFromDrop}>
         ${isResearchEngine(this.context.engine)
@@ -206,6 +229,19 @@ export class AppShell extends LitElement {
         @close=${() => (this.editedFirearm = undefined)}
       ></gl-firearm-dialog>
       <gl-converter-dialog .open=${this.converterOpen} .context=${this.context} @close=${() => (this.converterOpen = false)}></gl-converter-dialog>
+      <gl-new-load-dialog .open=${this.newLoadOpen} .entries=${this.components.entries} .context=${this.context}
+        .sources=${cloneSources(this.store.documents, this.library.entries)}
+        .firearms=${this.newLoadOpen ? choosableFirearms(this.firearms.entries, this.library.entries, this.publishedGuns ?? []) : []}
+        .loading=${this.publishedGuns === undefined}
+        @load-firearms=${() => { if (this.publishedGuns === undefined) void this.readPublishedGuns(); }}
+        @create-load=${(event: CustomEvent<Load>) => this.createDocument(event.detail)}
+        @close=${() => (this.newLoadOpen = false)}></gl-new-load-dialog>
+      <gl-shortcuts-dialog .open=${this.shortcutsOpen} .enabled=${this.settings.keyboardShortcuts} .context=${this.context}
+        @shortcuts-change=${(event: CustomEvent<boolean>) => {
+          this.settings = { ...this.settings, keyboardShortcuts: event.detail };
+          this.applySettings();
+        }}
+        @close=${() => (this.shortcutsOpen = false)}></gl-shortcuts-dialog>
       <gl-close-document-dialog
         .name=${this.store.documents.find((document) => document.id === this.closingDocument)?.name}
         .saving=${this.savingBeforeClose}
@@ -243,8 +279,19 @@ export class AppShell extends LitElement {
     if (this.view === 'compare' && this.store.documents.length >= 2) {
       return html`<gl-compare-view .documents=${this.store.documents} .context=${this.context}></gl-compare-view>`;
     }
-    if (!active) return html`<p class="empty-message">${t('documents.empty')}</p>`;
+    if (!active) return html`<div class="empty-message"><p>${t('documents.empty')}</p>
+      <button @click=${() => (this.newLoadOpen = true)}>${t('documents.new')}</button></div>`;
     return html`
+      <div class="document-actions">
+        <label for="document-name">${t('documents.name')}</label>
+        <input id="document-name" .value=${active.name.replace(/\.json$/i, '')}
+          @change=${(event: Event) => {
+            const input = event.target as HTMLInputElement;
+            this.store.rename(active.id, input.value);
+            input.value = this.store.active!.name.replace(/\.json$/i, '');
+          }} />
+        <button title=${t('documents.copyHelp')} @click=${() => this.copyDocument()}>${t('documents.copy')}</button>
+      </div>
       <header class="print-header">
         <h1>${t('app.title')}: ${active.name.replace(/\.json$/i, '')}</h1>
         <p>${new Date().toLocaleString(this.settings.language)} · ${t('about.version')} ${__BUILD_COMMIT__.slice(0, 7)}</p>
@@ -293,7 +340,8 @@ export class AppShell extends LitElement {
         continue;
       }
       const result = this.store.open(file.name, text);
-      if (!result.ok) errors.push(...result.issues.filter((issue) => issue.severity === 'error').map((issue) => issue.message));
+      if (result.ok) this.view = 'editor';
+      else errors.push(...result.issues.filter((issue) => issue.severity === 'error').map((issue) => issue.message));
     }
     this.openErrors = errors;
   }
@@ -427,9 +475,56 @@ export class AppShell extends LitElement {
     this.store.close(id);
     if (this.view === 'compare' && this.store.documents.length < 2) this.view = 'editor';
     void this.updateComplete.then(() => {
-      const target = this.querySelector<HTMLElement>('.tab.active .tab-name') ?? this.querySelector<HTMLElement>('.toolbar .file-input');
+      const target = this.querySelector<HTMLElement>('.tab.active .tab-name') ?? this.querySelector<HTMLElement>('.toolbar .new-load');
       target?.focus();
     });
+  }
+
+  private createDocument(load: Load): void {
+    this.store.openNew(`${load.title}.json`, load);
+    this.newLoadOpen = false;
+    this.openErrors = [];
+    this.view = 'editor';
+    void this.updateComplete.then(() => this.querySelector<HTMLInputElement>('#document-name')?.focus());
+  }
+
+  private copyDocument(): void {
+    const active = this.store.active;
+    if (!active) return;
+    const title = this.context.t('documents.copyName', { name: active.name.replace(/\.json$/i, '') });
+    this.createDocument(copyLoadInputs(active.load, title));
+  }
+
+  private handleShortcut = (event: KeyboardEvent): void => {
+    if (this.querySelector('dialog[open]')) return;
+    const action = documentShortcut(event, this.settings.keyboardShortcuts);
+    const active = this.store.active;
+    if (!action || (action !== 'new' && !active)) return;
+    event.preventDefault();
+    if (action === 'new') this.newLoadOpen = true;
+    else if (action === 'close') this.requestClose(active!.id);
+    else void this.saveToLibrary(active!.id);
+  };
+
+  /** Arrow/Home/End navigation and Delete apply only while a load-tab button has focus. */
+  private navigateTabs(event: KeyboardEvent, id: number): void {
+    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.isComposing) return;
+    const documents = this.store.documents;
+    const index = documents.findIndex((document) => document.id === id);
+    if (index < 0) return;
+    if (event.key === 'Delete') {
+      event.preventDefault();
+      if (!event.repeat) this.requestClose(id);
+      return;
+    }
+    const next = event.key === 'ArrowRight' ? (index + 1) % documents.length
+      : event.key === 'ArrowLeft' ? (index - 1 + documents.length) % documents.length
+      : event.key === 'Home' ? 0 : event.key === 'End' ? documents.length - 1 : undefined;
+    if (next === undefined) return;
+    event.preventDefault();
+    const target = documents[next]!;
+    this.showDocument(target.id);
+    void this.updateComplete.then(() => this.querySelector<HTMLElement>(`[data-document-id="${target.id}"] .tab-name`)?.focus());
   }
 
   /** A gun file, into the gun library: the same place "Save as a gun" puts one. */

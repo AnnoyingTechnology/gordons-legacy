@@ -64,6 +64,8 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 
 | Date | Decision | By |
 |---|---|---|
+| 2026-10-16 | New load has two paths: clone an existing load, or a large guided flow starting with a gun or cartridge, then projectile and powder. | Julien, chat |
+| 2026-10-16 | Application shortcuts use Alt/Option+Shift+N/W and Ctrl/Cmd+S with a persisted opt-in; browser window/tab shortcuts remain untouched. Clone copies inputs into a new document; observations and imported-file metadata stay on the original. | Implementation, following #34 |
 | 2026-10-16 | Resume development, excluding R2; follow the repository handoff and regular commit/push workflow. | Julien, chat |
 | 2026-10-13 | Rewrite GRT from scratch rather than port or wrap it: development ended, download removed 2026-07-27, NextGen never shipped, no public rewrite exists. | Julien |
 | 2026-10-13 | Name: Gordon's Legacy. | Julien |
@@ -152,6 +154,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 
 | Date | Entry |
 |---|---|
+| 2026-10-16 | #34: added New with clone/open/saved sources and gun/cartridge → projectile → powder → review flow, searchable large choices, Rename/Copy inputs, opt-in shortcut help and local tab keys. No example values fill missing inputs; cartridge selection stays explicit after choosing a gun. Five languages, desktop/mobile and light/dark checks; 696 tests, typecheck and build pass. Browser workflow checks cover both routes, invalid/missing fields, Back, clones, rename, shortcuts and reload. Audit and remaining save/export/delete/history work: `docs/ui-audit.md`. |
 | 2026-10-16 | #34 pickup audit: no New, Rename or Duplicate actions, no documented application shortcuts; closing an edited tab immediately discards it. Save completion also marked the current document clean instead of the snapshot actually written. Fixed with Save / Discard / Cancel and snapshot-aware save completion. 687 tests, typecheck and build pass. Headless Chromium checked cancellation/Escape, save-and-close, discard, focus restoration, edits during a pending save, failed-save retention and reload recovery; no page errors. Next: named document creation and discoverable keyboard actions. |
 | 2026-10-13 | M0: repository, README, GPL-3.0 licence, plan, agent instructions, progress record, `.grtload` format notes. |
 | 2026-10-13 | M1: npm-workspace scaffold with TypeScript 7 and Vitest; decisions on pushing, fixtures and binary analysis recorded. |

@@ -546,6 +546,8 @@ code {
 /* Toolbar buttons fill the bar's height: icon above label, as in desktop engineering tools. */
 .tool-group {
   display: flex;
+  flex-wrap: wrap;
+  max-width: 100%;
   align-items: stretch;
   padding: 0 0.3rem;
   border-left: 1px solid var(--rule);
@@ -741,6 +743,76 @@ main {
   border: 1px dashed var(--rule);
   padding: 2rem;
   max-width: 40rem;
+}
+
+.document-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.document-actions input {
+  flex: 1;
+  min-width: 8rem;
+  max-width: 32rem;
+}
+
+dialog.new-load-dialog {
+  width: min(68rem, calc(100vw - 2rem));
+  max-width: none;
+  max-height: calc(100dvh - 2rem);
+  box-sizing: border-box;
+  overflow: auto;
+}
+
+.new-load-dialog form {
+  display: block;
+  text-align: left;
+}
+
+.new-load-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.new-load-heading h2 { margin: 0; }
+.new-load-heading button { font-size: 1.5rem; min-width: 2.75rem; }
+.new-load-progress { display: flex; flex-wrap: wrap; list-style: none; gap: 0.5rem 1.5rem; padding: 0; }
+.new-load-progress li { color: var(--muted); }
+.new-load-progress [aria-current] { color: var(--fg); font-weight: 700; }
+.new-load-progress span { font-variant-numeric: tabular-nums; }
+.new-load-paths, .new-load-choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(23rem, 100%), 1fr)); gap: 0.75rem; }
+.new-load-path, .new-load-choice { display: flex; flex-direction: column; align-items: flex-start; text-align: left; white-space: normal; overflow-wrap: anywhere; height: auto; gap: 0.5rem; padding: 1rem; }
+.new-load-path { min-height: 10rem; justify-content: center; }
+.new-load-path strong { font-size: 1.25rem; }
+.new-load-choice small { color: var(--muted); }
+.new-load-summary { display: flex; flex-wrap: wrap; gap: 0.75rem 2rem; padding: 0.75rem; border: 1px solid var(--rule); }
+.new-load-summary div { min-width: 0; overflow-wrap: anywhere; }
+.new-load-summary dt { color: var(--muted); font-size: 0.85rem; }
+.new-load-summary dd { margin: 0.25rem 0 0; }
+.new-load-search { display: block; }
+.new-load-search input { display: block; width: 100%; box-sizing: border-box; margin-top: 0.25rem; padding: 0.65rem; }
+.new-load-choices { max-height: 24rem; overflow-y: auto; padding: 0.25rem; }
+.new-load-dialog .dialog-actions { display: flex; gap: 0.5rem; margin-top: 1.5rem; }
+
+.new-load-dialog form > label {
+  display: block;
+  margin-top: 0.6rem;
+}
+
+.new-load-dialog form > input,
+.new-load-values input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.new-load-values {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
+  gap: 0.6rem 1rem;
+  margin-top: 1rem;
+}
+
+@media print {
+  .document-actions { display: none; }
 }
 
 /* Load editor */
