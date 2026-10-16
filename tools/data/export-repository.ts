@@ -17,6 +17,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync
 import { join } from 'node:path';
 import { readDocument, sha256, type ComponentKind, type DataIndexEntry, type Provenance } from '@gordons-legacy/data';
 import { parseFirearm, type Firearm } from '@gordons-legacy/formats';
+import { plainText } from './firearms/maker-site.ts';
 
 const SNAPSHOT = join(import.meta.dirname, '../../packages/app/src/data/community-components.json');
 const GRAINS_PER_KILOGRAM = 15432.358;
@@ -179,6 +180,36 @@ function existingFirearms(repository: string, maker: string): Firearm[] {
 }
 
 /**
+ * A name as a comparison: the trademark marks, the entities a page escaped and the punctuation left
+ * out. `Bergara BA13 TAKE DOWN SYNTHETIC CAMO STRATA® .223 Rem.` and `Bergara B14 Sporter 6.5&#215;55
+ * SE` are how two of them were published before the extractors shared one reader of a page's text.
+ */
+export function comparableName(name: string): string {
+  return plainText(name).toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+/** The figures a gun is the same gun by, for the comparison below. */
+function figures(gun: Firearm): string {
+  return JSON.stringify([gun.source?.url, gun.barrel.length, gun.barrel.twistLength, gun.barrel.gunMass]);
+}
+
+/**
+ * The published guns a new reading supersedes: the same page, the same figures, and the same name once
+ * the marks and the escapes are out of it. Guns accumulate, because a gun that has left a catalogue is
+ * still owned and loaded for — but a gun whose **name** we read better is not a second gun, and keeping
+ * both would offer the user `STRATA®` and `STRATA` as two rifles.
+ */
+export function supersededNames(published: readonly Firearm[], read: ReadonlyMap<string, Firearm>): Set<string> {
+  const fresh = new Map([...read.values()].map((gun) => [`${comparableName(gun.name)} ${figures(gun)}`, gun.name]));
+  const superseded = new Set<string>();
+  for (const gun of published) {
+    const renamed = fresh.get(`${comparableName(gun.name)} ${figures(gun)}`);
+    if (renamed !== undefined && renamed !== gun.name) superseded.add(gun.name);
+  }
+  return superseded;
+}
+
+/**
  * Writes the gun database: one file per maker, holding that maker's guns by name, with the guns the
  * repository already holds kept where the new reading no longer has them — a gun that has left a
  * catalogue is still owned and loaded for. Returns the index entries.
@@ -190,8 +221,12 @@ async function writeFirearms(repository: string, folders: readonly string[]): Pr
   mkdirSync(join(repository, 'firearms'), { recursive: true });
   const entries: DataIndexEntry[] = [];
   for (const maker of [...makers].sort()) {
-    const guns = new Map(existingFirearms(repository, maker).map((gun) => [gun.name, gun]));
-    for (const [name, gun] of read.get(maker) ?? []) guns.set(name, gun);
+    const published = existingFirearms(repository, maker);
+    const fresh = read.get(maker) ?? new Map<string, Firearm>();
+    const superseded = supersededNames(published, fresh);
+    if (superseded.size > 0) console.log(`  firearms/${maker}.json: ${superseded.size} guns published under a name since read better`);
+    const guns = new Map(published.filter((gun) => !superseded.has(gun.name)).map((gun) => [gun.name, gun]));
+    for (const [name, gun] of fresh) guns.set(name, gun);
     const value = [...guns.values()].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
     if (value.length === 0) continue;
     const document = { format: 'gordons-legacy.component', version: 1, kind: 'firearm', provenance: firearmProvenance(value), value };
@@ -249,4 +284,9 @@ async function main(): Promise<void> {
   console.log(`${files.length} files → ${repository}${makerFiles.length === 0 ? '' : ` (${makerFiles.length} makers' guns)`}`);
 }
 
-await main();
+/**
+ * Only when this file is the program, so that a test can import the rules above. `import.meta.main` is
+ * the Deno and Node 24 answer; the file name is the fallback, because a runner that leaves it undefined
+ * would otherwise turn the export into a silent no-op.
+ */
+if (import.meta.main ?? (process.argv[1] ?? '').endsWith('export-repository.ts')) await main();
