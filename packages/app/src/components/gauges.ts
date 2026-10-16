@@ -62,10 +62,13 @@ export function speedScale(velocity: number, temperature: number, context: UiCon
  * beside it, never by colour alone.
  */
 export function pressureGauge(peak: number, limits: PressureLimit[], nearShare: number, context: UiContext) {
-  const { quantity } = context;
+  const { quantity, number } = context;
+  const unit = displayUnit('pressure', context.units);
   const lowest = limits[0]!.pressure;
   const top = Math.max(peak, ...limits.map((limit) => limit.pressure)) * 1.15;
   const state = peak > lowest ? 'above' : peak >= nearShare * lowest ? 'near' : 'within';
+  const ticks = niceTicks(0, unit.fromSi(top), 6)
+    .filter((value) => value >= 0 && unit.toSi(value) <= top);
   return html`
     <div class="scale pressure-gauge" role="img" aria-label=${quantity(peak, 'pressure')}>
       <div class="scale-track">
@@ -76,6 +79,10 @@ export function pressureGauge(peak: number, limits: PressureLimit[], nearShare: 
             <span class="limit-label ${index % 2 === 1 ? 'below' : ''}">${limitName(limit, context)} ${quantity(limit.pressure, 'pressure')}</span>
           </div>`,
         )}
+      </div>
+      <div class="scale-ticks">
+        ${ticks.map((value) => html`<span style=${styleMap({ left: percent(unit.toSi(value), 0, top) })}>${number(value, 0)}</span>`)}
+        <span class="scale-unit">${unit.symbol}</span>
       </div>
     </div>
   `;

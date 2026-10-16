@@ -1730,6 +1730,10 @@ main:has(.load-editor.concern-danger)::before {
 
 .key-card.primary {
   grid-column: span 3;
+  display: grid;
+  grid-row: span 4;
+  grid-template-rows: subgrid;
+  row-gap: 0;
 }
 
 .key-card.fill-card,
@@ -1871,12 +1875,11 @@ main:has(.load-editor.concern-danger)::before {
 
 .limit-label.below {
   bottom: auto;
-  top: 100%;
+  top: calc(100% + 1.1rem);
 }
 
-.pressure-gauge {
-  margin-top: 1.6rem;
-  margin-bottom: 1.2rem;
+.pressure-gauge:has(.limit-label.below) {
+  padding-bottom: 1.1rem;
 }
 
 .gauge-bar {
