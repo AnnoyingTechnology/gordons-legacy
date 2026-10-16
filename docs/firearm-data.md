@@ -83,8 +83,18 @@ What every extractor shares sits beside them, and nothing of it is written twice
 
 - `maker-site.ts`: how a crawl identifies itself (`AGENT`), the second it waits between pages (`DELAY`,
   which Henry overrides with the ten its `robots.txt` asks for), the command line (`crawlArguments`), a
-  gun's file name, the write that goes through the format's own reader (`firearmJson`), and the log line.
+  gun's file name, the write that goes through the format's own reader (`firearmJson`), the log line, and
+  **a page read as the text it displays** (`decodeEntities`, `plainText`) — entities decoded, a
+  typographic quote as the inch mark every figure reader looks for, `×` as `x`, trademark marks left out.
+  Six extractors each had their own partial list of entities before, and two of those lists had holes
+  that reached the published data.
 - `published-figures.ts`: the maker's own strings, and what a published mass includes.
+
+Three tools serve every maker, and none of them fetches a product page:
+
+- `survey-site.ts` — what a host says about being read, before an extractor is written for it.
+- `check-corpus.ts` — whether a crawl's own output is believable.
+- `compare-corpus.ts` — what a refresh changes against what is published.
 
 Everything else is the maker's own shape — which pages to read, and how to read a figure out of one —
 and stays in its own file.
@@ -170,8 +180,17 @@ Refresh one maker at a time:
    It compares every SI figure with the maker's own printed string in `source.published`, refuses a
    figure no gun can have, and reports two files that hold one gun name. A clean run is necessary, not
    sufficient: it cannot see a figure that is wrong in the same way in both the string and the value.
-5. Stage the differences as a reviewed diff, field by field, rather than swapping the folder. A changed
-   barrel length is a correction to publish; a changed count is usually a bug to fix first.
+5. **Read the diff against what is published**, rather than swapping the folder:
+
+       deno run -A tools/data/firearms/compare-corpus.ts <clone>/firearms/bergara.json /tmp/gl/guns-bergara
+
+   The last argument is the fresh folder; everything before it is what is published today, and one crawl
+   can feed several maker files (`sako.ts` reads Sako and Tikka). It prints the guns that are new, the
+   guns that were not read this time, and the guns whose figures **changed**, with the maker's own string
+   beside both values. A changed barrel length is either a correction to publish or a reading to fix, and
+   the printed string usually says which; a changed count is a bug to find before anything is published.
+   This is what makes the rule below more than a sentence: over three thousand guns, nobody reads a diff
+   by hand, and the refresh of 2026-10-15 was in fact judged on the counts alone.
 
 **A gun that has left the catalogue is not deleted.** Discontinued guns stay in use for decades, and
 their owners load for them; a record whose page is gone is marked as such — its figures were true when
