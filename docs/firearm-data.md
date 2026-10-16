@@ -25,13 +25,13 @@ cannot be built from the facts is not built at all.
 
 An extractor writes one file per gun; the data repository holds **one file per maker** (`firearms/
 glock.json`), holding that maker's records. The application downloads a whole catalogue to search it, and
-the makers read so far hold about 8,800 guns — that many single files would be that many requests on a
+the makers read so far hold about 8,760 guns — that many single files would be that many requests on a
 first search. `tools/data/export-repository.ts --firearms <folder>` does the grouping.
 
 Twenty-eight maker files are 7.2 MB of JSON, which GitHub serves gzipped at 246 kB. They are downloaded
 when a user first searches for their gun, never on a first visit, and cached afterwards: in a headless
-browser the whole database arrives and is searchable in 523 ms over a local server, and a keystroke
-filters all 8,790 guns in under a millisecond.
+browser the whole database arrives and is searchable in 526 ms over a local server, and a keystroke
+filters all 8,764 guns in under a millisecond.
 
 Three values the simulation wants are **never** published and stay absent: the jump to the lands, the
 gas leaks, and the real chamber-to-muzzle length (see below). The application shows a published barrel
