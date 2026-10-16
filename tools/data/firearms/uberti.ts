@@ -16,9 +16,10 @@
  * barrel length excludes its cylinder.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { loadableCartridge, namedCartridge } from './loadable-cartridge.ts';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, DELAY, fetchText, fileName, firearmJson, plainText, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
+import { crawlArguments, fetchPage, fetchText, fileName, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const SITEMAP = 'https://www.uberti-usa.com/sitemap.xml';
@@ -81,17 +82,6 @@ export function twistLength(text: string | undefined): number | undefined {
   return twist !== undefined && twist > 0 && twist <= LONGEST_TWIST ? twist : undefined;
 }
 
-/**
- * A cartridge a reloader loads for from the caliber cell: one cartridge, with a figure in it, no rimfire.
- * `.45 Colt/.45 ACP` and `.357 Mag or .38 Special` name two cartridges at once, so they are left out.
- */
-export function loadable(cartridge: string): boolean {
-  // A bare calibre (`.44`) could as well be a cap-and-ball revolver as a cartridge: it is not a cartridge name.
-  if (!/[0-9]/.test(cartridge) || /^\.?[0-9]+$/.test(cartridge.trim())) return false;
-  // `.45/70` and `.44/40` are one cartridge written the old way; any other slash joins two.
-  if (/\/|\bor\b|&|\band\b|,/i.test(cartridge.replace(/^\.?[0-9]{2,3}\/[0-9]{2,3}\b/, ''))) return false;
-  return !/(^|[^0-9])(22|17)\s*(lr|long rifle|wmr|hmr|wsm|short|magnum|mag)\b/i.test(cartridge);
-}
 
 /** The page's title before its pipe: `1873 Rifle and Carbine | Uberti USA Replica Rifles and Revolvers`. */
 export function familyFromTitle(page: string): string | undefined {
@@ -111,7 +101,8 @@ export function firearmsFrom(page: string, url: string, retrieved: string): Fire
     const cartridge = cell('cartridge');
     const length = barrelLength(cell('barrelLength'));
     const model = cell('model');
-    if (!cartridge || !loadable(cartridge) || length === undefined || !model) continue;
+    // A bare calibre (`.44`) is a cap-and-ball revolver's bore, not a cartridge: `namedCartridge` refuses it.
+    if (!cartridge || !loadableCartridge(cartridge) || !namedCartridge(cartridge) || length === undefined || !model) continue;
     const variant = cell('description');
     const gunMass = mass(cell('weight'));
     const twist = twistLength(cell('twist'));
@@ -175,10 +166,9 @@ async function main(): Promise<void> {
   const skipped: string[] = [];
   const taken = new Map<string, Firearm>();
   for (const url of pages) {
-    await sleep(DELAY);
     let page: string;
     try {
-      page = await fetchText(url);
+      page = await fetchPage(url);
     } catch (error) {
       skipped.push(`${url}: ${(error as Error).message}`);
       continue;

@@ -12,9 +12,10 @@
  * the whole run takes about twenty minutes. Rimfire models, which are most of the line, are left out.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { loadableCartridge } from './loadable-cartridge.ts';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, fetchText, fileName, firearmJson, plainText, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
+import { crawlArguments, fetchPage, fetchText, fileName, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const SITEMAP = 'https://www.henryusa.com/firearm-sitemap.xml';
@@ -62,11 +63,6 @@ export function twistLength(text: string | undefined): number | undefined {
   return inches > 0 && inches < 50 ? inches * units.INCH : undefined;
 }
 
-/** A cartridge a reloader loads for: no rimfire, no shotgun gauge. */
-export function loadable(cartridge: string): boolean {
-  const rimfire = /(^|[^0-9])(22|17)\s*(s\/l\/lr|s\/l|lr|long rifle|wmr|mag|magnum|win\S* mag|hmr|hm2|short)/i;
-  return /[0-9]/.test(cartridge) && !rimfire.test(cartridge) && !/\b[0-9]+\s*(ga|gauge)\b|\.?410\b/i.test(cartridge);
-}
 
 /** The guns of one page: one per chambering that has a cartridge and a barrel length. */
 export function firearmsFrom(page: string, url: string, retrieved: string): Firearm[] {
@@ -74,7 +70,7 @@ export function firearmsFrom(page: string, url: string, retrieved: string): Fire
   for (const { title, values } of specifications(page)) {
     const cartridge = values.get('Caliber');
     const length = barrelLength(values.get('Barrel Length'));
-    if (!title || !cartridge || !loadable(cartridge) || length === undefined) continue;
+    if (!title || !cartridge || !loadableCartridge(cartridge) || length === undefined) continue;
     const twistText = values.get('Rate of Twist');
     const weight = values.get('Weight');
     const twist = twistLength(twistText);
@@ -125,10 +121,9 @@ async function main(): Promise<void> {
   const skipped: string[] = [];
   const names = new Set<string>();
   for (const url of pages) {
-    await sleep(DELAY);
     let page: string;
     try {
-      page = await fetchText(url);
+      page = await fetchPage(url, DELAY);
     } catch (error) {
       skipped.push(`${url}: ${(error as Error).message}`);
       continue;

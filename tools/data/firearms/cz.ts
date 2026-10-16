@@ -15,9 +15,10 @@
  * Only the cartridge, the barrel length, the twist and the mass are taken. Nothing else.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { loadableCartridge } from './loadable-cartridge.ts';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, DELAY, fetchText, fileName, firearmJson, plainText, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
+import { crawlArguments, fetchPage, fetchText, fileName, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const SITEMAP = 'https://www.czfirearms.com/sitemap.xml';
@@ -127,10 +128,6 @@ export function twistLength(text: string | undefined): number | undefined {
   return undefined;
 }
 
-/** A cartridge a reloader loads for: it has a figure in it, and it is no rimfire. */
-export function loadable(caliber: string): boolean {
-  return /[0-9]/.test(caliber) && !/flobert/i.test(caliber) && !/\b(22|17)\s*(lr|long rifle|wmr|hmr|short)\b/i.test(caliber);
-}
 
 /** The gun a variant describes, or nothing when it lacks a cartridge or a barrel length. */
 export function firearmFrom(variant: Variant, url: string, retrieved: string): Firearm | undefined {
@@ -146,7 +143,7 @@ export function firearmFrom(variant: Variant, url: string, retrieved: string): F
   const mass = plausibleGunMass(metricValue(weight));
   const twistText = find('dralllange-anzahl-der-zuge')?.text;
   const twist = twistLength(twistText);
-  if (!cartridge || !loadable(cartridge) || length === undefined) return undefined;
+  if (!cartridge || !loadableCartridge(cartridge) || length === undefined) return undefined;
   const name = plainText(variant.title);
   return {
     format: FIREARM_FORMAT,
@@ -189,10 +186,9 @@ async function main(): Promise<void> {
   const skipped: string[] = [];
   const names = new Set<string>();
   for (const url of pages) {
-    await sleep(DELAY);
     let page: string;
     try {
-      page = await fetchText(url);
+      page = await fetchPage(url);
     } catch (error) {
       skipped.push(`${url}: ${(error as Error).message}`);
       continue;

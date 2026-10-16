@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { firearmsFrom, length, mass, modelFromHeadline, notLoadable, publishedTwist, rifleAddresses, settleNames, specificationBlocks, twistLength } from '../../../tools/data/firearms/winchester.ts';
+import { firearmsFrom, length, mass, modelFromHeadline, notLoadable, publishedTwist, rifleAddresses, settleNames, specificationBlocks, twistLength, withDecimalFraction } from '../../../tools/data/firearms/winchester.ts';
 
 /**
  * The reading of a maker's published specifications (tools/data/firearms/winchester.ts, issue #30). The
@@ -70,6 +70,8 @@ describe('reading a published specification', () => {
     expect(notLoadable('22 LR')).toBe('rimfire');
     expect(notLoadable('17 HMR')).toBe('rimfire');
     expect(notLoadable('22 WMR')).toBe('rimfire');
+    expect(notLoadable('17 M 2')).toBe('rimfire');
+    expect(notLoadable('21 SHARP')).toBe('rimfire');
     expect(notLoadable('300 H&H MAG')).toBeUndefined();
     expect(notLoadable('357-38')).toBe('several cartridges');
     expect(notLoadable('')).toBe('no cartridge');
@@ -113,7 +115,10 @@ describe('reading a published specification', () => {
   });
 
   it('writes the twist as 1:N beside the figure, the way the checker reads it, and leaves anything else alone', () => {
-    expect(publishedTwist('18 3/4"')).toBe('1:18 3/4"');
+    expect(publishedTwist('18 3/4"')).toBe('1:18.75"');
+    expect(withDecimalFraction('18 1/2"')).toBe('18.5"');
+    expect(withDecimalFraction('22"')).toBe('22"');
+    expect(withDecimalFraction('9 1/3"')).toBe('9 1/3"');
     expect(publishedTwist('1:10"')).toBe('1:10"');
     expect(publishedTwist('N/A')).toBe('N/A');
   });

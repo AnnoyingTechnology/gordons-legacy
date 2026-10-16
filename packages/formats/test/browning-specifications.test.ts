@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { chamberings, firearmsFrom, length, loadable, mass, modelFrom, printedForRecord, twistLength } from '../../../tools/data/firearms/browning.ts';
+import { chamberings, firearmsFrom, length, mass, modelFrom, soldWithOptic, twistLength } from '../../../tools/data/firearms/browning.ts';
 
 /**
  * The reading of a maker's published specifications (tools/data/firearms/browning.ts, issue #30). The
@@ -52,11 +52,11 @@ describe('reading a published specification', () => {
     expect(twistLength('101"')).toBeUndefined();
   });
 
-  it("keeps the maker's words and adds the reading the corpus check understands", () => {
-    expect(printedForRecord('length', '16 1/2"')).toBe('16 1/2" (16.5")');
-    expect(printedForRecord('length', '22"')).toBe('22"');
-    expect(printedForRecord('twist', '7 1/2"')).toBe('7 1/2" (1:7.5")');
-    expect(printedForRecord('twist', 'Varies')).toBe('Varies');
+  it('warns when a model is sold with a scope', () => {
+    expect(soldWithOptic('AB3 Hunter Combo - Nikon')).toBe(true);
+    expect(soldWithOptic('X-Bolt 2 Hunter')).toBe(false);
+    const page = `<h1>Example Combo</h1>${block(0, { Caliber: '308 Win', 'Barrel Length': '22"', Weight: '6 lbs' })}`;
+    expect(firearmsFrom(page, 'https://example.invalid/z.html', '2026-10-16').guns[0]!.notes).toMatch(/scope/);
   });
 
   it('reads a mass in pounds and ounces, and rejects a placeholder', () => {
@@ -67,21 +67,6 @@ describe('reading a published specification', () => {
     expect(mass(undefined)).toBeUndefined();
   });
 
-  it('tells a cartridge from a rimfire or a shotgun gauge', () => {
-    expect(loadable('308 Win')).toBe(true);
-    expect(loadable('6.5 CREEDMOOR')).toBe(true);
-    expect(loadable('22 LR')).toBe(false);
-    expect(loadable('22 WMR')).toBe(false);
-    expect(loadable('22 S L LR')).toBe(false);
-    expect(loadable('17 M 2')).toBe(false);
-    expect(loadable('22 Hornet')).toBe(true);
-    expect(loadable('22-250 REM')).toBe(true);
-    expect(loadable('300 H&H MAG')).toBe(true);
-    expect(loadable('17 HMR')).toBe(false);
-    expect(loadable('12 Gauge')).toBe(false);
-    expect(loadable('308 Win / 30-06')).toBe(false);
-    expect(loadable('223 Rem')).toBe(true);
-  });
 
   it('builds one gun per loadable chambering and says what it left out', () => {
     const { guns, skipped } = firearmsFrom(PAGE, 'https://example.invalid/rifles/example-9.html', '2026-10-16');
@@ -99,7 +84,7 @@ describe('reading a published specification', () => {
       url: 'https://example.invalid/rifles/example-9.html',
       retrieved: '2026-10-16',
       massBasis: 'unstated',
-      published: { barrelLength: '22"', weight: '6 lbs 7 oz', twist: '10" (1:10")' },
+      published: { barrelLength: '22"', weight: '6 lbs 7 oz', twist: '10"' },
     });
   });
 

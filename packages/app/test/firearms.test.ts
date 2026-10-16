@@ -71,6 +71,14 @@ describe('the gun library', () => {
     // A maker typesetting the case with a multiplication sign names the same cartridge.
     expect(chamberedFor({ ...newFirearm(), name: 'Bergara', cartridge: '6.5×55 SE' }, '6.5 x 55 Swedish')).toBe(true);
     expect(chamberedFor({ ...newFirearm(), name: 'Bergara', cartridge: '8×57 JRS' }, '6.5 x 55 Swedish')).toBe(false);
+    // A maker who prints two names for one chamber: a load of either is a load for that gun.
+    const henry: Firearm = { ...newFirearm(), name: 'Henry Big Boy', cartridge: '.357 Magnum/.38 Spl' };
+    expect(chamberedFor(henry, '.357 Magnum')).toBe(true);
+    expect(chamberedFor(henry, '.38 Spl')).toBe(true);
+    expect(chamberedFor(henry, '.44 Magnum')).toBe(false);
+    // `.45/70` is the old way of writing one cartridge: it is not split, and a name of figures only
+    // stays ambiguous, as a bare calibre does.
+    expect(chamberedFor({ ...newFirearm(), name: 'Uberti', cartridge: '.45/70' }, '.45-70 Government')).toBe(false);
     // Without a cartridge they are simply in order of name.
     expect(choosableFirearms(entries, []).map((firearm) => firearm.name)).toEqual(['Alpha 9', 'Zeta .45']);
   });

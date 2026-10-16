@@ -12,9 +12,10 @@
  * (`/en/esp/...`) are left out. Only the cartridge, the barrel length, the twist and the mass are taken.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { loadableCartridge } from './loadable-cartridge.ts';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, DELAY, fetchText, fileName, firearmJson, plainText, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
+import { crawlArguments, fetchPage, fetchText, fileName, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const SITEMAP = 'https://www.bergara.online/en/page-sitemap.xml';
@@ -68,10 +69,6 @@ export function twistLength(text: string | undefined): number | undefined {
   return number > 0 ? number * (match[2] === 'mm' ? units.MILLIMETRE : units.INCH) : undefined;
 }
 
-/** A cartridge a reloader loads for: it has a figure in it, and it is no rimfire. */
-export function loadable(cartridge: string): boolean {
-  return /[0-9]/.test(cartridge) && !/(^|[^0-9])(22|17)\s*(lr|long rifle|wmr|hmr|wsm|short)\b/i.test(cartridge);
-}
 
 /** The guns of one page: one per row of its configuration table. */
 export function firearmsFrom(page: string, url: string, retrieved: string): Firearm[] {
@@ -86,7 +83,7 @@ export function firearmsFrom(page: string, url: string, retrieved: string): Fire
     for (const row of table.rows) {
       const cartridge = row[0];
       const barrelLength = length(row[barrelColumn]);
-      if (!cartridge || !loadable(cartridge) || barrelLength === undefined) continue;
+      if (!cartridge || !loadableCartridge(cartridge) || barrelLength === undefined) continue;
       const twist = twistLength(row[twistColumn]);
       const weight = weightColumn >= 0 ? row[weightColumn] : undefined;
       const gunMass = mass(weight);
@@ -137,10 +134,9 @@ async function main(): Promise<void> {
   const skipped: string[] = [];
   const names = new Set<string>();
   for (const url of pages) {
-    await sleep(DELAY);
     let page: string;
     try {
-      page = await fetchText(url);
+      page = await fetchPage(url);
     } catch (error) {
       skipped.push(`${url}: ${(error as Error).message}`);
       continue;

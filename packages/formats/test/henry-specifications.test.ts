@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { barrelLength, firearmsFrom, loadable, mass, specifications, twistLength } from '../../../tools/data/firearms/henry.ts';
+import { barrelLength, firearmsFrom, mass, specifications, twistLength } from '../../../tools/data/firearms/henry.ts';
 
 /**
  * The reading of a maker's published specifications (tools/data/firearms/henry.ts, issue #30). The page
@@ -44,14 +44,6 @@ describe('reading a published specification', () => {
     expect(twistLength(undefined)).toBeUndefined();
   });
 
-  it('tells a cartridge from a rimfire or a shotgun gauge', () => {
-    expect(loadable('.45-70')).toBe(true);
-    expect(loadable('.357 Mag')).toBe(true);
-    expect(loadable('.22 S/L/LR')).toBe(false);
-    expect(loadable('.22 WMR')).toBe(false);
-    expect(loadable('.17 HMR')).toBe(false);
-    expect(loadable('12 Gauge')).toBe(false);
-  });
 
   it('builds the centerfire guns of a page with their source, and leaves out the rest', () => {
     const guns = firearmsFrom(PAGE, 'https://example.invalid/firearm/example/', '2026-10-15');

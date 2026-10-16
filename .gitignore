@@ -4,3 +4,6 @@ dist/
 *.log
 # Scratch folders an extractor run leaves beside the crawlers; never part of the tool.
 tools/data/firearms/.*/
+
+# TypeScript build state, written by `tsc -b`.
+tsconfig.tsbuildinfo

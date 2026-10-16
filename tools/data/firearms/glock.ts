@@ -14,9 +14,10 @@
  * `published` all the same, and the application shows that.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { loadableCartridge } from './loadable-cartridge.ts';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, DELAY, fetchText, fileName, firearmJson, plainText, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
+import { crawlArguments, fetchPage, fetchText, fileName, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
 
 const SITEMAP = 'https://us.glock.com/sitemap.xml';
 
@@ -45,13 +46,6 @@ export function metric(value: string, unit: 'mm' | 'g'): number | undefined {
   return unit === 'mm' ? number * units.MILLIMETRE : number * units.GRAM;
 }
 
-/**
- * A cartridge a reloader can load for: not Glock's `Training ammunition` of the marking variants, and
- * not a rimfire, which is not handloaded.
- */
-export function loadable(caliber: string): boolean {
-  return /[0-9]/.test(caliber) && !/training|marking|fx\b|utm/i.test(caliber) && !/\b(22|17)\s*(lr|long rifle|wmr|hmr|short)\b/i.test(caliber);
-}
 
 /**
  * The model from a page's title. Their titles carry the site's own words as well, in any order and
@@ -90,7 +84,7 @@ export function firearmFrom(page: string, url: string, retrieved: string): Firea
   const massBasis = withEmptyMagazine !== undefined ? 'empty-magazine' : withoutMagazine !== undefined ? 'without-magazine' : undefined;
   const mass = plausibleGunMass(metric(weight ?? '', 'g'));
   const model = title === undefined ? undefined : modelFrom(title);
-  if (model === undefined || !caliber || !loadable(caliber) || barrelValue === undefined || !barrel) return undefined;
+  if (model === undefined || !caliber || !loadableCartridge(caliber) || barrelValue === undefined || !barrel) return undefined;
   return {
     format: FIREARM_FORMAT,
     schemaVersion: FIREARM_SCHEMA_VERSION,
@@ -127,10 +121,9 @@ async function main(): Promise<void> {
   // Two pages sometimes describe the same gun (a commercial and a law-enforcement listing).
   const names = new Set<string>();
   for (const url of pistols) {
-    await sleep(DELAY);
     let page: string;
     try {
-      page = await fetchText(url);
+      page = await fetchPage(url);
     } catch (error) {
       skipped.push(`${url}: ${(error as Error).message}`);
       continue;

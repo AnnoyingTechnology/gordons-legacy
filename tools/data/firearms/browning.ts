@@ -15,9 +15,10 @@
  * includes, so every record says `unstated`.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { loadableCartridge } from './loadable-cartridge.ts';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, DELAY, fetchText, fileName, firearmJson, plainText, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
+import { crawlArguments, fetchPage, fetchText, fileName, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const SITE = 'https://www.browning.com';
@@ -78,21 +79,6 @@ export function twistLength(text: string | undefined): number | undefined {
   return metres !== undefined && metres >= TWIST_RANGE.shortest && metres <= TWIST_RANGE.longest ? metres : undefined;
 }
 
-/**
- * A printed string as the record keeps it: the maker's own words, and when they are a fraction of an
- * inch or a bare twist, the same figure written the way the corpus check reads it, after them. The page
- * says `16 1/2"` and `10"` (meaning 1:10"); the check reads `16.5"` and `1:10"`.
- */
-export function printedForRecord(kind: 'length' | 'twist', text: string | undefined): string | undefined {
-  if (text === undefined || text.trim() === '') return text;
-  const value = kind === 'length' ? length(text) : twistLength(text);
-  if (value === undefined) return text;
-  const decimal = Number((value / units.INCH).toFixed(4));
-  const reading = kind === 'length' ? `${decimal}"` : `1:${decimal}"`;
-  const plain = kind === 'length' ? !text.includes('/') : /^\s*1\s*:/.test(text);
-  return plain ? text : `${text} (${reading})`;
-}
-
 /** A mass in kilograms from `6 lbs 7 oz`, `7 lbs.` or `9 oz`. Anything not in pounds or ounces is nothing. */
 export function mass(text: string | undefined): number | undefined {
   const match = /^\s*(?:([0-9]+(?:\.[0-9]+)?)\s*lbs?\.?)?\s*(?:([0-9]+(?:\.[0-9]+)?)\s*oz\.?)?\s*$/i.exec(text ?? '');
@@ -100,19 +86,6 @@ export function mass(text: string | undefined): number | undefined {
   return plausibleGunMass(Number(match[1] ?? 0) * units.POUND + Number(match[2] ?? 0) * OUNCE);
 }
 
-/**
- * A cartridge a reloader loads for: it has a figure in it, names one cartridge only, and is no rimfire
- * (`22 LR`, `22 S L LR`, `22 S`, `22 WMR`, `17 HMR`, `17 M 2`), shotgun gauge or air gun. `300 H&H MAG`
- * is one cartridge; only an ampersand with spaces around it joins two.
- */
-export function loadable(cartridge: string): boolean {
-  return (
-    /[0-9]/.test(cartridge) &&
-    !/\s(\/|and|or|&)\s|,|;/i.test(cartridge) &&
-    !/gauge|\bga\b|pellet|air/i.test(cartridge) &&
-    !/^\.?(22|17)\s*(s|l|lr|long rifle|wmr|win\.? mag|magnum|mag|hmr|hm2|m ?2|mach 2|short|rimfire)\b/i.test(cartridge)
-  );
-}
 
 /** The model from a page's headline (`X-Bolt 2 Hunter`), falling back on the title before its first dash. */
 export function modelFrom(page: string): string | undefined {
@@ -120,6 +93,14 @@ export function modelFrom(page: string): string | undefined {
   const title = /<title>([^<]*)<\/title>/.exec(page)?.[1];
   const model = plainText(headline ?? '') || plainText(title ?? '').split(/\s[-–|]\s/)[0]?.trim();
   return model ? model.replace(/^Browning\s+/i, '') : undefined;
+}
+
+/** The warning a combo carries, as Savage's records do. */
+const OPTIC_NOTE = 'Browning sells this model with a scope fitted, and its published weight may include the optic. Weigh the gun.';
+
+/** Whether a model is sold as a package with an optic: `AB3 Hunter Combo - Nikon`, `AB3 Redfield Scope Combo`. */
+export function soldWithOptic(model: string): boolean {
+  return /\bcombo\b|\bscope\b/i.test(model);
 }
 
 /** A chambering that could not become a gun, and why. */
@@ -149,7 +130,7 @@ export function firearmsFrom(page: string, url: string, retrieved: string): { gu
       skipped.push({ what: model, why: 'no cartridge' });
       continue;
     }
-    if (!loadable(block.cartridge)) {
+    if (!loadableCartridge(block.cartridge)) {
       skipped.push({ what: `${model} ${block.cartridge}`, why: `not loadable (${block.cartridge})` });
       continue;
     }
@@ -161,7 +142,7 @@ export function firearmsFrom(page: string, url: string, retrieved: string): { gu
     const gunMass = mass(block.weight);
     if (twist === undefined && block.twist !== undefined) skipped.push({ what: `${model} ${block.cartridge}`, why: `twist left out (${block.twist})` });
     if (gunMass === undefined && block.weight !== undefined) skipped.push({ what: `${model} ${block.cartridge}`, why: `mass left out (${block.weight})` });
-    const published = publishedFigures({ barrelLength: printedForRecord('length', block.barrel), weight: block.weight, twist: printedForRecord('twist', block.twist) });
+    const published = publishedFigures({ barrelLength: block.barrel, weight: block.weight, twist: block.twist });
     const lengths = new Set(sameCartridge(block.cartridge).map((other) => other.barrel));
     const name = `Browning ${model} ${block.cartridge}${lengths.size > 1 ? ` ${block.barrel}` : ''}`;
     const existing = guns.find((gun) => gun.name === name);
@@ -177,6 +158,8 @@ export function firearmsFrom(page: string, url: string, retrieved: string): { gu
       maker: 'Browning',
       model,
       cartridge: block.cartridge,
+      // A combo is sold with a scope fitted, and the page does not say whether its weight includes it.
+      ...(soldWithOptic(model) && gunMass !== undefined ? { notes: OPTIC_NOTE } : {}),
       barrel: {
         name,
         length: barrelLength,
@@ -211,12 +194,11 @@ async function main(): Promise<void> {
   const retrieved = new Date().toISOString().slice(0, 10);
   let written = 0;
   const skipped: string[] = [];
-  const names = new Map<string, string>();
+  const names = new Map<string, { url: string; published: string }>();
   for (const url of pages) {
-    await sleep(DELAY);
     let page: string;
     try {
-      page = await fetchText(url);
+      page = await fetchPage(url);
     } catch (error) {
       const message = (error as Error).message;
       skipped.push(`${url}: ${message}`);
@@ -238,11 +220,14 @@ async function main(): Promise<void> {
       }
       const file = fileName(firearm);
       const earlier = names.get(file);
+      const published = JSON.stringify(firearm.source?.published);
       if (earlier !== undefined) {
-        skipped.push(`${url}: ${firearm.name} is already written from ${earlier}`);
+        // The same gun on two pages: the first is kept, and a disagreement between them is said aloud.
+        const verdict = earlier.published === published ? 'same figures' : `FIGURES DISAGREE, ${earlier.published} against ${published}`;
+        skipped.push(`${url}: ${firearm.name} is already written from ${earlier.url} (${verdict})`);
         continue;
       }
-      names.set(file, url);
+      names.set(file, { url, published });
       writeFileSync(join(folder, file), json.text);
       written++;
       console.log(summaryLine(firearm));

@@ -19,9 +19,10 @@
  * and Ruger does not say how; the files say `published` all the same, and the application shows that.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { loadableCartridge } from './loadable-cartridge.ts';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, DELAY, decodeEntities, fetchText, fileName, firearmJson, plainText, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
+import { crawlArguments, decodeEntities, fetchPage, fetchText, fileName, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
 
 const SITE = 'https://ruger.com';
 const OUNCE = units.POUND / 16; // kg
@@ -126,18 +127,6 @@ export function twistLength(value: string): number | undefined {
   return Number(match[1]) * units.INCH;
 }
 
-/**
- * A cartridge a reloader can load for: it has a figure in it, and is not a rimfire (.22 LR, .22 WMR,
- * .17 HMR, .22 Short), an air gun, a blank, or a training or marking round.
- */
-export function loadable(caliber: string): boolean {
-  return (
-    /[0-9]/.test(caliber) &&
-    !/training|marking|blank|air|pellet|bb\b|simunition/i.test(caliber) &&
-    !/\b(22|17)\s*(lr|long rifle|wmr|win\.? mag|hmr|short|wsm|mach 2|hm2)\b/i.test(caliber) &&
-    !/^\.?22\s*(mag|rimfire)/i.test(caliber)
-  );
-}
 
 /**
  * The model from a sheet: its headline, without the trademark signs and without the maker's name
@@ -170,7 +159,7 @@ export function firearmFrom(page: string, url: string, retrieved: string): Firea
       .map(([key, value]) => [key, printed(value)] as const)
       .filter(([, value]) => value !== ''),
   );
-  if (model === undefined || caliber === '' || !loadable(caliber) || barrel === undefined) return undefined;
+  if (model === undefined || caliber === '' || !loadableCartridge(caliber) || barrel === undefined) return undefined;
   return {
     format: FIREARM_FORMAT,
     schemaVersion: FIREARM_SCHEMA_VERSION,
@@ -213,10 +202,9 @@ async function findSheets(limit: number): Promise<string[]> {
   const sheets = new Set<string>();
   for (let index = 0; index < queue.length && sheets.size < limit; index++) {
     const family = queue[index]!;
-    await sleep(DELAY);
     let page: string;
     try {
-      page = await fetchText(family);
+      page = await fetchPage(family);
     } catch (error) {
       console.log(` - ${family}: ${(error as Error).message}`);
       continue;
@@ -245,10 +233,9 @@ async function main(): Promise<void> {
   const skipped: string[] = [];
   const names = new Set<string>();
   for (const url of sheets) {
-    await sleep(DELAY);
     let page: string;
     try {
-      page = await fetchText(url);
+      page = await fetchPage(url);
     } catch (error) {
       skipped.push(`${url}: ${(error as Error).message}`);
       continue;
@@ -256,7 +243,7 @@ async function main(): Promise<void> {
     const firearm = firearmFrom(page, url, retrieved);
     if (!firearm) {
       const caliber = readable(specifications(page).find((item) => item.title.toLowerCase() === 'caliber')?.value ?? '');
-      skipped.push(`${url}: ${caliber === '' ? 'no cartridge' : loadable(caliber) ? 'no barrel length' : `not loadable (${caliber})`}`);
+      skipped.push(`${url}: ${caliber === '' ? 'no cartridge' : loadableCartridge(caliber) ? 'no barrel length' : `not loadable (${caliber})`}`);
       continue;
     }
     const json = firearmJson(firearm);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { configurationTables, firearmsFrom, length, loadable, mass, modelFromTitle, twistLength } from '../../../tools/data/firearms/bergara.ts';
+import { configurationTables, firearmsFrom, length, mass, modelFromTitle, twistLength } from '../../../tools/data/firearms/bergara.ts';
 
 /**
  * The reading of a maker's published specifications (tools/data/firearms/bergara.ts, issue #30). The page
@@ -50,13 +50,6 @@ describe('reading a published specification', () => {
     expect(twistLength('1:10')).toBeUndefined();
   });
 
-  it('tells a cartridge from a rimfire', () => {
-    expect(loadable('.308 Win.')).toBe(true);
-    expect(loadable('6.5 Creedmoor')).toBe(true);
-    expect(loadable('.22 LR')).toBe(false);
-    expect(loadable('.17 HMR')).toBe(false);
-    expect(loadable('.223 Rem.')).toBe(true);
-  });
 
   it('builds one gun per cartridge with its twist, its mass and where the figures come from', () => {
     const guns = firearmsFrom(PAGE, 'https://example.invalid/rifles/example-7/', '2026-10-15');

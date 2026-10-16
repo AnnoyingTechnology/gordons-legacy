@@ -1,0 +1,218 @@
+/**
+ * How the American rifle makers' pages (Weatherby, Nosler, Seekins, Barrett, Montana, Marlin, Horizon,
+ * issue #30) print their figures, and how a reading becomes a gun record.
+ *
+ * These makers print in inches and pounds, some of them with the metric figure beside it. Every reader
+ * here returns SI (metres, kilograms) together with the value of the last printed digit, so that a
+ * measure printed in two units can keep whichever was printed to the finer step (docs/firearm-data.md,
+ * ruger.ts). A reader returns nothing for a figure it cannot place: a range, a bare number with no unit,
+ * a `configuration dependent` weight. Nothing here guesses.
+ */
+import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
+import { plainText, plausibleGunMass } from './maker-site.ts';
+import { publishedFigures, type MassBasis } from './published-figures.ts';
+
+const OUNCE = units.POUND / 16; // kg
+
+/** A table of a page: its header cells and its rows, as plain text. */
+export interface Table {
+  header: string[];
+  rows: string[][];
+}
+
+/** Every table of a page, the first row being its header (whether the maker wrote `th` or `td`). */
+export function tablesOf(markup: string): Table[] {
+  const tables: Table[] = [];
+  for (const [, body] of markup.matchAll(/<table[^>]*>(.*?)<\/table>/gs)) {
+    const rows = [...body!.matchAll(/<tr[^>]*>(.*?)<\/tr>/gs)].map(([, row]) =>
+      [...row!.matchAll(/<t[hd][^>]*>(.*?)<\/t[hd]>/gs)].map(([, cell]) => plainText(cell!)),
+    );
+    if (rows.length > 0) tables.push({ header: rows[0]!, rows: rows.slice(1) });
+  }
+  return tables;
+}
+
+/** The index of the first header cell matching a pattern, or -1. */
+export function columnOf(table: Table, pattern: RegExp): number {
+  return table.header.findIndex((cell) => pattern.test(cell));
+}
+
+/**
+ * A measure in SI together with what its last printed digit is worth, also in SI: `24"` is a step of
+ * 1 inch, `51.44 cm` a step of 0.1 mm. The finer step is the more informative figure.
+ */
+export interface Reading {
+  /** SI: metres or kilograms. */
+  value: number;
+  /** SI value of the last printed digit. */
+  step: number;
+}
+
+/** The reading of the first `<number> <unit>` in a text, or nothing. */
+function readingOf(text: string, unit: string, si: number): Reading | undefined {
+  const match = new RegExp(`(?<![0-9.:])([0-9]+(?:\\.[0-9]+)?)\\s*${unit}`, 'i').exec(text.replace(/(?<=[0-9]),(?=[0-9]{3}\b)/g, ''));
+  if (!match) return undefined;
+  const printed = match[1]!;
+  return { value: Number(printed) * si, step: 10 ** -(printed.split('.')[1]?.length ?? 0) * si };
+}
+
+/** Of several readings of one measure, the one printed to the finest step. */
+export function finest(readings: (Reading | undefined)[]): Reading | undefined {
+  const known = readings.filter((reading): reading is Reading => reading !== undefined);
+  return known.length === 0 ? undefined : known.reduce((best, reading) => (reading.step < best.step ? reading : best));
+}
+
+/** A length printed in inches (`24"`, `20.6 in`, `26 inches`). The text has been through `plainText`. */
+export function inches(text: string): Reading | undefined {
+  return readingOf(text, '(?:"|in\\b|inch(?:es)?\\b)', units.INCH);
+}
+
+/** A length printed in millimetres or centimetres (`737 mm`, `51.44 cm`). */
+export function metricLength(text: string): Reading | undefined {
+  return finest([readingOf(text, 'mm\\b', units.MILLIMETRE), readingOf(text, 'cm\\b', 10 * units.MILLIMETRE)]);
+}
+
+/**
+ * A barrel length from text that may print it twice (`26" (660 mm)`), as the finer figure. A muzzle
+ * brake counted into the length (`24" (22" barrel + 2" muzzle brake)`) is not part of the barrel, so
+ * the figure before the word `barrel` is taken instead of the first one; a text that mentions a brake
+ * without saying how much of the length is barrel gives nothing.
+ */
+export function barrelLength(text: string): Reading | undefined {
+  if (/brake|compensator|suppressor|silencer/i.test(text)) {
+    const barrel = /([0-9]+(?:\.[0-9]+)?)\s*(?:"|in\b|inch(?:es)?)\s*barrel/i.exec(text);
+    return barrel ? inches(`${barrel[1]}"`) : undefined;
+  }
+  if (/\bor\b|\/|,|\bto\b/i.test(text)) return undefined; // several barrels in one cell: no single gun
+  return finest([inches(text), metricLength(text)]);
+}
+
+/**
+ * A mass printed in pounds and ounces (`7.5 lbs`, `5.3lbs.`, `7lb 10.9oz`, `7lbs 8oz`) or kilograms
+ * (`6.6 kg`), as the finer figure. Two weights in one text (a range, `5.8 lbs to 6.4 lbs`) or a weight
+ * that depends on the configuration give nothing: no single gun has that mass.
+ */
+export function gunMass(text: string): Reading | undefined {
+  if (/configuration|depend|approx|range|\bto\b|[–—]/i.test(text)) return undefined;
+  if ((text.match(/\blbs?\b|\bkg\b/gi) ?? []).length > 2) return undefined;
+  const pounds = readingOf(text, 'lbs?\\b\\.?', units.POUND);
+  const ounces = readingOf(text, 'oz\\b', OUNCE);
+  const customary =
+    pounds === undefined && ounces === undefined
+      ? undefined
+      : { value: (pounds?.value ?? 0) + (ounces?.value ?? 0), step: (ounces ?? pounds!).step };
+  const metric = readingOf(text, 'kg\\b', 1);
+  const best = finest([customary, metric]);
+  return best && plausibleGunMass(best.value) !== undefined ? best : undefined;
+}
+
+/**
+ * The turn of rifling in metres from `1:8`, `1 : 9.4"`, `1-8"` or `1 in 32"`. These makers print the
+ * twist in inches throughout, so a figure with no unit is inches; a millimetre figure is taken as such.
+ * A range (`1:7 to 1:10`) or a second figure that differs gives nothing. So does a turn shorter than
+ * 100 mm (1:3.9"): that is the shortest check-corpus.ts accepts, and the one gun that prints a 1:3 twist
+ * (an 8.6 Blackout) is better without a twist than refused whole.
+ */
+export function twistLength(text: string): number | undefined {
+  const turns = [...text.matchAll(/(?<![0-9])1\s*(?::|-|in\b)\s*([0-9]+(?:\.[0-9]+)?)\s*("|in\b|mm\b)?/gi)];
+  if (turns.length === 0 || /\bor\b|\bto\b|\//i.test(text)) return undefined;
+  const values = turns.map(([, number, unit]) => Number(number) * (unit?.toLowerCase() === 'mm' ? units.MILLIMETRE : units.INCH));
+  return values.every((value) => Math.abs(value - values[0]!) < 1e-9) && values[0]! >= 0.1 ? values[0] : undefined;
+}
+
+
+/** The model and gun a reading is about, before it is a record. */
+export interface Configuration {
+  /** The maker, `Weatherby`. */
+  maker: string;
+  /** Who is cited as the publisher, `Weatherby, Inc.`. */
+  publisher: string;
+  /** The model as the page names it, `Mark V Backcountry 2.0`. */
+  model: string;
+  /** The cartridge as the maker writes it. */
+  cartridge: string;
+  /** The barrel, SI metres. */
+  barrel: number;
+  /** The turn of rifling, metres, when published. */
+  twist?: number | undefined;
+  /** The mass, kg, when the page gives one for this very configuration. */
+  mass?: number | undefined;
+  /** The page and the day it was read. */
+  url: string;
+  retrieved: string;
+  /** The maker's own strings, `barrelLength`, `weight`, `twist`. */
+  published: Record<string, string | undefined>;
+  /** What the mass includes, when the page says; `unstated` otherwise. */
+  massBasis?: MassBasis;
+  /** Words added to the gun's name to tell it from another of the same model and cartridge. */
+  nameSuffix?: string | undefined;
+}
+
+/** The record of a configuration. */
+export function firearmOf(configuration: Configuration): Firearm {
+  const { maker, model, cartridge, mass, twist } = configuration;
+  const name = `${maker} ${model} ${cartridge}${configuration.nameSuffix ? ` ${configuration.nameSuffix}` : ''}`;
+  const gunMassKnown = mass !== undefined && plausibleGunMass(mass) !== undefined;
+  return {
+    format: FIREARM_FORMAT,
+    schemaVersion: FIREARM_SCHEMA_VERSION,
+    name,
+    maker,
+    model,
+    cartridge,
+    barrel: {
+      name,
+      length: configuration.barrel,
+      ...(twist === undefined ? {} : { twistLength: twist }),
+      ...(gunMassKnown ? { gunMass: mass } : {}),
+      gasLeaks: [],
+    },
+    source: {
+      kind: 'published',
+      publisher: configuration.publisher,
+      url: configuration.url,
+      retrieved: configuration.retrieved,
+      ...(gunMassKnown ? { massBasis: configuration.massBasis ?? 'unstated' } : {}),
+      published: publishedFigures(configuration.published),
+    },
+  };
+}
+
+/**
+ * Names for the configurations of one page. A model sold in the same cartridge with two barrel lengths
+ * is two guns, and the length goes into both names (`... 50 BMG 29"`); one that differs in nothing the
+ * record holds is the same gun twice, and the second is left out.
+ *
+ * Returns the configurations to write, and the reasons for those left out.
+ */
+export function distinguished(configurations: Configuration[]): { kept: Configuration[]; dropped: string[] } {
+  const byCartridge = new Map<string, Configuration[]>();
+  for (const configuration of configurations) {
+    const key = configuration.cartridge.toLowerCase();
+    byCartridge.set(key, [...(byCartridge.get(key) ?? []), configuration]);
+  }
+  const kept: Configuration[] = [];
+  const dropped: string[] = [];
+  for (const group of byCartridge.values()) {
+    const barrels = new Set(group.map((configuration) => configuration.barrel.toFixed(5)));
+    const first = new Map<string, Configuration>(); // by barrel length
+    for (const configuration of group) {
+      const barrel = configuration.barrel.toFixed(5);
+      const earlier = first.get(barrel);
+      if (earlier === undefined) {
+        const labelled = barrels.size > 1 ? { ...configuration, nameSuffix: configuration.published['barrelLength'] } : configuration;
+        first.set(barrel, labelled);
+        kept.push(labelled);
+      } else if (earlier.twist !== configuration.twist || earlier.mass !== configuration.mass) {
+        dropped.push(`${configuration.cartridge} ${configuration.published['barrelLength']}: listed twice with different figures; only the first is kept`);
+      }
+    }
+  }
+  return { kept, dropped };
+}
+
+/** A page's `<title>` as plain text, or nothing. */
+export function titleOf(page: string): string | undefined {
+  const title = /<title[^>]*>([^<]*)<\/title>/i.exec(page)?.[1];
+  return title === undefined ? undefined : plainText(title);
+}

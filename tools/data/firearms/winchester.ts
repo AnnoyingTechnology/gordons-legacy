@@ -29,6 +29,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
 import { AGENT, crawlArguments, DELAY, fetchText, fileName, firearmJson, plainText, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
+import { cachedPage, keepPage } from './page-cache.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const SITE = 'https://www.winchesterguns.com';
@@ -88,12 +89,12 @@ export function mass(text: string | undefined): number | undefined {
 
 /**
  * Why a cartridge is not one a reloader loads for, or `undefined` when it is: no figure in it, a
- * rimfire (22 LR, 22 WMR, 17 HMR, 17 WSM, 17 Mach 2), or several cartridges named at once (`357-38`
+ * rimfire (22 LR, 22 WMR, 17 HMR, 17 WSM, 17 Mach 2 written `17 M 2`, 21 Sharp), or several cartridges named at once (`357-38`
  * is the .357 Magnum and the .38 Special, `/` joins two others; `300 H&H MAG` is one).
  */
 export function notLoadable(cartridge: string): string | undefined {
   if (!/[0-9]/.test(cartridge)) return 'no cartridge';
-  if (/(^|[^0-9])(22|17)\s*(lr|long rifle|wmr|win\.? mag|hmr|short|wsm|mach 2|hm2)\b/i.test(cartridge)) return 'rimfire';
+  if (/(^|[^0-9])(22|17)\s*(lr|long rifle|wmr|win\.? mag|hmr|short|wsm|mach 2|m 2|hm2)\b/i.test(cartridge) || /^21 sharp$/i.test(cartridge.trim())) return 'rimfire';
   if (/^357-38$/.test(cartridge.trim()) || /\/|\bor\b/i.test(cartridge)) return 'several cartridges';
   return undefined;
 }
@@ -150,7 +151,7 @@ export function firearmsFrom(page: string, url: string, retrieved: string): { fi
         retrieved,
         // One Weight, with no word on what it includes.
         ...(gunMass === undefined ? {} : { massBasis: 'unstated' as const }),
-        published: publishedFigures({ caliber: cartridge, barrelLength: block['barrel length'], weight: block['weight'], twist: publishedTwist(block['twist rate']) }),
+        published: publishedFigures({ caliber: cartridge, barrelLength: withDecimalFraction(block['barrel length']), weight: block['weight'], twist: publishedTwist(block['twist rate']) }),
       },
     });
   }
@@ -158,12 +159,25 @@ export function firearmsFrom(page: string, url: string, retrieved: string): { fi
 }
 
 /**
+ * A printed measure with its fraction written as a decimal when that is exact (`18 1/2"` is `18.5"`,
+ * `9 3/4"` is `9.75"`): the corpus checker reads a number and a unit, not a fraction, and the figure is
+ * the same. A fraction that is not exact in decimals is left as printed.
+ */
+export function withDecimalFraction(printed: string | undefined): string | undefined {
+  return printed?.replace(/(\d+)\s+(\d+)\/(\d+)/, (whole, integer: string, numerator: string, denominator: string) => {
+    const fraction = Number(numerator) / Number(denominator);
+    return Number.isFinite(fraction) && Number.isInteger(fraction * 1024) ? String(Number(integer) + fraction) : whole;
+  });
+}
+
+/**
  * The twist as `source.published` keeps it. The page prints the inches per turn alone (`10"`), under a
- * label that says Twist Rate; the record writes it the way every other maker and the corpus checker
- * read a twist, `1:10"`, so that the figure and its string can be compared. Anything else stays as it is.
+ * label that says Twist Rate; the record writes it the way every other maker's twist is written and the
+ * corpus checker reads it, `1:10"`, so that the figure and its string can be compared. Anything else
+ * stays as it is.
  */
 export function publishedTwist(printed: string | undefined): string | undefined {
-  return printed !== undefined && twistLength(printed) !== undefined && !/^\s*1\s*:/.test(printed) ? `1:${printed.trim()}` : printed;
+  return printed !== undefined && twistLength(printed) !== undefined && !/^\s*1\s*:/.test(printed) ? `1:${withDecimalFraction(printed)!.trim()}` : printed;
 }
 
 /**
@@ -199,19 +213,32 @@ export function rifleAddresses(sitemap: string): string[] {
     .filter((address) => /\/products\/(rifles\/[a-z0-9-]+|discontinued\/rifles)\/[a-z0-9-]+\.html$/.test(address) && !address.endsWith('/overview.html'));
 }
 
-/** A page's text, or why there is none. A page that redirects to itself is named so, and not followed. */
+/**
+ * A page's text, or why there is none. A page that redirects to itself is named so, and not followed.
+ *
+ * The redirects are why this does not use the shared `fetchPage`, and the cache is consulted by hand
+ * instead (page-cache.ts): a page reached through a redirect is kept under the address the sitemap
+ * gave, which is the address a second run will ask for.
+ */
 async function readPage(url: string): Promise<{ page: string } | { problem: string }> {
+  const kept = cachedPage(url);
+  if (kept !== undefined) return { page: kept };
   try {
+    await sleep(DELAY);
     const response = await fetch(url, { headers: { 'user-agent': AGENT }, redirect: 'manual' });
     if (response.status >= 300 && response.status < 400) {
       const target = new URL(response.headers.get('location') ?? '', url).href;
       await response.body?.cancel();
       if (target === url) return { problem: 'redirects to itself' };
       await sleep(DELAY);
-      return { page: await fetchText(target) };
+      const page = await fetchText(target);
+      keepPage(url, page);
+      return { page };
     }
     if (!response.ok) return { problem: `${response.status}` };
-    return { page: await response.text() };
+    const page = await response.text();
+    keepPage(url, page);
+    return { page };
   } catch (error) {
     return { problem: (error as Error).message };
   }
@@ -229,7 +256,6 @@ async function main(): Promise<void> {
   const skipped: string[] = [];
   const found: Firearm[] = [];
   for (const url of pages) {
-    await sleep(DELAY);
     const result = await readPage(url);
     if ('problem' in result) {
       skipped.push(`${url}: ${result.problem}`);

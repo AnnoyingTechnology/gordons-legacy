@@ -24,6 +24,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseFirearm, units, type Firearm } from '@gordons-legacy/formats';
+import { loadableCartridge } from './loadable-cartridge.ts';
 import { plausibleGunMass } from './maker-site.ts';
 
 /** A number as a maker writes it, with either decimal mark: `9.5` and `9,5` are the same figure. */
@@ -38,8 +39,17 @@ const TWIST_RANGE = { shortest: 0.1, longest: 1.2 };
 /** How close a figure must be to its printed string: half a millimetre, or half a percent of it. */
 const TOLERANCE = { length: 0.0006, mass: 0.002, relative: 0.005 };
 
-function value(text: string): number {
-  return Number(text.replace(',', '.'));
+/**
+ * The figures a printed number can mean. A number is usually one figure, but a group of exactly three
+ * digits behind the mark is ambiguous between the two conventions a catalogue may follow: Schmeisser's
+ * `3.250 g` is three thousand two hundred and fifty grams, and an English page's `3.250 kg` would be
+ * three and a quarter kilograms. Both readings are offered, and a figure that matches either agrees —
+ * which is what this file asks. It is not the place to decide how a maker punctuates.
+ */
+function values(text: string): number[] {
+  const decimal = Number(text.replace(',', '.'));
+  const grouped = /^[0-9]{1,3}[.,][0-9]{3}$/.test(text) ? [Number(text.replace(/[.,]/, ''))] : [];
+  return [decimal, ...grouped];
 }
 
 /**
@@ -47,58 +57,58 @@ function value(text: string): number {
  * which is how Smith & Wesson print a barrel length (`4.22`), and their own prose repeats it as `4.22”`.
  */
 export function printedLengths(text: string): number[] {
-  const written = [...text.matchAll(new RegExp(`${NUMBER}\\s*(mm|cm|m\\b|in\\b|inch(?:es)?|"|”)`, 'gi'))].map(([, number, unit]) => {
+  const fractions = printedFractions(text);
+  if (fractions.length > 0) return fractions;
+  const written = [...text.matchAll(new RegExp(`${NUMBER}\\s*(mm|cm|m\\b|in\\b|inch(?:es)?|"|”)`, 'gi'))].flatMap(([, number, unit]) => {
     const metres = { mm: units.MILLIMETRE, cm: 10 * units.MILLIMETRE, m: 1 }[unit!.toLowerCase()] ?? units.INCH;
-    return value(number!) * metres;
+    return values(number!).map((figure) => figure * metres);
   });
   if (written.length > 0) return written;
-  return [...text.matchAll(new RegExp(NUMBER, 'g'))].map(([, number]) => value(number!) * units.INCH);
+  return [...text.matchAll(new RegExp(NUMBER, 'g'))].flatMap(([, number]) => values(number!).map((figure) => figure * units.INCH));
 }
 
-/** The masses a printed string can mean, in kilograms. `6 lbs. 2 oz.` is one figure in two words. */
+/**
+ * The inches an imperial fraction means, in metres: Browning prints a barrel as `7 1/2"` and `16 1/2"`,
+ * which is how a gunsmith writes it and how no decimal reader reads it.
+ */
+export function printedFractions(text: string): number[] {
+  return [...text.matchAll(/(?:([0-9]+)\s+)?([0-9]+)\s*\/\s*([0-9]+)\s*(?:"|”|in\b|inch(?:es)?)?/g)].map(([, whole, numerator, denominator]) => {
+    return (Number(whole ?? 0) + Number(numerator) / Number(denominator)) * units.INCH;
+  });
+}
+
+/**
+ * The masses a printed string can mean, in kilograms. `6 lbs. 2 oz.` is one figure in two words.
+ *
+ * `gr` is read as grams, not grains: Girsan print `830 gr.` for a pistol of 830 g, and no maker gives a
+ * gun's weight in grains — a grain is for a bullet or a charge, and 830 of them would be 54 g.
+ */
 export function printedMasses(text: string): number[] {
   const ounce = units.POUND / 16;
-  const masses = [...text.matchAll(new RegExp(`${NUMBER}\\s*(kg|g\\b|oz|lbs?)`, 'gi'))].map(([, number, unit]) => {
-    const kilograms = { kg: 1, g: units.GRAM, oz: ounce }[unit!.toLowerCase()] ?? units.POUND;
-    return value(number!) * kilograms;
+  const masses = [...text.matchAll(new RegExp(`${NUMBER}\\s*(kg|gr?\\b|oz|lbs?)`, 'gi'))].flatMap(([, number, unit]) => {
+    const kilograms = { kg: 1, g: units.GRAM, gr: units.GRAM, oz: ounce }[unit!.toLowerCase()] ?? units.POUND;
+    return values(number!).map((figure) => figure * kilograms);
   });
   const both = new RegExp(`${NUMBER}\\s*lbs?\\.?\\s*${NUMBER}\\s*oz`, 'i').exec(text);
-  return both ? [...masses, value(both[1]!) * units.POUND + value(both[2]!) * ounce] : masses;
+  return both ? [...masses, values(both[1]!)[0]! * units.POUND + values(both[2]!)[0]! * ounce] : masses;
 }
 
-/** The turns of rifling a printed string can mean, in metres: `1:9,5"`, `1:203 mm`, or a bare `1:10`. */
+/**
+ * The turns of rifling a printed string can mean, in metres: `1:9,5"`, `1:203 mm`, a bare `1:10`, and —
+ * since the field is the twist and nothing else — the turn on its own, which is how Browning prints it
+ * (`10"` for one turn in ten inches, `9 1/2"` for one in nine and a half).
+ */
 export function printedTwists(text: string): number[] {
-  return [...text.matchAll(new RegExp(`1\\s*(?:[:-]|in\\b)\\s*${NUMBER}\\s*(mm|cm|in\\b|inch(?:es)?|"|”)?`, 'gi'))].map(([, number, unit]) => {
+  const ratios = [...text.matchAll(new RegExp(`1\\s*(?:[:-]|in\\b)\\s*${NUMBER}\\s*(mm|cm|in\\b|inch(?:es)?|"|”)?`, 'gi'))].flatMap(([, number, unit]) => {
     const metres = { mm: units.MILLIMETRE, cm: 10 * units.MILLIMETRE }[unit?.toLowerCase() ?? ''] ?? units.INCH;
-    return value(number!) * metres;
+    return values(number!).map((figure) => figure * metres);
   });
+  return ratios.length > 0 ? ratios : printedLengths(text);
 }
 
 /** Whether a figure is one of the printed string's readings, to the tolerance above. */
 function agrees(figure: number, printed: number[], absolute: number): boolean {
   return printed.some((candidate) => Math.abs(figure - candidate) <= Math.max(absolute, TOLERANCE.relative * figure));
-}
-
-/**
- * What a reloader cannot load for, and what must therefore never reach a record: the rimfire cartridges
- * and the shotgun gauges. Written out one by one rather than as a clever pattern, because the names that
- * look alike are the ones that matter — `.22 LR` is rimfire, `.22 Hornet`, `.22-250` and `.223` are not.
- */
-const UNLOADABLE = [
-  // .22 rimfire, in every spelling the makers print, `22 S L LR` (short, long and long rifle) included.
-  /\b\.?22\s*(s\s*l\s*lr|lr|l\.r\.|l\b|long|short|wmr|wrf|win\s*mag|magnum|mag\b|bb|cb)\b/i,
-  // .17 rimfire: HMR, Mach 2 (which Browning prints `17 M 2`) and the .17 Winchester Super Magnum.
-  /\b\.?17\s*(hmr|hm2|m\s*2|mach\s*2|wsm)\b/i,
-  /\b\.?21\s*sharp\b/i,
-  /\b5\s*mm\s*(rem(ington)?\s*)?(rimfire|magnum)\b/i,
-  /\b(12|16|20|24|28|32|36)\s*(ga|gauge|gaugé|bore)\b/i,
-  /\b\.?410\s*(ga|gauge|bore)\b/i,
-  /\bairgun|air\s*rifle|\b177\b|\b4\.5\s*mm\b/i,
-];
-
-/** Whether a cartridge is one a reloader can load, as far as its name says. */
-export function loadableCartridge(cartridge: string | undefined): boolean {
-  return cartridge !== undefined && cartridge !== '' && !UNLOADABLE.some((pattern) => pattern.test(cartridge));
 }
 
 /** A date as a record must carry it: the day a page was read, which is a day that has happened. */

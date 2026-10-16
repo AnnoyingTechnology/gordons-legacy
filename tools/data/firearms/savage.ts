@@ -12,9 +12,10 @@
  * Only the cartridge, the barrel length, the twist and the mass are taken.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { loadableCartridge } from './loadable-cartridge.ts';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, DELAY, fetchText, fileName, firearmJson, plainText, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
+import { crawlArguments, fetchPage, fetchText, fileName, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const SITEMAP = 'https://savagearms.com/site-map';
@@ -83,10 +84,6 @@ export function twistLength(text: string | undefined): number | undefined {
   return match && Number(match[1]) > 0 ? Number(match[1]) * units.INCH : undefined;
 }
 
-/** A cartridge a reloader loads for: no rimfire, no shotgun gauge. */
-export function loadable(cartridge: string): boolean {
-  return /[0-9]/.test(cartridge) && !/\b(22|17)\s*(lr|long rifle|wmr|hmr|wsm|short)\b/i.test(cartridge) && !/gauge|\b[0-9]+\s*ga\b|\.?410\b/i.test(cartridge);
-}
 
 /** The gun a SKU page describes, or nothing when it has no loadable cartridge or no barrel length. */
 export function firearmFrom(page: string, model: string, url: string, retrieved: string): Firearm | undefined {
@@ -94,7 +91,7 @@ export function firearmFrom(page: string, model: string, url: string, retrieved:
   const cartridge = table.get('Caliber');
   const barrelLength = length(table.get('Barrel Length'));
   const type = table.get('Firearm Type')?.toLowerCase();
-  if (!cartridge || !loadable(cartridge) || barrelLength === undefined || (type !== 'centerfire' && type !== 'handgun')) return undefined;
+  if (!cartridge || !loadableCartridge(cartridge) || barrelLength === undefined || (type !== 'centerfire' && type !== 'handgun')) return undefined;
   const twistText = table.get('Rate of Twist');
   const weight = table.get('Weight');
   const twist = twistLength(twistText);
@@ -145,10 +142,9 @@ async function main(): Promise<void> {
   const skipped: string[] = [];
   const names = new Set<string>();
   for (const modelUrl of models) {
-    await sleep(DELAY);
     let modelPage: string;
     try {
-      modelPage = await fetchText(modelUrl);
+      modelPage = await fetchPage(modelUrl);
     } catch (error) {
       skipped.push(`${modelUrl}: ${(error as Error).message}`);
       continue;
@@ -157,14 +153,13 @@ async function main(): Promise<void> {
     // One SKU per cartridge and barrel length: the others differ by colour or market.
     const chosen = new Map<string, SkuRow>();
     for (const row of skuRows(modelPage)) {
-      if (loadable(row.cartridge) && !chosen.has(`${row.cartridge}|${row.barrelLength}`)) chosen.set(`${row.cartridge}|${row.barrelLength}`, row);
+      if (loadableCartridge(row.cartridge) && !chosen.has(`${row.cartridge}|${row.barrelLength}`)) chosen.set(`${row.cartridge}|${row.barrelLength}`, row);
     }
     for (const row of chosen.values()) {
-      await sleep(DELAY);
       const url = `https://savagearms.com/firearms/sku/${row.sku}`;
       let page: string;
       try {
-        page = await fetchText(url);
+        page = await fetchPage(url);
       } catch (error) {
         skipped.push(`${url}: ${(error as Error).message}`);
         continue;

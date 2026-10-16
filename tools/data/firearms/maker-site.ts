@@ -12,6 +12,7 @@
  *     deno run -A tools/data/firearms/<maker>.ts <output folder> [--limit 5]
  */
 import { parseFirearm, serializeFirearm, units, type Firearm } from '@gordons-legacy/formats';
+import { cachedPage, keepPage } from './page-cache.ts';
 
 /** Who the crawl says it is, so a site owner can see what it is and ask us to stop. */
 export const AGENT = 'gordons-legacy-research/1.0 (+https://github.com/AnnoyingTechnology/gordons-legacy)';
@@ -24,6 +25,20 @@ export async function fetchText(url: string): Promise<string> {
   const response = await fetch(url, { headers: { 'user-agent': AGENT } });
   if (!response.ok) throw new Error(`${response.status} for ${url}`);
   return response.text();
+}
+
+/**
+ * A page of a catalogue: from the cache when it holds one, otherwise fetched and then kept
+ * (page-cache.ts). The wait belongs here rather than to the loop around it, because it is the fetch
+ * that has to be paid for; a page already on disk costs the site nothing and is read at once.
+ */
+export async function fetchPage(url: string, delay: number = DELAY): Promise<string> {
+  const kept = cachedPage(url);
+  if (kept !== undefined) return kept;
+  await sleep(delay);
+  const markup = await fetchText(url);
+  keepPage(url, markup);
+  return markup;
 }
 
 export function sleep(milliseconds: number): Promise<void> {

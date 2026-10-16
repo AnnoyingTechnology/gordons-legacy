@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, type Firearm } from '../src/index.ts';
-import { auditFirearm, loadableCartridge, printedLengths, printedMasses, printedTwists } from '../../../tools/data/firearms/check-corpus.ts';
+import { auditFirearm, printedLengths, printedMasses, printedTwists } from '../../../tools/data/firearms/check-corpus.ts';
+import { loadableCartridge } from '../../../tools/data/firearms/loadable-cartridge.ts';
 
 /**
  * The check a crawl's output goes through before anything is published
@@ -94,6 +95,21 @@ describe('checking a crawl before it is published', () => {
     }
   });
 
+  it('reads a figure a gunsmith writes as a fraction, and a turn printed on its own', () => {
+    // Browning print inches only, as `7 1/2"`, and the twist as the turn alone: `10"` is 1:10".
+    expect(printedLengths('16 1/2"')[0]).toBeCloseTo(0.4191, 12);
+    expect(printedLengths('7 1/2"')[0]).toBeCloseTo(0.1905, 12);
+    expect(printedTwists('10"')[0]).toBeCloseTo(0.254, 12);
+    expect(printedTwists('9 1/2"')[0]).toBeCloseTo(0.2413, 12);
+    // A ratio still wins where one is written, whichever unit it is in.
+    expect(printedTwists('1:9,5"')[0]).toBeCloseTo(0.2413, 12);
+    expect(printedTwists('1:203 mm')[0]).toBeCloseTo(0.203, 12);
+    // A record whose figures are printed that way passes, which is the point: before this, an extractor
+    // had added a second reading of its own into `source.published`, where only the maker's words belong.
+    const browning = record({ length: 0.4191, twistLength: 0.254, gunMass: 2.92 }, { barrelLength: '16 1/2"', twist: '10"', weight: '6 lbs 7 oz' });
+    expect(auditFirearm(browning)).toEqual([]);
+  });
+
   it('reads a printed figure as its maker writes it, with either decimal mark', () => {
     expect(printedLengths('56 cm (22")')).toEqual([0.56, 0.5588]);
     expect(printedLengths('508 mm')).toEqual([0.508]);
@@ -102,6 +118,11 @@ describe('checking a crawl before it is published', () => {
     expect(printedMasses('3,4 kg (7.5 lbs)')[0]).toBeCloseTo(3.4, 12);
     expect(printedMasses('6 lbs. 2 oz.').at(-1)).toBeCloseTo(2.77825, 5);
     expect(printedMasses('705 g | 24.87 oz')[0]).toBeCloseTo(0.705, 12);
+    // Schmeisser write three thousand two hundred and fifty grams as `3.250 g`; an English page would
+    // mean three and a quarter kilograms by the same characters, so both readings count as agreement.
+    expect(printedMasses('3.250 g')).toContainEqual(3.25);
+    expect(printedMasses('3.250 g')[0]).toBeCloseTo(0.00325, 12);
+    expect(printedMasses('2,7 kg')[0]).toBeCloseTo(2.7, 12);
     expect(printedTwists('1:9,5"')[0]).toBeCloseTo(0.2413, 12);
     expect(printedTwists('1 : 9,5 / 4')[0]).toBeCloseTo(0.2413, 12);
     expect(printedTwists('1:203 mm')[0]).toBeCloseTo(0.203, 12);

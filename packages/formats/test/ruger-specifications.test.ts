@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { firearmFrom, length, links, loadable, mass, modelFrom, specifications, twistLength } from '../../../tools/data/firearms/ruger.ts';
+import { firearmFrom, length, links, mass, modelFrom, specifications, twistLength } from '../../../tools/data/firearms/ruger.ts';
 
 /**
  * The reading of a maker's published specifications (tools/data/firearms/ruger.ts, issue #30). The page
@@ -62,17 +62,6 @@ describe('reading a published specification', () => {
     expect(twistLength('Varies')).toBeUndefined();
   });
 
-  it('tells a cartridge from a rimfire', () => {
-    expect(loadable('9mm Luger')).toBe(true);
-    expect(loadable('45 Colt')).toBe(true);
-    expect(loadable('5.7x28mm')).toBe(true);
-    expect(loadable('22 LR')).toBe(false);
-    expect(loadable('22 WMR')).toBe(false);
-    expect(loadable('17 HMR')).toBe(false);
-    expect(loadable('17 WSM')).toBe(false);
-    expect(loadable('17 Hornet')).toBe(true);
-    expect(loadable('Training round')).toBe(false);
-  });
 
   it('names the model from the sheet’s headline and its model number', () => {
     expect(modelFrom(PAGE, '9001')).toBe('Rifle Example 9001');

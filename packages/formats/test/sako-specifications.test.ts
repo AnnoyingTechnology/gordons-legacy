@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cartridgeName, firearmsFrom, loadable, modelName, twistLength, variantsOf } from '../../../tools/data/firearms/sako.ts';
+import { cartridgeName, firearmsFrom, modelName, twistLength, variantsOf } from '../../../tools/data/firearms/sako.ts';
 
 /**
  * The reading of a maker's published specifications (tools/data/firearms/sako.ts, issue #30). The page
@@ -65,10 +65,8 @@ describe('reading a published specification', () => {
     expect(twistLength(undefined)).toBeUndefined();
   });
 
-  it('writes decimals with a point, and tells a cartridge from a rimfire', () => {
+  it('writes decimals with a point, as the application compares them', () => {
     expect(cartridgeName('6,5 x 55 SE')).toBe('6.5 x 55 SE');
-    expect(loadable('308 Win.')).toBe(true);
-    expect(loadable('22 LR')).toBe(false);
   });
 
   it('writes the model as Tikka does when the page gives a code or capitals', () => {

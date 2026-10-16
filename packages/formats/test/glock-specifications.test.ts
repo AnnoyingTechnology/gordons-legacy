@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { firearmFrom, loadable, metric, modelFrom, specifications } from '../../../tools/data/firearms/glock.ts';
+import { firearmFrom, metric, modelFrom, specifications } from '../../../tools/data/firearms/glock.ts';
 
 /**
  * The reading of a maker's published specifications (tools/data/firearms/glock.ts, issue #30). The page
@@ -48,12 +48,6 @@ describe('reading a published specification', () => {
     expect(metric('no figure here', 'mm')).toBeUndefined();
   });
 
-  it('tells a cartridge from a marking round or a rimfire', () => {
-    expect(loadable('9x19 mm')).toBe(true);
-    expect(loadable('.45 Auto')).toBe(true);
-    expect(loadable('Training ammunition')).toBe(false);
-    expect(loadable('22 LR')).toBe(false);
-  });
 
   it('finds the model wherever the site puts its own name in the title', () => {
     expect(modelFrom('GLOCK 17 Gen5')).toBe('17 Gen5');

@@ -6,7 +6,6 @@ import {
   difference,
   firearmFrom,
   gunMass,
-  loadable,
   productPage,
   readableName,
   twistLength,
@@ -96,18 +95,6 @@ describe('reading a published specification', () => {
     expect(twistLength('<li>a 1:2 twist</li>')).toBeUndefined();
   });
 
-  it('tells a cartridge from a rimfire', () => {
-    expect(loadable('9MM')).toBe(true);
-    expect(loadable('45-70 GOVT')).toBe(true);
-    expect(loadable('22 LR')).toBe(false);
-    expect(loadable('22 WMR')).toBe(false);
-    expect(loadable('17 HMR')).toBe(false);
-    expect(loadable('22 MAGNUM')).toBe(false);
-    expect(loadable('AIRGUN')).toBe(false);
-    // A shotgun gauge, and a gun that takes several cartridges, are not the single cartridge the files name.
-    expect(loadable('12 GAUGE')).toBe(false);
-    expect(loadable('410,45 COLT,45 AUTO')).toBe(false);
-  });
 
   it('tells a complete gun from a part or a set', () => {
     const gun = productPage(pageWith(PISTOL))!;

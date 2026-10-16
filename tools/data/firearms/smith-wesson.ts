@@ -25,9 +25,10 @@
  *    figure. No correction is made here: the files say `published`, and the application shows that.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { loadableCartridge } from './loadable-cartridge.ts';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, DELAY, fetchText, fileName, firearmJson, plainText, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
+import { crawlArguments, DELAY, fetchPage, fetchText, fileName, firearmJson, plainText, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const SITEMAP = 'https://www.smith-wesson.com/sitemap.xml';
@@ -133,21 +134,6 @@ export function twistLength(description: string): number | undefined {
   return reading === undefined ? undefined : tidy(reading.inchesPerTurn * units.INCH);
 }
 
-/**
- * Whether a cartridge is one a reloader can load for: a name with a number in it, and not a rimfire.
- * The pages write calibers like `9MM`, `380 AUTO`, `44 MAGNUM`, `5.56 NATO`, `22 LR`, `22 MAGNUM`.
- */
-export function loadable(caliber: string): boolean {
-  if (!/[0-9]/.test(caliber)) return false;
-  if (/\b(22|17)\s*(lr|long rifle|wmr|wmrf|hmr|short|magnum rimfire|win mag)\b/i.test(caliber)) return false;
-  if (/\b22\s*magnum\b/i.test(caliber)) return false;
-  if (/rimfire|blank|training|marking|airgun|air gun|bb\b|pellet|\bcal\b/i.test(caliber)) return false;
-  // A shotgun fires shot, not the one projectile the simulation models.
-  if (/gauge|\bga\b/i.test(caliber)) return false;
-  // `410,45 COLT,45 Auto` is a gun that takes several cartridges: which one the figures are for is not said.
-  if (caliber.includes(',')) return false;
-  return true;
-}
 
 /**
  * Whether the product is a whole gun and not a part or a set. A gun has an action and a magazine
@@ -222,7 +208,7 @@ export function firearmFrom(page: string, url: string, retrieved: string): Firea
   if (product === undefined || !completeGun(product)) return undefined;
   const caliber = product.specifications.get('CALIBER');
   const length = barrelLength(product.specifications.get('BARREL LENGTH'));
-  if (!caliber || !loadable(caliber) || length === undefined) return undefined;
+  if (!caliber || !loadableCartridge(caliber) || length === undefined) return undefined;
   const mass = gunMass(product.dimensions);
   const twistFound = twistReading(product.description);
   const twist = twistFound === undefined ? undefined : tidy(twistFound.inchesPerTurn * units.INCH);
@@ -311,10 +297,9 @@ async function main(): Promise<void> {
   const skipped: string[] = [];
   const writtenFiles = new Map<string, Firearm>();
   for (const url of products) {
-    await sleep(DELAY);
     let page: string;
     try {
-      page = await fetchText(url);
+      page = await fetchPage(url);
     } catch (error) {
       skipped.push(`${url}: ${(error as Error).message}`);
       continue;

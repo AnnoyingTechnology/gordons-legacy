@@ -19,9 +19,10 @@
  * it: a number under 50 cannot be millimetres, so it is taken as inches (the same rule as Henry's).
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { loadableCartridge } from './loadable-cartridge.ts';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, DELAY, fetchText, fileName, firearmJson, plainText, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
+import { crawlArguments, fetchPage, fetchText, fileName, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
 import { publishedFigures, type MassBasis } from './published-figures.ts';
 
 const SITEMAP = 'https://grandpower.eu/product-sitemap.xml';
@@ -74,20 +75,18 @@ export function twistLength(text: string | undefined): number | undefined {
   return number > 0 ? number * (match[2].toLowerCase() === 'mm' ? units.MILLIMETRE : units.INCH) : undefined;
 }
 
-/** One cartridge with a figure in it and no rimfire; a pair (`9mm / .40 S&W`) is not one cartridge. */
-export function loadable(cartridge: string): boolean {
-  if (!/[0-9]/.test(cartridge) || /\/|\bor\b|&amp;|,/i.test(cartridge)) return false;
-  return !/(^|[^0-9])(22|17)\s*(lr|long rifle|wmr|hmr|wsm|short|magnum|mag)\b/i.test(cartridge);
-}
 
 /**
- * The weight labels and what each mass includes. A label that says only `Weight` gives a figure whose
- * basis is unstated; `with magazine` does not say whether the magazine is loaded, so it is unstated too.
+ * The weight labels and what each mass includes, best first. Several pages print two weights (`Weight w/
+ * empty magazine` and `Weight w/o magazine`); the engine wants the gun as it recoils, so the one with an
+ * empty magazine wins, whatever order the page lists them in. A label that says only `Weight` gives a
+ * figure whose basis is unstated; `with magazine` does not say whether the magazine is loaded, so it is
+ * unstated too.
  */
 const WEIGHT_LABELS: [RegExp, MassBasis][] = [
-  [/^weight (w\/o|without) magazine$/, 'without-magazine'],
   // The page writes `Weight w/ empty magazine`; the slash is sometimes lost in the markup.
   [/^weight (with |w\/? ?)?empty magazine$/, 'empty-magazine'],
+  [/^weight (w\/o|without) magazine$/, 'without-magazine'],
   [/^weight$/, 'unstated'],
   [/^weight (with|w\/?) magazine$/, 'unstated'],
 ];
@@ -99,14 +98,15 @@ export function firearmFrom(page: string, url: string, retrieved: string): Firea
   const cartridge = values.get('caliber');
   const barrelText = values.get('barrel length');
   const barrel = length(barrelText);
-  if (model === undefined || cartridge === undefined || !loadable(cartridge) || barrel === undefined) return undefined;
+  if (model === undefined || cartridge === undefined || !loadableCartridge(cartridge) || barrel === undefined) return undefined;
   let weightText: string | undefined;
   let massBasis: MassBasis = 'unstated';
-  for (const [label, text] of values) {
-    const known = WEIGHT_LABELS.find(([pattern]) => pattern.test(label));
-    if (known !== undefined && weightText === undefined) {
-      weightText = text;
-      massBasis = known[1];
+  for (const [pattern, basis] of WEIGHT_LABELS) {
+    const label = [...values.keys()].find((key) => pattern.test(key));
+    if (label !== undefined && mass(values.get(label)) !== undefined) {
+      weightText = values.get(label);
+      massBasis = basis;
+      break;
     }
   }
   const gunMass = mass(weightText);
@@ -154,10 +154,9 @@ async function main(): Promise<void> {
   const skipped: string[] = [];
   const taken = new Map<string, Firearm>();
   for (const url of pages) {
-    await sleep(DELAY);
     let page: string;
     try {
-      page = await fetchText(url);
+      page = await fetchPage(url);
     } catch (error) {
       skipped.push(`${url}: ${(error as Error).message}`);
       continue;

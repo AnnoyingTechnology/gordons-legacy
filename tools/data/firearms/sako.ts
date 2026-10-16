@@ -18,9 +18,10 @@
  * twist and the mass are taken.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { loadableCartridge } from './loadable-cartridge.ts';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, DELAY, fetchText, fileName, firearmJson, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
+import { crawlArguments, fetchPage, fetchText, fileName, firearmJson, plausibleGunMass, summaryLine } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const SITEMAP = 'https://www.sako.global/sitemap.xml';
@@ -87,10 +88,6 @@ export function twistLength(text: string | undefined): number | undefined {
   return number > 0 ? number * (match[2] === 'mm' ? units.MILLIMETRE : units.INCH) : undefined;
 }
 
-/** A cartridge a reloader loads for: no rimfire. The page writes decimals with a comma. */
-export function loadable(cartridge: string): boolean {
-  return /[0-9]/.test(cartridge) && !/\b(22|17)\s*(lr|long rifle|wmr|hmr|short)\b/i.test(cartridge);
-}
 
 /** `6,5 Creedmoor` → `6.5 Creedmoor`. */
 export function cartridgeName(cartridge: string): string {
@@ -121,7 +118,7 @@ function masses(group: readonly RifleVariant[]): number[] {
 export function firearmsFrom(variants: RifleVariant[], url: string, retrieved: string): Firearm[] {
   const groups = new Map<string, RifleVariant[]>();
   for (const variant of variants) {
-    if (!loadable(variant.cartridge)) continue;
+    if (!loadableCartridge(variant.cartridge)) continue;
     const key = [modelName(variant.model), variant.cartridge, variant.barrelLength, variant.twist ?? ''].join('|');
     groups.set(key, [...(groups.get(key) ?? []), variant]);
   }
@@ -188,10 +185,9 @@ async function main(): Promise<void> {
   const skipped: string[] = [];
   const names = new Set<string>();
   for (const url of pages) {
-    await sleep(DELAY);
     let page: string;
     try {
-      page = await fetchText(url);
+      page = await fetchPage(url);
     } catch (error) {
       skipped.push(`${url}: ${(error as Error).message}`);
       continue;

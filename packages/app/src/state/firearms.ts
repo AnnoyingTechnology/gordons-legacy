@@ -116,8 +116,27 @@ function dimensions(name: string): string | undefined {
  * equally the start of .357 Magnum — two cartridges that must never be offered for one another. Those
  * match nothing; the user picks their gun themselves. The same rule keeps `.45` away from .454 Casull.
  */
+/**
+ * The cartridges a gun's record names. A maker often prints two names for one chamber — Henry's
+ * `.357 Magnum/.38 Spl`, FN's `.223 Rem/5.56 NATO` — and the record keeps the words as printed, so a
+ * load of either is a load for that gun.
+ *
+ * Two spellings are one name and are never split: `.45/70` is how the older makers write `.45-70`, and
+ * a comma between figures is a metric page's decimal (`7,62 x 39`).
+ */
+function names(cartridge: string): string[] {
+  if (/^\s*\.?\d{2,3}\s*\/\s*\d{2,3}\s*$/.test(cartridge)) return [cartridge.trim()];
+  return cartridge
+    .split(/\/|;|(?<!\d),|,(?!\d)|\sor\s/i)
+    .map((name) => name.trim())
+    .filter((name) => name !== '');
+}
+
 export function chamberedFor(firearm: Firearm, cartridge: string): boolean {
-  const gun = normalise(firearm.cartridge ?? '');
+  const printed = firearm.cartridge ?? '';
+  const parts = names(printed);
+  if (parts.length > 1) return parts.some((name) => chamberedFor({ ...firearm, cartridge: name }, cartridge));
+  const gun = normalise(printed);
   const load = normalise(cartridge);
   if (gun === '' || load === '') return false;
   if (gun === load) return true;

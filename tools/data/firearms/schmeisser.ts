@@ -15,17 +15,19 @@
  *   position), and a page whose barrel in centimetres and in inches contradict each other;
  * - a page with no weight is still written (the mass is optional), a page with no barrel is not.
  *
- * The mass is `unstated`: the page gives one weight and does not say what it includes. Its `3.250 g`
- * is kept in `source.published` as `3250 g`, because the checker reads `3.250 g` as three grams.
+ * The mass is `unstated`: the page gives one weight and does not say what it includes, and its `3.250 g`
+ * is kept in `source.published` exactly as printed — the checker reads both conventions of a group of
+ * three digits (tools/data/firearms/check-corpus.ts).
  *
  * Two pages can carry one name (the SP9 is listed with two barrel lengths): the barrel length is then
  * added to both names and the clash is printed.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { loadableCartridge } from './loadable-cartridge.ts';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, type Firearm } from '@gordons-legacy/formats';
-import { clashes, loadable, printedLength, printedMass, printedTwist, textLines } from './german-speaking-makers.ts';
-import { crawlArguments, DELAY, fetchText, fileName, firearmJson, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
+import { clashes, printedLength, printedMass, printedTwist, textLines } from './german-speaking-makers.ts';
+import { crawlArguments, fetchPage, fetchText, fileName, firearmJson, plausibleGunMass, summaryLine } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const CATALOGUE = 'https://schmeisser-germany.com/en/all-products/';
@@ -66,11 +68,6 @@ export function technicalData(page: string): Map<string, string[]> {
   return data;
 }
 
-/** `3.250 g` as `3250 g`: the maker's figure without the thousands dot a checker would read as a decimal. */
-function withoutThousandsDot(weight: string): string {
-  return weight.replace(/([0-9])\.([0-9]{3})(\s*g\b)/i, '$1$2$3');
-}
-
 /** The gun of one product page, or the reason there is none. */
 export function firearmFrom(page: string, url: string, retrieved: string): Firearm | { skipped: string } {
   const data = technicalData(page);
@@ -80,7 +77,7 @@ export function firearmFrom(page: string, url: string, retrieved: string): Firea
   const barrel = data.get('Barrel')?.join(' ');
   if (model === undefined || caliber === undefined) return { skipped: 'no model or no caliber' };
   if (data.get('Caliber')!.length > 1 || /[|,;]/.test(caliber)) return { skipped: `several cartridges: ${caliber}` };
-  if (!loadable(caliber)) return { skipped: `${caliber} is not a cartridge to load for` };
+  if (!loadableCartridge(caliber)) return { skipped: `${caliber} is not a cartridge to load for` };
   if (barrel === undefined) return { skipped: 'no barrel length' };
   const barrelLength = printedLength(barrel);
   if (barrelLength === undefined) return { skipped: `no single barrel length in "${barrel}"` };
@@ -110,7 +107,7 @@ export function firearmFrom(page: string, url: string, retrieved: string): Firea
       retrieved,
       // One weight, and the page does not say what it covers.
       ...(gunMass === undefined ? {} : { massBasis: 'unstated' as const }),
-      published: publishedFigures({ barrelLength: barrel, weight: weight === undefined ? undefined : withoutThousandsDot(weight), twist: twistText }),
+      published: publishedFigures({ barrelLength: barrel, weight: weight === undefined ? undefined : weight, twist: twistText }),
     },
   };
 }
@@ -126,9 +123,8 @@ async function main(): Promise<void> {
   const guns: Firearm[] = [];
   const skipped: string[] = [];
   for (const url of pages) {
-    await sleep(DELAY);
     try {
-      const result = firearmFrom(await fetchText(url), url, retrieved);
+      const result = firearmFrom(await fetchPage(url), url, retrieved);
       if ('skipped' in result) skipped.push(`${url}: ${result.skipped}`);
       else guns.push(result);
     } catch (error) {

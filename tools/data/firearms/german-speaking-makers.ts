@@ -89,10 +89,6 @@ export function printedTwist(text: string): number | undefined {
   return twist >= 4 * units.INCH && twist <= 40 * units.INCH ? twist : undefined;
 }
 
-/** A cartridge a reloader loads for: it has a figure in it, and it is no rimfire. */
-export function loadable(cartridge: string): boolean {
-  return /[0-9]/.test(cartridge) && !/(^|[^0-9])(22|17)\s*(lr|long rifle|wmr|hmr|wsm|short)\b/i.test(cartridge) && !/farbmunition|simunition|blank/i.test(cartridge);
-}
 
 /** A page's visible text as one line per block element, entities decoded; scripts and styles dropped. */
 export function textLines(markup: string): string[] {

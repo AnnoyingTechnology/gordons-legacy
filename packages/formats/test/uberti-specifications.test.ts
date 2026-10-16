@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { barrelLength, familyFromTitle, firearmsFrom, loadable, mass, specificationTable, twistLength } from '../../../tools/data/firearms/uberti.ts';
+import { barrelLength, familyFromTitle, firearmsFrom, mass, specificationTable, twistLength } from '../../../tools/data/firearms/uberti.ts';
 
 /**
  * The reading of a maker's published specifications (tools/data/firearms/uberti.ts, issue #30). The page
@@ -47,13 +47,6 @@ describe('reading a published specification', () => {
     expect(twistLength('RH')).toBeUndefined();
   });
 
-  it('keeps one cartridge, written either way, and leaves out rimfire and pairs', () => {
-    expect(loadable('.45 Colt')).toBe(true);
-    expect(loadable('.45/70')).toBe(true);
-    expect(loadable('.22 LR')).toBe(false);
-    expect(loadable('.45 Colt/.45 ACP')).toBe(false);
-    expect(loadable('.44')).toBe(false);
-  });
 
   it('builds a gun per loadable row, with the maker\'s strings and an unstated mass basis', () => {
     const guns = firearmsFrom(PAGE, 'https://example.invalid/cartridge-rifles/example-99', '2026-10-16');
@@ -62,6 +55,7 @@ describe('reading a published specification', () => {
       'Uberti Example 99 Rifle Short .357 Mag',
       'Uberti Example 99 Rifle Long .45 Colt 24.25"',
       'Uberti Example 99 Rifle Long .45 Colt 28"',
+      'Uberti Example 99 Rifle Two .45 Colt/.45 ACP',
       'Uberti Example 99 Rifle Old way .45/70',
     ]);
     const first = guns[0]!;

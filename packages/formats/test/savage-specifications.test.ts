@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { firearmFrom, length, loadable, mass, modelFromTitle, properties, skuRows, twistLength } from '../../../tools/data/firearms/savage.ts';
+import { firearmFrom, length, mass, modelFromTitle, properties, skuRows, twistLength } from '../../../tools/data/firearms/savage.ts';
 
 /**
  * The reading of a maker's published specifications (tools/data/firearms/savage.ts, issue #30). The pages
@@ -89,13 +89,6 @@ describe('reading a published specification', () => {
     expect(twistLength('1:10')).toBeUndefined();
   });
 
-  it('tells a cartridge from a rimfire or a shotgun gauge', () => {
-    expect(loadable('308 Win')).toBe(true);
-    expect(loadable('6.5 Creedmoor')).toBe(true);
-    expect(loadable('22 LR')).toBe(false);
-    expect(loadable('17 HMR')).toBe(false);
-    expect(loadable('12 Gauge')).toBe(false);
-  });
 
   it('builds a gun with its twist, its mass and where the figures come from', () => {
     const firearm = firearmFrom(SKU_PAGE, 'Example 99', 'https://example.invalid/sku/10001', '2026-10-15');

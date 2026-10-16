@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { firearmFrom, loadable, metricValue, pageData, twistLength, variantsOf } from '../../../tools/data/firearms/cz.ts';
+import { firearmFrom, metricValue, pageData, twistLength, variantsOf } from '../../../tools/data/firearms/cz.ts';
 
 /**
  * The reading of a maker's published specifications (tools/data/firearms/cz.ts, issue #30). The page
@@ -68,12 +68,6 @@ describe('reading a published specification', () => {
     expect(twistLength(undefined)).toBeUndefined();
   });
 
-  it('tells a cartridge from a rimfire', () => {
-    expect(loadable('308 Win.')).toBe(true);
-    expect(loadable('9 × 19')).toBe(true);
-    expect(loadable('22 LR')).toBe(false);
-    expect(loadable('22 WMR')).toBe(false);
-  });
 
   it('carries a cartridge in the spelling it is compared by', () => {
     // Their own data writes `9 × 19`, which as it stands matches no load (see maker-site.ts).
