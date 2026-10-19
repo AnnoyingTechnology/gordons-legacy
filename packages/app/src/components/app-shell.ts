@@ -2,6 +2,7 @@ import type { Firearm, Load, MeasurementSeries, Projectile } from '@gordons-lega
 import { FIREARM_FORMAT, importGrtProjectiles, importGrtPropellant, importGrtrace, parseFirearm, serializeFirearm, serializeLoad } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
 import type { Language } from '../i18n/i18n.ts';
+import { browserStorage, remember, remembered } from '../state/browser-storage.ts';
 import { DocumentStore } from '../state/documents.ts';
 import { engineById, isResearchEngine } from '../state/engine-choice.ts';
 import { loadSettings, saveSettings, type Settings } from '../state/settings.ts';
@@ -91,12 +92,14 @@ export class AppShell extends LitElement {
   declare closeError: string;
   declare newLoadOpen: boolean;
   declare shortcutsOpen: boolean;
-  private readonly store = new DocumentStore(window.localStorage);
+  /** The browser's storage, or nothing when the browser refuses it (browser-storage.ts). */
+  private readonly storage = browserStorage();
+  private readonly store = new DocumentStore(this.storage);
   private readonly library = new Library(indexedDbStorage());
   private readonly saveDocument = documentSaver(this.store, this.library);
   private readonly components = new ComponentLibrary(indexedDbStore<ComponentEntry>('components'));
   private readonly firearms = new FirearmLibrary(indexedDbStore<FirearmEntry>('firearms'));
-  private settings: Settings = loadSettings(window.localStorage, navigator.languages);
+  private settings: Settings = loadSettings(this.storage, navigator.languages);
 
   constructor() {
     super();
@@ -117,7 +120,7 @@ export class AppShell extends LitElement {
     this.shortcutsOpen = false;
     // The dedication and safety notice open on a browser's first visit, over an example load, so that the
     // tool shows what it does instead of an empty page (#29).
-    this.aboutOpen = window.localStorage.getItem(WELCOME_SEEN_KEY) === null;
+    this.aboutOpen = remembered(this.storage, WELCOME_SEEN_KEY) === null;
     if (this.aboutOpen && this.store.documents.length === 0) this.openExample();
     this.store.subscribe(() => this.requestUpdate());
     this.library.subscribe(() => this.requestUpdate());
@@ -182,6 +185,7 @@ export class AppShell extends LitElement {
         ${isResearchEngine(this.context.engine)
           ? html`<p class="warning">${t('engine.researchWarning', { name: this.context.engine.name })}</p>`
           : nothing}
+        ${this.storage === undefined ? html`<p class="warning" role="alert">${t('documents.storageDenied')}</p>` : nothing}
         ${this.store.storageFull ? html`<p class="warning">${t('documents.storageFull')}</p>` : nothing}
         ${this.store.recoveryFailed ? html`<p class="warning" role="alert">${t('documents.recoveryFailed')}</p>` : nothing}
         ${this.openErrors.length > 0
@@ -641,7 +645,7 @@ export class AppShell extends LitElement {
 
   private closeAbout = () => {
     this.aboutOpen = false;
-    window.localStorage.setItem(WELCOME_SEEN_KEY, '1');
+    remember(this.storage, WELCOME_SEEN_KEY, '1');
   };
 
   /** Units chosen one kind at a time; the preset shown stays the one they started from. */
@@ -672,7 +676,7 @@ export class AppShell extends LitElement {
   }
 
   private applySettings(): void {
-    saveSettings(window.localStorage, this.settings);
+    saveSettings(this.storage, this.settings);
     this.context = createContext(this.settings.language, this.settings.units, engineById(this.settings.engine));
   }
 }

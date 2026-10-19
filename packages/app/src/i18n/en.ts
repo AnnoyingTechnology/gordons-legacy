@@ -103,6 +103,7 @@ export const en = {
   'example.title': 'Example load',
   'example.note': "An example so that the tool is not empty on a first visit: a .308 Winchester from the community's CC0 files, with a charge the simulation puts well under the maximum. It is not load data, and nothing here was measured: check every charge against the powder or bullet maker's published data. Open your own file, or edit this one.",
   'documents.recoveryFailed': "Some saved tabs could not be restored. Recovered tabs remain available; check your library or backup for the missing ones.",
+  'documents.storageDenied': "This browser is not letting the tool store anything: the loads you open and the settings you change will be gone when the page closes. Save your loads to files.",
   'documents.storageFull': "The open loads no longer fit in the browser's storage (large pictures?): save them to files, or they will be lost when the page closes.",
   'documents.close': 'Close {name}',
   'documents.open': 'Open loads',

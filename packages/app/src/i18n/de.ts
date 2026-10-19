@@ -104,6 +104,7 @@ export const de: Messages = {
   'example.title': 'Beispielladung',
   'example.note': 'Ein Beispiel, damit das Werkzeug beim ersten Besuch nicht leer ist: eine .308 Winchester aus den CC0-Dateien der Gemeinschaft, mit einer Ladung, die die Simulation deutlich unter dem Maximum sieht. Das sind keine Ladedaten, und nichts davon wurde gemessen: Prüfen Sie jede Ladung anhand der veröffentlichten Daten des Pulver- oder Geschossherstellers. Öffnen Sie Ihre eigene Datei oder ändern Sie diese.',
   'documents.recoveryFailed': "Einige gespeicherte Tabs konnten nicht wiederhergestellt werden. Wiederhergestellte Tabs bleiben verfügbar; suchen Sie die fehlenden in Ihrer Bibliothek oder Sicherung.",
+  'documents.storageDenied': 'Dieser Browser lässt das Werkzeug nichts speichern: Geöffnete Ladungen und geänderte Einstellungen gehen beim Schließen der Seite verloren. Speichern Sie Ihre Ladungen in Dateien.',
   'documents.storageFull': 'Die geöffneten Ladungen passen nicht mehr in den Speicher des Browsers (große Bilder?): Speichern Sie sie in Dateien, sonst gehen sie beim Schließen der Seite verloren.',
   'documents.close': '{name} schließen',
   'documents.open': 'Geöffnete Ladungen',

@@ -104,6 +104,7 @@ export const es: Messages = {
   'example.title': 'Carga de ejemplo',
   'example.note': 'Un ejemplo, para que la herramienta no esté vacía en la primera visita: un .308 Winchester de los archivos CC0 de la comunidad, con una carga que la simulación sitúa muy por debajo del máximo. No son datos de recarga, y nada de esto se ha medido: compruebe cada carga con los datos publicados por el fabricante de la pólvora o de la bala. Abra su propio archivo, o modifique este.',
   'documents.recoveryFailed': "No se pudieron restaurar algunas pestañas guardadas. Las recuperadas siguen disponibles; busque las que faltan en la biblioteca o copia de seguridad.",
+  'documents.storageDenied': 'Este navegador no permite que la herramienta almacene nada: las cargas abiertas y los ajustes modificados se perderán al cerrar la página. Guarde sus cargas en archivos.',
   'documents.storageFull': 'Las cargas abiertas ya no caben en el almacenamiento del navegador (¿imágenes grandes?): guárdelas en archivos o se perderán al cerrar la página.',
   'documents.close': 'Cerrar {name}',
   'documents.open': 'Cargas abiertas',

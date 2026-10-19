@@ -53,5 +53,11 @@ export function loadSettings(storage: Storage | undefined, browserLanguages: rea
 }
 
 export function saveSettings(storage: Storage | undefined, settings: Settings): void {
-  storage?.setItem(STORAGE_KEY, JSON.stringify(settings));
+  // A browser may refuse the write (storage blocked for the site, or full). Changing a unit must not
+  // throw out of the click that changed it; the setting then holds for the session only.
+  try {
+    storage?.setItem(STORAGE_KEY, JSON.stringify(settings));
+  } catch {
+    // Nothing to do here: the shell already says that this browser remembers nothing.
+  }
 }
