@@ -73,7 +73,8 @@ src/
   units/units.ts        display units per kind of quantity (metric and imperial presets)
   units/conversions.ts  the unit converter's units
   i18n/                 message catalogs (en is the source; the compiler checks the others are complete)
-  state/                open documents and settings (localStorage); the library of saved loads, the
+  state/                open documents and settings (localStorage, reached through browser-storage.ts,
+                        since a browser may refuse it); the library of saved loads, the
                         user's guns and the component library (IndexedDB: indexed-db.ts, library.ts,
                         firearms.ts, components.ts); the published gun database, read on the first
                         search (published-firearms.ts); the backup file holding them all (backup.ts);

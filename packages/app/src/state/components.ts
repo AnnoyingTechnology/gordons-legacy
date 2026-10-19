@@ -193,6 +193,11 @@ export class ComponentLibrary {
   }
 }
 
+/**
+ * A stored entry, or nothing. Each kind is checked against its own format, and an entry whose `kind` is
+ * not one of the three is dropped: it used to fall through to the projectile check, so a record from a
+ * later version of the app — or a damaged one — was read as something it never was (#32).
+ */
 function checked(entry: ComponentEntry): ComponentEntry[] {
   if (entry.kind === 'caliber') {
     const result = checkCaliber(entry.value);
@@ -202,6 +207,7 @@ function checked(entry: ComponentEntry): ComponentEntry[] {
     const result = checkPropellant(entry.value);
     return result.ok ? [{ ...entry, value: result.value }] : [];
   }
+  if (entry.kind !== 'projectile') return [];
   const result = checkProjectile(entry.value);
   return result.ok ? [{ ...entry, value: result.value }] : [];
 }

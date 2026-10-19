@@ -60,9 +60,16 @@ export class FirearmLibrary {
   }
 }
 
+/**
+ * A stored entry, or nothing: the gun is checked like a file being opened, and the entry's own fields
+ * are checked too, since a record written by an older version may carry none (#32). A missing date is
+ * filled in rather than losing the gun: it is the gun the user saved, and a list only sorts by the date.
+ */
 function checked(entry: FirearmEntry): FirearmEntry[] {
   const result = checkFirearm(entry.firearm);
-  return result.ok ? [{ ...entry, firearm: result.value }] : [];
+  if (!result.ok) return [];
+  const updatedAt = typeof entry.updatedAt === 'string' && entry.updatedAt !== '' ? entry.updatedAt : new Date(0).toISOString();
+  return [{ ...entry, firearm: result.value, updatedAt }];
 }
 
 /** An empty gun, to fill in: a barrel with nothing but a length the editor will ask for. */

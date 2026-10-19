@@ -17,7 +17,7 @@ export class Library {
   constructor(storage: LibraryStorage) {
     this.storage = storage;
     this.ready = storage.list().then((entries) => {
-      this.entries = entries;
+      this.entries = entries.flatMap(checked);
       this.changed();
     });
   }
@@ -68,6 +68,24 @@ export class Library {
 
 function newId(): string {
   return crypto.randomUUID();
+}
+
+/**
+ * A stored entry, or nothing: the load is checked like a file being opened, so that a damaged record
+ * can't reach the engine, and the entry's own name and date are checked too, since a record written by
+ * an older version of the app may carry neither (#32). Neither is worth losing a load over — a list
+ * shows the name and sorts by the date — so they are filled in.
+ *
+ * This is the library's own doing, not its storage's, as in `firearms.ts` and `components.ts`: a check
+ * that lived in the IndexedDB wrapper alone was a check the tests never ran, and every entry reaches
+ * the application through here whatever it was stored in.
+ */
+function checked(entry: LibraryEntry): LibraryEntry[] {
+  const result = parseLoad(JSON.stringify(entry.load));
+  if (!result.ok) return [];
+  const name = typeof entry.name === 'string' && entry.name.trim() !== '' ? entry.name : (result.value.title || 'Untitled');
+  const updatedAt = typeof entry.updatedAt === 'string' && entry.updatedAt !== '' ? entry.updatedAt : new Date(0).toISOString();
+  return [{ ...entry, load: result.value, name, updatedAt }];
 }
 
 /** Entries of one cartridge, by firearm. */

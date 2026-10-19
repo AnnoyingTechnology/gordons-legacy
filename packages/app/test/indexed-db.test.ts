@@ -1,5 +1,5 @@
 import { expect, test, vi } from 'vitest';
-import { indexedDbStore } from '../src/state/indexed-db.ts';
+import { indexedDbStore, keyedRecords } from '../src/state/indexed-db.ts';
 
 /** Manual event delivery separates request success from the transaction's eventual outcome. */
 function databaseEvents() {
@@ -72,4 +72,15 @@ test('a version change closes the old connection and later operations reopen it'
   await connected(events);
   events.transaction.oncomplete?.call(events.transaction, new Event('complete'));
   await retry;
+});
+
+/**
+ * What `getAll()` returns is whatever is in the store: a record written by an older version of the
+ * application, or one damaged on disk. The `id` is the key everything downstream removes, replaces and
+ * renders by, so a value without one is dropped here rather than throwing inside the promise a whole
+ * library waits on — one bad record would empty a user's library instead of itself (#32).
+ */
+test('only records with a usable key come out of a store', () => {
+  const kept = { id: 'a', name: 'kept' };
+  expect(keyedRecords([kept, null, undefined, 'a string', 42, [], {}, { id: 7 }, { id: '' }, { id: 'b' }])).toEqual([kept, { id: 'b' }]);
 });

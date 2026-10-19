@@ -15,6 +15,23 @@ export interface RecordStore<T extends { id: string }> {
   remove(id: string): Promise<void>;
 }
 
+/**
+ * The stored values that are records of ours: an object with a string `id`, which is the one field this
+ * interface promises and the key everything downstream removes, replaces and renders by (#32).
+ *
+ * `getAll()` returns whatever is in the store — a record written by an older version of the app, or one
+ * damaged on disk — and the type assertion that used to stand here promised a shape nobody had checked.
+ * A value with no usable key is dropped here rather than reaching a library, where the first field read
+ * off it would throw inside the promise that the whole list depends on: one bad record would then empty
+ * a user's library instead of itself.
+ */
+export function keyedRecords<T extends { id: string }>(values: readonly unknown[]): T[] {
+  return values.filter((value): value is T => {
+    const record = value as { id?: unknown } | null;
+    return typeof record === 'object' && record !== null && !Array.isArray(record) && typeof record.id === 'string' && record.id !== '';
+  });
+}
+
 const opened = new Map<IDBFactory, Promise<IDBDatabase>>();
 
 function open(factory: IDBFactory): Promise<IDBDatabase> {
@@ -54,7 +71,7 @@ export function indexedDbStore<T extends { id: string }>(name: StoreName, factor
     });
   };
   return {
-    list: async () => (await run('readonly', (store) => store.getAll())) as T[],
+    list: async () => keyedRecords<T>(await run('readonly', (store) => store.getAll())),
     put: async (record) => void (await run('readwrite', (store) => store.put(record))),
     remove: async (id) => void (await run('readwrite', (store) => store.delete(id))),
   };

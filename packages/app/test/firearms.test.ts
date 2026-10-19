@@ -115,3 +115,27 @@ describe('the gun library', () => {
     expect(both[0]?.maker).toBe('Glock');
   });
 });
+
+/**
+ * The entry's own fields are checked as well as the gun's (#32): a record saved by an older version may
+ * carry no date, which is no reason to lose the gun — a list only sorts by it.
+ */
+describe('a stored gun with fields missing', () => {
+  test('keeps the gun and fills in the date', async () => {
+    const storage = memoryStore<FirearmEntry>();
+    await storage.put({ id: 'dateless', firearm: { ...newFirearm(), name: 'Example' } } as unknown as FirearmEntry);
+    const library = new FirearmLibrary(storage);
+    await library.ready;
+    expect(library.entries.map((entry) => entry.firearm.name)).toEqual(['Example']);
+    expect(library.entries[0]!.updatedAt).toBe('1970-01-01T00:00:00.000Z');
+  });
+
+  test('leaves out a record whose gun is not one, keeping the guns beside it', async () => {
+    const storage = memoryStore<FirearmEntry>();
+    await storage.put({ id: 'kept', firearm: { ...newFirearm(), name: 'Example' }, updatedAt: '2026-10-19T00:00:00.000Z' });
+    await storage.put({ id: 'broken', firearm: { name: 'No barrel' }, updatedAt: '2026-10-19T00:00:00.000Z' } as unknown as FirearmEntry);
+    const library = new FirearmLibrary(storage);
+    await library.ready;
+    expect(library.entries.map((entry) => entry.id)).toEqual(['kept']);
+  });
+});

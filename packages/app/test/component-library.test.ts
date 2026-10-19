@@ -31,3 +31,18 @@ test('a file of another kind is refused with a message', async () => {
   const library = new ComponentLibrary(memoryStore<ComponentEntry>(), []);
   expect(await library.importFile('load.grtload', '<x/>')).toHaveLength(1);
 });
+
+/**
+ * A record of a kind this version does not know — one written by a later version, or damaged — used to
+ * fall through to the projectile check and be read as something it never was (#32). It is left out, and
+ * the components beside it are not lost with it.
+ */
+test('a stored component of an unknown kind is left out, and the rest still arrive', async () => {
+  const storage = memoryStore<ComponentEntry>();
+  const projectile = communityComponents().find((entry) => entry.kind === 'projectile')!;
+  await storage.put({ ...projectile, id: 'kept' });
+  await storage.put({ ...projectile, id: 'unknown-kind', kind: 'ignition-primer' } as unknown as ComponentEntry);
+  const library = new ComponentLibrary(storage, []);
+  await library.ready;
+  expect(library.entries.map((entry) => entry.id)).toEqual(['kept']);
+});

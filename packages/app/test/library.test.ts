@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { importGrtLoad, serializeLoad, type Load } from '@gordons-legacy/formats';
 import { describe, expect, test } from 'vitest';
 import { summarizeLoad } from '../src/analysis/load-summary.ts';
-import { memoryStorage } from '../src/state/library-storage.ts';
+import { memoryStorage, type LibraryEntry } from '../src/state/library-storage.ts';
 import { Library, shelves } from '../src/state/library.ts';
 import { readBackup, writeBackup } from '../src/state/backup.ts';
 import { choosableFirearms, FirearmLibrary, newFirearm, type FirearmEntry } from '../src/state/firearms.ts';
@@ -122,6 +122,40 @@ describe('Library', () => {
     expect(await readBackup(backup, library, guns)).toEqual({ added: 2, failed: 2 });
     expect(library.entries.map(entry => entry.name)).toEqual(['First', 'Last']);
     expect(guns.entries).toEqual([]);
+  });
+});
+
+/**
+ * The entry's own fields are checked as well as the load (#32): a record written by an older version of
+ * the app may carry no name and no date, which is no reason to lose the load — a list shows the name
+ * and sorts by the date, so both are filled in.
+ */
+describe('a stored load with fields missing', () => {
+  test('keeps the load, naming it after its title and dating it from the epoch', async () => {
+    const storage = memoryStorage();
+    const titled: Load = { ...glock, title: 'Named in the file' };
+    await storage.put({ id: 'nameless', load: titled } as unknown as LibraryEntry);
+    const library = new Library(storage);
+    await library.ready;
+    expect(library.entries.map((entry) => entry.name)).toEqual(['Named in the file']);
+    expect(library.entries[0]!.updatedAt).toBe('1970-01-01T00:00:00.000Z');
+  });
+
+  test('names a load with no title of its own either', async () => {
+    const storage = memoryStorage();
+    await storage.put({ id: 'nameless', name: '  ', load: { ...glock, title: '' } } as unknown as LibraryEntry);
+    const library = new Library(storage);
+    await library.ready;
+    expect(library.entries.map((entry) => entry.name)).toEqual(['Untitled']);
+  });
+
+  test('leaves out a record whose load is not one, keeping the loads beside it', async () => {
+    const storage = memoryStorage();
+    await storage.put({ id: 'kept', name: 'A', load: glock, updatedAt: '2026-10-19T00:00:00.000Z' });
+    await storage.put({ id: 'broken', name: 'B', load: { cartridge: 'none' }, updatedAt: '2026-10-19T00:00:00.000Z' } as unknown as LibraryEntry);
+    const library = new Library(storage);
+    await library.ready;
+    expect(library.entries.map((entry) => entry.id)).toEqual(['kept']);
   });
 });
 

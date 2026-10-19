@@ -1,4 +1,4 @@
-import { parseLoad, type Load } from '@gordons-legacy/formats';
+import type { Load } from '@gordons-legacy/formats';
 import { indexedDbStore, memoryStore, type RecordStore } from './indexed-db.ts';
 
 /** A load kept in the user's library. */
@@ -25,15 +25,5 @@ export function memoryStorage(): LibraryStorage {
  * app requests; a backup file is the user's safeguard.
  */
 export function indexedDbStorage(factory: IDBFactory = indexedDB): LibraryStorage {
-  const store = indexedDbStore<LibraryEntry>('library', factory);
-  return {
-    ...store,
-    // Entries are checked like a file being opened, so that a damaged record can't reach the engine.
-    list: async () => (await store.list()).flatMap(checked),
-  };
-}
-
-function checked(entry: LibraryEntry): LibraryEntry[] {
-  const result = parseLoad(JSON.stringify(entry.load));
-  return result.ok ? [{ ...entry, load: result.value }] : [];
+  return indexedDbStore<LibraryEntry>('library', factory);
 }
