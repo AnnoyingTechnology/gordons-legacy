@@ -114,9 +114,8 @@ The shared readers are tested in their own right too (`printed-figures.test.ts`,
 `weatherby-chamberings.test.ts`, `metric-figures.test.ts`, `maker-site-text.test.ts`), since a mistake
 in one of them is a mistake in every corpus that reads through it.
 
-Not true yet of five makers: Colt, Ed Brown, FN America, Girsan and Kel-Tec have no page-shape test of
-their own (2026-10-19). Their figures come from `printed-figures.ts`, which is tested; what is unguarded
-is the part each of them does itself — which block of a page holds the specifications.
+It became true of every maker on 2026-10-19: Colt, Ed Brown, FN America, Girsan, Kel-Tec and Weatherby
+had none until then, Weatherby's 662 guns and the five others' shared reader included.
 
 ## Makers
 
