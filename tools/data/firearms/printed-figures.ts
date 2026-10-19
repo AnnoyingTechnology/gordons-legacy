@@ -1,7 +1,8 @@
 /**
  * How the American makers print a barrel length, a weight and a twist, and how a crawl of their pages is
- * written out (issue #30, docs/firearm-data.md). Shared by the extractors of Colt, FN America, Daniel
- * Defense, Wilson Combat, Nighthawk, Bond Arms, Magnum Research, Kel-Tec, Ed Brown, Girsan and Benelli.
+ * written out (issue #30, docs/firearm-data.md). Read through by the extractors of Colt, Ed Brown,
+ * FN America, Girsan, Kel-Tec and Weatherby (through `rifle-figures.ts`), and the place a new maker of
+ * theirs starts.
  *
  * Two jobs, one per half of this file:
  *

@@ -141,7 +141,7 @@ gun for gun except Ruger, where the catalogue itself changed (below).
 | Desert Tech | `desert-tech.ts` | per-configuration specifications in the public product page’s Angular `ng-state` | 83 (10 product pages, 2026-10-16) | SKU keeps configurations distinct; `weightLb` is shipping weight and is ignored. Only labelled gun Weight is used; unitless twists remain absent, with their printed string retained. WLVRN pages omit weight and twist. |
 | Browning | `browning.ts` | one `riflesoption` block per chambering, titled cells | 2,642 | the largest catalogue read, discontinued rifles included; inches and pounds only, with fractions (`7 1/2"`, `6 lbs 7 oz`) and the twist as a bare turn (`10"` is 1:10") |
 | Winchester | `winchester.ts` | the same CMS as Browning, one block per chambering | 1,170 | `robots.txt` answers 404, so nothing is forbidden; some sitemap addresses redirect to themselves forever and are skipped; one cartridge listed twice with different weights settles to nothing |
-| Weatherby | `weatherby.ts` | a tech-specs table per product page | 662 | no product URL in any sitemap, so the pages are reached by a link crawl; the WooCommerce `weight` is a shipping weight and is never read; **their own spelling is `muzzle break`**, which had nine barrels two inches too long until the brake rule learned it |
+| Weatherby | `weatherby.ts` | a tech-specs table per product page | 662 | no product URL in any sitemap, so the pages are reached by a link crawl; the WooCommerce `weight` is a shipping weight and is never read; **their own spelling is `muzzle break`**, which had nine barrels two inches too long until the brake rule learned it; 23 product pages give no gun, and that was checked page by page on 2026-10-19 — they publish the cartridges a model is sold in as a `Choose an option` list and no barrel length, twist or weight at all, so there is nothing to read there, not a parser to fix |
 | Christensen Arms | `christensen-arms.ts` | a `CALIBER \| LENGTH \| TWIST` table per rifle | 228 | the page's one *Starting Weight* is the lightest configuration's, so it is taken only where the table has a single row; accessories and apparel pages have no table |
 | FN America | `fn-america.ts` | titled specification lines | 135 | a page that prints `20" or 24"`, or a rifle that *converts* to another cartridge, leaves the figure to a choice and is left out |
 | Tanfoglio | `tanfoglio.ts` | an Italian `Peso` / `Canna` table, one cell per chambering | 110 | `gr.` is the Italian *grammi*, not grains; one cell can hold a weight per chambering (`1090 gr. (CAL.45ACP)`) and a record keeps only its own |
@@ -212,6 +212,25 @@ Benelli Italy, Verney-Carron and Rigby answer fine but their `robots.txt` disall
 list of AI crawlers; our crawler carries its own name, but it *is* run by an agent, so that block is
 honoured. Each of these is worth re-checking in a later run: a 403 can be a misconfiguration, and the
 Cloudflare default can be turned off as easily as it was turned on.
+
+### Eleven hosts surveyed again, 2026-10-19
+
+The module headers named Nosler, Seekins, Barrett, Montana, Horizon, Daniel Defense, Wilson Combat,
+Nighthawk, Bond Arms and Magnum Research as makers these shared readers were written for. No extractor
+of any of them exists; the headers have been corrected to name their real users, and the eleven hosts
+were surveyed again to say plainly where each stands:
+
+| Host | What answered | What reading it would take |
+|---|---|---|
+| horizonfirearms.com | `robots.txt` refuses ClaudeBot, GPTBot and eleven other AI crawlers by name | nothing: a refusal is final |
+| wilsoncombat.com | 2,709 product addresses in the sitemap; a product page prints `Caliber` and `Twist Rate` | the most tractable of the ten: a filter telling a gun from a bullet, a holster or a barrel, which is most of that catalogue |
+| nosler.com, danieldefense.com, bondarms.com | 1,483 / 375 / 921 addresses | the product pages have not been read yet; their shape is unknown |
+| nighthawkcustom.com, seekinsprecision.com, montanarifleco.com | 1,024 / 115 / 47 addresses, but the sitemaps hold **categories and blog posts**, not products | a link crawl from the category pages, as Weatherby and Ruger need; Seekins also renders its catalogue from a JavaScript payload, so the figures are not in the markup a fetch returns |
+| barrett.net, proofresearch.com, magnumresearch.com | 819 / 50 / 369 addresses, nearly all news items | find where the products live before anything else |
+
+So the answer to "is that everything?" is: everything **read**, plus ten makers that allow the crawl and
+have not been written yet. That is per-maker work, one extractor and one test each, and the order above
+is the order of least guesswork.
 
 Where a maker writes a cartridge in a form no reloader uses (`9MM`, `45 ACP`), the extractor maps it to
 the conventional name **in a table, one entry per form**, and keeps the maker's own word in

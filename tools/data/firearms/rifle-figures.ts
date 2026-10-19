@@ -1,6 +1,8 @@
 /**
- * How the American rifle makers' pages (Weatherby, Nosler, Seekins, Barrett, Montana, Marlin, Horizon,
- * issue #30) print the chamberings of one model: a table whose every row is a gun.
+ * How a rifle maker's page prints the chamberings of one model: a table whose every row is a gun
+ * (issue #30). Weatherby's pages are shaped that way, and theirs is the only extractor reading this
+ * today. Another maker whose pages list chamberings the same way reads through this module as it
+ * stands; what stays in a maker's own file is which pages to read and what their cells mean.
  *
  * These makers print in inches and pounds, some of them with the metric figure beside it. Every reader
  * here returns SI (metres, kilograms) together with the value of the last printed digit, so that a
