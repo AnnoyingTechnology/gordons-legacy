@@ -110,6 +110,13 @@ and stays in its own file.
 Each extractor has a test in `packages/formats/test/<maker>-specifications.test.ts`, written against a
 page **in the maker's shape but with invented figures**. The maker's own text is never reproduced in
 this repository, and the invented figures make it obvious that a test checks the parsing, not the data.
+The shared readers are tested in their own right too (`printed-figures.test.ts`,
+`weatherby-chamberings.test.ts`, `metric-figures.test.ts`, `maker-site-text.test.ts`), since a mistake
+in one of them is a mistake in every corpus that reads through it.
+
+Not true yet of five makers: Colt, Ed Brown, FN America, Girsan and Kel-Tec have no page-shape test of
+their own (2026-10-19). Their figures come from `printed-figures.ts`, which is tested; what is unguarded
+is the part each of them does itself — which block of a page holds the specifications.
 
 ## Makers
 

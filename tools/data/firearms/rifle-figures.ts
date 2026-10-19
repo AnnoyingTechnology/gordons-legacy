@@ -1,17 +1,20 @@
 /**
  * How the American rifle makers' pages (Weatherby, Nosler, Seekins, Barrett, Montana, Marlin, Horizon,
- * issue #30) print their figures, and how a reading becomes a gun record.
+ * issue #30) print the chamberings of one model: a table whose every row is a gun.
  *
  * These makers print in inches and pounds, some of them with the metric figure beside it. Every reader
  * here returns SI (metres, kilograms) together with the value of the last printed digit, so that a
  * measure printed in two units can keep whichever was printed to the finer step (docs/firearm-data.md,
  * ruger.ts). A reader returns nothing for a figure it cannot place: a range, a bare number with no unit,
  * a `configuration dependent` weight. Nothing here guesses.
+ *
+ * The record and the crawl are the shared ones (`printed-figures.ts`); what is this module's own is the
+ * table, the figures in its cells, and the naming of a model sold with two barrels in one cartridge.
  */
-import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
+import { units } from '@gordons-legacy/formats';
 import { finest, type Reading } from './finest-reading.ts';
 import { plainText, plausibleGunMass } from './maker-site.ts';
-import { publishedFigures, type MassBasis } from './published-figures.ts';
+import { firearmRecord, type GunFacts, type PageReading } from './printed-figures.ts';
 
 const OUNCE = units.POUND / 16; // kg
 
@@ -107,98 +110,49 @@ export function twistLength(text: string): number | undefined {
 }
 
 
-/** The model and gun a reading is about, before it is a record. */
-export interface Configuration {
-  /** The maker, `Weatherby`. */
-  maker: string;
-  /** Who is cited as the publisher, `Weatherby, Inc.`. */
-  publisher: string;
-  /** The model as the page names it, `Mark V Backcountry 2.0`. */
-  model: string;
-  /** The cartridge as the maker writes it. */
-  cartridge: string;
-  /** The barrel, SI metres. */
-  barrel: number;
-  /** The turn of rifling, metres, when published. */
-  twist?: number | undefined;
-  /** The mass, kg, when the page gives one for this very configuration. */
-  mass?: number | undefined;
-  /** The page and the day it was read. */
-  url: string;
-  retrieved: string;
-  /** The maker's own strings, `barrelLength`, `weight`, `twist`. */
-  published: Record<string, string | undefined>;
-  /** What the mass includes, when the page says; `unstated` otherwise. */
-  massBasis?: MassBasis;
-  /** Words added to the gun's name to tell it from another of the same model and cartridge. */
-  nameSuffix?: string | undefined;
-}
-
-/** The record of a configuration. */
-export function firearmOf(configuration: Configuration): Firearm {
-  const { maker, model, cartridge, mass, twist } = configuration;
-  const name = `${maker} ${model} ${cartridge}${configuration.nameSuffix ? ` ${configuration.nameSuffix}` : ''}`;
-  const gunMassKnown = mass !== undefined && plausibleGunMass(mass) !== undefined;
-  return {
-    format: FIREARM_FORMAT,
-    schemaVersion: FIREARM_SCHEMA_VERSION,
-    name,
-    maker,
-    model,
-    cartridge,
-    barrel: {
-      name,
-      length: configuration.barrel,
-      ...(twist === undefined ? {} : { twistLength: twist }),
-      ...(gunMassKnown ? { gunMass: mass } : {}),
-      gasLeaks: [],
-    },
-    source: {
-      kind: 'published',
-      publisher: configuration.publisher,
-      url: configuration.url,
-      retrieved: configuration.retrieved,
-      ...(gunMassKnown ? { massBasis: configuration.massBasis ?? 'unstated' } : {}),
-      published: publishedFigures(configuration.published),
-    },
-  };
+/**
+ * The guns a page listing a model's chamberings holds, as the shared crawl writes them
+ * (`printed-figures.ts`): one row of the table is one gun, and `left` holds what the reader itself
+ * could not use. A page that gives nothing says so once, so that a parser which has stopped working
+ * does not look like a catalogue that has emptied.
+ */
+export function chamberings(guns: readonly GunFacts[], left: readonly string[]): PageReading[] {
+  const { kept, dropped } = distinguished(guns);
+  const skipped = [...left, ...dropped];
+  if (kept.length === 0 && left.length === 0) skipped.push('no gun with a cartridge and a barrel length');
+  return [...skipped.map((reason) => ({ skipped: reason })), ...kept.map((gun) => ({ firearm: firearmRecord(gun) }))];
 }
 
 /**
- * Names for the configurations of one page. A model sold in the same cartridge with two barrel lengths
- * is two guns, and the length goes into both names (`... 50 BMG 29"`); one that differs in nothing the
- * record holds is the same gun twice, and the second is left out.
+ * Names for the guns of one page. A model sold in the same cartridge with two barrel lengths is two
+ * guns, and the length goes into both names (`... 50 BMG 29"`); one that differs in nothing the record
+ * holds is the same gun twice, and the second is left out.
  *
- * Returns the configurations to write, and the reasons for those left out.
+ * Returns the guns to write, and the reasons for those left out.
  */
-export function distinguished(configurations: Configuration[]): { kept: Configuration[]; dropped: string[] } {
-  const byCartridge = new Map<string, Configuration[]>();
-  for (const configuration of configurations) {
-    const key = configuration.cartridge.toLowerCase();
-    byCartridge.set(key, [...(byCartridge.get(key) ?? []), configuration]);
+export function distinguished(guns: readonly GunFacts[]): { kept: GunFacts[]; dropped: string[] } {
+  const byName = new Map<string, GunFacts[]>();
+  for (const gun of guns) {
+    const key = gun.name.toLowerCase();
+    byName.set(key, [...(byName.get(key) ?? []), gun]);
   }
-  const kept: Configuration[] = [];
+  const kept: GunFacts[] = [];
   const dropped: string[] = [];
-  for (const group of byCartridge.values()) {
-    const barrels = new Set(group.map((configuration) => configuration.barrel.toFixed(5)));
-    const first = new Map<string, Configuration>(); // by barrel length
-    for (const configuration of group) {
-      const barrel = configuration.barrel.toFixed(5);
+  for (const group of byName.values()) {
+    const barrels = new Set(group.map((gun) => gun.barrelLength.toFixed(5)));
+    const first = new Map<string, GunFacts>(); // by barrel length
+    for (const gun of group) {
+      const barrel = gun.barrelLength.toFixed(5);
       const earlier = first.get(barrel);
+      const printedBarrel = gun.published['barrelLength'];
       if (earlier === undefined) {
-        const labelled = barrels.size > 1 ? { ...configuration, nameSuffix: configuration.published['barrelLength'] } : configuration;
+        const labelled = barrels.size > 1 && printedBarrel ? { ...gun, name: `${gun.name} ${printedBarrel}` } : gun;
         first.set(barrel, labelled);
         kept.push(labelled);
-      } else if (earlier.twist !== configuration.twist || earlier.mass !== configuration.mass) {
-        dropped.push(`${configuration.cartridge} ${configuration.published['barrelLength']}: listed twice with different figures; only the first is kept`);
+      } else if (earlier.twistLength !== gun.twistLength || earlier.gunMass !== gun.gunMass) {
+        dropped.push(`${gun.cartridge} ${printedBarrel}: listed twice with different figures; only the first is kept`);
       }
     }
   }
   return { kept, dropped };
-}
-
-/** A page's `<title>` as plain text, or nothing. */
-export function titleOf(page: string): string | undefined {
-  const title = /<title[^>]*>([^<]*)<\/title>/i.exec(page)?.[1];
-  return title === undefined ? undefined : plainText(title);
 }

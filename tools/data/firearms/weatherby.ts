@@ -18,10 +18,10 @@
  * each cartridge once), anything but cartridge, barrel, twist and weight. The page prints one Weight and
  * does not say what it includes, so every mass is `unstated`.
  */
-import { crawlArguments, fetchPage, plainText } from './maker-site.ts';
+import { fetchPage, pageTitle, plainText } from './maker-site.ts';
 import { loadableCartridge } from './loadable-cartridge.ts';
-import { crawl, type PageReading } from './rifle-crawl.ts';
-import { barrelLength, columnOf, gunMass, tablesOf, titleOf, twistLength, type Configuration } from './rifle-figures.ts';
+import { crawl, type GunFacts, type PageReading } from './printed-figures.ts';
+import { barrelLength, chamberings, columnOf, gunMass, tablesOf, twistLength } from './rifle-figures.ts';
 
 const SITE = 'https://weatherby.com';
 const CATEGORIES = ['rifles', 'rifles/mark-v', 'rifles/vanguard', 'rifles/model-307', 'rifles/legacy-models', 'rifles/readytoship'];
@@ -30,7 +30,7 @@ const NOT_RIFLES = /\/store\/(?:orion|sorix|element|18i|d-weatherby)/;
 
 /** The model from a product page's title: `Mark V® Backcountry 2.0 – Weatherby, Inc.`. */
 export function modelFromTitle(page: string): string | undefined {
-  const model = titleOf(page)?.split(/\s[–-]\sWeatherby/i)[0]?.trim();
+  const model = pageTitle(page)?.split(/\s[–-]\sWeatherby/i)[0]?.trim();
   return model ? model.replace(/^Weatherby\s+/i, '') : undefined;
 }
 
@@ -40,12 +40,12 @@ export function productLinks(page: string): string[] {
   return [...new Set(links)].filter((url) => !NOT_RIFLES.test(url));
 }
 
-/** The configurations of one product page: one per row of its chambering table. */
-export function readPage(page: string, url: string, retrieved: string): PageReading {
+/** The guns of one product page: one per row of its chambering table. */
+export function readPage(page: string, url: string, retrieved: string): PageReading[] {
   const model = modelFromTitle(page);
-  const configurations: Configuration[] = [];
+  const guns: GunFacts[] = [];
   const left: string[] = [];
-  if (model === undefined) return { configurations, left: ['no title'] };
+  if (model === undefined) return chamberings(guns, ['no title']);
   for (const table of tablesOf(page)) {
     const caliber = columnOf(table, /^caliber$/i);
     const twist = columnOf(table, /^twist/i);
@@ -64,26 +64,25 @@ export function readPage(page: string, url: string, retrieved: string): PageRead
         left.push(`${model} ${cartridge}: barrel length "${row[barrel] ?? ''}" is not a single barrel`);
         continue;
       }
-      configurations.push({
+      guns.push({
         maker: 'Weatherby',
         publisher: 'Weatherby, Inc.',
+        name: `Weatherby ${plainText(model)} ${cartridge}`,
         model: plainText(model),
         cartridge,
-        barrel: barrelReading.value,
-        twist: twistLength(row[twist] ?? ''),
-        mass: weight >= 0 ? gunMass(row[weight] ?? '')?.value : undefined,
+        barrelLength: barrelReading.value,
+        twistLength: twistLength(row[twist] ?? ''),
+        gunMass: weight >= 0 ? gunMass(row[weight] ?? '')?.value : undefined,
         url,
         retrieved,
         published: { barrelLength: row[barrel], weight: weight >= 0 ? row[weight] : undefined, twist: row[twist] },
       });
     }
   }
-  return { configurations, left };
+  return chamberings(guns, left);
 }
 
 async function main(): Promise<void> {
-  const args = crawlArguments('weatherby', process.argv.slice(2));
-  if (args === undefined) return;
   const products = new Set<string>();
   for (const category of CATEGORIES) {
     try {
@@ -93,7 +92,7 @@ async function main(): Promise<void> {
     }
   }
   console.log(`${products.size} product pages`);
-  await crawl({ folder: args.folder, pages: [...products].slice(0, args.limit), read: readPage });
+  await crawl('weatherby', [...products], readPage);
 }
 
 if (import.meta.main) await main();

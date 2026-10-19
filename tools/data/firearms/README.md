@@ -37,7 +37,7 @@ whose page shape is closest, then a test with a fixture in that page's shape, th
 | Which of the maker's own strings may a record keep | `published-figures.ts` |
 | Which of a page's two renderings of one measure do we believe | `finest-reading.ts` |
 | How do the pages that print inches and pounds print a figure, and how is a crawl of them written out | `printed-figures.ts` |
-| How do their rifle pages print a configuration table | `rifle-figures.ts`, `rifle-crawl.ts` |
+| How do their rifle pages list a model's chamberings, one row per gun | `rifle-figures.ts` |
 | How does a metric page print a figure (comma decimal, the inch beside) | `metric-figures.ts` |
 | Is this corpus fit to publish | `check-corpus.ts` |
 | Are the strings a record quotes the maker's own | `quoted-figures.ts` |
@@ -48,10 +48,9 @@ Each of these came out of the maker modules when a second maker needed the same 
 `finest-reading.ts` out of five that had each written the same comparison. That is the rule for this
 folder: a reader stays in the maker's module until a second maker needs it, and then it moves out whole.
 
-Two answers are still given twice, and a reader should know it before being surprised: a record is built
-either by `firearmRecord` (one page's figures) or by `firearmOf` (one row of a configuration table), and
-a crawl is driven either by `crawl` in `printed-figures.ts` or by `crawl` in `rifle-crawl.ts`. They do
-the same two things in two shapes; folding them together is the next tidying this folder wants.
+There is one record and one crawl for the whole folder, both in `printed-figures.ts`: `firearmRecord`
+builds every gun file from the same `GunFacts`, and `crawl` walks the pages, settles a name taken twice
+and writes them. A maker's module decides which pages to read and what a cell means, and nothing else.
 
 ## The four tools a refresh uses
 

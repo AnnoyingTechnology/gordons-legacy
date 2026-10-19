@@ -13,7 +13,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
 import { finest, type Reading } from './finest-reading.ts';
-import { publishedFigures } from './published-figures.ts';
+import { publishedFigures, type MassBasis } from './published-figures.ts';
 import { crawlArguments, DELAY, fetchPage, fileName, firearmJson, plausibleGunMass, summaryLine } from './maker-site.ts';
 
 /** A line that names a figure instead of giving one: `Overall Length: 39.63"`, `Twist Rate`. */
@@ -183,7 +183,7 @@ export interface GunFacts {
   /** Gun mass, kg, when the page gives one. */
   gunMass?: number | undefined;
   /** What the mass includes; `unstated` when the page does not say. Needed when there is a mass. */
-  massBasis?: 'without-magazine' | 'empty-magazine' | 'loaded' | 'unstated' | undefined;
+  massBasis?: MassBasis | undefined;
   /** The page. */
   url: string;
   /** The day it was read, YYYY-MM-DD. */
