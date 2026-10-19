@@ -30,7 +30,7 @@
  *  - the WooCommerce `weight` of a variation is a shipping weight and is never read;
  *  - accessories (optics plates), rimfire (.22 LR King Cobra) and anything without a loadable cartridge.
  */
-import { decodeEntities, fetchText, plainText } from './maker-site.ts';
+import { decodeEntities, fetchText, plainText, textLines } from './maker-site.ts';
 import { loadableCartridge } from './loadable-cartridge.ts';
 import {
   crawl,
@@ -39,7 +39,6 @@ import {
   length,
   mass,
   readableName,
-  textLines,
   twist,
   type PageReading,
   withMaker,

@@ -20,7 +20,15 @@ export const AGENT = 'gordons-legacy-research/1.0 (+https://github.com/AnnoyingT
 /** A second between pages, where a robots.txt asks for nothing more: allowed is no reason to be rude. */
 export const DELAY = 1000;
 
-/** A page's text, with the crawl named. Throws on anything but a 200, so a bad page is skipped, not read. */
+/**
+ * A page's text, with the crawl named. Throws on anything but a 200, so a bad page is skipped, not read.
+ *
+ * This is the fetch that does not go through the page cache, and a catalogue's listing — a sitemap, a
+ * family page — is read with it on purpose: a refresh has to see the catalogue as it is today, or it
+ * would read yesterday's list of guns from disk and never find the models a maker has added. The price
+ * is that re-running an extractor over cached pages still costs one request per maker, and stops at it
+ * when there is no network at all.
+ */
 export async function fetchText(url: string): Promise<string> {
   const response = await fetch(url, { headers: { 'user-agent': AGENT } });
   if (!response.ok) throw new Error(`${response.status} for ${url}`);
@@ -113,6 +121,35 @@ export function plainText(markup: string): string {
     .replace(/[®™]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+/**
+ * A page as the lines a reader sees, one per block element (`<li>`, `<p>`, `<div>`, `<tr>`, `<td>`,
+ * `<dt>`, `<dd>`, `<label>`, headings, sections), scripts, styles and comments out.
+ *
+ * A specification is a label and a value that sit in neighbouring blocks, or one `Label: value` line,
+ * and `plainText` alone would run a whole page together into one. Two extractors had a reader of their
+ * own for this before, each with a different list of block elements.
+ */
+export function textLines(markup: string): string[] {
+  return markup
+    .replace(/<(script|style|svg|noscript)\b[\s\S]*?<\/\1>/gi, ' ')
+    .replace(/<!--[\s\S]*?-->/g, ' ')
+    .replace(/<br\s*\/?>|<\/(p|div|li|ul|tr|td|th|dt|dd|h[1-6]|section|span|label)>/gi, '\n')
+    .split('\n')
+    .map(plainText)
+    .filter((line) => line !== '');
+}
+
+/** The text of a page's `<title>`. */
+export function pageTitle(page: string): string | undefined {
+  const title = /<title[^>]*>([^<]*)<\/title>/i.exec(page)?.[1];
+  return title === undefined ? undefined : plainText(title);
+}
+
+/** Every `<loc>` of a sitemap. */
+export function sitemapLocations(sitemap: string): string[] {
+  return [...sitemap.matchAll(/<loc>\s*([^<\s]*)\s*<\/loc>/g)].map(([, url]) => url!);
 }
 
 /**

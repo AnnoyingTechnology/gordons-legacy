@@ -30,21 +30,28 @@ whose page shape is closest, then a test with a fixture in that page's shape, th
 
 | Question | Module |
 |---|---|
-| How does a crawl behave: its name, its pace, how a page becomes text, how a gun becomes a file | `maker-site.ts` |
+| How does a crawl behave: its name, its pace, how a page becomes text and lines, how a gun becomes a file | `maker-site.ts` |
 | May this site be read, and how large is its catalogue | `survey-site.ts` |
 | Where are the pages this crawl has already read | `page-cache.ts` |
 | Is this caliber one cartridge a reloader can load for | `loadable-cartridge.ts` |
 | Which of the maker's own strings may a record keep | `published-figures.ts` |
-| How do the American makers print a figure, and how is a crawl of their pages written out | `printed-figures.ts` |
+| Which of a page's two renderings of one measure do we believe | `finest-reading.ts` |
+| How do the pages that print inches and pounds print a figure, and how is a crawl of them written out | `printed-figures.ts` |
 | How do their rifle pages print a configuration table | `rifle-figures.ts`, `rifle-crawl.ts` |
-| How do the German-speaking makers print a figure (comma decimal, metric with the inch beside) | `german-speaking-makers.ts` |
+| How does a metric page print a figure (comma decimal, the inch beside) | `metric-figures.ts` |
 | Is this corpus fit to publish | `check-corpus.ts` |
 | Are the strings a record quotes the maker's own | `quoted-figures.ts` |
 | What changed since the last crawl | `compare-corpus.ts` |
 
-Three of these came out of a maker's module when a second maker needed the same answer, and one —
-`loadable-cartridge.ts` — came out of sixteen of them, each of which had a different part of the answer.
-That is the rule for this folder: a reader stays in the maker's module until a second maker needs it.
+Each of these came out of the maker modules when a second maker needed the same answer —
+`loadable-cartridge.ts` out of sixteen of them, each of which held a different part of the answer, and
+`finest-reading.ts` out of five that had each written the same comparison. That is the rule for this
+folder: a reader stays in the maker's module until a second maker needs it, and then it moves out whole.
+
+Two answers are still given twice, and a reader should know it before being surprised: a record is built
+either by `firearmRecord` (one page's figures) or by `firearmOf` (one row of a configuration table), and
+a crawl is driven either by `crawl` in `printed-figures.ts` or by `crawl` in `rifle-crawl.ts`. They do
+the same two things in two shapes; folding them together is the next tidying this folder wants.
 
 ## The four tools a refresh uses
 

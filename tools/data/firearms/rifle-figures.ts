@@ -9,6 +9,7 @@
  * a `configuration dependent` weight. Nothing here guesses.
  */
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
+import { finest, type Reading } from './finest-reading.ts';
 import { plainText, plausibleGunMass } from './maker-site.ts';
 import { publishedFigures, type MassBasis } from './published-figures.ts';
 
@@ -37,29 +38,12 @@ export function columnOf(table: Table, pattern: RegExp): number {
   return table.header.findIndex((cell) => pattern.test(cell));
 }
 
-/**
- * A measure in SI together with what its last printed digit is worth, also in SI: `24"` is a step of
- * 1 inch, `51.44 cm` a step of 0.1 mm. The finer step is the more informative figure.
- */
-export interface Reading {
-  /** SI: metres or kilograms. */
-  value: number;
-  /** SI value of the last printed digit. */
-  step: number;
-}
-
 /** The reading of the first `<number> <unit>` in a text, or nothing. */
 function readingOf(text: string, unit: string, si: number): Reading | undefined {
   const match = new RegExp(`(?<![0-9.:])([0-9]+(?:\\.[0-9]+)?)\\s*${unit}`, 'i').exec(text.replace(/(?<=[0-9]),(?=[0-9]{3}\b)/g, ''));
   if (!match) return undefined;
   const printed = match[1]!;
   return { value: Number(printed) * si, step: 10 ** -(printed.split('.')[1]?.length ?? 0) * si };
-}
-
-/** Of several readings of one measure, the one printed to the finest step. */
-export function finest(readings: (Reading | undefined)[]): Reading | undefined {
-  const known = readings.filter((reading): reading is Reading => reading !== undefined);
-  return known.length === 0 ? undefined : known.reduce((best, reading) => (reading.step < best.step ? reading : best));
 }
 
 /** A length printed in inches (`24"`, `20.6 in`, `26 inches`). The text has been through `plainText`. */

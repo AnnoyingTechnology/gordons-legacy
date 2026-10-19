@@ -20,6 +20,7 @@
  * and Ruger does not say how; the files say `published` all the same, and the application shows that.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { finest, type Reading } from './finest-reading.ts';
 import { loadableCartridge } from './loadable-cartridge.ts';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
@@ -57,20 +58,6 @@ function renderings(value: string): { imperial: string; metric: string } {
   return { imperial: readable(imperial ?? ''), metric: readable(metric ?? '') };
 }
 
-/**
- * A figure as its maker printed it: the value in SI, and what its last digit is worth, also in SI.
- *
- * Ruger prints every measure twice and rounds the two differently — a barrel printed as `18.50"` is
- * 469.9 mm, while the metric span beside it says `46.9 cm` — so taking the metric figure by habit would
- * throw away a digit the maker published. The finer step wins instead, whichever unit it is in.
- */
-interface Reading {
-  /** SI: metres or kilograms. */
-  value: number;
-  /** SI value of the last published digit: 0.01 inch is 2.54e-4 m, 1 mm is 1e-3 m. */
-  step: number;
-}
-
 function reading(text: string, unit: string, si: number): Reading | undefined {
   const match = new RegExp(`([0-9]+(?:[.,][0-9]+)?)\\s*${unit}(?![a-z])`, 'i').exec(text);
   if (!match) return undefined;
@@ -81,13 +68,6 @@ function reading(text: string, unit: string, si: number): Reading | undefined {
   return { value: number * si, step: 10 ** -decimals * si };
 }
 
-/** Of the figures a sheet gives for one measure, the one printed to the finest step. */
-function finest(readings: (Reading | undefined)[]): number | undefined {
-  const known = readings.filter((entry): entry is Reading => entry !== undefined);
-  if (known.length === 0) return undefined;
-  return known.reduce((best, entry) => (entry.step < best.step ? entry : best)).value;
-}
-
 /** `71 mm`, `12.7 cm` or `2.80"` → metres, taking whichever the sheet printed to the finer step. */
 export function length(value: string): number | undefined {
   const { imperial, metric } = renderings(value);
@@ -95,7 +75,7 @@ export function length(value: string): number | undefined {
     reading(metric, 'mm', units.MILLIMETRE),
     reading(metric, 'cm', 1e-2),
     reading(imperial, '("|in\\b|inch)', units.INCH) ?? reading(value, '("|&quot;)', units.INCH),
-  ]);
+  ])?.value;
 }
 
 /** `317 g` or `1.2 kg` (metric, preferred), else `11.2 oz.` or `6 lbs. 2 oz.` → kilograms. */
@@ -108,7 +88,7 @@ export function mass(value: string): number | undefined {
     pounds === undefined && ounces === undefined
       ? undefined
       : { value: (pounds?.value ?? 0) + (ounces?.value ?? 0), step: (ounces ?? pounds!).step };
-  return plausibleGunMass(finest([reading(metric, 'g', units.GRAM), reading(metric, 'kg', 1), customary]));
+  return plausibleGunMass(finest([reading(metric, 'g', units.GRAM), reading(metric, 'kg', 1), customary])?.value);
 }
 
 /**

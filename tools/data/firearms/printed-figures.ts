@@ -12,23 +12,9 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
+import { finest, type Reading } from './finest-reading.ts';
 import { publishedFigures } from './published-figures.ts';
-import { crawlArguments, DELAY, fetchPage, fileName, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
-
-/**
- * A page as the lines a reader sees, one per block element (`<li>`, `<p>`, `<div>`, `<tr>`, `<td>`,
- * `<dt>`, `<dd>`, headings), scripts and styles out. A specification is a label and a value that sit in
- * neighbouring blocks or in one `Label: value` line, and `plainText` alone would run them together.
- */
-export function textLines(markup: string): string[] {
-  return markup
-    .replace(/<(script|style|svg|noscript)\b[\s\S]*?<\/\1>/gi, ' ')
-    .replace(/<!--[\s\S]*?-->/g, ' ')
-    .replace(/<br\s*\/?>|<\/(p|div|li|ul|tr|td|th|dt|dd|h[1-6]|section|span)>/gi, '\n')
-    .split('\n')
-    .map(plainText)
-    .filter((line) => line !== '');
-}
+import { crawlArguments, DELAY, fetchPage, fileName, firearmJson, plausibleGunMass, summaryLine } from './maker-site.ts';
 
 /** A line that names a figure instead of giving one: `Overall Length: 39.63"`, `Twist Rate`. */
 function isLabel(line: string | undefined): boolean {
@@ -63,19 +49,6 @@ export function tidy(value: number): number {
 }
 
 /**
- * A figure as its maker printed it: the value in SI, and what its last digit is worth, also in SI.
- *
- * A page that prints a measure in two units rounds the two differently (`16.1"` is 408.9 mm, and the
- * millimetres beside it say so), so the one printed to the finer step wins, whichever unit it is in.
- */
-interface Reading {
-  /** SI: metres or kilograms. */
-  value: number;
-  /** SI value of the last published digit: 0.1 inch is 2.54e-3 m, 1 mm is 1e-3 m. */
-  step: number;
-}
-
-/**
  * Every figure in `text` followed by one of `unitPattern`'s spellings, as readings of that unit.
  *
  * All of them, not the first: a cell that gives a choice (`20" or 24"`, `11.3 lb. or 11.8 lb.`) looks
@@ -105,13 +78,6 @@ function aChoice(text: string, unitPattern: string, si: number): boolean {
   return readings(text, unitPattern, si).length > 0 && reading(text, unitPattern, si) === undefined;
 }
 
-/** Of several readings of one measure, the value of the one printed to the finest step. */
-function finest(readings: (Reading | undefined)[]): number | undefined {
-  const known = readings.filter((entry): entry is Reading => entry !== undefined);
-  if (known.length === 0) return undefined;
-  return known.reduce((best, entry) => (entry.step < best.step ? entry : best)).value;
-}
-
 /** The three spellings of a length, as the makers print them. */
 const LENGTH_UNITS: Array<[string, number]> = [
   ['mm', units.MILLIMETRE],
@@ -128,7 +94,7 @@ const LENGTH_UNITS: Array<[string, number]> = [
  */
 export function length(text: string): number | undefined {
   if (LENGTH_UNITS.some(([unit, si]) => aChoice(text, unit, si))) return undefined;
-  const value = finest(LENGTH_UNITS.map(([unit, si]) => reading(text, unit, si)));
+  const value = finest(LENGTH_UNITS.map(([unit, si]) => reading(text, unit, si)))?.value;
   return value === undefined ? undefined : tidy(value);
 }
 
@@ -153,7 +119,7 @@ export function mass(text: string): number | undefined {
     pounds === undefined && ounces === undefined
       ? undefined
       : { value: (pounds?.value ?? 0) + (ounces?.value ?? 0), step: (ounces ?? pounds!).step };
-  const value = finest([reading(text, 'kg', 1), reading(text, 'g|grams?', units.GRAM), customary]);
+  const value = finest([reading(text, 'kg', 1), reading(text, 'g|grams?', units.GRAM), customary])?.value;
   return plausibleGunMass(value === undefined ? undefined : tidy(value));
 }
 

@@ -26,6 +26,7 @@ import { loadableCartridge } from './loadable-cartridge.ts';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
 import { crawlArguments, fetchPage, fetchText, fileName, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
+import { finest, type Reading } from './finest-reading.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const SITEMAP = 'https://www.sabatti.it/sitemap.xml';
@@ -87,12 +88,6 @@ export function chamberings(page: string): { chamberings: Chambering[]; left: st
 }
 
 
-/** A figure as printed with the value of its last digit, both in SI. */
-interface Reading {
-  value: number;
-  step: number;
-}
-
 function reading(printed: string, unit: number, step: number | undefined): Reading {
   const decimals = printed.split(/[.,]/)[1]?.length ?? 0;
   return { value: Number(printed.replace(',', '.')) * unit, step: (step ?? 1) * 10 ** -decimals * unit };
@@ -114,7 +109,7 @@ export function barrelLength(text: string | undefined): number | undefined {
     if (centimetres[2] === undefined) return metric.value;
     const imperial = reading(centimetres[2], units.INCH, undefined);
     if (!agree(metric.value, imperial.value, 0.03)) return undefined;
-    return imperial.step < metric.step ? imperial.value : metric.value;
+    return finest([metric, imperial])!.value;
   }
   const inches = /^([0-9]+(?:[.,][0-9]+)?)\s*(?:"|in\b)$/.exec(text ?? '');
   return inches ? reading(inches[1]!, units.INCH, undefined).value : undefined;
@@ -131,7 +126,7 @@ export function mass(text: string | undefined): number | undefined {
   if (match[2] === undefined) return plausibleGunMass(metric.value);
   const imperial = reading(match[2], units.POUND, undefined);
   if (!agree(metric.value, imperial.value, 0.05)) return undefined;
-  return plausibleGunMass(imperial.step < metric.step ? imperial.value : metric.value);
+  return plausibleGunMass(finest([metric, imperial])!.value);
 }
 
 /** The model from the specification list, else from the page's title. */

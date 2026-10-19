@@ -26,9 +26,8 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseFirearm } from '@gordons-legacy/formats';
-import { plainText } from './maker-site.ts';
+import { plainText, textLines } from './maker-site.ts';
 import { cacheFolder, cachedPage } from './page-cache.ts';
-import { textLines } from './printed-figures.ts';
 
 /** A page or a quoted string with its encoding undone, for comparing one against the other. */
 export function comparable(text: string): string {

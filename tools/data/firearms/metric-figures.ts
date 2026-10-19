@@ -1,20 +1,15 @@
 /**
- * What the German-speaking makers' extractors (haenel.ts, steyr.ts, schmeisser.ts, oberland-arms.ts)
- * read the same way: figures printed with a comma decimal and a dot for thousands, in metric with the
- * inch beside, and a page's text cut into lines.
+ * How a metric page prints a figure: a comma decimal, a dot for thousands, and the inch or the pound
+ * beside the millimetre (`37 cm / 14.5"`, `ca. 3,1 kg`, `3.250 g`). It is what the German-speaking
+ * makers' extractors read the same way — haenel.ts, steyr.ts, schmeisser.ts, oberland-arms.ts — while
+ * printed-figures.ts does the same for the pages that print inches and pounds.
  *
  * Nothing here knows a maker's page. It turns a string a maker printed into SI, or into `undefined`
  * when the string is not one unambiguous figure: a page that gives two barrel lengths in one cell, or
  * whose two units contradict each other, is a skipped gun and not a guessed one.
  */
 import { units } from '@gordons-legacy/formats';
-import { plainText } from './maker-site.ts';
-
-/** A figure as printed, in SI, with what its last printed digit is worth (also SI). */
-interface Reading {
-  value: number;
-  step: number;
-}
+import { finest, type Reading } from './finest-reading.ts';
 
 /** How far two units of one measure may differ before the page is taken to contradict itself. */
 const AGREEMENT = 0.02;
@@ -55,9 +50,9 @@ function lengthReadings(text: string): Reading[] {
 export function printedLength(text: string): number | undefined {
   const readings = lengthReadings(text);
   if (readings.length === 0) return undefined;
-  const finest = readings.reduce((best, reading) => (reading.step < best.step ? reading : best));
-  const agree = readings.every((reading) => Math.abs(reading.value - finest.value) <= AGREEMENT * finest.value);
-  return agree ? finest.value : undefined;
+  const believed = finest(readings)!;
+  const agree = readings.every((reading) => Math.abs(reading.value - believed.value) <= AGREEMENT * believed.value);
+  return agree ? believed.value : undefined;
 }
 
 /**
@@ -89,27 +84,6 @@ export function printedTwist(text: string): number | undefined {
   return twist >= 4 * units.INCH && twist <= 40 * units.INCH ? twist : undefined;
 }
 
-
-/** A page's visible text as one line per block element, entities decoded; scripts and styles dropped. */
-export function textLines(markup: string): string[] {
-  return markup
-    .replace(/<(script|style)\b[^>]*>.*?<\/\1>/gis, ' ')
-    .replace(/<\/(p|div|span|h[1-6]|li|tr|td|th|dd|dt|label)>|<br\s*\/?>/gi, '\n')
-    .split('\n')
-    .map((line) => plainText(line))
-    .filter((line) => line !== '');
-}
-
-/** The text of a page's `<title>`, entities decoded. */
-export function pageTitle(page: string): string | undefined {
-  const title = /<title[^>]*>([^<]*)<\/title>/i.exec(page)?.[1];
-  return title === undefined ? undefined : plainText(title);
-}
-
-/** Every `<loc>` of a sitemap. */
-export function sitemapLocations(sitemap: string): string[] {
-  return [...sitemap.matchAll(/<loc>\s*([^<\s]*)\s*<\/loc>/g)].map(([, url]) => url!);
-}
 
 /**
  * The names that more than one gun of a crawl carries, with those guns. An extractor settles these

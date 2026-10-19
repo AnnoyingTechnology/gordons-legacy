@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { clashes, printedLength, printedMass, printedTwist, sitemapLocations, textLines } from '../../../tools/data/firearms/german-speaking-makers.ts';
+import { sitemapLocations, textLines } from '../../../tools/data/firearms/maker-site.ts';
+import { clashes, printedLength, printedMass, printedTwist } from '../../../tools/data/firearms/metric-figures.ts';
 
-/** The figure readers the German-speaking makers' extractors share (tools/data/firearms/german-speaking-makers.ts, issue #30). */
+/** How a metric page prints a figure (tools/data/firearms/metric-figures.ts, issue #30), and how any
+ * page is read as the lines and the addresses it holds (maker-site.ts). */
 
 describe('a length as these makers print it', () => {
   it('takes the finer step of two units: 14.5 inches keeps the digit 37 cm has lost', () => {

@@ -20,9 +20,9 @@
  *  - rimfire and several-cartridge pages (`loadable` in printed-figures.ts).
  *  - The pages of discontinued guns are read all the same: their owners still load for them.
  */
-import { fetchText, plainText } from './maker-site.ts';
+import { fetchText, plainText, textLines } from './maker-site.ts';
 import { loadableCartridge } from './loadable-cartridge.ts';
-import { crawl, firearmRecord, labelled, length, mass, textLines, twist, withMaker, type PageReading } from './printed-figures.ts';
+import { crawl, firearmRecord, labelled, length, mass, twist, withMaker, type PageReading } from './printed-figures.ts';
 
 const SITEMAP = 'https://fnamerica.com/firearm-sitemap.xml';
 

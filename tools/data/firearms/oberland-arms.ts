@@ -35,8 +35,8 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { loadableCartridge } from './loadable-cartridge.ts';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, type Firearm } from '@gordons-legacy/formats';
-import { clashes, printedLength, printedMass, textLines } from './german-speaking-makers.ts';
-import { AGENT, crawlArguments, fetchPage, fileName, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
+import { clashes, printedLength, printedMass } from './metric-figures.ts';
+import { AGENT, crawlArguments, fetchPage, fileName, firearmJson, plainText, plausibleGunMass, summaryLine, textLines } from './maker-site.ts';
 import { publishedFigures, type MassBasis } from './published-figures.ts';
 
 const SITEMAP = 'https://www.oberlandarms.com/web/sitemap/shop-1/sitemap-1.xml.gz';
