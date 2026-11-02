@@ -5,18 +5,22 @@ import { shelves, type Library, type LibraryEntry } from '../state/library.ts';
 import { firearmLabel, newFirearm, type FirearmEntry } from '../state/firearms.ts';
 import { headerRow } from '../dom.ts';
 import type { UiContext } from './context.ts';
+import type { StockItem } from '../state/inventory.ts';
+import './stock-view.ts';
 
 /**
  * The user's library: every saved load, by cartridge and firearm, with what tells loads apart at a
  * glance (velocity, energy, share of the maximum, the review's level, the best group, the measured
- * velocity). Fires `open-entry` with an entry's id to open it in a tab, `import-files` with files to
- * add, `backup` to download the library, `restore` with a backup file.
+ * velocity), the user's guns and the stock. Fires `open-entry` with an entry's id to open it in a tab,
+ * `record-batch` with an entry's id, `import-files` with files to add, `backup` to download the library,
+ * `restore` with a backup file.
  */
 export class LibraryView extends LitElement {
   static override properties = {
     library: { attribute: false },
     entries: { attribute: false },
     firearms: { attribute: false },
+    stock: { attribute: false },
     context: { attribute: false },
     filter: { state: true },
   };
@@ -26,6 +30,8 @@ export class LibraryView extends LitElement {
   declare entries: LibraryEntry[];
   /** The user's guns, shown under the loads (issue #24). */
   declare firearms: FirearmEntry[];
+  /** What is on the shelf (stock-view.ts), below the guns. */
+  declare stock: StockItem[];
   declare context: UiContext;
   /** Words that every shown load must contain, in any of its names. */
   declare filter: string;
@@ -34,6 +40,7 @@ export class LibraryView extends LitElement {
     super();
     this.filter = '';
     this.firearms = [];
+    this.stock = [];
   }
 
   protected override createRenderRoot(): HTMLElement {
@@ -104,6 +111,7 @@ export class LibraryView extends LitElement {
               )}
             </table></div>`}
         ${this.renderFirearms()}
+        <gl-stock-view .items=${this.stock} .context=${this.context}></gl-stock-view>
       </section>
     `;
   }
@@ -191,7 +199,9 @@ export class LibraryView extends LitElement {
       <td>${simulated ? html`<span class="level-badge ${simulated.level}">${t(`assessment.level.${simulated.level}`)}</span>` : ''}</td>
       <td class="number">${summary?.measuredVelocity === undefined ? '' : quantity(summary.measuredVelocity, 'velocity')}</td>
       <td class="number">${summary?.bestGroup ? quantity(summary.bestGroup.angle, 'angle') : ''}</td>
-      <td>
+      <td class="row-actions">
+        <button class="icon-button" aria-label=${t('stock.recordBatchOf', { name: entry.name })} title=${t('stock.recordBatchOf', { name: entry.name })}
+          @click=${() => this.fire('record-batch', entry.id)}>${icon('charge')}</button>
         <button class="remove" aria-label=${t('library.remove', { name: entry.name })} title=${t('library.remove', { name: entry.name })}
           @click=${() => this.removeEntry(entry)}>${icon('close')}</button>
       </td>

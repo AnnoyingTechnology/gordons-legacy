@@ -23,6 +23,7 @@ const COMPUTED_FAMILIES = [
   'limit',
   'components.source',
   'boreArea',
+  'stock.kind',
 ];
 
 function sources(folder: string): string {

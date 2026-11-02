@@ -28,6 +28,8 @@ import { ComponentLibrary, type ComponentEntry } from '../state/components.ts';
 import { choosableFirearms, FirearmLibrary, firearmFromLoad, withFirearm, type FirearmEntry } from '../state/firearms.ts';
 import { cachedFirearms, fetchFirearms } from '../state/published-firearms.ts';
 import { readBackup, writeBackup } from '../state/backup.ts';
+import { Inventory, type StockItem, type Use } from '../state/inventory.ts';
+import './batch-dialog.ts';
 import './firearm-dialog.ts';
 import './firearm-picker.ts';
 import { indexedDbStore } from '../state/indexed-db.ts';
@@ -60,6 +62,7 @@ export class AppShell extends LitElement {
     view: { state: true },
     chronograph: { state: true },
     editedFirearm: { state: true },
+    batch: { state: true },
     firearmPickerOpen: { state: true },
     publishedGuns: { state: true },
     closingDocument: { state: true },
@@ -80,6 +83,8 @@ export class AppShell extends LitElement {
   declare chronograph: { csv: ChronographCsv; fileName: string } | undefined;
   /** The gun being described, with the id of the entry it replaces when it is an edit (issue #24). */
   declare editedFirearm: { firearm: Firearm; id?: string } | undefined;
+  /** The saved load a batch is being recorded of (batch-dialog.ts); undefined when none. */
+  declare batch: { name: string; load: Load } | undefined;
   /** True while the user is choosing the gun of the active load (issue #30). */
   declare firearmPickerOpen: boolean;
   /** The makers' published guns, read when the user first looks for one; undefined until then. */
@@ -100,6 +105,7 @@ export class AppShell extends LitElement {
   private readonly saveDocument = documentSaver(this.store, this.library);
   private readonly components = new ComponentLibrary(indexedDbStore<ComponentEntry>('components'));
   private readonly firearms = new FirearmLibrary(indexedDbStore<FirearmEntry>('firearms'));
+  private readonly inventory = new Inventory(indexedDbStore<StockItem>('inventory'));
   private settings: Settings = loadSettings(this.storage, navigator.languages);
 
   constructor() {
@@ -126,6 +132,7 @@ export class AppShell extends LitElement {
     this.store.subscribe(() => this.requestUpdate());
     this.library.subscribe(() => this.requestUpdate());
     this.firearms.subscribe(() => this.requestUpdate());
+    this.inventory.subscribe(() => this.requestUpdate());
     this.components.subscribe(() => this.requestUpdate());
     void this.components.useRepository(indexedDbDataCache(), (url) => fetch(url));
     // Ask the browser not to clear the library under storage pressure; it may still refuse.
@@ -243,6 +250,9 @@ export class AppShell extends LitElement {
         @export=${(event: CustomEvent<Firearm>) => download(serializeFirearm(event.detail), `${event.detail.name.trim() || 'gun'}.firearm.json`)}
         @close=${() => (this.editedFirearm = undefined)}
       ></gl-firearm-dialog>
+      <gl-batch-dialog .batch=${this.batch} .items=${this.inventory.entries} .context=${this.context}
+        @use-stock=${(event: CustomEvent<Use[]>) => void this.keepStock(() => this.inventory.use(event.detail)).then(() => (this.batch = undefined))}
+        @close=${() => (this.batch = undefined)}></gl-batch-dialog>
       <gl-converter-dialog .open=${this.converterOpen} .context=${this.context} @close=${() => (this.converterOpen = false)}></gl-converter-dialog>
       <gl-new-load-dialog .open=${this.newLoadOpen} .entries=${this.components.entries} .context=${this.context}
         .sources=${cloneSources(this.store.documents, this.library.entries)}
@@ -282,7 +292,11 @@ export class AppShell extends LitElement {
         .library=${this.library}
         .entries=${this.library.entries}
         .firearms=${this.firearms.entries}
+        .stock=${this.inventory.entries}
         .context=${this.context}
+        @save-stock=${(event: CustomEvent<StockItem>) => void this.keepStock(() => this.inventory.save(event.detail))}
+        @remove-stock=${(event: CustomEvent<string>) => void this.keepStock(() => this.inventory.remove(event.detail))}
+        @record-batch=${(event: CustomEvent<string>) => this.recordBatch(event.detail)}
         @edit-firearm=${(event: CustomEvent<{ firearm: Firearm; id?: string }>) => (this.editedFirearm = event.detail)}
         @remove-firearm=${(event: CustomEvent<string>) => void this.keepFirearm(undefined, event.detail)}
         @open-entry=${(event: CustomEvent<string>) => this.openEntry(event.detail)}
@@ -586,6 +600,22 @@ export class AppShell extends LitElement {
     if (active) this.store.update(active.id, withFirearm(active.load, firearm));
   }
 
+  /** A batch of a saved load: what it used comes off the shelf (batch-dialog.ts). */
+  private recordBatch(entryId: string): void {
+    const entry = this.library.entries.find((candidate) => candidate.id === entryId);
+    if (entry) this.batch = { name: entry.name, load: entry.load };
+  }
+
+  /** Runs a change to the stock, reporting a failed write instead of losing it silently. */
+  private async keepStock(change: () => Promise<unknown>): Promise<void> {
+    try {
+      await change();
+      this.openErrors = this.openErrors.filter((message) => message !== this.context.t('library.saveFailed'));
+    } catch {
+      this.openErrors = [this.context.t('library.saveFailed')];
+    }
+  }
+
   private async keepFirearm(firearm: Firearm | undefined, id: string | undefined): Promise<void> {
     try {
       if (firearm) await this.firearms.save(firearm, id);
@@ -617,7 +647,7 @@ export class AppShell extends LitElement {
 
   private downloadBackup(): void {
     const date = new Date().toISOString().slice(0, 10);
-    download(writeBackup(this.library.entries, this.firearms.entries), `gordons-legacy-library-${date}.json`);
+    download(writeBackup(this.library.entries, this.firearms.entries, this.inventory.entries), `gordons-legacy-library-${date}.json`);
   }
 
   private async restoreBackup(file: File): Promise<void> {
@@ -627,7 +657,7 @@ export class AppShell extends LitElement {
       this.openErrors = [this.context.t('library.restoreFailed', { added: '0', failed: '1' })];
       return;
     }
-    const { added, failed } = await readBackup(text, this.library, this.firearms);
+    const { added, failed } = await readBackup(text, this.library, this.firearms, this.inventory);
     this.openErrors = failed > 0 ? [this.context.t('library.restoreFailed', { added: String(added), failed: String(failed) })] : [];
   }
 

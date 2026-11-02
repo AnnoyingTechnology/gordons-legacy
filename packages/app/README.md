@@ -52,6 +52,8 @@ src/
     obt-view.ts           OBT nodes near the load and the charge for each
     compare-view.ts       <gl-compare-view>: the open loads overlaid, with key figures
     library-view.ts       <gl-library-view>: saved loads by cartridge and firearm, import, backup
+    stock-view.ts         <gl-stock-view>: the stock on the shelf, edited in place, with what runs low
+    batch-dialog.ts       <gl-batch-dialog>: records a batch of a saved load, taking what it used off the shelf
     component-picker.ts   <gl-component-picker>: choose a powder (GRT's burning-rate table and powder
                           search) or a projectile from the component library
     firearm-picker.ts     <gl-firearm-picker>: choose the gun a load is fired in, searching the user's
@@ -77,7 +79,7 @@ src/
   state/                open documents and settings (localStorage, reached through browser-storage.ts,
                         since a browser may refuse it); the library of saved loads, the
                         user's guns and the component library (IndexedDB: indexed-db.ts, library.ts,
-                        firearms.ts, components.ts); the published gun database, read on the first
+                        firearms.ts, components.ts, inventory.ts for the stock); the published gun database, read on the first
                         search (published-firearms.ts); the backup file holding them all (backup.ts);
                         the data repository's cache (data-cache.ts); saving files (file-saving.ts);
                         the example load of a first visit (example-load.ts); validated document creation

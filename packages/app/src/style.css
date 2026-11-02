@@ -2137,12 +2137,58 @@ main:has(.load-editor.concern-danger)::before {
   text-decoration: underline;
 }
 
-.library-table .remove {
+.library-table .remove,
+.library-table .icon-button {
   height: 1.6rem;
   padding: 0 0.3rem;
   border: none;
   background: none;
   color: var(--muted);
+}
+
+.library-table .row-actions {
+  white-space: nowrap;
+}
+
+/* The stock (stock-view.ts): cells edited in place. */
+.stock {
+  margin-top: 1.5rem;
+}
+
+.stock-table {
+  width: auto;
+  min-width: min(100%, 44rem);
+}
+
+.stock-table input[type='text'] {
+  width: 100%;
+  min-width: 10rem;
+}
+
+.stock-table input.amount {
+  width: 7rem;
+  min-width: 0;
+  text-align: right;
+}
+
+.stock-table tr.low td {
+  background: var(--warn-bg);
+  color: var(--warn-fg);
+}
+
+.stock-table tr.low td:first-child {
+  box-shadow: inset 3px 0 0 var(--warn-border);
+}
+
+.stock-table .remove {
+  border: none;
+  background: none;
+  color: var(--muted);
+}
+
+.batch-use {
+  display: block;
+  margin: 0.3rem 0;
 }
 
 .level-badge {

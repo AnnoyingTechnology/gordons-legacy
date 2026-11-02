@@ -31,7 +31,9 @@ export type QuantityKind =
   | 'distance'
   | 'ballisticCoefficient'
   /** Angles seen from the muzzle: group sizes. SI: radians. */
-  | 'angle';
+  | 'angle'
+  /** Powder on the shelf, by the container (state/inventory.ts). SI: kilograms. */
+  | 'powderStock';
 
 export interface DisplayUnit {
   /** Stable identifier, saved in preferences. */
@@ -93,6 +95,7 @@ const UNITS: Record<QuantityKind, DisplayUnit[]> = {
   ballisticCoefficient: [linear('lb/in2', 'lb/in²', units.POUND_PER_SQUARE_INCH_MASS, 3), linear('kg/m2', 'kg/m²', 1, 1)],
   // Minutes of angle (1/60 degree) and milliradians.
   angle: [linear('MOA', 'MOA', Math.PI / (180 * 60), 2), linear('mrad', 'mrad', 1e-3, 2)],
+  powderStock: [linear('kg', 'kg', 1, 3), linear('lb', 'lb', units.POUND, 2)],
 };
 
 /** The kinds a user can choose a unit for: those with more than one. */
@@ -114,6 +117,7 @@ const PRESETS: Record<UnitSystem, Partial<Record<QuantityKind, string>>> = {
     projectileMass: 'gr',
     chargeMass: 'gr',
     gunMass: 'lb',
+    powderStock: 'lb',
     pressure: 'psi',
     temperature: 'F',
     velocity: 'ft/s',
