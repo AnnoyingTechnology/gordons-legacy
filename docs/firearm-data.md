@@ -242,9 +242,13 @@ is the order of least guesswork.
 
 | Bond Arms | 11 | About 20 model pages. A derringer takes interchangeable barrels, so a caliber cell lists several chamberings (`.45 ACP, 9mm`), each one gun with the model's barrel and no weight, since the page doesn't say which one was weighed. The `.45LC/.410` barrels (most of the range) are a shotshell and a cartridge at once, and are left out. |
 
-`check-corpus.ts` and `quoted-figures.ts`: 159 records, 0 problems. The checker now reads `8 lbs, 15.4 oz`
-and `19 ounces` as one weight each. Still unread: the link crawls (Nighthawk, Seekins, Montana) and the
-three whose products have to be found.
+| Montana Rifle Company | 16 | Four model pages, ten seconds apart as `robots.txt` asks; a table laid out sideways (labels down the first column, a gun per column), one the other way, lengths in double primes. A chambering `coming soon` is left out. |
+| Barrett | 58 | A dozen model pages found from the home page's links (the sitemaps are news). One spec container per barrel configuration (`fluted`, `heavy`, or a barrel length), one list per chambering; a chambering listing several barrels is a choice and is left out. The pages print a few inch and millimetre figures that disagree (`24" (620 mm)`): the finer reading is kept, as everywhere. |
+| Nighthawk Custom | 0 | Its model pages render their figures from JavaScript, and its "pistol specs" table gives frame, caliber and weight but no barrel. Not readable without a browser; left. |
+
+`check-corpus.ts` and `quoted-figures.ts`: 233 records, 0 problems. The checker now reads `8 lbs, 15.4 oz`
+and `19 ounces` as one weight each. Still unread: Seekins (a JavaScript catalogue, like Nighthawk),
+Proof Research and Magnum Research.
 
 Where a maker writes a cartridge in a form no reloader uses (`9MM`, `45 ACP`), the extractor maps it to
 the conventional name **in a table, one entry per form**, and keeps the maker's own word in
