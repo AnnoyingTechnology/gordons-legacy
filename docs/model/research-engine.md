@@ -1,8 +1,10 @@
 # Research engine (M7): design
 
-Status: **design, reviewed** (physics review by Codex, 2026-10-14, applied). Nothing here is implemented or shown to users yet. Per the plan, the
-research engine ships only when its measured error is no worse than GRT Traditional's on the
-validation corpus ([validation.md](validation.md)).
+Status: **R1 implemented** (`packages/engine/src/research/`; physics review by Codex, 2026-10-14,
+applied). Since 2026-10-15 the application offers it as a labelled research engine beside GRT
+Traditional, which stays the default (maintainer's decision; `packages/app/src/state/engine-choice.ts`):
+choosing it puts a warning across every view. It is not validated, and on the measured pressures we hold
+it reads further under the peak than GRT Traditional ([validation.md](validation.md)).
 
 ## Why
 
@@ -105,12 +107,13 @@ Traditional's uniform travel grid (2000 points) so that the engines compare poin
    qualifies the engine: a model can match velocities with pressures that are too low.
 4. Each switchable term on and off, to show what it contributes.
 
-The engine is shown to users only when 2 and 3 show it no worse than GRT Traditional; until then it
-runs in tools and tests only.
+The plan was to show the engine to users only when 2 and 3 showed it no worse than GRT Traditional.
+The maintainer chose on 2026-10-15 to offer it earlier, as a research engine with a warning, never the
+default; the comparison that would settle it is issue #31.
 
 ## First results (R1, 2026-10-14)
 
-Implemented as `packages/engine/src/research/` (tools and tests only). With GRT's powder data used
+Implemented as `packages/engine/src/research/` (then for tools and tests only). With GRT's powder data used
 as is, R1 burns much faster than GRT Traditional: on the .327 Federal fixture 3258 bar and 446 m/s
 against GRT's 1962 bar and 411 m/s; on the hottest 300 BLK fixture 6114 bar against 3445 bar.
 Against the chronograph corpus (`tools/validation/chronograph.ts --engine research-1`):
@@ -162,7 +165,8 @@ Against the chronograph corpus, on the 47 charges both engines simulate:
 R1 is now set **without covolume by default**, to stay consistent with the powder data it uses; the
 covolume returns once powders are fitted for it. On velocity it does better than GRT Traditional, most
 of all on the subsonic loads; its peaks are a median 12 % above GRT's. Which peaks are closer to reality
-is unknown until measured pressures are available, so R1 stays out of the application.
+is unknown until measured pressures are available (it was kept out of the application at the time; see
+Status for what changed).
 
 Next steps, in order:
 
