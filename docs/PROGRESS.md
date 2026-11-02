@@ -28,7 +28,7 @@ no longer exists): #22/#31 the pressure harness is rebuilt to #31's protocol and
 documents (Reload Swiss RS14, Western Powders 8.0); results in `docs/model/validation.md`, sources in
 `docs/model/pressure-sources.md`. Bottlenecks: powder models, bullet lengths, case capacities. #34
 Undo/Redo and Reopen closed are done. #35: R2 stays excluded (Julien, 2026-10-16); only its stale-docs
-finding was acted on. #32's second pass (editor input) and #39 are done; #30 has Wilson Combat, Nosler and Daniel Defense in data PR #2. Next: #30's last makers (Proof Research, Magnum Research; Seekins and Nighthawk need a browser), more #22 data.
+finding was acted on. #32's second pass (editor input) and #39 are done; #30 has Wilson Combat, Nosler and Daniel Defense in data PR #2. #30's readable makers are done (Nighthawk, Magnum Research and Seekins need a browser). Next: more #22 data, #32's next pass.
 
 Earlier pickup, 2026-10-16: #34 document workflow audit and #32 code audit. The requested guided
 review, compact name/review notice, consistent page spacing, full-width footer and edge-touching
@@ -205,6 +205,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 
 | Date | Entry |
 |---|---|
+| 2026-11-02 | #30 PROOF Research: 120 guns. Seven of the ten makers surveyed on 2026-10-19 are now read (353 guns this session, 0 problems); Nighthawk, Magnum Research and Seekins render their figures in JavaScript and are recorded as unreadable by a fetch. Data PR #2: 35 makers, 488 files valid. |
 | 2026-11-02 | #30 Barrett 58 and Montana Rifle Company 16 read; Nighthawk's pages render their figures in JavaScript and give nothing to a fetch. Data PR #2 now 34 makers, 487 files valid; 233 records this session, 0 problems. Left: Seekins (JavaScript), Proof Research, Magnum Research. |
 | 2026-11-02 | #30 Bond Arms: 11 guns, one per chambering of a derringer's caliber cell, no weight where several share one; the `.45LC/.410` barrels left out. Checker reads `19 ounces`. Pushed to data PR #2 (32 makers, 485 files valid). |
 | 2026-11-02 | **#30 three more makers: Wilson Combat 80, Nosler 27, Daniel Defense 41.** One extractor and one test each (`wilson-combat.ts`, `nosler.ts`, `daniel-defense.ts`), pages cached. Wilson's `robots.txt` asks AI agents for ten seconds a page (two hours of crawl, honoured); its guns are found through 245 gun categories, the shop's resale of other makers' guns is left out, and so are pages whose heading names another cartridge than their `Caliber:` (one `300 HAM'R` sold as `300 Blackout`, one `8.6 Blackout` printed `.6 Blackout`). Daniel Defense tells a gun from a barrel by the magazine it ships with. The corpus checker now reads `8 lbs, 15.4 oz` as one weight. 148 records, 0 problems from `check-corpus.ts` and `quoted-figures.ts`; pushed to data PR #2 (31 makers), which still waits for Julien. 926 tests. |

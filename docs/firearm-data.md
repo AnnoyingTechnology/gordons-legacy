@@ -244,11 +244,13 @@ is the order of least guesswork.
 
 | Montana Rifle Company | 16 | Four model pages, ten seconds apart as `robots.txt` asks; a table laid out sideways (labels down the first column, a gun per column), one the other way, lengths in double primes. A chambering `coming soon` is left out. |
 | Barrett | 58 | A dozen model pages found from the home page's links (the sitemaps are news). One spec container per barrel configuration (`fluted`, `heavy`, or a barrel length), one list per chambering; a chambering listing several barrels is a choice and is left out. The pages print a few inch and millimetre figures that disagree (`24" (620 mm)`): the finer reading is kept, as everywhere. |
+| PROOF Research | 120 | Fifteen model pages; the cartridge is a tab (`caliber-N`), each part number a row of spans. Parts differing only by hand or colour are one gun; the barrel's unit is its column's (`Barrel Length in Inches`), the twist `8 PXT` or a bare `8`. The model's one weight is a range: no mass. |
 | Nighthawk Custom | 0 | Its model pages render their figures from JavaScript, and its "pistol specs" table gives frame, caliber and weight but no barrel. Not readable without a browser; left. |
+| Magnum Research | 0 | The Desert Eagle and BFR pages hold no figure in their markup either: the same. |
 
-`check-corpus.ts` and `quoted-figures.ts`: 233 records, 0 problems. The checker now reads `8 lbs, 15.4 oz`
-and `19 ounces` as one weight each. Still unread: Seekins (a JavaScript catalogue, like Nighthawk),
-Proof Research and Magnum Research.
+`check-corpus.ts` and `quoted-figures.ts`: 353 records, 0 problems. The checker now reads `8 lbs, 15.4 oz`
+and `19 ounces` as one weight each. Of the ten makers surveyed on 2026-10-19, seven are read; Nighthawk,
+Magnum Research and Seekins publish their figures through JavaScript, which a fetch does not run.
 
 Where a maker writes a cartridge in a form no reloader uses (`9MM`, `45 ACP`), the extractor maps it to
 the conventional name **in a table, one entry per form**, and keeps the maker's own word in
