@@ -13,7 +13,8 @@ const COMMANDS: Record<string, (args: string[]) => { output: string; exitCode: n
 };
 
 const [command, ...args] = process.argv.slice(2);
-const run = command === undefined ? undefined : COMMANDS[command];
+// An own key only: `toString` or `__proto__` would otherwise run an inherited property (#32).
+const run = command === undefined || !Object.hasOwn(COMMANDS, command) ? undefined : COMMANDS[command];
 if (run === undefined) {
   console.error(`Usage: main.ts <command> …\nCommands: ${Object.keys(COMMANDS).join(', ')}`);
   process.exit(2);

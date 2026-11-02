@@ -70,7 +70,9 @@ export class LineChart {
     const all = [options, ...(options.others ?? [])];
     this.xMin = Math.min(...all.map((series) => series.x[0] ?? 0));
     this.xMax = Math.max(...all.map((series) => series.x[series.x.length - 1] ?? 1));
-    let yMax = Math.max(...all.flatMap((series) => Array.from(series.y)), ...(options.limits ?? []).map((limit) => limit.value), 0);
+    // A loop, not a spread: a curve of R1's can hold more points than a call takes arguments (#32).
+    let yMax = Math.max(0, ...(options.limits ?? []).map((limit) => limit.value));
+    for (const series of all) for (let index = 0; index < series.y.length; index++) yMax = Math.max(yMax, series.y[index]!);
     // Headroom above the highest value, so that labels above points stay inside the plot.
     const yTicks = niceTicks(0, yMax * 1.15);
     yMax = yTicks[yTicks.length - 1]!;

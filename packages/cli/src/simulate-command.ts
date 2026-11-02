@@ -48,7 +48,13 @@ export function simulateCommand(args: string[]): { output: string; exitCode: num
   const json = args.includes('--json');
   const files = args.filter((arg) => !arg.startsWith('--'));
   if (files.length !== 1) return { output: 'Usage: simulate [--json] <file.grtload | file.json>', exitCode: 2 };
-  const result = readLoad(files[0]!);
+  let result: ImportResult<Load>;
+  try {
+    result = readLoad(files[0]!);
+  } catch (error) {
+    // A missing or unreadable file is the user's input, reported as such rather than as a stack trace.
+    return { output: `error: cannot read ${files[0]!}: ${(error as Error).message}`, exitCode: 1 };
+  }
   if (!result.ok) {
     return { output: result.issues.map((issue) => `${issue.severity}: ${issue.message}`).join('\n'), exitCode: 1 };
   }

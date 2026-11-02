@@ -16,3 +16,8 @@ test('a single shot has no standard deviation', () => {
 test('no shots, no statistics', () => {
   expect(shotStatistics([])).toBeUndefined();
 });
+
+test('a string longer than a call takes arguments (#32)', () => {
+  const values = Array.from({ length: 200_000 }, (_, index) => 300 + (index % 7));
+  expect(shotStatistics(values)?.extremeSpread).toBe(6);
+});

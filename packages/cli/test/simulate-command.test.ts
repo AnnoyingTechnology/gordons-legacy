@@ -37,3 +37,9 @@ test('refuses a load outside the model, naming the input', () => {
   expect(exitCode).toBe(1);
   expect(output).toContain('charge-exceeds-case (charge.mass)');
 });
+
+test('reports a file it cannot read, instead of throwing', () => {
+  const { output, exitCode } = simulateCommand(['/nonexistent/load.grtload']);
+  expect(exitCode).toBe(1);
+  expect(output).toMatch(/^error: cannot read \/nonexistent\/load\.grtload/);
+});

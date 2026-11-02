@@ -13,7 +13,8 @@ export function shotStatistics(values: readonly number[]): ShotStatistics | unde
   if (values.length === 0) return undefined;
   const count = values.length;
   const mean = values.reduce((sum, value) => sum + value, 0) / count;
-  const extremeSpread = Math.max(...values) - Math.min(...values);
+  // Reduced, not spread: `Math.max(...values)` throws past about 120,000 shots (#32).
+  const extremeSpread = values.reduce((high, value) => Math.max(high, value), -Infinity) - values.reduce((low, value) => Math.min(low, value), Infinity);
   if (count < 2) return { count, mean, extremeSpread };
   const variance = values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / (count - 1);
   return { count, mean, standardDeviation: Math.sqrt(variance), extremeSpread };
