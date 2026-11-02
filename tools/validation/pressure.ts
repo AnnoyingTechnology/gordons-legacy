@@ -1,215 +1,244 @@
 /**
- * Compares the engines' peak pressures with pressures published by powder makers (issue #22). Velocity
- * agreement alone never qualifies an engine: a model can match velocities with pressures that are too
- * low, which is the dangerous direction. This is the only check that can qualify them.
+ * The pressure study (issues #22 and #31): both engines against published pressure measurements, on
+ * identical inputs, scored by the protocol fixed in #31 before any data was seen.
  *
- *     node tools/validation/pressure.ts <rows.csv> [--engine research-1]
+ *     node tools/validation/pressure.ts [--rs14 <RS14 datasheet.pdf>] [--western <Western guide 8.0.pdf>]
+ *                                      [--conditions <file.json>]... [--components <folder>]...
+ *                                      [--details] [--json <results.json>]
  *
- * The CSV holds one published load a row. Its columns, in this order, with a header line:
+ * - `--rs14`, `--western`: the makers' PDFs as downloaded from their sites (see `docs/model/pressure-sources.md`).
+ *   Their SHA-256 is checked, so that another edition is noticed instead of read wrongly. Reading them
+ *   needs `pdftotext` (Poppler) on the path. The makers' tables are never copied into this repository.
+ * - `--conditions`: conditions of your own, a JSON array of `PressureCondition` with a `sources` list
+ *   (`{ "sources": [...], "conditions": [...] }`).
+ * - `--components`: a folder of GRT files (`.grtload`, `.caliber`, `.propellant`, `.projectile`) whose
+ *   components join the community corpus. They stay on your machine; `not_mine` folders are skipped.
+ * - `--details`: every condition with its inputs and both engines' results.
+ * - `--json`: the derived results (log ratios, statuses, input provenance), without the published values.
  *
- *     cartridge,powder,bulletMass,bulletName,coal,charge,barrel,velocity,pressure,standard,source
- *
- * | Column | Unit | Meaning |
- * |---|---|---|
- * | `cartridge` | | As the caliber file names it, or any name that contains it: `.308 Win`, `9 mm Luger`. |
- * | `powder` | | Maker and product as our corpus names them: `Hodgdon H380 #3`. |
- * | `bulletMass` | grains | |
- * | `bulletName` | | Optional; a projectile of the corpus whose name contains it, else one is chosen by mass and diameter. |
- * | `coal` | inches | Cartridge overall length the table gives. |
- * | `charge` | grains | |
- * | `barrel` | inches | The test barrel's length. |
- * | `velocity` | ft/s | The published velocity. |
- * | `pressure` | psi or CUP | The published pressure. |
- * | `standard` | | `psi` or `cup`; CUP rows are reported apart, since CUP does not convert to psi. |
- * | `source` | | Where the row comes from: maker, edition, page. |
- *
- * Every row is simulated from the caliber definition of our corpus, with the published powder, a
- * projectile of that mass, the published overall length, charge and barrel. What the table does not
- * give — the case capacity above all — comes from the caliber file, so a few percent of error is in
- * the comparison before the engine is asked anything. Rows whose parts we don't have are listed as
- * skipped rather than guessed at.
+ * Velocity agreement alone never qualifies an engine: a model can match velocities with pressures that
+ * are too low. And no result here says a load is safe: it compares two simulators with a few published
+ * measurements under the stated conditions.
  */
-import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { grtTraditional, researchEngine, type Engine } from '@gordons-legacy/engine';
-import { checkCaliber, checkProjectile, checkPropellant, units, type CaliberDefinition, type Load, type Projectile, type Propellant } from '@gordons-legacy/formats';
+import { units } from '@gordons-legacy/formats';
+import { addLocalFiles, communityPool, type ComponentPool } from './pressure/component-pool.ts';
+import type { PressureCondition, PressureSource } from './pressure/conditions.ts';
+import { logRatio, type LogRatioSummary } from './pressure/scoring.ts';
+import { RS14_SOURCE, rs14Conditions } from './pressure/sources/reload-swiss-rs14.ts';
+import { WESTERN_8_SOURCE, westernConditions } from './pressure/sources/western-powders-8.ts';
+import { PERTURBATIONS, runConditions, summarizeStudy, type ConditionResult, type GroupSummary } from './pressure/study.ts';
 
-const SNAPSHOT = new URL('../../packages/app/src/data/community-components.json', import.meta.url);
+const ENGINES: [Engine, Engine] = [grtTraditional, researchEngine];
 
-interface PublishedRow {
-  cartridge: string;
-  powder: string;
-  /** kg. */
-  bulletMass: number;
-  bulletName: string;
-  /** m. */
-  overallLength: number;
-  /** kg. */
-  charge: number;
-  /** m. */
-  barrel: number;
-  /** m/s. */
-  velocity: number;
-  /** Pa for psi rows; CUP is not a pressure unit and is kept as published. */
-  pressure: number;
-  standard: 'psi' | 'cup';
-  source: string;
+interface Arguments {
+  rs14?: string;
+  western?: string;
+  conditions: string[];
+  components: string[];
+  details: boolean;
+  json?: string;
 }
 
-interface Comparison {
-  row: PublishedRow;
-  simulatedPressure: number;
-  simulatedVelocity: number;
-}
-
-/** The community corpus, as the app bundles it. */
-function corpus(): { calibers: CaliberDefinition[]; projectiles: Projectile[]; powders: Propellant[] } {
-  const snapshot = JSON.parse(readFileSync(SNAPSHOT, 'utf8')) as {
-    calibers: Array<{ caliber: unknown }>;
-    projectiles: Array<{ projectile: unknown }>;
-    powders: Array<{ propellant: unknown }>;
-  };
-  const kept = <T>(values: unknown[], check: (value: unknown) => { ok: boolean; value?: T }): T[] =>
-    values.flatMap((value) => {
-      const result = check(value);
-      return result.ok && result.value ? [result.value] : [];
-    });
-  return {
-    calibers: kept(snapshot.calibers.map((entry) => entry.caliber), checkCaliber),
-    projectiles: kept(snapshot.projectiles.map((entry) => entry.projectile), checkProjectile),
-    powders: kept(snapshot.powders.map((entry) => entry.propellant), checkPropellant),
-  };
-}
-
-function normalise(text: string): string {
-  return text.toLowerCase().replace(/[^a-z0-9]/g, '');
-}
-
-export function readRows(csv: string): PublishedRow[] {
-  const lines = csv.split('\n').map((line) => line.trim()).filter((line) => line !== '' && !line.startsWith('#'));
-  const rows: PublishedRow[] = [];
-  for (const line of lines.slice(1)) {
-    const [cartridge, powder, bulletMass, bulletName, coal, charge, barrel, velocity, pressure, standard, ...source] = line.split(',').map((cell) => cell.trim());
-    if (!cartridge || !powder || !charge || !pressure) continue;
-    rows.push({
-      cartridge,
-      powder,
-      bulletMass: Number(bulletMass) * units.GRAIN,
-      bulletName: bulletName ?? '',
-      overallLength: Number(coal) * units.INCH,
-      charge: Number(charge) * units.GRAIN,
-      barrel: Number(barrel) * units.INCH,
-      velocity: Number(velocity) * units.FOOT_PER_SECOND,
-      pressure: standard === 'cup' ? Number(pressure) : Number(pressure) * units.PSI,
-      standard: standard === 'cup' ? 'cup' : 'psi',
-      source: source.join(','),
-    });
+function parseArguments(args: string[]): Arguments {
+  const parsed: Arguments = { conditions: [], components: [], details: false };
+  for (let index = 0; index < args.length; index++) {
+    const value = args[index + 1];
+    switch (args[index]) {
+      case '--rs14':
+        if (value) parsed.rs14 = value;
+        index++;
+        break;
+      case '--western':
+        if (value) parsed.western = value;
+        index++;
+        break;
+      case '--conditions':
+        if (value) parsed.conditions.push(value);
+        index++;
+        break;
+      case '--components':
+        if (value) parsed.components.push(value);
+        index++;
+        break;
+      case '--json':
+        if (value) parsed.json = value;
+        index++;
+        break;
+      case '--details':
+        parsed.details = true;
+        break;
+      default:
+        throw new Error(`unknown argument ${args[index]}`);
+    }
   }
-  return rows;
+  return parsed;
 }
 
-/** The load a published row describes, as far as our data can describe it. */
-export function loadFor(row: PublishedRow, parts = corpus()): Load | { missing: string } {
-  const caliber = parts.calibers.find((candidate) => normalise(`${candidate.name} ${candidate.alternativeNames}`).includes(normalise(row.cartridge)));
-  if (!caliber) return { missing: `no caliber file for ${row.cartridge}` };
-  const powder = parts.powders.find((candidate) => normalise(`${candidate.maker} ${candidate.product}`) === normalise(row.powder));
-  if (!powder) return { missing: `no powder model for ${row.powder}` };
-  const diameter = caliber.rifling?.grooveDiameter ?? 0;
-  const named = row.bulletName === '' ? undefined : parts.projectiles.find((candidate) => normalise(candidate.name).includes(normalise(row.bulletName)));
-  const byMass = parts.projectiles
-    .filter((candidate) => Math.abs(candidate.diameter - diameter) < 0.0002)
-    .sort((a, b) => Math.abs(a.mass - row.bulletMass) - Math.abs(b.mass - row.bulletMass))[0];
-  const projectile = named ?? byMass;
-  if (!projectile) return { missing: `no projectile of ${(row.bulletMass / units.GRAIN).toFixed(0)} gr at ${(diameter * 1000).toFixed(2)} mm` };
-  if (!caliber.caseDimensions || !caliber.rifling || !caliber.typicalCaseCapacity) return { missing: `caliber ${caliber.name} lacks its dimensions` };
-  return {
-    format: 'gordons-legacy.load',
-    schemaVersion: 1,
-    title: `${row.cartridge} · ${row.powder}`,
-    cartridge: {
-      name: caliber.name,
-      grooveDiameter: caliber.rifling.grooveDiameter,
-      effectiveBoreArea: caliber.rifling.effectiveBoreArea,
-      maxPressure: caliber.maxPressure,
-      pressureMeasurementMethod: '',
-      caseLength: caliber.caseDimensions.caseLength,
-      caseCapacity: caliber.typicalCaseCapacity,
-      overallLength: row.overallLength,
-      sebertFactor: caliber.sebertFactor,
-      shotshell: false,
-      definition: caliber,
-    },
-    barrel: { name: 'test barrel', length: row.barrel, gasLeaks: [] },
-    // The published bullet's mass, with the shape of the nearest one we have.
-    projectile: { ...projectile, mass: row.bulletMass },
-    propellant: powder,
-    charge: { mass: row.charge, temperature: 294.15 },
-    measurements: [],
-    notes: [],
-    pictures: [],
-  };
+/** The text of a maker's PDF, after checking it is the edition the reader was written for. */
+function documentText(path: string, source: PressureSource, mode: '-layout' | '-raw'): string {
+  const hash = createHash('sha256').update(readFileSync(path)).digest('hex');
+  if (hash !== source.sha256) {
+    throw new Error(`${path} is not the document ${source.id} was read from (SHA-256 ${hash}, expected ${source.sha256}). Check the edition before reading it.`);
+  }
+  return execFileSync('pdftotext', [mode, path, '-'], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
 }
 
-export function compare(rows: PublishedRow[], engine: Engine = grtTraditional): { comparisons: Comparison[]; skipped: string[] } {
-  const parts = corpus();
-  const comparisons: Comparison[] = [];
-  const skipped: string[] = [];
-  for (const row of rows) {
-    const load = loadFor(row, parts);
-    if ('missing' in load) {
-      skipped.push(`${row.cartridge} · ${row.powder}: ${load.missing}`);
+function percent(summary: LogRatioSummary | undefined, field: 'geometricMeanBias' | 'lowest' | 'median' | 'highest'): string {
+  return summary ? `${summary[field] >= 0 ? '+' : ''}${summary[field].toFixed(1)} %` : '—';
+}
+
+function printGroup(summary: GroupSummary): void {
+  const [first, second] = summary.pressure;
+  const counted = first ?? second;
+  console.log(`\n${summary.group}: ${counted?.conditions ?? 0} conditions in ${counted?.series ?? 0} series`);
+  ENGINES.forEach((engine, index) => {
+    const pressure = summary.pressure[index];
+    const velocity = summary.velocity[index];
+    console.log(
+      `  ${engine.name.padEnd(22)} pressure: bias ${percent(pressure, 'geometricMeanBias').padStart(8)}, ` +
+        `median ${percent(pressure, 'median').padStart(8)}, range ${percent(pressure, 'lowest')} to ${percent(pressure, 'highest')}, ` +
+        `under-predicted in ${pressure ? (pressure.underPredicted * 100).toFixed(0) : '—'} % of series, ` +
+        `loss L5 ${pressure ? pressure.loss.factor5.toFixed(3) : '—'} (L2 ${pressure ? pressure.loss.factor2.toFixed(3) : '—'}, L10 ${pressure ? pressure.loss.factor10.toFixed(3) : '—'}), ` +
+        `mean |log error| ${pressure ? pressure.meanAbsoluteLogError.toFixed(3) : '—'}` +
+        `\n  ${''.padEnd(22)} velocity: bias ${percent(velocity, 'geometricMeanBias').padStart(8)}, median ${percent(velocity, 'median').padStart(8)}`,
+    );
+  });
+  for (const [factor, difference] of summary.lossDifferences) {
+    if (!difference) continue;
+    console.log(
+      `  paired L${factor}(${ENGINES[1].name}) − L${factor}(${ENGINES[0].name}): ${difference.mean.toFixed(3)}, ` +
+        `exploratory 95 % interval over ${difference.series} series ${difference.low.toFixed(3)} to ${difference.high.toFixed(3)} (negative favours ${ENGINES[1].name})`,
+    );
+  }
+}
+
+/**
+ * Each scored group's comparison again with every assumed input moved, on the conditions both engines
+ * simulate in the baseline **and** in the variant, so that a change of eligibility can't pass for a
+ * change of result. An interval that comes to include zero is not a reversal: the point estimate is.
+ */
+function printSensitivity(conditions: PressureCondition[], pool: ComponentPool, sources: PressureSource[], baseline: ConditionResult[]): void {
+  console.log('\nSensitivity to the assumed inputs (one at a time; published inputs never change; whole groups only):');
+  const pairedIds = new Set(baseline.filter((result) => result.status === 'paired').map((result) => result.condition.id));
+  const rows = PERTURBATIONS.map((perturbation) => {
+    const results = runConditions(conditions, pool, ENGINES, perturbation);
+    const common = results.filter((result) => result.status === 'paired' && pairedIds.has(result.condition.id));
+    return {
+      name: perturbation.name,
+      lost: pairedIds.size - common.length,
+      summaries: summarizeStudy(common, sources).filter((summary) => !summary.group.includes(',')),
+    };
+  });
+  for (const group of rows[0]!.summaries.map((summary) => summary.group)) {
+    console.log(`  ${group}:`);
+    for (const { name, lost, summaries } of rows) {
+      const summary = summaries.find((candidate) => candidate.group === group);
+      if (!summary) continue;
+      const bias = summary.pressure.map((pressure) => percent(pressure, 'geometricMeanBias').padStart(8)).join('  ');
+      const difference = summary.lossDifference ? `${summary.lossDifference.mean.toFixed(3)} (${summary.lossDifference.low.toFixed(3)} to ${summary.lossDifference.high.toFixed(3)})` : '—';
+      const dropped = lost > 0 ? `  (${lost} baseline conditions no longer paired)` : '';
+      console.log(`    ${name.padEnd(40)} pressure bias ${bias}   paired L5 difference ${difference}${dropped}`);
+    }
+  }
+}
+
+function printDetails(results: ConditionResult[]): void {
+  for (const result of results) {
+    console.log(`\n${result.condition.id} (${result.condition.location})`);
+    if (result.status === 'missing') {
+      for (const reason of result.missing) console.log(`  missing: ${reason}`);
       continue;
     }
-    const result = engine.simulate(load);
-    if (!result.ok) {
-      skipped.push(`${row.cartridge} · ${row.powder}: refused (${result.problems.map((problem) => problem.code).join(', ')})`);
-      continue;
-    }
-    comparisons.push({ row, simulatedPressure: result.simulation.maxPressure, simulatedVelocity: result.simulation.muzzleVelocity });
+    for (const input of result.inputs) console.log(`  ${input.status.padEnd(13)} ${input.path}: ${input.note}`);
+    result.outcomes.forEach((outcome, index) => {
+      const name = ENGINES[index]!.name.padEnd(22);
+      if ('refused' in outcome) return console.log(`  ${name} refused: ${outcome.refused.join(', ')}`);
+      const pressure = result.condition.pressure ? ` (${signed(logRatio(outcome.pressure, result.condition.pressure.value))})` : '';
+      const velocity = result.condition.velocity ? ` (${signed(logRatio(outcome.velocity, result.condition.velocity.value))})` : '';
+      console.log(`  ${name} ${(outcome.pressure / units.BAR).toFixed(0)} bar${pressure}, ${outcome.velocity.toFixed(0)} m/s${velocity}`);
+    });
   }
-  return { comparisons, skipped };
 }
 
-function summarize(label: string, errors: number[]): void {
-  if (errors.length === 0) return;
-  const absolute = errors.map(Math.abs).sort((a, b) => a - b);
-  const mean = errors.reduce((sum, error) => sum + error, 0) / errors.length;
-  const rms = Math.sqrt(errors.reduce((sum, error) => sum + error * error, 0) / errors.length);
-  const median = absolute[Math.floor(absolute.length / 2)]!;
-  console.log(`${label}: ${errors.length} rows, mean ${(mean * 100).toFixed(1)} %, RMS ${(rms * 100).toFixed(1)} %, median |error| ${(median * 100).toFixed(1)} %`);
+function signed(r: number): string {
+  const value = 100 * (Math.exp(r) - 1);
+  return `${value >= 0 ? '+' : ''}${value.toFixed(1)} %`;
+}
+
+/** The derived results only: what each engine got relative to the measurement, never the measurement. */
+function derivedResults(results: ConditionResult[], summaries: GroupSummary[]) {
+  return {
+    engines: ENGINES.map((engine) => engine.id),
+    conditions: results.map((result) => ({
+      id: result.condition.id,
+      series: result.condition.series,
+      status: result.status,
+      ...(result.status === 'missing'
+        ? { missing: result.missing }
+        : {
+            inputs: result.inputs.map(({ path, status }) => ({ path, status })),
+            pressureLogRatio: result.outcomes.map((outcome) => ('pressure' in outcome && result.condition.pressure ? logRatio(outcome.pressure, result.condition.pressure.value) : null)),
+            velocityLogRatio: result.outcomes.map((outcome) => ('velocity' in outcome && result.condition.velocity ? logRatio(outcome.velocity, result.condition.velocity.value) : null)),
+            refused: result.outcomes.map((outcome) => ('refused' in outcome ? outcome.refused : null)),
+          }),
+    })),
+    summaries,
+  };
 }
 
 function main(): void {
-  const args = process.argv.slice(2);
-  const engine = args.includes('--engine') && args[args.indexOf('--engine') + 1] === researchEngine.id ? researchEngine : grtTraditional;
-  const path = args.find((argument) => !argument.startsWith('--') && argument !== engine.id);
-  if (!path) {
-    console.error('usage: node tools/validation/pressure.ts <rows.csv> [--engine research-1]');
+  const args = parseArguments(process.argv.slice(2));
+  let pool: ComponentPool = communityPool();
+  for (const folder of args.components) pool = addLocalFiles(pool, folder);
+
+  const sources: PressureSource[] = [];
+  const conditions: PressureCondition[] = [];
+  const unread: string[] = [];
+  const read = (source: PressureSource, extracted: { conditions: PressureCondition[]; unread: string[] }) => {
+    sources.push(source);
+    conditions.push(...extracted.conditions);
+    unread.push(...extracted.unread.map((line) => `${source.id}, ${line}`));
+    console.log(`${source.id}: ${extracted.conditions.length} conditions read, ${extracted.unread.length} row-like lines not read`);
+  };
+  if (args.rs14) read(RS14_SOURCE, rs14Conditions(documentText(args.rs14, RS14_SOURCE, '-layout')));
+  if (args.western) read(WESTERN_8_SOURCE, westernConditions(documentText(args.western, WESTERN_8_SOURCE, '-raw')));
+  for (const path of args.conditions) {
+    const file = JSON.parse(readFileSync(path, 'utf8')) as { sources: PressureSource[]; conditions: PressureCondition[] };
+    sources.push(...file.sources);
+    conditions.push(...file.conditions);
+  }
+  if (conditions.length === 0) {
+    console.error('No conditions: give --rs14, --western or --conditions (see the comment at the top of this file).');
     process.exitCode = 1;
     return;
   }
-  const rows = readRows(readFileSync(path, 'utf8'));
-  const { comparisons, skipped } = compare(rows, engine);
-  console.log(`engine: ${engine.name}\n`);
-  const psi = comparisons.filter(({ row }) => row.standard === 'psi');
-  for (const { row, simulatedPressure, simulatedVelocity } of comparisons) {
-    const published = row.standard === 'psi' ? `${(row.pressure / units.PSI).toFixed(0)} psi` : `${row.pressure.toFixed(0)} CUP`;
-    const simulated = `${(simulatedPressure / units.PSI).toFixed(0)} psi`;
-    const error = row.standard === 'psi' ? `${(((simulatedPressure - row.pressure) / row.pressure) * 100).toFixed(1)} %` : '—';
-    console.log(
-      `${`${row.cartridge} · ${row.powder}`.slice(0, 44).padEnd(44)} ${(row.charge / units.GRAIN).toFixed(1)} gr  ` +
-        `published ${published.padStart(10)}  simulated ${simulated.padStart(10)}  ${error.padStart(7)}  ` +
-        `velocity ${(row.velocity / units.FOOT_PER_SECOND).toFixed(0)} → ${(simulatedVelocity / units.FOOT_PER_SECOND).toFixed(0)} ft/s`,
-    );
+
+  const results = runConditions(conditions, pool, ENGINES);
+  const summaries = summarizeStudy(results, sources);
+  const count = (status: ConditionResult['status']) => results.filter((result) => result.status === status).length;
+  console.log(`Pressure study: ${conditions.length} conditions from ${sources.map((source) => source.id).join(', ')}`);
+  console.log(`  paired (both engines simulate them): ${count('paired')}`);
+  console.log(`  unpaired (one engine refuses; never scored, since that would reward refusing): ${count('unpaired')}`);
+  console.log(`  missing (a component or input we don't have): ${count('missing')}`);
+  console.log(`R1's pressure is its breech pressure; GRT Traditional's is its single chamber pressure.`);
+  for (const summary of summaries) printGroup(summary);
+
+  const reasons = new Map<string, number>();
+  for (const result of results) if (result.status === 'missing') for (const reason of result.missing) reasons.set(reason, (reasons.get(reason) ?? 0) + 1);
+  if (reasons.size > 0) {
+    console.log('\nWhy conditions are missing:');
+    for (const [reason, times] of [...reasons].sort((a, b) => b[1] - a[1])) console.log(`  ${String(times).padStart(3)} × ${reason}`);
   }
-  console.log();
-  summarize('pressure (psi rows)', psi.map(({ row, simulatedPressure }) => (simulatedPressure - row.pressure) / row.pressure));
-  summarize('velocity (all rows)', comparisons.map(({ row, simulatedVelocity }) => (simulatedVelocity - row.velocity) / row.velocity));
-  const cup = comparisons.length - psi.length;
-  if (cup > 0) console.log(`${cup} rows are in CUP, which is not a pressure: they are listed but not scored.`);
-  if (skipped.length > 0) {
-    console.log(`\n${skipped.length} rows skipped:`);
-    for (const reason of skipped) console.log(' -', reason);
+  printSensitivity(conditions, pool, sources, results);
+  if (args.details) {
+    if (unread.length > 0) console.log(`\nRow-like lines not read:\n${unread.map((line) => `  ${line}`).join('\n')}`);
+    printDetails(results);
   }
+  if (args.json) writeFileSync(args.json, `${JSON.stringify(derivedResults(results, summaries), null, 2)}\n`);
 }
 
 if (import.meta.main) main();

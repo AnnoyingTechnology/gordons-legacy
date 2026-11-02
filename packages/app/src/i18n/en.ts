@@ -66,7 +66,7 @@ export const en = {
   'toolbar.language': 'Language',
   'toolbar.engine': 'Engine',
   'toolbar.engineHelp': 'Which interior-ballistics model computes the figures. None of them is validated against measured pressures.',
-  'engine.researchWarning': 'Research engine {name}: experimental figures, not load data. In the few measured comparisons we have, it reads further below the peak pressure than the GRT model.',
+  'engine.researchWarning': "Research engine {name}: experimental figures, not load data. In the few comparisons with measured pressures near the maximum, it read well below the measured peak. Neither engine establishes a safe charge: use the component maker’s published data.",
   'components.noLoad': 'Open a load first: powder and projectile files replace a component of the open load.',
   'components.chooseProjectile': 'Choose a projectile',
   'choice.cancel': 'Cancel',

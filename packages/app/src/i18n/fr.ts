@@ -67,7 +67,7 @@ export const fr: Messages = {
   'toolbar.language': 'Langue',
   'toolbar.engine': 'Moteur',
   'toolbar.engineHelp': "Quel modèle de balistique intérieure calcule les valeurs. Aucun n'est validé par des pressions mesurées.",
-  'engine.researchWarning': 'Moteur de recherche {name} : valeurs expérimentales, pas des données de rechargement. Dans les rares comparaisons avec des mesures dont nous disposons, il sous-estime la pression maximale davantage que le modèle GRT.',
+  'engine.researchWarning': "Moteur de recherche {name} : valeurs expérimentales, pas des données de rechargement. Dans les rares comparaisons avec des pressions mesurées près du maximum, il est resté nettement sous le pic mesuré. Aucun des deux moteurs n’établit qu’une charge est sûre : suivez les données publiées par le fabricant des composants.",
   'components.noLoad': "Ouvrez d'abord un chargement : les fichiers de poudre et de projectile remplacent un composant du chargement ouvert.",
   'components.chooseProjectile': 'Choisir un projectile',
   'choice.cancel': 'Annuler',

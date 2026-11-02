@@ -67,7 +67,7 @@ export const it: Messages = {
   'toolbar.language': 'Lingua',
   'toolbar.engine': 'Motore',
   'toolbar.engineHelp': 'Quale modello di balistica interna calcola i valori. Nessuno è validato su pressioni misurate.',
-  'engine.researchWarning': 'Motore di ricerca {name}: valori sperimentali, non dati di ricarica. Nei pochi confronti con misurazioni disponibili, resta più al di sotto della pressione massima rispetto al modello GRT.',
+  'engine.researchWarning': "Motore di ricerca {name}: valori sperimentali, non dati di ricarica. Nei pochi confronti con pressioni misurate vicino al massimo, è rimasto nettamente sotto il picco misurato. Nessuno dei due motori stabilisce che una carica sia sicura: usate i dati pubblicati dal produttore dei componenti.",
   'components.noLoad': 'Aprite prima una ricarica: i file di polvere e di proiettile sostituiscono un componente della ricarica aperta.',
   'components.chooseProjectile': 'Scegliere un proiettile',
   'choice.cancel': 'Annulla',

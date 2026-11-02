@@ -67,7 +67,7 @@ export const de: Messages = {
   'toolbar.language': 'Sprache',
   'toolbar.engine': 'Modell',
   'toolbar.engineHelp': 'Welches innenballistische Modell die Werte berechnet. Keines ist an gemessenen Drücken validiert.',
-  'engine.researchWarning': 'Forschungsmodell {name}: experimentelle Werte, keine Ladedaten. In den wenigen Vergleichen mit Messungen liegt es weiter unter dem Spitzendruck als das GRT-Modell.',
+  'engine.researchWarning': "Forschungsmodell {name}: experimentelle Werte, keine Ladedaten. In den wenigen Vergleichen mit gemessenen Drücken nahe dem Höchstwert lag es deutlich unter der gemessenen Spitze. Keines der beiden Modelle belegt, dass eine Ladung sicher ist: Verwenden Sie die veröffentlichten Daten des Komponentenherstellers.",
   'components.noLoad': 'Öffnen Sie zuerst eine Ladung: Pulver- und Geschossdateien ersetzen eine Komponente der geöffneten Ladung.',
   'components.chooseProjectile': 'Geschoss wählen',
   'choice.cancel': 'Abbrechen',

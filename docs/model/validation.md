@@ -100,6 +100,47 @@ This does not change what the application says: pressures stay unvalidated, and 
 pointing at published data. It does set the direction to watch — the model runs cool — and it gives the
 first number to beat.
 
+### Published laboratory data, first run (2026-11-02)
+
+Tool: `tools/validation/pressure.ts`, rebuilt to issue #31's protocol: log ratios, the asymmetric loss
+L5 (with L2 and L10), a charge series counted once, only conditions both engines simulate, every input
+marked published, specification or assumed, and a sensitivity check that moves each assumed input on
+the conditions paired in the baseline. Sources and their limits: [pressure-sources.md](pressure-sources.md).
+Reviewed by Astra (`gpt-6-astra`, medium) before this was written; its corrections are in.
+
+Of 12,182 conditions read from the two documents, 22 can be simulated: the others need a powder model,
+a caliber definition or a bullet length we don't have. Every powder model's fitting provenance is
+unknown, and case capacity, several bullet lengths (retailer listings, forum measurements), boat-tail
+geometry (a flat base is assumed) and powder temperature are assumed.
+
+**Western Powders guide 8.0, SAAMI piezo, Accurate MAGPRO, 7 maximum-charge conditions (7 series,
+.300 WSM, .300 PRC, .30 Nosler).** GRT Traditional had lower asymmetric pressure loss than R1: L5 0.318
+against 0.805. Geometric mean biases were +8.4 % and −14.9 %; GRT Traditional under-predicted two
+conditions, R1 all seven. The symmetric mean absolute log errors were almost identical, 0.160 and
+0.161: the preference reflects mainly the explicit penalty for under-prediction. The paired difference
+L5(R1) − L5(GRT) was +0.487, with an exploratory series-bootstrap interval of 0.139 to 0.847; with case
+capacity 2 % smaller, or GRT's high shot-start pressure for monolithic copper bullets, that interval
+includes zero, though the point estimate still favours GRT Traditional.
+
+The largest discrepancy was GRT Traditional's +43.4 % on the .300 WSM, 240 gr Sierra MatchKing,
+compressed MAGPRO condition. Its reconstruction assumes the case capacity, a forum-sourced bullet length
+and a flat base for a boat-tail bullet. The discrepancy belongs to this model-plus-input reconstruction
+and its cause is unresolved: it is neither discarded nor attributed to compression, geometry or the
+engine's physics.
+
+**Reload Swiss RS14 datasheet, method not stated, 8 conditions in 3 series (.308 Win. subsonic, 450 mm
+barrel).** Pressure biases +6.4 % (GRT Traditional) and +3.9 % (R1), paired L5 difference −0.041
+(exploratory interval −0.061 to −0.008). Velocities were over-predicted, +16.5 % and +8.0 %; the
+measurement is V5, 5 m from the muzzle, against the simulated muzzle velocity, a small part of that gap
+for subsonic bullets. Reload Swiss itself writes that QuickLOAD and GRT over-predict velocity for such
+loads.
+
+What this does not establish: general superiority of either engine, independent predictive accuracy,
+or anything about a charge's safety. Seven and three series from two publications are not independent
+laboratories, and the intervals reflect only the scatter between those series. No correction factor
+follows from it. It does agree in direction with the four IMR 4166 conditions above: near the maximum,
+R1 reads well under the measured peak.
+
 ## Research engine R1
 
 See [research-engine.md](research-engine.md), First results: with GRT's powder data as is, R1's mean
@@ -135,6 +176,8 @@ Velocities disagree far less: R1 is 2.5 % slower at the median (−8.8 % to +6.2
 
 ## Next
 
-- Published data (Vihtavuori, Hodgdon…): charge, velocity and pressure for named components and
-  barrel lengths, to measure pressure predictions.
+- The most valuable single step (Astra's advice, 2026-11-02): one independent, fully characterised
+  piezoelectric charge series for a powder we hold a model of — measured case capacity and projectile
+  geometry, temperature, test barrel, shot counts and dispersion, documented independence from the
+  model's fitting. It removes more uncertainty than hundreds of rows with guessed inputs.
 - The same comparisons for the research engine (M7), on the same corpus, per caliber and powder class.

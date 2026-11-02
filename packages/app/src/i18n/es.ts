@@ -67,7 +67,7 @@ export const es: Messages = {
   'toolbar.language': 'Idioma',
   'toolbar.engine': 'Motor',
   'toolbar.engineHelp': 'Qué modelo de balística interior calcula los valores. Ninguno está validado con presiones medidas.',
-  'engine.researchWarning': 'Motor de investigación {name}: valores experimentales, no datos de recarga. En las pocas comparaciones con mediciones disponibles, queda más por debajo de la presión máxima que el modelo GRT.',
+  'engine.researchWarning': "Motor de investigación {name}: valores experimentales, no datos de recarga. En las pocas comparaciones con presiones medidas cerca del máximo, quedó claramente por debajo del pico medido. Ninguno de los dos motores establece que una carga sea segura: use los datos publicados por el fabricante del componente.",
   'components.noLoad': 'Abra primero una carga: los archivos de pólvora y de proyectil sustituyen un componente de la carga abierta.',
   'components.chooseProjectile': 'Elegir un proyectil',
   'choice.cancel': 'Cancelar',
