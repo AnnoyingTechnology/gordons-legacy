@@ -41,6 +41,7 @@ import { cloneSources } from '../state/load-copy.ts';
 import type { DocumentHeading } from './document-heading.ts';
 import { documentShortcut, isTextEntry } from '../state/keyboard-shortcuts.ts';
 import { documentSaver } from '../state/document-saving.ts';
+import type { LoadChange } from '../state/load-change.ts';
 
 /**
  * The application: toolbar, one tab per open load, and the active load's editor. Owns the document
@@ -311,7 +312,7 @@ export class AppShell extends LitElement {
         @fold-group=${(event: CustomEvent<string>) => this.foldGroup(event.detail)}
         @save-firearm=${() => (this.editedFirearm = { firearm: firearmFromLoad(active.load) })}
         @pick-firearm=${() => this.pickFirearm()}
-        @load-change=${(event: CustomEvent<Load>) => this.store.update(active.id, event.detail)}
+        @load-change=${(event: CustomEvent<LoadChange>) => this.store.update(active.id, event.detail.load, event.detail.typing)}
         @rename-document=${(event: CustomEvent<string>) => this.store.rename(active.id, event.detail)}
         @calibrated=${(event: CustomEvent<CalibratedLoad>) => this.openCalibrated(active.name, event.detail)}
         @open-load=${(event: CustomEvent<{ name: string; load: Load }>) => this.store.openNew(`${event.detail.name}.json`, event.detail.load)}
@@ -360,7 +361,7 @@ export class AppShell extends LitElement {
     const result = extension === '.propellant' ? importGrtPropellant(text) : importGrtProjectiles(text);
     if (!result.ok) return result.issues.filter((issue) => issue.severity === 'error').map((issue) => issue.message);
     if (!Array.isArray(result.value)) {
-      this.store.update(active.id, withPropellant(active.load, result.value), false);
+      this.store.update(active.id, withPropellant(active.load, result.value));
     } else if (result.value.length === 1) {
       this.useProjectile(result.value[0]);
     } else {
@@ -389,7 +390,7 @@ export class AppShell extends LitElement {
     if (!active) return [this.context.t('components.noLoad')];
     const result = importGrtrace(text);
     if (!result.ok) return result.issues.filter((issue) => issue.severity === 'error').map((issue) => issue.message);
-    this.store.update(active.id, { ...active.load, measurements: [...active.load.measurements, result.value] }, false);
+    this.store.update(active.id, { ...active.load, measurements: [...active.load.measurements, result.value] });
     return [];
   }
 
@@ -404,13 +405,13 @@ export class AppShell extends LitElement {
 
   private addMeasurements(series: MeasurementSeries): void {
     const active = this.store.active;
-    if (active) this.store.update(active.id, { ...active.load, measurements: [...active.load.measurements, series] }, false);
+    if (active) this.store.update(active.id, { ...active.load, measurements: [...active.load.measurements, series] });
     this.chronograph = undefined;
   }
 
   private useProjectile(projectile: Projectile | undefined): void {
     const active = this.store.active;
-    if (active && projectile) this.store.update(active.id, withProjectile(active.load, projectile), false);
+    if (active && projectile) this.store.update(active.id, withProjectile(active.load, projectile));
   }
 
   private openFromInput = (event: Event) => {
@@ -582,7 +583,7 @@ export class AppShell extends LitElement {
   /** The gun the user picked: the load is fired in it, under its name. */
   private useFirearm(firearm: Firearm): void {
     const active = this.store.active;
-    if (active) this.store.update(active.id, withFirearm(active.load, firearm), false);
+    if (active) this.store.update(active.id, withFirearm(active.load, firearm));
   }
 
   private async keepFirearm(firearm: Firearm | undefined, id: string | undefined): Promise<void> {

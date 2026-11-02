@@ -74,13 +74,13 @@ describe('undo, redo and reopening a closed load', () => {
     const store = new DocumentStore(undefined, time.now);
     store.openNew('Load.json', load);
     const id = store.active!.id;
-    store.update(id, withCharge(2));
+    store.update(id, withCharge(2), 'charge');
     time.advance(200);
-    store.update(id, withCharge(2.8));
+    store.update(id, withCharge(2.8), 'charge');
     time.advance(200);
-    store.update(id, withCharge(2.85));
+    store.update(id, withCharge(2.85), 'charge');
     time.advance(5000);
-    store.update(id, withCharge(3));
+    store.update(id, withCharge(3), 'charge');
     store.undo(id);
     expect(store.active!.load).toEqual(withCharge(2.85));
     store.undo(id);
@@ -97,13 +97,35 @@ describe('undo, redo and reopening a closed load', () => {
     const store = new DocumentStore(undefined, time.now);
     store.openNew('Load.json', load);
     const id = store.active!.id;
-    store.update(id, withCharge(2));
-    store.update(id, withCharge(2.5), false);
+    store.update(id, withCharge(2), 'charge');
+    store.update(id, withCharge(2.5));
     store.undo(id);
     expect(store.active!.load).toEqual(withCharge(2));
     expect(store.canRedo(id)).toBe(true);
-    store.update(id, withCharge(4), false);
+    store.update(id, withCharge(4));
     expect(store.canRedo(id)).toBe(false);
+  });
+
+  it('never merges keystrokes of two different inputs, however quick', () => {
+    const store = new DocumentStore(undefined, () => 0);
+    store.openNew('Load.json', load);
+    const id = store.active!.id;
+    store.update(id, withCharge(2), 'charge');
+    store.update(id, { ...withCharge(2), title: 'Other' }, 'title');
+    store.undo(id);
+    expect(store.active!.load).toEqual(withCharge(2));
+  });
+
+  it('reopens a load under its own id, and records a save that finished after it closed', () => {
+    const store = new DocumentStore();
+    store.openSaved('Load.json', load, 'entry');
+    const id = store.active!.id;
+    store.update(id, withCharge(2));
+    store.close(id);
+    store.markSaved(id, serializeLoad(withCharge(2)), 'entry');
+    store.reopenClosed();
+    expect(store.active!.id).toBe(id);
+    expect(store.isDirty(store.active!)).toBe(false);
   });
 
   it('undoes a rename, name and title together', () => {
@@ -120,7 +142,7 @@ describe('undo, redo and reopening a closed load', () => {
     const store = new DocumentStore();
     store.openSaved('Load.json', load, 'entry');
     const id = store.active!.id;
-    store.update(id, withCharge(2), false);
+    store.update(id, withCharge(2));
     store.close(id);
     expect(store.documents).toHaveLength(0);
     expect(store.canReopen).toBe(true);

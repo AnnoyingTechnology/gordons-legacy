@@ -3,6 +3,7 @@ import { html, LitElement, nothing } from 'lit';
 import { effectiveBoreArea, type BoreProfile } from '../editor/bore-area.ts';
 import { displayUnit, formatNumber, parseNumber } from '../units/units.ts';
 import type { UiContext } from './context.ts';
+import { loadChangeEvent } from '../state/load-change.ts';
 
 const PROFILES: BoreProfile[] = ['grooved', 'polygonal-corners', 'polygonal-rounded'];
 
@@ -122,7 +123,7 @@ export class BoreAreaDialog extends LitElement {
 
   private use(area: number): void {
     this.dispatchEvent(
-      new CustomEvent('load-change', { detail: { ...this.load, cartridge: { ...this.load.cartridge, effectiveBoreArea: area } }, bubbles: true }),
+      loadChangeEvent({ ...this.load, cartridge: { ...this.load.cartridge, effectiveBoreArea: area } }),
     );
   }
 }

@@ -23,6 +23,7 @@ export class DocumentHistory {
   private undoSteps: DocumentSnapshot[] = [];
   private redoSteps: DocumentSnapshot[] = [];
   private lastRecord = Number.NEGATIVE_INFINITY;
+  private lastTyping: string | undefined;
   private readonly now: () => number;
 
   constructor(now: () => number = Date.now) {
@@ -38,14 +39,15 @@ export class DocumentHistory {
   }
 
   /**
-   * Records the state before a change. A change that `merges` (an edit typed in a field) and follows
-   * the previous one within `MERGE_WINDOW` extends that step instead of making a new one; any change
-   * clears Redo.
+   * Records the state before a change. A keystroke in an input (`typing` names the input) that follows
+   * the previous keystroke in the same input within `MERGE_WINDOW` extends that step instead of making a
+   * new one; any change clears Redo.
    */
-  record(before: DocumentSnapshot, merges: boolean): void {
+  record(before: DocumentSnapshot, typing?: string): void {
     const time = this.now();
-    const extendsLast = merges && this.undoSteps.length > 0 && time - this.lastRecord < MERGE_WINDOW;
-    this.lastRecord = merges ? time : Number.NEGATIVE_INFINITY;
+    const extendsLast = typing !== undefined && typing === this.lastTyping && this.undoSteps.length > 0 && time - this.lastRecord < MERGE_WINDOW;
+    this.lastRecord = typing === undefined ? Number.NEGATIVE_INFINITY : time;
+    this.lastTyping = typing;
     this.redoSteps = [];
     if (extendsLast) return;
     this.undoSteps.push(before);
@@ -58,6 +60,7 @@ export class DocumentHistory {
     if (!previous) return undefined;
     this.redoSteps.push(current);
     this.lastRecord = Number.NEGATIVE_INFINITY;
+    this.lastTyping = undefined;
     return previous;
   }
 
@@ -66,6 +69,7 @@ export class DocumentHistory {
     if (!next) return undefined;
     this.undoSteps.push(current);
     this.lastRecord = Number.NEGATIVE_INFINITY;
+    this.lastTyping = undefined;
     return next;
   }
 }

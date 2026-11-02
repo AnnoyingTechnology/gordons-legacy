@@ -8,6 +8,7 @@ import type { Load } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
 import { displayUnit, formatNumber, parseNumber } from '../units/units.ts';
 import type { UiContext } from './context.ts';
+import { loadChangeEvent } from '../state/load-change.ts';
 
 const REFERENCE_CELSIUS = 21;
 
@@ -126,7 +127,7 @@ export class TemperatureFit extends LitElement {
       ...(result.cold === undefined ? {} : { coldTemperatureCoefficient: result.cold }),
       ...(result.hot === undefined ? {} : { hotTemperatureCoefficient: result.hot }),
     };
-    this.dispatchEvent(new CustomEvent('load-change', { detail: { ...this.load, propellant: { ...this.load.propellant, burnModel } }, bubbles: true }));
+    this.dispatchEvent(loadChangeEvent({ ...this.load, propellant: { ...this.load.propellant, burnModel } }));
   }
 }
 

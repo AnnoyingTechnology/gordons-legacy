@@ -14,8 +14,9 @@ export class TabStrip extends HTMLElement {
 
   connectedCallback(): void {
     this.resizes.observe(this);
-    // Attributes are not watched: measuring sets one, and must not trigger itself.
-    this.mutations.observe(this, { childList: true, subtree: true, characterData: true });
+    // Of the attributes only `class` is watched (a tab becoming active changes its width); measuring
+    // sets `data-truncated`, which must not trigger itself.
+    this.mutations.observe(this, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['class'] });
     this.addEventListener('pointerover', this.pointed);
     this.addEventListener('pointerleave', this.hide);
     this.addEventListener('focusin', this.focused);

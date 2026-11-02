@@ -4,6 +4,7 @@ import { groupStatistics } from '../analysis/shot-group.ts';
 import { icon } from '../icons/icons.ts';
 import type { UiContext } from './context.ts';
 import './shot-group-dialog.ts';
+import { loadChangeEvent } from '../state/load-change.ts';
 
 /** The load's shot groups, each with its size; opens the editor for a new or an existing group. */
 export class ShotGroupsPanel extends LitElement {
@@ -60,7 +61,7 @@ export class ShotGroupsPanel extends LitElement {
 
   private removeGroup(index: number): void {
     const shotGroups = (this.load.shotGroups ?? []).filter((_, position) => position !== index);
-    this.dispatchEvent(new CustomEvent('load-change', { detail: { ...this.load, shotGroups }, bubbles: true }));
+    this.dispatchEvent(loadChangeEvent({ ...this.load, shotGroups }));
   }
 }
 

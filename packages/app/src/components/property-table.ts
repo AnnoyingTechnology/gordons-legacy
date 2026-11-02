@@ -5,6 +5,7 @@ import { fieldConcerns, type Field, type FieldGroup, type NumberField } from '..
 import { icon, type IconName } from '../icons/icons.ts';
 import { displayUnit, formatNumber, isAmbiguousNumber, parseNumber } from '../units/units.ts';
 import type { UiContext } from './context.ts';
+import { loadChangeEvent } from '../state/load-change.ts';
 
 /** The icon heading each group of inputs (issue #17). */
 const GROUP_ICONS: Partial<Record<string, IconName>> = {
@@ -41,10 +42,13 @@ export class PropertyTable extends LitElement {
   declare action: unknown;
   /** Text being typed, by field index, kept until the field loses focus. */
   declare drafts: Map<number, string>;
+  /** Each field's value when its typing started, to go back to if the typing ends invalid. */
+  private originals: Map<number, number | undefined>;
 
   constructor() {
     super();
     this.drafts = new Map();
+    this.originals = new Map();
     this.problems = [];
     this.folded = false;
   }
@@ -153,7 +157,7 @@ export class PropertyTable extends LitElement {
             aria-invalid=${error ? 'true' : 'false'}
             .value=${draft ?? this.format(field)}
             @input=${(event: Event) => this.edit(field, index, (event.target as HTMLInputElement).value)}
-            @blur=${() => this.forget(index)}
+            @blur=${() => this.forget(field, index)}
           />
           ${error ? html`<div class="field-error" role="alert">${error}</div>` : nothing}
         </td>
@@ -204,24 +208,47 @@ export class PropertyTable extends LitElement {
     return field.kind === 'plain' ? value : displayUnit(field.kind, this.context.units).toSi(value);
   }
 
-  private edit(field: NumberField, index: number, text: string): void {
-    this.drafts = new Map(this.drafts).set(index, text);
-    if (field.clear && text.trim() === '') {
-      this.emit(field.clear(this.load));
-      return;
-    }
-    if (this.validate(field, text) !== undefined) return;
-    this.emit(field.set(this.load, this.toSi(field, parseNumber(text)!)));
+  /** The input's identity for Undo: its keystrokes merge into one step (state/load-change.ts). */
+  private typingKey(index: number): string {
+    return `${this.group.title}:${index}`;
   }
 
-  private forget(index: number): void {
+  private edit(field: NumberField, index: number, text: string): void {
+    if (!this.originals.has(index)) this.originals.set(index, field.get(this.load));
+    this.drafts = new Map(this.drafts).set(index, text);
+    if (field.clear && text.trim() === '') {
+      this.emit(field.clear(this.load), this.typingKey(index));
+      return;
+    }
+    // An invalid draft must not leave its valid beginning in the load: typing `3,445` passes through
+    // `3,44`, which reads as 3.44. The load goes back to the value the typing started from.
+    if (this.validate(field, text) !== undefined) {
+      this.restore(field, index);
+      return;
+    }
+    this.emit(field.set(this.load, this.toSi(field, parseNumber(text)!)), this.typingKey(index));
+  }
+
+  private restore(field: NumberField, index: number): void {
+    const original = this.originals.get(index);
+    if (field.get(this.load) === original) return;
+    const load = original === undefined ? field.clear?.(this.load) : field.set(this.load, original);
+    if (load) this.emit(load, this.typingKey(index));
+  }
+
+  /** Leaving a field ends its typing. An invalid draft stays on screen with its explanation. */
+  private forget(field: NumberField, index: number): void {
+    this.originals.delete(index);
+    const draft = this.drafts.get(index);
+    const invalid = draft !== undefined && !(field.clear && draft.trim() === '') && this.validate(field, draft) !== undefined;
+    if (invalid) return;
     const drafts = new Map(this.drafts);
     drafts.delete(index);
     this.drafts = drafts;
   }
 
-  private emit(load: Load): void {
-    this.dispatchEvent(new CustomEvent('load-change', { detail: load, bubbles: true }));
+  private emit(load: Load, typing?: string): void {
+    this.dispatchEvent(loadChangeEvent(load, typing));
   }
 }
 

@@ -3,6 +3,7 @@ import { html, LitElement, nothing, svg } from 'lit';
 import { groupStatistics, milliradians, minutesOfAngle, type Hit } from '../analysis/shot-group.ts';
 import { displayUnit, formatNumber, parseNumber } from '../units/units.ts';
 import type { UiContext } from './context.ts';
+import { loadChangeEvent } from '../state/load-change.ts';
 
 /** Photos are stored downscaled: loads live in the browser's limited storage. */
 const MAXIMUM_PICTURE_SIZE = 1600;
@@ -294,7 +295,7 @@ export class ShotGroupDialog extends LitElement {
     const groups = [...(this.load.shotGroups ?? [])];
     if (this.groupIndex >= 0) groups[this.groupIndex] = group;
     else groups.push(group);
-    this.dispatchEvent(new CustomEvent('load-change', { detail: { ...this.load, pictures, shotGroups: groups }, bubbles: true }));
+    this.dispatchEvent(loadChangeEvent({ ...this.load, pictures, shotGroups: groups }));
   };
 }
 

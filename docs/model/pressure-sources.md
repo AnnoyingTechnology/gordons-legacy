@@ -44,6 +44,7 @@ Reading traps found while writing the readers:
 | [Kagankiewicz & Magier 2023](https://link.springer.com/article/10.1007/s00161-023-01263-3), CC BY 4.0 | Kistler piezo traces (figs. 5, 7, 9), three series of five shots | Military propellant without a model of ours; no raw time series offered |
 | Hodgdon's Reloading Data Center | psi per load for Hodgdon, IMR and Winchester powders (H380, Lil'Gun, StaBALL Match, IMR 4166 — powders we hold models of) | An interactive application, not a document; automated reading was refused by this agent's permission policy (2026-11-02). Some of our models are described as derived from Hodgdon's data, which would make it circular for them |
 | Alliant Reloader's Guide 2022 | psi for shotshell loads only | Rifle and handgun tables have no pressure |
+| [Vectan US catalogue 2025](https://shootersworldpowder.com/wp-content/uploads/2025/05/Vectan-Reloading-catalogue_vUS_compressed.pdf) (Shooters World) | psi beside charge and velocity, including Vectan A1, a powder the maintainer's files model | 12-gauge shotshell rows only: a hull's capacity, a wad and a shot column are inputs no source gives, and the engines are not yet checked on shotshells |
 | Vihtavuori guides, Hornady, Sierra | Charges and velocities | No pressure. Vihtavuori's 2026 guide says its loads are "pressure tested according to the C.I.P. method" and its maximum loads set against the CIP and SAAMI maxima, which makes a maximum load an upper bound at best, not a measurement |
 
 ## What limits the study

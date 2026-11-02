@@ -22,7 +22,8 @@ export const CLOSED_LIMIT = 10;
 
 /** A closed load, as it was when closed, unsaved changes included. */
 interface ClosedDocument {
-  document: Omit<OpenDocument, 'id'>;
+  /** Kept whole, its id included: a save still running for it must finish on the same document. */
+  document: OpenDocument;
   history: DocumentHistory;
 }
 
@@ -97,13 +98,13 @@ export class DocumentStore {
   }
 
   /**
-   * Replaces a document's load, as one Undo step. `merges` is for edits typed in a field: quick ones
-   * merge into a single step. A deliberate replacement (a powder, a projectile, a calibration) doesn't.
+   * Replaces a document's load, as one Undo step. `typing` names the input when the change is a
+   * keystroke: quick keystrokes in one input merge into a single step (state/load-change.ts).
    */
-  update(id: number, load: Load, merges = true): void {
+  update(id: number, load: Load, typing?: string): void {
     const document = this.documents.find((candidate) => candidate.id === id);
     if (!document) return;
-    this.historyOf(id).record({ name: document.name, load: document.load }, merges);
+    this.historyOf(id).record({ name: document.name, load: document.load }, typing);
     this.documents = this.documents.map((candidate) => (candidate.id === id ? { ...candidate, load } : candidate));
     this.changed();
   }
@@ -113,7 +114,7 @@ export class DocumentStore {
     const trimmed = title.trim().replace(/\.json$/i, '').trim();
     const document = this.documents.find((candidate) => candidate.id === id);
     if (!trimmed || !document) return;
-    this.historyOf(id).record({ name: document.name, load: document.load }, false);
+    this.historyOf(id).record({ name: document.name, load: document.load });
     this.documents = this.documents.map((candidate) => candidate.id === id
       ? { ...candidate, name: `${trimmed}.json`, load: { ...candidate.load, title: trimmed } }
       : candidate);
@@ -155,13 +156,14 @@ export class DocumentStore {
     return history;
   }
 
-  /** Records the exact snapshot written, so an edit made while saving remains unsaved. */
+  /**
+   * Records the exact snapshot written, so an edit made while saving remains unsaved. A save that
+   * finishes after its tab was closed is recorded on the closed load too, for Reopen.
+   */
   markSaved(id: number, savedText: string, libraryId?: string): void {
-    this.documents = this.documents.map((document) =>
-      document.id === id
-        ? { ...document, savedText, ...(libraryId === undefined ? {} : { libraryId }) }
-        : document,
-    );
+    const saved = (document: OpenDocument) => (document.id === id ? { ...document, savedText, ...(libraryId === undefined ? {} : { libraryId }) } : document);
+    this.documents = this.documents.map(saved);
+    this.closed = this.closed.map((entry) => ({ ...entry, document: saved(entry.document) }));
     this.changed();
   }
 
@@ -179,8 +181,7 @@ export class DocumentStore {
     const index = this.documents.findIndex((document) => document.id === id);
     const document = this.documents[index];
     if (!document) return;
-    const { id: _closedId, ...kept } = document;
-    this.closed = [...this.closed, { document: kept, history: this.historyOf(id) }].slice(-CLOSED_LIMIT);
+    this.closed = [...this.closed, { document, history: this.historyOf(id) }].slice(-CLOSED_LIMIT);
     this.histories.delete(id);
     this.documents = this.documents.filter((candidate) => candidate.id !== id);
     if (this.activeId === id) this.activeId = this.documents[Math.min(index, this.documents.length - 1)]?.id;
@@ -202,7 +203,8 @@ export class DocumentStore {
     this.closed = this.closed.slice(0, -1);
     const { libraryId, ...rest } = last.document;
     const linked = libraryId !== undefined && !this.documents.some((document) => document.libraryId === libraryId);
-    const document: OpenDocument = linked ? { ...rest, libraryId, id: this.nextId++ } : { ...rest, savedText: libraryId ? '' : rest.savedText, id: this.nextId++ };
+    // The same id: the ordered save queue (document-saving.ts) and a save completing late both find it.
+    const document: OpenDocument = linked ? { ...rest, libraryId } : { ...rest, savedText: libraryId ? '' : rest.savedText };
     this.histories.set(document.id, last.history);
     this.documents = [...this.documents, document];
     this.activeId = document.id;

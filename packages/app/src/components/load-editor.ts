@@ -19,6 +19,7 @@ import './property-table.ts';
 import './document-heading.ts';
 import { renderProblems, renderResults, type ChartAxis } from './results-view.ts';
 import { onChartLayoutChange } from './charts-view.ts';
+import { loadChangeEvent } from '../state/load-change.ts';
 
 /**
  * One load: its inputs, grouped as in GRT, beside the simulated shot, which follows every edit.
@@ -193,7 +194,7 @@ export class LoadEditor extends LitElement {
   }
 
   private emit(load: Load): void {
-    this.dispatchEvent(new CustomEvent('load-change', { detail: load, bubbles: true }));
+    this.dispatchEvent(loadChangeEvent(load));
   }
 
   /**

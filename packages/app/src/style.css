@@ -682,8 +682,13 @@ button:disabled {
   display: none;
 }
 
-.tab-preview .tab-title {
+.tab-preview .tab-title,
+.tab-preview .badge span {
   font-weight: 500;
+  /* The preview is there to show what the tab cuts: a long name wraps instead. */
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
 }
 
 .tab-preview .badges {

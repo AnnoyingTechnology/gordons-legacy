@@ -2,6 +2,7 @@ import type { Load, Note } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
 import { icon } from '../icons/icons.ts';
 import type { UiContext } from './context.ts';
+import { loadChangeEvent } from '../state/load-change.ts';
 
 /** Image types shown from a load's pictures; others (SVG among them) are not displayed. */
 const SHOWN_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
@@ -92,7 +93,7 @@ export class NotesPanel extends LitElement {
   };
 
   private emit(load: Load): void {
-    this.dispatchEvent(new CustomEvent('load-change', { detail: load, bubbles: true }));
+    this.dispatchEvent(loadChangeEvent(load));
   }
 }
 
