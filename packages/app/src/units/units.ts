@@ -148,15 +148,28 @@ export function formatQuantity(value: number, kind: QuantityKind, preferences: U
   return `${formatNumber(unit.fromSi(value), unit.decimals, locale)} ${unit.symbol}`;
 }
 
+/**
+ * Whether a typed number has a comma that could be a thousands separator: `2,850` is 2850 to an
+ * English reader and 2.85 to a French one, and the results show pressures and velocities grouped that
+ * way (`3,445 bar`). Reading either would be silently wrong by a factor of a thousand for someone, so
+ * the input is refused and the user asked to write it without the doubt (`2850` or `2.85`). A leading
+ * zero (`0,325`) is never a thousands group, so it stays a decimal comma.
+ */
+export function isAmbiguousNumber(text: string): boolean {
+  return /^[-+]?[1-9]\d{0,2},\d{3}$/.test(text.trim().replace(/\s/g, ''));
+}
+
 export function formatNumber(value: number, decimals: number, locale = 'en'): string {
   return value.toLocaleString(locale, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
 
 /**
  * Reads a number typed by a user, accepting a comma or a dot as decimal separator. Returns undefined
- * for anything that isn't a finite number.
+ * for anything that isn't a finite number, and for a comma that may be a thousands separator
+ * (`isAmbiguousNumber`).
  */
 export function parseNumber(text: string): number | undefined {
+  if (isAmbiguousNumber(text)) return undefined;
   const normalized = text.trim().replace(/\s/g, '').replace(',', '.');
   if (!/^[-+]?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?$/.test(normalized)) return undefined;
   const value = Number(normalized);

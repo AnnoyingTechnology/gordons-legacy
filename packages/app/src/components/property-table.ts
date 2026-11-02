@@ -3,7 +3,7 @@ import type { Load } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
 import { fieldConcerns, type Field, type FieldGroup, type NumberField } from '../editor/fields.ts';
 import { icon, type IconName } from '../icons/icons.ts';
-import { displayUnit, formatNumber, parseNumber } from '../units/units.ts';
+import { displayUnit, formatNumber, isAmbiguousNumber, parseNumber } from '../units/units.ts';
 import type { UiContext } from './context.ts';
 
 /** The icon heading each group of inputs (issue #17). */
@@ -183,6 +183,7 @@ export class PropertyTable extends LitElement {
   }
 
   private validate(field: NumberField, text: string): string | undefined {
+    if (isAmbiguousNumber(text)) return this.context.t('field.ambiguous');
     const value = parseNumber(text);
     if (value === undefined) return this.context.t('field.invalid');
     if (field.positive && !(this.toSi(field, value) > 0)) return this.context.t('field.invalid');

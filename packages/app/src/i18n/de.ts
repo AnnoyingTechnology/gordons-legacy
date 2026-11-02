@@ -170,6 +170,7 @@ export const de: Messages = {
   'field.ladderSteps': "Anzahl der Ladestufen der Ladeleiter",
   'field.ladderStep': "Ladungsabstufung der Ladeleiter",
   'field.invalid': 'Keine gültige Zahl',
+  'field.ambiguous': "Ist das Komma ein Tausendertrennzeichen? Schreiben Sie die Zahl ohne, mit Punkt oder Komma für die Dezimalstellen: 2850 oder 2.85.",
   'results.peakPressure': 'Maximaler Gasdruck',
   'results.muzzleVelocity': 'Mündungsgeschwindigkeit',
   'results.barrelTime': 'Geschosslaufzeit',

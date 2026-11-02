@@ -170,6 +170,7 @@ export const es: Messages = {
   'field.ladderSteps': 'Cargas de la escalera',
   'field.ladderStep': 'Paso de la escalera',
   'field.invalid': 'Número no válido',
+  'field.ambiguous': "¿La coma separa los miles? Escriba el número sin separador de miles, con punto o coma para los decimales: 2850, o 2.85.",
   'results.peakPressure': 'Presión máxima',
   'results.muzzleVelocity': 'Velocidad en boca',
   'results.barrelTime': 'Tiempo en el cañón',

@@ -170,6 +170,7 @@ export const fr: Messages = {
   'field.ladderSteps': "Nombre de charges de l’escalier",
   'field.ladderStep': "Incrément de charge de l’escalier",
   'field.invalid': 'Nombre non valide',
+  'field.ambiguous': "La virgule sépare-t-elle les milliers ? Écrivez le nombre sans séparateur de milliers, avec un point ou une virgule pour les décimales : 2850, ou 2.85.",
   'results.peakPressure': 'Pression maximale',
   'results.muzzleVelocity': 'Vitesse à la bouche',
   'results.barrelTime': 'Temps dans le canon',

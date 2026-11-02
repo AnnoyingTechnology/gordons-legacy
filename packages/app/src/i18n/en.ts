@@ -172,6 +172,7 @@ export const en = {
   'field.ladderSteps': 'Ladder charges',
   'field.ladderStep': 'Ladder step',
   'field.invalid': 'Not a valid number',
+  'field.ambiguous': "Is the comma a thousands separator? Write the number without one, with a dot or a comma for decimals: 2850, or 2.85.",
   'results.peakPressure': 'Peak pressure',
   'results.muzzleVelocity': 'Muzzle velocity',
   'results.barrelTime': 'Barrel time',

@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { CHOOSABLE_KINDS, displayUnit, formatQuantity, parseNumber, presetPreferences, unitsFor } from '../src/units/units.ts';
+import { CHOOSABLE_KINDS, displayUnit, formatQuantity, isAmbiguousNumber, parseNumber, presetPreferences, unitsFor } from '../src/units/units.ts';
 
 test('every unit converts back to the SI value it came from', () => {
   for (const kind of CHOOSABLE_KINDS) {
@@ -34,4 +34,22 @@ test('typed numbers accept a comma or a dot and reject the rest', () => {
   expect(parseNumber('1e-3')).toBe(0.001);
   expect(parseNumber('abc')).toBeUndefined();
   expect(parseNumber('')).toBeUndefined();
+});
+
+test('a typed number with a decimal comma or dot', () => {
+  expect(parseNumber('2,85')).toBe(2.85);
+  expect(parseNumber(' 2.850 ')).toBe(2.85);
+  expect(parseNumber('0,325')).toBe(0.325);
+  expect(parseNumber('3 445')).toBe(3445);
+  expect(parseNumber('1e3')).toBe(1000);
+});
+
+test('refuses a comma that may be a thousands separator, rather than misreading it a thousandfold', () => {
+  // The results print pressures as "3,445 bar": typed back, that must not become 3.445.
+  for (const text of ['3,445', '62,000', '-1,500']) {
+    expect(isAmbiguousNumber(text)).toBe(true);
+    expect(parseNumber(text)).toBeUndefined();
+  }
+  for (const text of ['2,85', '0,325', '2,8505', '3445', '3.445']) expect(isAmbiguousNumber(text)).toBe(false);
+  expect(parseNumber('1,234,567')).toBeUndefined();
 });
