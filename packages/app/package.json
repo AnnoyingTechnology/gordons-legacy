@@ -14,7 +14,9 @@
     "@gordons-legacy/data": "0.0.0",
     "@gordons-legacy/engine": "0.0.0",
     "@gordons-legacy/formats": "0.0.0",
-    "lit": "3.3.3"
+    "jsqr": "1.4.0",
+    "lit": "3.3.3",
+    "qrcode-generator": "2.0.4"
   },
   "devDependencies": {
     "vite": "8.3.4"

@@ -65,6 +65,21 @@ export class Inventory {
     return entry.id;
   }
 
+  /**
+   * Takes an item from another device (sync/), keeping its id and date: it replaces the local item of the
+   * same id only when it is newer. Returns whether it was taken.
+   */
+  async receive(item: StockItem): Promise<boolean> {
+    const [checkedItem] = checked(item);
+    if (!checkedItem) return false;
+    const local = this.entries.find((entry) => entry.id === checkedItem.id);
+    if (local && local.updatedAt >= checkedItem.updatedAt) return false;
+    await this.storage.put(checkedItem);
+    this.entries = [...this.entries.filter((entry) => entry.id !== checkedItem.id), checkedItem];
+    this.changed();
+    return true;
+  }
+
   async remove(id: string): Promise<void> {
     await this.storage.remove(id);
     this.entries = this.entries.filter((entry) => entry.id !== id);

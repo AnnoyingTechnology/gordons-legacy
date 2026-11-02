@@ -13,7 +13,7 @@ import './stock-view.ts';
  * glance (velocity, energy, share of the maximum, the review's level, the best group, the measured
  * velocity), the user's guns and the stock. Fires `open-entry` with an entry's id to open it in a tab,
  * `record-batch` with an entry's id, `import-files` with files to add, `backup` to download the library,
- * `restore` with a backup file.
+ * `restore` with a backup file, `sync` to exchange with another device.
  */
 export class LibraryView extends LitElement {
   static override properties = {
@@ -73,6 +73,7 @@ export class LibraryView extends LitElement {
             <input type="file" webkitdirectory multiple class="file-input" @change=${this.importFiles} />
           </label>
           <button @click=${() => this.fire('backup')}>${icon('save')} ${t('library.backup')}</button>
+          <button title=${t('sync.title')} @click=${() => this.fire('sync')}>${icon('compare')} ${t('sync.open')}</button>
           <label class="button">
             ${icon('undo')} ${t('library.restore')}
             <input type="file" accept=".json" class="file-input" @change=${this.restore} />

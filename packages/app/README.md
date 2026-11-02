@@ -54,6 +54,7 @@ src/
     library-view.ts       <gl-library-view>: saved loads by cartridge and firearm, import, backup
     stock-view.ts         <gl-stock-view>: the stock on the shelf, edited in place, with what runs low
     batch-dialog.ts       <gl-batch-dialog>: records a batch of a saved load, taking what it used off the shelf
+    sync-dialog.ts        <gl-sync-dialog>: exchanges loads and stock with another device by animated QR codes
     component-picker.ts   <gl-component-picker>: choose a powder (GRT's burning-rate table and powder
                           search) or a projectile from the component library
     firearm-picker.ts     <gl-firearm-picker>: choose the gun a load is fired in, searching the user's
@@ -90,6 +91,9 @@ src/
   data/                 community-components.json: the CC0 community components bundled for a first
                         offline visit (tools/data/build-community.ts); online, the app takes them from
                         the data repository through @gordons-legacy/data
+  sync/                 the bench ↔ phone exchange (issue #21): what is exchanged and how it merges
+                        (sync-payload.ts), cutting it into QR frames and back (qr-frames.ts), reading a QR
+                        code from the camera (qr-decoder.ts)
   icons/icons.ts        original SVG icons
   measurements/         statistics of measured shots; reading chronograph CSV exports
   analysis/             review.ts, review-worker.ts, review-client.ts: the heavy analyses (review,

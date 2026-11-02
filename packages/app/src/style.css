@@ -2186,6 +2186,19 @@ main:has(.load-editor.concern-danger)::before {
   color: var(--muted);
 }
 
+.sync-dialog canvas,
+.sync-dialog video {
+  display: block;
+  width: min(320px, 80vw);
+  height: auto;
+  margin: 0.8rem auto;
+  background: #fff;
+}
+
+.sync-dialog progress {
+  width: 100%;
+}
+
 .batch-use {
   display: block;
   margin: 0.3rem 0;

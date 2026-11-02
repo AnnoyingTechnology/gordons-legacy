@@ -30,6 +30,7 @@ import { cachedFirearms, fetchFirearms } from '../state/published-firearms.ts';
 import { readBackup, writeBackup } from '../state/backup.ts';
 import { Inventory, type StockItem, type Use } from '../state/inventory.ts';
 import './batch-dialog.ts';
+import './sync-dialog.ts';
 import './firearm-dialog.ts';
 import './firearm-picker.ts';
 import { indexedDbStore } from '../state/indexed-db.ts';
@@ -63,6 +64,7 @@ export class AppShell extends LitElement {
     chronograph: { state: true },
     editedFirearm: { state: true },
     batch: { state: true },
+    syncOpen: { state: true },
     firearmPickerOpen: { state: true },
     publishedGuns: { state: true },
     closingDocument: { state: true },
@@ -85,6 +87,8 @@ export class AppShell extends LitElement {
   declare editedFirearm: { firearm: Firearm; id?: string } | undefined;
   /** The saved load a batch is being recorded of (batch-dialog.ts); undefined when none. */
   declare batch: { name: string; load: Load } | undefined;
+  /** Whether the bench ↔ phone exchange is open (sync-dialog.ts). */
+  declare syncOpen: boolean;
   /** True while the user is choosing the gun of the active load (issue #30). */
   declare firearmPickerOpen: boolean;
   /** The makers' published guns, read when the user first looks for one; undefined until then. */
@@ -124,6 +128,7 @@ export class AppShell extends LitElement {
     this.savingBeforeClose = false;
     this.closeError = '';
     this.newLoadOpen = false;
+    this.syncOpen = false;
     this.shortcutsOpen = false;
     // The dedication and safety notice open on a browser's first visit, over an example load, so that the
     // tool shows what it does instead of an empty page (#29).
@@ -250,6 +255,8 @@ export class AppShell extends LitElement {
         @export=${(event: CustomEvent<Firearm>) => download(serializeFirearm(event.detail), `${event.detail.name.trim() || 'gun'}.firearm.json`)}
         @close=${() => (this.editedFirearm = undefined)}
       ></gl-firearm-dialog>
+      <gl-sync-dialog .open=${this.syncOpen} .library=${this.library} .inventory=${this.inventory} .context=${this.context}
+        @close=${() => (this.syncOpen = false)}></gl-sync-dialog>
       <gl-batch-dialog .batch=${this.batch} .items=${this.inventory.entries} .context=${this.context}
         @use-stock=${(event: CustomEvent<Use[]>) => void this.keepStock(() => this.inventory.use(event.detail)).then(() => (this.batch = undefined))}
         @close=${() => (this.batch = undefined)}></gl-batch-dialog>
@@ -297,6 +304,7 @@ export class AppShell extends LitElement {
         @save-stock=${(event: CustomEvent<StockItem>) => void this.keepStock(() => this.inventory.save(event.detail))}
         @remove-stock=${(event: CustomEvent<string>) => void this.keepStock(() => this.inventory.remove(event.detail))}
         @record-batch=${(event: CustomEvent<string>) => this.recordBatch(event.detail)}
+        @sync=${() => (this.syncOpen = true)}
         @edit-firearm=${(event: CustomEvent<{ firearm: Firearm; id?: string }>) => (this.editedFirearm = event.detail)}
         @remove-firearm=${(event: CustomEvent<string>) => void this.keepFirearm(undefined, event.detail)}
         @open-entry=${(event: CustomEvent<string>) => this.openEntry(event.detail)}

@@ -40,6 +40,19 @@ export class Library {
     return id;
   }
 
+  /**
+   * Takes an entry from another device (sync/), keeping its id and date: it replaces the local entry of
+   * the same id only when it is newer. Returns whether it was taken.
+   */
+  async receive(entry: LibraryEntry): Promise<boolean> {
+    const local = this.get(entry.id);
+    if (local && local.updatedAt >= entry.updatedAt) return false;
+    await this.storage.put(entry);
+    this.entries = [...this.entries.filter((candidate) => candidate.id !== entry.id), entry];
+    this.changed();
+    return true;
+  }
+
   async remove(id: string): Promise<void> {
     await this.storage.remove(id);
     this.entries = this.entries.filter((entry) => entry.id !== id);
