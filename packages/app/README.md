@@ -21,6 +21,7 @@ src/
     app-shell.ts          <gl-app>: the views, open and save, drag and drop, settings, footer
     toolbar.ts            the toolbar (full-height buttons in groups)
     tab-bar.ts            one tab per open load, with its badges
+    tab-strip.ts          <gl-tab-strip>: fades the tabs that don't fit, previews one whole on hover or focus
     about-dialog.ts       dedication, safety notice and build; opens on a first visit
     units-dialog.ts       display unit of each kind of quantity
     choice-dialog.ts      pick one of several options (projectiles of a file)

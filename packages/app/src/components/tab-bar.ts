@@ -3,8 +3,12 @@ import { icon } from '../icons/icons.ts';
 import type { OpenDocument } from '../state/documents.ts';
 import type { UiContext } from './context.ts';
 import { loadBadges } from './load-badges.ts';
+import './tab-strip.ts';
 
-/** One tab per open load: its name, a dot when unsaved, its cartridge, projectile and powder badges. */
+/**
+ * One tab per open load: its name, a dot when unsaved, its cartridge, projectile and powder badges.
+ * `<gl-tab-strip>` fades the tabs that don't fit and previews them whole (issue #39).
+ */
 export function tabBar(
   documents: readonly OpenDocument[],
   activeId: number | undefined,
@@ -14,6 +18,7 @@ export function tabBar(
 ) {
   const { t } = context;
   return html`
+    <gl-tab-strip>
     <nav class="tabs" aria-label=${t('documents.open')}>
       ${documents.map((document) => {
         const active = document.id === activeId;
@@ -33,5 +38,7 @@ export function tabBar(
         `;
       })}
     </nav>
+    <div class="tab-preview" aria-hidden="true" hidden></div>
+    </gl-tab-strip>
   `;
 }
