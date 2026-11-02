@@ -24,6 +24,8 @@ export interface ChronographCsv {
 
 /** Plausible velocities in either unit: from slow subsonic loads (m/s) to fast rifle loads (ft/s). */
 const PLAUSIBLE = { min: 50, max: 5000 };
+/** The most columns a chronograph export is read with: LabRadar and Garmin files have a dozen or two. */
+const MAXIMUM_COLUMNS = 100;
 const VELOCITY_HEADER = /\b(v0|vel|velocity|speed|vitesse|geschw|velocidad|velocit)/i;
 const FEET = /\b(fps|ft\/s|feet)\b/i;
 const METRES = /\b(m\/s|mps|meters per second|metres per second)\b/i;
@@ -35,7 +37,9 @@ export function readChronographCsv(text: string): ChronographCsv | undefined {
   const rows = lines.map((line) => line.split(delimiter).map((cell) => cell.trim().replace(/^"|"$/g, '')));
   // A column's values are its longest unbroken run of numbers (the data table, not the header block
   // above it); its header is the cell just above that run.
-  const width = Math.max(...rows.map((row) => row.length));
+  const width = rows.reduce((widest, row) => Math.max(widest, row.length), 0);
+  // No chronograph exports this many columns, and scanning each over every row would be quadratic (#32).
+  if (width > MAXIMUM_COLUMNS) return undefined;
   const columns: CsvColumn[] = [];
   for (let index = 0; index < width; index++) {
     let best = { start: 0, values: [] as number[] };
@@ -63,7 +67,8 @@ export function readChronographCsv(text: string): ChronographCsv | undefined {
 function detectDelimiter(lines: string[]): string {
   const scores = [';', '\t', ','].map((delimiter) => {
     const counts = lines.map((line) => line.split(delimiter).length);
-    const most = Math.max(...counts);
+    // A reduction, not `Math.max(...counts)`: a long file overflows a call's arguments (#32).
+    const most = counts.reduce((highest, count) => Math.max(highest, count), 0);
     return { delimiter, score: most > 1 ? counts.filter((count) => count === most).length : 0 };
   });
   return scores.sort((a, b) => b.score - a.score)[0]!.delimiter;

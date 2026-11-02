@@ -15,6 +15,9 @@ export interface XmlElement {
   text: string;
 }
 
+/** Deeper than any GRT file, shallow enough for any browser's stack. */
+const MAXIMUM_DEPTH = 200;
+
 export class XmlSyntaxError extends Error {
   readonly line: number;
 
@@ -54,6 +57,8 @@ const PREDEFINED_ENTITIES: Record<string, string> = {
 class XmlReader {
   private readonly source: string;
   private position = 0;
+  /** How deep the element being read sits; a GRT file is a few levels deep, a hostile one thousands. */
+  private depth = 0;
 
   constructor(source: string) {
     // A byte-order mark may precede the declaration.
@@ -81,6 +86,16 @@ class XmlReader {
   }
 
   private readElement(): XmlElement {
+    // Reading is recursive: past this depth the stack would overflow with an error no importer catches.
+    if (++this.depth > MAXIMUM_DEPTH) this.fail(`Elements nested more than ${MAXIMUM_DEPTH} deep`);
+    try {
+      return this.readElementBody();
+    } finally {
+      this.depth--;
+    }
+  }
+
+  private readElementBody(): XmlElement {
     this.expect('<');
     const element: XmlElement = { name: this.readName(), attributes: {}, children: [], text: '' };
     this.readAttributes(element);
@@ -148,8 +163,12 @@ class XmlReader {
 
   private decodeEntities(raw: string): string {
     return raw.replace(/&(#x[0-9a-fA-F]+|#\d+|\w+);/g, (match, entity: string) => {
-      if (entity.startsWith('#x')) return String.fromCodePoint(parseInt(entity.slice(2), 16));
-      if (entity.startsWith('#')) return String.fromCodePoint(parseInt(entity.slice(1), 10));
+      if (entity.startsWith('#')) {
+        const code = entity.startsWith('#x') ? parseInt(entity.slice(2), 16) : parseInt(entity.slice(1), 10);
+        // `String.fromCodePoint` throws a RangeError past U+10FFFF, which no importer would catch.
+        if (!(code >= 0 && code <= 0x10ffff)) this.fail(`Character reference "${match}" is not a character`);
+        return String.fromCodePoint(code);
+      }
       const character = PREDEFINED_ENTITIES[entity];
       if (character === undefined) this.fail(`Unknown entity "${match}"`);
       return character;

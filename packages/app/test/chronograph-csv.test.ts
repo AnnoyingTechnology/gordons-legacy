@@ -44,3 +44,13 @@ describe('readChronographCsv', () => {
     expect(readChronographCsv('a,b\n1,2\n')).toBeUndefined();
   });
 });
+
+it('a hostile CSV comes back quickly as nothing or as numbers, never as an exception (#32)', () => {
+  // Thousands of columns on one line: no chronograph exports that, and scanning them all is quadratic.
+  const ragged = `${'50;'.repeat(8000)}50\n${'50\n'.repeat(8000)}`;
+  const started = performance.now();
+  expect(readChronographCsv(ragged)).toBeUndefined();
+  expect(performance.now() - started).toBeLessThan(500);
+  // A hundred and thirty thousand lines overflowed `Math.max(...counts)`.
+  expect(readChronographCsv('900\n'.repeat(130000))?.columns[0]?.values).toHaveLength(130000);
+});

@@ -42,20 +42,25 @@ export function importGrtrace(source: string): ImportResult<MeasurementSeries> {
     const shot: Shot = {
       velocity,
       ...(pressure !== undefined && pressure > 0 ? { pressure: pressure * BAR } : {}),
-      label: decodeGrtString(String(trace['Designation'] ?? '')),
-      note: decodeGrtString(String(trace['Notes'] ?? '')),
+      label: decodeGrtString(text(trace['Designation'])),
+      note: decodeGrtString(text(trace['Notes'])),
     };
-    byCharge.set(charge, [...(byCharge.get(charge) ?? []), shot]);
+    // Appended in place: copying the list for every shot made a long recording quadratic (#32).
+    const shots = byCharge.get(charge);
+    if (shots) shots.push(shot);
+    else byCharge.set(charge, [shot]);
   });
   log.info('grtrace-units', 'GRTrace gives charges in grains and velocities in m/s (inferred from its recordings).');
-  const powder = decodeGrtString(String(config['Propellant'] ?? ''));
-  const projectile = decodeGrtString(String(config['Projectile'] ?? ''));
+  const powder = decodeGrtString(text(config['Propellant']));
+  const projectile = decodeGrtString(text(config['Projectile']));
+  // One note for every charge, built once: each charge building its own copy made memory quadratic.
+  const note = [projectile, powder, 'strain gauge (PressureTrace II)'].filter(Boolean).join(', ');
   const series: MeasurementSeries = {
-    title: `PressureTrace ${String(document['DateTime'] ?? '')}`.trim(),
+    title: `PressureTrace ${text(document['DateTime'])}`.trim(),
     showInReport: true,
     charges: [...byCharge.entries()].map(([grains, shots], index) => ({
       label: `Charge ${index + 1}`,
-      note: [projectile, powder, 'strain gauge (PressureTrace II)'].filter(Boolean).join(', '),
+      note,
       chargeMass: grains * GRAIN,
       showInReport: true,
       shots,
@@ -63,6 +68,11 @@ export function importGrtrace(source: string): ImportResult<MeasurementSeries> {
   };
   checkValue(series, MEASUREMENT_SERIES_SPEC, '', log);
   return log.result(series);
+}
+
+/** A text field: GRTrace writes strings, sometimes numbers; anything else is no text (`String()` of an object can throw). */
+function text(value: unknown): string {
+  return typeof value === 'string' ? value : typeof value === 'number' && Number.isFinite(value) ? String(value) : '';
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -15,6 +15,8 @@ export type FieldSpec =
   /** A finite number of 0 or more. */
   | 'nonNegative'
   | 'integer'
+  /** A whole number within bounds, both included. */
+  | { integerBetween: [number, number] }
   | { optional: FieldSpec }
   | { literal: string | number }
   | { object: Shape }
@@ -56,6 +58,10 @@ export function checkValue(value: unknown, spec: FieldSpec, path: string, log: I
     const valid = isPlainObject(value) && Object.values(value).every((item) => typeof item === 'string');
     return expect(valid, value, 'an object of strings', path, log);
   }
+  if ('integerBetween' in spec) {
+    const [low, high] = spec.integerBetween;
+    return expect(Number.isInteger(value) && (value as number) >= low && (value as number) <= high, value, `a whole number from ${low} to ${high}`, path, log);
+  }
   if ('literal' in spec) return expect(value === spec.literal, value, JSON.stringify(spec.literal), path, log);
   if ('arrayOf' in spec) {
     if (!Array.isArray(value)) return expect(false, value, 'a list', path, log);
@@ -88,7 +94,8 @@ function checkVariants(
 ): unknown {
   if (!isPlainObject(value)) return expect(false, value, 'an object', path, log);
   const tag = value[variants.field];
-  const shape = typeof tag === 'string' ? variants.shapes[tag] : undefined;
+  // Own keys only: `__proto__` or `constructor` would find an inherited value and skip every field check.
+  const shape = typeof tag === 'string' && Object.hasOwn(variants.shapes, tag) ? variants.shapes[tag] : undefined;
   if (shape === undefined) {
     const allowed = Object.keys(variants.shapes).map((name) => JSON.stringify(name)).join(', ');
     log.error('invalid-value', `Expected one of ${allowed}, found ${describe(tag)}.`, join(path, variants.field));

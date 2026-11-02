@@ -57,7 +57,8 @@ export function readAppendix(appendix: XmlElement, loadChargeMass: number, log: 
       if (note !== undefined) result.notes.push(note);
     } else if (child.name === 'gallery') {
       const path = `appendix/gallery[${++galleryIndex}]`;
-      result.pictures.push(...readGallery(child, path, result.unmapped, log));
+      // One at a time: spreading a hundred thousand pictures into `push` overflows its arguments (#32).
+      for (const picture of readGallery(child, path, result.unmapped, log)) result.pictures.push(picture);
     } else {
       log.warning('unknown-element', `Unknown appendix element <${child.name}> was ignored.`, 'appendix');
     }

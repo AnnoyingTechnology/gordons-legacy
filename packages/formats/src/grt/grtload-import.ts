@@ -14,6 +14,7 @@ import { decodeGrtString } from './percent-decoding.ts';
 import { readLoadProjectile } from './projectile-mapping.ts';
 import { readPropellant } from './propellant-mapping.ts';
 import { childNamed, childrenNamed, type XmlElement } from './xml.ts';
+import { MAXIMUM_LADDER_STEPS } from '../load/ladder.ts';
 
 export interface GrtLoadImportOptions {
   /** Name of the imported file, recorded in `Load.importedFrom`. */
@@ -79,7 +80,7 @@ export function importGrtLoad(source: string, options: GrtLoadImportOptions = {}
     mass: propellantFields.quantity('mc', 'mass', 'g'),
     temperature: propellantFields.quantity('pt', 'temperature', 'Cel'),
   };
-  const ladder = readLadder(propellantFields);
+  const ladder = readLadder(propellantFields, log);
   const barrel = readBarrel(gunFields, childNamed(input, 'gun'), log);
 
   const load: Load = {
@@ -182,11 +183,18 @@ function checkSeatingDepth(load: Load, projectileFields: GrtFields, log: IssueLo
   }
 }
 
-/** GRT disables the ladder when it has fewer than two steps. */
-function readLadder(fields: GrtFields): Ladder | undefined {
+/**
+ * GRT disables the ladder when it has fewer than two steps, and offers ten at most. A ladder outside that
+ * (a whole number of steps from 2 to 10, a positive step) is not one GRT makes: it is left out, said.
+ */
+function readLadder(fields: GrtFields, log: IssueLog): Ladder | undefined {
   const steps = fields.optionalNumber('laddercnt');
   const massStep = fields.optionalQuantity('laddermc', 'mass', 'g');
   if (steps === undefined || steps < 2 || massStep === undefined) return undefined;
+  if (!Number.isInteger(steps) || steps > MAXIMUM_LADDER_STEPS || !(massStep > 0)) {
+    log.warning('invalid-ladder', `The ladder (${steps} steps) is not one GRT makes and was left out.`, 'propellant/laddercnt');
+    return undefined;
+  }
   return { steps, massStep };
 }
 

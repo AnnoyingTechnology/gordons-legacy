@@ -175,7 +175,8 @@ export function formatNumber(value: number, decimals: number, locale = 'en'): st
 export function parseNumber(text: string): number | undefined {
   if (isAmbiguousNumber(text)) return undefined;
   const normalized = text.trim().replace(/\s/g, '').replace(',', '.');
-  if (!/^[-+]?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?$/.test(normalized)) return undefined;
+  // The fraction only after a point, or a long run of digits backtracks quadratically (as grt-number.ts).
+  if (!/^[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?$/.test(normalized)) return undefined;
   const value = Number(normalized);
   return Number.isFinite(value) ? value : undefined;
 }

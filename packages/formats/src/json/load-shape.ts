@@ -8,6 +8,7 @@ import type { MeasuredCharge, MeasurementSeries, Shot } from '../load/measuremen
 import type { Projectile, ProjectileBase } from '../load/projectile.ts';
 import type { GrtBurnModel, Propellant, PropellantCalibration } from '../load/propellant.ts';
 import type { FieldSpec, ShapeOf } from './shape.ts';
+import { MAXIMUM_LADDER_STEPS } from '../load/ladder.ts';
 
 /*
  * The shape of each part of a load document, mirroring the types in ../load/. `satisfies ShapeOf<T>`
@@ -202,7 +203,7 @@ const propellant = {
 
 const charge = { mass: 'positive', temperature: 'positive' } satisfies ShapeOf<Charge>;
 
-const ladder = { steps: 'integer', massStep: 'positive' } satisfies ShapeOf<Ladder>;
+const ladder = { steps: { integerBetween: [2, MAXIMUM_LADDER_STEPS] }, massStep: 'positive' } satisfies ShapeOf<Ladder>;
 
 const shot = {
   velocity: 'positive',
