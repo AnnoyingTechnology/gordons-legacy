@@ -119,6 +119,8 @@ describe('checking a crawl before it is published', () => {
     expect(printedMasses('6 lbs. 2 oz.').at(-1)).toBeCloseTo(2.77825, 5);
     // Wilson Combat's comma between the pounds and the ounces of one weight.
     expect(printedMasses('8 lbs, 15.4 oz').at(-1)).toBeCloseTo(8 * 0.45359237 + 15.4 * 0.45359237 / 16, 9);
+    // Bond Arms spell the ounce out.
+    expect(printedMasses('19 ounces')[0]).toBeCloseTo(19 * 0.45359237 / 16, 9);
     expect(printedMasses('705 g | 24.87 oz')[0]).toBeCloseTo(0.705, 12);
     // Schmeisser write three thousand two hundred and fifty grams as `3.250 g`; an English page would
     // mean three and a quarter kilograms by the same characters, so both readings count as agreement.

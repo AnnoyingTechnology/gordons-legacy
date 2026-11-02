@@ -85,8 +85,9 @@ export function printedFractions(text: string): number[] {
  */
 export function printedMasses(text: string): number[] {
   const ounce = units.POUND / 16;
-  const masses = [...text.matchAll(new RegExp(`${NUMBER}\\s*(kg|gr?\\b|oz|lbs?)`, 'gi'))].flatMap(([, number, unit]) => {
-    const kilograms = { kg: 1, g: units.GRAM, gr: units.GRAM, oz: ounce }[unit!.toLowerCase()] ?? units.POUND;
+  // Bond Arms spell the ounce out: `19 ounces`.
+  const masses = [...text.matchAll(new RegExp(`${NUMBER}\\s*(kg|gr?\\b|ounces?|oz|lbs?)`, 'gi'))].flatMap(([, number, unit]) => {
+    const kilograms = { kg: 1, g: units.GRAM, gr: units.GRAM, oz: ounce, ounce, ounces: ounce }[unit!.toLowerCase()] ?? units.POUND;
     return values(number!).map((figure) => figure * kilograms);
   });
   // Wilson Combat prints `8 lbs, 15.4 oz`: the comma joins the pounds and ounces of one weight.

@@ -17,7 +17,7 @@ deno run -A tools/data/firearms/<maker>.ts <output folder> [--limit 5]
 
 ## One maker, one module
 
-`glock.ts`, `ruger.ts`, `browning.ts`, `wilson-combat.ts`, `nosler.ts`, `daniel-defense.ts`, … — one module per maker, named after it. Each knows two things
+`glock.ts`, `ruger.ts`, `browning.ts`, `wilson-combat.ts`, `nosler.ts`, `daniel-defense.ts`, `bond-arms.ts`, … — one module per maker, named after it. Each knows two things
 and nothing else: which pages of that site hold guns, and how that maker prints a figure. A maker's
 module exports the functions its test reads the page with, so the test is an example of the page's
 shape rather than a mock.

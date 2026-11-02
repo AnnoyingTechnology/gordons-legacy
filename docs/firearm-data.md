@@ -240,9 +240,11 @@ is the order of least guesswork.
 | Nosler | 27 | Nine Model 21 and Model 48 pages, each a labelled table; one misprinted twist (`1.8`) costs its gun the twist only. Five prose-only pages give nothing. |
 | Daniel Defense | 41 | Every product page of the sitemap (the categories show their first page only, and `?p=2` is disallowed); a gun is a page whose table names the `Magazine` it ships with. The DELTA 5 PRO print barrel and twist in one cell (`24" 1:8"`), each quoted apart. |
 
-`check-corpus.ts` and `quoted-figures.ts`: 148 records, 0 problems. The checker now reads `8 lbs, 15.4 oz`
-as one weight. Still unread: Bond Arms, then the link crawls (Nighthawk, Seekins, Montana) and the three
-whose products have to be found.
+| Bond Arms | 11 | About 20 model pages. A derringer takes interchangeable barrels, so a caliber cell lists several chamberings (`.45 ACP, 9mm`), each one gun with the model's barrel and no weight, since the page doesn't say which one was weighed. The `.45LC/.410` barrels (most of the range) are a shotshell and a cartridge at once, and are left out. |
+
+`check-corpus.ts` and `quoted-figures.ts`: 159 records, 0 problems. The checker now reads `8 lbs, 15.4 oz`
+and `19 ounces` as one weight each. Still unread: the link crawls (Nighthawk, Seekins, Montana) and the
+three whose products have to be found.
 
 Where a maker writes a cartridge in a form no reloader uses (`9MM`, `45 ACP`), the extractor maps it to
 the conventional name **in a table, one entry per form**, and keeps the maker's own word in
