@@ -2,24 +2,20 @@
 
 Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)).
 
-## Current state
+## Current state (2026-11-02)
 
-- **Milestone:** M2 done, M3 in progress: the GRT Traditional engine reproduces GRT to machine precision (peak
-  pressure, muzzle velocity, barrel time within 10⁻¹⁴) on all 19 fixtures and all 67 maintainer loads,
-  every gas-leak type, jump to the lands and z2 recomputation included, with muzzle energy,
-  efficiency, spin, the 10 %-of-peak lead time (BLT), recoil and OBT: every result GRT reports. M2 is
-  complete; M3 (the app) is in progress.
-- **Code:** `packages/formats` imports `.grtload`, `.caliber`, `.projectile` and `.propellant` files into
-  the load format (SI units), and saves and reads JSON loads with field-by-field validation; 182 tests on
-  the CC0 corpus and five of the maintainer's loads. Imports are checked against the same specification as
-  saved loads. All
-  198 GRT files available import without errors. `packages/engine` runs GRT Traditional;
-  `packages/cli` simulates a load file. The app (Lit) is a load editor: open several `.grtload` or JSON
-  loads in tabs (also by drag and drop), edit the inputs in property tables grouped as in GRT, see the
-  simulated shot follow every keystroke, save as JSON; metric or imperial units; five languages;
-  open documents persist in `localStorage`; installable and usable offline (service worker).
-- **Docs:** [formats/json-v1.md](formats/json-v1.md) (load format), [formats/grtload.md](formats/grtload.md)
-  (GRT files), [development.md](development.md) (commands, pitfalls), `packages/formats/README.md`.
+- **Milestones:** M1 formats and M2 GRT Traditional done (GRT reproduced to machine precision, every
+  result GRT reports). M3 the app: in daily use (load editor, library, comparison, review, assistants,
+  Undo/Redo, five languages, offline, single-file copy). M4 data: data repository live; guns of 35 makers
+  in open PR #2; the GRT database import (#19) is another agent's. M5 GRT tools: all exist. M7 research
+  engine R1: offered as a labelled research engine.
+- **Validation:** chronograph study (velocity); a pressure study by #31's protocol reading four published
+  documents (`tools/validation/pressure/`, `docs/model/validation.md`). The default engine has read up to
+  22 % under published pressures on one powder model and 8 % over on another; the app's safety wording
+  says so. Bottleneck: powder models and bullet lengths, not documents.
+- **Tests:** 944 (Vitest), `tsc`, production build; CI deploys GitHub Pages from `main`.
+- **Docs:** `docs/PLAN.md` (plan), `docs/model/` (engines, validation, pressure sources), `docs/formats/`,
+  `docs/firearm-data.md`, `docs/ui-audit.md`, `docs/code-audit.md`, each package's README.
 
 ## Next steps
 
