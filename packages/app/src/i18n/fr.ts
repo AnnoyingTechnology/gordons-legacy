@@ -136,6 +136,7 @@ export const fr: Messages = {
   'sync.done': "Terminé : {taken} entrées nouvelles ou plus récentes reprises ; {unreadable} illisibles.",
   'sync.noCamera': "La caméra n’a pas pu être ouverte : ce navigateur l’a refusée ou n’en a pas.",
   'sync.notOurs': "Les codes lus ne sont pas un échange de cette application.",
+  'sync.tooLarge': "Trop de données pour des codes : plus de deux mille. Sauvegardez plutôt la bibliothèque dans un fichier.",
   'quantity.time': 'Temps',
   'quantity.spinRate': 'Rotation',
   'quantity.specificEnergy': 'Énergie massique',

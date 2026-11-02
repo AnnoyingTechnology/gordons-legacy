@@ -135,6 +135,7 @@ export const en = {
   'sync.done': "Done: {taken} entries new or newer taken; {unreadable} unreadable.",
   'sync.noCamera': "The camera could not be opened: this browser refused it or has none.",
   'sync.notOurs': "The codes read are not an exchange of this app.",
+  'sync.tooLarge': "Too much to show as codes: more than two thousand. Back the library up to a file instead.",
   'quantity.time': 'Time',
   'quantity.spinRate': 'Spin',
   'quantity.specificEnergy': 'Specific energy',

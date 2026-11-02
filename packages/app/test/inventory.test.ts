@@ -70,3 +70,18 @@ describe('the stock', () => {
     expect(restored.entries).toMatchObject([{ kind: 'primer', name: 'CCI 200', quantity: 900, lowStock: 100 }]);
   });
 });
+
+describe('a batch', () => {
+  it('is taken off the shelf all at once or not at all', async () => {
+    const storage = memoryStore<StockItem>();
+    const stock = new Inventory(storage);
+    await stock.ready;
+    const powder = await stock.save({ kind: 'powder', name: 'N140', quantity: 0.5 });
+    const bullets = await stock.save({ kind: 'projectile', name: 'SMK 168', quantity: 100 });
+    storage.putAll = async () => {
+      throw new Error('disk full');
+    };
+    await expect(stock.use([{ id: powder, amount: 0.1 }, { id: bullets, amount: 50 }])).rejects.toThrow('disk full');
+    expect(stock.entries.map((item) => item.quantity).sort()).toEqual([0.5, 100]);
+  });
+});

@@ -7,7 +7,8 @@ import type { UiContext } from './context.ts';
 /**
  * Records a batch of a load (issues #10, #21): how many rounds, and what came off the shelf. The powder
  * and projectile named like the load's are ticked with what the batch used; primers and cases, which a
- * load does not name, are ticked by hand at one a round. Fires `use-stock` with the uses, and `close`.
+ * load does not name, are ticked by hand at one a round. Fires `use-stock` with the uses, and `close`;
+ * the shell sets `busy` while it writes, and closes the dialog only once the write succeeded.
  */
 export class BatchDialog extends LitElement {
   static override properties = {
@@ -17,6 +18,7 @@ export class BatchDialog extends LitElement {
     context: { attribute: false },
     roundsText: { state: true },
     ticked: { state: true },
+    busy: { attribute: false },
   };
 
   declare batch: { name: string; load: Load } | undefined;
@@ -25,6 +27,8 @@ export class BatchDialog extends LitElement {
   declare roundsText: string;
   /** The ticked items, by id. */
   declare ticked: Set<string>;
+  /** True while the shell takes the batch off the shelf: confirming twice would take it twice. */
+  declare busy: boolean;
 
   constructor() {
     super();
@@ -32,6 +36,7 @@ export class BatchDialog extends LitElement {
     this.items = [];
     this.roundsText = '50';
     this.ticked = new Set();
+    this.busy = false;
   }
 
   protected override createRenderRoot(): HTMLElement {
@@ -89,7 +94,7 @@ export class BatchDialog extends LitElement {
           })}
         </fieldset>
         <div class="dialog-actions">
-          <button ?disabled=${this.rounds() === undefined || uses.size === 0} @click=${this.confirm}>${t('stock.confirm')}</button>
+          <button ?disabled=${this.busy || this.rounds() === undefined || uses.size === 0} @click=${this.confirm}>${t('stock.confirm')}</button>
           <form method="dialog"><button>${t('app.close')}</button></form>
         </div>
       </dialog>
@@ -103,6 +108,7 @@ export class BatchDialog extends LitElement {
   }
 
   private confirm = (): void => {
+    if (this.busy) return;
     this.dispatchEvent(new CustomEvent('use-stock', { detail: this.uses() }));
   };
 }

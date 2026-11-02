@@ -12,6 +12,8 @@ const STORES: StoreName[] = ['library', 'components', 'data', 'firearms', 'inven
 export interface RecordStore<T extends { id: string }> {
   list(): Promise<T[]>;
   put(record: T): Promise<void>;
+  /** Puts several records in one transaction: all of them are written, or none. */
+  putAll(records: readonly T[]): Promise<void>;
   remove(id: string): Promise<void>;
 }
 
@@ -73,6 +75,11 @@ export function indexedDbStore<T extends { id: string }>(name: StoreName, factor
   return {
     list: async () => keyedRecords<T>(await run('readonly', (store) => store.getAll())),
     put: async (record) => void (await run('readwrite', (store) => store.put(record))),
+    putAll: async (records) => {
+      if (records.length === 0) return;
+      // One transaction: the requests share it, and an abort undoes all of them.
+      await run('readwrite', (store) => records.map((record) => store.put(record)).at(-1)!);
+    },
     remove: async (id) => void (await run('readwrite', (store) => store.delete(id))),
   };
 }
@@ -83,6 +90,7 @@ export function memoryStore<T extends { id: string }>(): RecordStore<T> {
   return {
     list: async () => [...records.values()].map((record) => structuredClone(record)),
     put: async (record) => void records.set(record.id, structuredClone(record)),
+    putAll: async (list) => void list.forEach((record) => records.set(record.id, structuredClone(record))),
     remove: async (id) => void records.delete(id),
   };
 }

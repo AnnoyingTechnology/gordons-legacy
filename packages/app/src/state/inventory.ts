@@ -71,9 +71,11 @@ export class Inventory {
    */
   async receive(item: StockItem): Promise<boolean> {
     const [checkedItem] = checked(item);
-    if (!checkedItem) return false;
+    // Dates are compared as instants, and one that isn't a date is refused (library.ts, `receive`).
+    const time = checkedItem ? Date.parse(checkedItem.updatedAt) : Number.NaN;
+    if (!checkedItem || !Number.isFinite(time) || !(typeof item.updatedAt === 'string' && Number.isFinite(Date.parse(item.updatedAt)))) return false;
     const local = this.entries.find((entry) => entry.id === checkedItem.id);
-    if (local && local.updatedAt >= checkedItem.updatedAt) return false;
+    if (local && Date.parse(local.updatedAt) >= time) return false;
     await this.storage.put(checkedItem);
     this.entries = [...this.entries.filter((entry) => entry.id !== checkedItem.id), checkedItem];
     this.changed();
@@ -91,11 +93,15 @@ export class Inventory {
    * batch used was miscounted, and zero is the truth that remains.
    */
   async use(uses: readonly Use[]): Promise<void> {
-    for (const { id, amount } of uses) {
+    const updatedAt = this.now().toISOString();
+    const changed = uses.flatMap(({ id, amount }) => {
       const item = this.entries.find((entry) => entry.id === id);
-      if (!item || !(amount > 0)) continue;
-      await this.save({ ...item, quantity: Math.max(0, item.quantity - amount) });
-    }
+      return item && amount > 0 ? [{ ...item, quantity: Math.max(0, item.quantity - amount), updatedAt }] : [];
+    });
+    // All at once or not at all: a batch half taken off the shelf would be taken off again on a retry.
+    await this.storage.putAll(changed);
+    this.entries = this.entries.map((entry) => changed.find((item) => item.id === entry.id) ?? entry);
+    this.changed();
   }
 
   private changed(): void {
@@ -131,6 +137,7 @@ export function batchUses(load: Load, rounds: number, items: readonly StockItem[
 
 /** A stored item, or nothing: an entry written by an older version or damaged on disk is checked (#32). */
 function checked(entry: StockItem): StockItem[] {
+  if (typeof entry !== 'object' || entry === null || typeof entry.id !== 'string' || entry.id === '') return [];
   const kind = STOCK_KINDS.includes(entry.kind) ? entry.kind : undefined;
   if (kind === undefined || typeof entry.name !== 'string' || !Number.isFinite(entry.quantity)) return [];
   const lowStock = typeof entry.lowStock === 'number' && Number.isFinite(entry.lowStock) ? entry.lowStock : undefined;

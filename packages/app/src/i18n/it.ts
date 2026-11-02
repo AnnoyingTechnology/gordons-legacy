@@ -136,6 +136,7 @@ export const it: Messages = {
   'sync.done': "Fatto: {taken} voci nuove o più recenti acquisite; {unreadable} illeggibili.",
   'sync.noCamera': "Impossibile aprire la fotocamera: questo browser l’ha rifiutata o non ne ha.",
   'sync.notOurs': "I codici letti non sono uno scambio di questa app.",
+  'sync.tooLarge': "Troppo da mostrare in codici: più di duemila. Salvate piuttosto la biblioteca in un file.",
   'quantity.time': 'Tempo',
   'quantity.spinRate': 'Rotazione',
   'quantity.specificEnergy': 'Energia specifica',

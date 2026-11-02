@@ -1,4 +1,5 @@
 import { html, LitElement, nothing } from 'lit';
+import { repeat } from 'lit/directives/repeat.js';
 import { icon } from '../icons/icons.ts';
 import { lowStock, STOCK_KINDS, type StockItem, type StockKind } from '../state/inventory.ts';
 import { displayUnit, formatNumber, parseNumber } from '../units/units.ts';
@@ -6,7 +7,8 @@ import type { UiContext } from './context.ts';
 
 /**
  * `<gl-stock-view>`: the stock on the shelf (issues #10, #21), in the library view below the guns. Every
- * cell is edited in place and saved when it is left. Fires `save-stock` with an item (no `id` for a new
+ * cell is edited in place and saved when it is left. Rows are keyed by item, so that a row moving in the
+ * order after a rename keeps its own inputs, focus included. Fires `save-stock` with an item (no `id` for a new
  * one) and `remove-stock` with an id; the shell keeps the stock.
  */
 export class StockView extends LitElement {
@@ -47,7 +49,7 @@ export class StockView extends LitElement {
                 <th>${t('stock.kind')}</th><th>${t('field.name')}</th><th class="number">${t('stock.quantity')}</th>
                 <th class="number">${t('stock.lowLevel')}</th><td></td>
               </tr></thead>
-              <tbody>${sorted.map((item) => this.renderRow(item, low.includes(item)))}</tbody>
+              <tbody>${repeat(sorted, (item) => item.id, (item) => this.renderRow(item, low.includes(item)))}</tbody>
             </table></div>`}
       </section>
     `;

@@ -136,6 +136,7 @@ export const de: Messages = {
   'sync.done': "Fertig: {taken} neue oder neuere Einträge übernommen; {unreadable} unlesbar.",
   'sync.noCamera': "Die Kamera ließ sich nicht öffnen: Dieser Browser hat sie verweigert oder hat keine.",
   'sync.notOurs': "Die gelesenen Codes sind kein Austausch dieser App.",
+  'sync.tooLarge': "Zu viel für Codes: mehr als zweitausend. Sichern Sie die Bibliothek stattdessen in eine Datei.",
   'quantity.time': 'Zeit',
   'quantity.spinRate': 'Drehzahl',
   'quantity.specificEnergy': 'Spezifische Energie',

@@ -3,7 +3,7 @@ import qrcode from 'qrcode-generator';
 import type { Inventory } from '../state/inventory.ts';
 import type { Library } from '../state/library.ts';
 import { decodeQr, nativeQrDetector } from '../sync/qr-decoder.ts';
-import { FrameCollector, framesOf } from '../sync/qr-frames.ts';
+import { FrameCollector, framesOf, MAXIMUM_FRAMES } from '../sync/qr-frames.ts';
 import { encodeSync, receiveSync, type SyncResult } from '../sync/sync-payload.ts';
 import type { UiContext } from './context.ts';
 
@@ -49,6 +49,8 @@ export class SyncDialog extends LitElement {
   private timer: ReturnType<typeof setInterval> | undefined;
   private stream: MediaStream | undefined;
   private collector = new FrameCollector();
+  /** Counts the starts and stops: an operation still pending when a newer one began gives up. */
+  private generation = 0;
 
   constructor() {
     super();
@@ -113,19 +115,26 @@ export class SyncDialog extends LitElement {
 
   private async start(mode: Mode): Promise<void> {
     this.stop();
+    const generation = this.generation;
     this.mode = mode;
     this.result = undefined;
     this.problem = undefined;
     await this.updateComplete;
-    if (mode === 'send') await this.send();
-    else await this.receive();
+    if (generation !== this.generation) return;
+    if (mode === 'send') await this.send(generation);
+    else await this.receive(generation);
   }
 
   /** Shows the exchange as a loop of QR frames. */
-  private async send(): Promise<void> {
+  private async send(generation: number): Promise<void> {
     const text = await encodeSync(this.library.entries, this.inventory.entries);
+    if (generation !== this.generation) return;
     this.frames = framesOf(text, crypto.randomUUID().slice(0, 8));
     this.frameCount = this.frames.length;
+    if (this.frames.length > MAXIMUM_FRAMES) {
+      this.problem = 'sync.tooLarge';
+      return;
+    }
     this.shown = 0;
     const draw = () => {
       const canvas = this.querySelector<HTMLCanvasElement>('.sync-code');
@@ -150,19 +159,33 @@ export class SyncDialog extends LitElement {
   }
 
   /** Reads frames from the camera until the exchange is whole, then merges it. */
-  private async receive(): Promise<void> {
+  private async receive(generation: number): Promise<void> {
     this.collector = new FrameCollector();
     this.progress = this.collector.progress;
+    let stream: MediaStream;
     try {
-      this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
     } catch {
-      this.problem = 'sync.noCamera';
+      if (generation === this.generation) this.problem = 'sync.noCamera';
       return;
     }
+    // Closed or switched while the browser was asking for the camera: let it go at once.
+    if (generation !== this.generation) {
+      for (const track of stream.getTracks()) track.stop();
+      return;
+    }
+    this.stream = stream;
     const video = this.querySelector<HTMLVideoElement>('.sync-camera');
-    if (!video) return;
-    video.srcObject = this.stream;
-    await video.play();
+    try {
+      if (!video) throw new Error('no video element');
+      video.srcObject = stream;
+      await video.play();
+    } catch {
+      this.stop();
+      if (generation === this.generation - 1) this.problem = 'sync.noCamera';
+      return;
+    }
+    if (generation !== this.generation) return;
     const detector = nativeQrDetector();
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d', { willReadFrequently: true });
@@ -190,12 +213,15 @@ export class SyncDialog extends LitElement {
     const whole = this.collector.text;
     if (whole === undefined) return;
     this.stop();
+    const generation = this.generation;
     const result = await receiveSync(whole, this.library, this.inventory);
+    if (generation !== this.generation) return;
     if (result) this.result = result;
     else this.problem = 'sync.notOurs';
   }
 
   private stop(): void {
+    this.generation++;
     if (this.timer !== undefined) clearInterval(this.timer);
     this.timer = undefined;
     for (const track of this.stream?.getTracks() ?? []) track.stop();

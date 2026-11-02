@@ -136,6 +136,7 @@ export const es: Messages = {
   'sync.done': "Hecho: {taken} entradas nuevas o más recientes incorporadas; {unreadable} ilegibles.",
   'sync.noCamera': "No se pudo abrir la cámara: este navegador la rechazó o no tiene.",
   'sync.notOurs': "Los códigos leídos no son un intercambio de esta aplicación.",
+  'sync.tooLarge': "Demasiado para mostrarlo en códigos: más de dos mil. Haga mejor una copia de la biblioteca en un archivo.",
   'quantity.time': 'Tiempo',
   'quantity.spinRate': 'Rotación',
   'quantity.specificEnergy': 'Energía específica',

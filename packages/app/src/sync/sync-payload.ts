@@ -15,6 +15,12 @@ import type { Library, LibraryEntry } from '../state/library.ts';
 export const SYNC_FORMAT = 'gordons-legacy.sync';
 export const SYNC_VERSION = 1;
 
+/**
+ * The most an exchange may decompress to, bytes. A few kB compress to the frames a camera reads, and a
+ * crafted few kB can decompress to gigabytes: reading stops here instead of filling the tab's memory.
+ */
+const MAXIMUM_DECOMPRESSED = 20 * 1024 * 1024;
+
 interface SyncDocument {
   format: typeof SYNC_FORMAT;
   version: typeof SYNC_VERSION;
@@ -42,25 +48,36 @@ export interface SyncResult {
 export async function receiveSync(text: string, library: Library, inventory: Inventory): Promise<SyncResult | undefined> {
   let document: unknown;
   try {
-    document = JSON.parse(new TextDecoder().decode(await transform(fromBase64url(text), new DecompressionStream('deflate-raw'))));
+    document = JSON.parse(new TextDecoder().decode(await decompress(fromBase64url(text))));
   } catch {
     return undefined;
   }
   if (!isSyncDocument(document)) return undefined;
   let taken = 0;
   let unreadable = 0;
+  // Each entry on its own: one that can't be read or written is counted, and the rest still come in.
   for (const item of document.stock) {
-    if (await inventory.receive(item)) taken++;
+    try {
+      if (await inventory.receive(item)) taken++;
+    } catch {
+      unreadable++;
+    }
   }
-  for (const entry of document.loads) {
-    const parsed = parseLoad(JSON.stringify(entry.load));
-    if (!parsed.ok || typeof entry.id !== 'string' || typeof entry.name !== 'string' || typeof entry.updatedAt !== 'string') {
+  for (const entry of document.loads as unknown[]) {
+    const fields = typeof entry === 'object' && entry !== null ? (entry as Record<string, unknown>) : {};
+    const parsed = parseLoad(JSON.stringify(fields['load'] ?? null));
+    const { id, name, updatedAt } = fields;
+    if (!parsed.ok || typeof id !== 'string' || id === '' || typeof name !== 'string' || typeof updatedAt !== 'string') {
       unreadable++;
       continue;
     }
-    const local = library.get(entry.id);
-    const load = local ? withPhotosOf(parsed.value, local.load) : parsed.value;
-    if (await library.receive({ id: entry.id, name: entry.name, updatedAt: entry.updatedAt, load })) taken++;
+    try {
+      const local = library.get(id);
+      const load = local ? withPhotosOf(parsed.value, local.load) : parsed.value;
+      if (await library.receive({ id, name, updatedAt, load })) taken++;
+    } catch {
+      unreadable++;
+    }
   }
   return { taken, unreadable };
 }
@@ -86,6 +103,30 @@ function isSyncDocument(value: unknown): value is SyncDocument {
     typeof document === 'object' && document !== null && document.format === SYNC_FORMAT && document.version === SYNC_VERSION &&
     Array.isArray(document.stock) && Array.isArray(document.loads)
   );
+}
+
+/** Inflates, stopping at `MAXIMUM_DECOMPRESSED`. */
+async function decompress(bytes: Uint8Array): Promise<Uint8Array> {
+  const reader = new Blob([bytes as BlobPart]).stream().pipeThrough(new DecompressionStream('deflate-raw')).getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.length;
+    if (total > MAXIMUM_DECOMPRESSED) {
+      await reader.cancel();
+      throw new RangeError('exchange too large');
+    }
+    chunks.push(value);
+  }
+  const output = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    output.set(chunk, offset);
+    offset += chunk.length;
+  }
+  return output;
 }
 
 async function transform(bytes: Uint8Array, stream: CompressionStream | DecompressionStream): Promise<Uint8Array> {

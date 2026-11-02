@@ -12,6 +12,12 @@ const PREFIX = 'GL1';
 /** Characters of the exchange per frame: small enough for a QR code a phone reads from a screen. */
 export const FRAME_TEXT = 300;
 
+/**
+ * The most frames an exchange may take: 600 kB of text, a quarter of an hour of codes. A code read from
+ * the camera can claim anything; a count beyond this is not ours and must not decide an allocation.
+ */
+export const MAXIMUM_FRAMES = 2000;
+
 export function framesOf(text: string, exchange: string, size = FRAME_TEXT): string[] {
   const count = Math.max(1, Math.ceil(text.length / size));
   return Array.from({ length: count }, (_, index) => `${PREFIX} ${exchange} ${index} ${count} ${text.slice(index * size, (index + 1) * size)}`);
@@ -22,17 +28,24 @@ export class FrameCollector {
   private exchange: string | undefined;
   private parts: Array<string | undefined> = [];
 
-  /** Adds a read frame; anything else read by the camera is ignored. A new exchange starts over. */
+  /**
+   * Adds a read frame; anything else read by the camera is ignored. A new exchange starts over; a frame
+   * of the current exchange that claims another count is ignored rather than allowed to throw away what
+   * was read.
+   */
   add(frame: string): void {
-    const match = /^GL1 (\S+) (\d+) (\d+) (.*)$/s.exec(frame);
+    const match = /^GL1 (\S+) (\d{1,6}) (\d{1,6}) (.*)$/s.exec(frame);
     if (!match) return;
-    const [, exchange, index, count, text] = match;
-    if (exchange !== this.exchange || Number(count) !== this.parts.length) {
+    const [, exchange, indexText, countText, text] = match;
+    const index = Number(indexText);
+    const count = Number(countText);
+    if (count < 1 || count > MAXIMUM_FRAMES || index >= count || text!.length > FRAME_TEXT) return;
+    if (exchange !== this.exchange) {
       this.exchange = exchange;
-      this.parts = new Array<string | undefined>(Number(count)).fill(undefined);
+      this.parts = new Array<string | undefined>(count).fill(undefined);
     }
-    const position = Number(index);
-    if (position < this.parts.length) this.parts[position] = text;
+    if (count !== this.parts.length) return;
+    this.parts[index] = text;
   }
 
   /** How many frames of the current exchange are read, out of how many. */

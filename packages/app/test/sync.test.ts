@@ -100,3 +100,53 @@ describe('photos', () => {
     expect(kept.shotGroups?.[0]?.picture).toEqual({ index: 0, metresPerPixel: 0.001 });
   });
 });
+
+describe('what the camera may read', () => {
+  it('cannot make the collector allocate for a count beyond any exchange of ours', () => {
+    const collector = new FrameCollector();
+    collector.add('GL1 x 0 4294967296 A');
+    collector.add('GL1 x 0 999999 A');
+    expect(collector.progress).toEqual({ read: 0, count: 0 });
+  });
+
+  it('keeps what was read when a frame of the same exchange claims another count', () => {
+    const collector = new FrameCollector();
+    collector.add('GL1 a 0 2 A');
+    collector.add('GL1 a 2 3 X');
+    collector.add('GL1 a 1 2 B');
+    expect(collector.text).toBe('AB');
+  });
+
+  it('refuses an exchange that decompresses to more than it should', async () => {
+    const { library, inventory } = await side();
+    // A few kB that inflate to 40 MB of spaces.
+    const bomb = new Uint8Array(await new Response(new Blob([new Uint8Array(40 * 1024 * 1024).fill(32)]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer());
+    let binary = '';
+    for (const byte of bomb) binary += String.fromCharCode(byte);
+    const text = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    expect(await receiveSync(text, library, inventory)).toBeUndefined();
+  });
+
+  it('counts an entry that is not one, takes the rest, and refuses a date that is not a date', async () => {
+    const { library, inventory } = await side();
+    const json = JSON.stringify({
+      format: 'gordons-legacy.sync',
+      version: 1,
+      stock: [null, { id: 'p', kind: 'primer', name: 'CCI', quantity: 10, updatedAt: 'zzz' }, { id: 'q', kind: 'primer', name: 'Fed', quantity: 10, updatedAt: '2026-11-02T00:00:00.000Z' }],
+      loads: [null, { id: 'l', name: 'L', updatedAt: '2026-11-02T00:00:00.000Z', load: 'not a load' }],
+    });
+    const compressed = new Uint8Array(await new Response(new Blob([json]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer());
+    let binary = '';
+    for (const byte of compressed) binary += String.fromCharCode(byte);
+    const text = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    expect(await receiveSync(text, library, inventory)).toEqual({ taken: 1, unreadable: 2 });
+    expect(inventory.entries.map((item) => item.id)).toEqual(['q']);
+  });
+
+  it('compares dates as instants, not as text', async () => {
+    const { library } = await side();
+    await library.receive({ id: 'l', name: 'Old', load, updatedAt: '2026-11-02T10:00:00Z' });
+    expect(await library.receive({ id: 'l', name: 'New', load, updatedAt: '2026-11-02T10:00:00.001Z' })).toBe(true);
+    expect(library.get('l')!.name).toBe('New');
+  });
+});

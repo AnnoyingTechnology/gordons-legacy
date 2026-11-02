@@ -45,8 +45,11 @@ export class Library {
    * the same id only when it is newer. Returns whether it was taken.
    */
   async receive(entry: LibraryEntry): Promise<boolean> {
+    // Dates are compared as instants: `…:00Z` and `…:00.001Z` don't sort as text, and a date that isn't one is refused.
+    const time = Date.parse(entry.updatedAt);
+    if (!Number.isFinite(time)) return false;
     const local = this.get(entry.id);
-    if (local && local.updatedAt >= entry.updatedAt) return false;
+    if (local && Date.parse(local.updatedAt) >= time) return false;
     await this.storage.put(entry);
     this.entries = [...this.entries.filter((candidate) => candidate.id !== entry.id), entry];
     this.changed();
