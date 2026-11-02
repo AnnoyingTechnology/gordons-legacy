@@ -29,7 +29,11 @@ export class ShortcutsDialog extends LitElement {
           <tr><th><kbd>Alt/Option + Shift + N</kbd></th><td>${t('documents.new')}</td></tr>
           <tr><th><kbd>Ctrl/Cmd + S</kbd></th><td>${t('toolbar.save')}</td></tr>
           <tr><th><kbd>Alt/Option + Shift + W</kbd></th><td>${t('shortcuts.close')}</td></tr>
+          <tr><th><kbd>Alt/Option + Shift + T</kbd></th><td>${t('shortcuts.reopen')}</td></tr>
+          <tr><th><kbd>Ctrl/Cmd + Z</kbd></th><td>${t('toolbar.undo')}</td></tr>
+          <tr><th><kbd>Ctrl/Cmd + Shift + Z</kbd>, <kbd>Ctrl + Y</kbd></th><td>${t('toolbar.redo')}</td></tr>
         </tbody></table>
+        <p>${t('shortcuts.undoField')}</p>
         <p>${t('shortcuts.tabs')}</p>
         <form method="dialog"><button>${t('app.close')}</button></form>
       </dialog>

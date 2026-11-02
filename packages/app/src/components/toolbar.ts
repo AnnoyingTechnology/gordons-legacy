@@ -12,6 +12,11 @@ import type { UiContext } from './context.ts';
 export interface ToolbarState {
   /** Whether a load is open (Save, Export and Print need one). */
   hasActiveLoad: boolean;
+  /** Whether the active load has a change to undo, or an undone one to redo. */
+  canUndo: boolean;
+  canRedo: boolean;
+  /** Whether a closed load can be reopened. */
+  canReopen: boolean;
   /** How many loads are open (Compare needs two). */
   openLoads: number;
   view: 'editor' | 'compare' | 'library';
@@ -28,6 +33,9 @@ export interface ToolbarActions {
   openFiles: (event: Event) => void;
   save: () => void;
   exportFile: () => void;
+  undo: () => void;
+  redo: () => void;
+  reopen: () => void;
   toggleView: (view: 'compare' | 'library') => void;
   setUnits: (system: UnitSystem) => void;
   customizeUnits: () => void;
@@ -62,6 +70,11 @@ export function toolbar(state: ToolbarState, actions: ToolbarActions, context: U
           ${icon('export')}<span>${t('toolbar.export')}</span>
         </button>
         <button class="tool" ?disabled=${!state.hasActiveLoad} @click=${() => window.print()}>${icon('print')}<span>${t('toolbar.print')}</span></button>
+      </div>
+      <div class="tool-group">
+        <button class="tool" ?disabled=${!state.canUndo} title=${t('toolbar.undoHelp')} @click=${actions.undo}>${icon('undo')}<span>${t('toolbar.undo')}</span></button>
+        <button class="tool" ?disabled=${!state.canRedo} title=${t('toolbar.redoHelp')} @click=${actions.redo}>${icon('redo')}<span>${t('toolbar.redo')}</span></button>
+        <button class="tool" ?disabled=${!state.canReopen} title=${t('toolbar.reopenHelp')} @click=${actions.reopen}>${icon('reopen')}<span>${t('toolbar.reopen')}</span></button>
       </div>
       <div class="tool-group">
         <button class="tool" aria-pressed=${pressed(state.view === 'library')} @click=${() => actions.toggleView('library')}>

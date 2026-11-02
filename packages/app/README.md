@@ -82,7 +82,8 @@ src/
                         the example load of a first visit (example-load.ts); validated document creation
                         (new-load.ts), cartridge preselection (cartridge-choice.ts), independent input copies
                         (load-copy.ts), shortcut matching
-                        (keyboard-shortcuts.ts), ordered snapshot saves (document-saving.ts)
+                        (keyboard-shortcuts.ts), ordered snapshot saves (document-saving.ts), each load's
+                        Undo/Redo steps (document-history.ts)
   data/                 community-components.json: the CC0 community components bundled for a first
                         offline visit (tools/data/build-community.ts); online, the app takes them from
                         the data repository through @gordons-legacy/data
@@ -108,7 +109,8 @@ case/barrel fields, with technical details expanded when incomplete. Manually en
 a case-variant change; missing required inputs still prevent creation. The load name heads the results column; click it to rename, or press F2 on its tab.
 Enter confirms, Escape cancels, and leaving the field commits. Cloning stays under New, without a
 separate document-actions row. The Shortcuts button explains local tab keys and enables application shortcuts. Edited tabs ask before
-closing. See [the UI audit](../../docs/ui-audit.md) for coverage and remaining work.
+closing; a closed load can be reopened, and every change to a load can be undone (toolbar, or
+Ctrl/Cmd+Z outside text fields once shortcuts are enabled). See [the UI audit](../../docs/ui-audit.md) for coverage and remaining work.
 
 Local writes are reported as saved only after IndexedDB commits the transaction. Backup restore
 accepts supported v1/v2 envelopes, adds records independently, and reports failed entries/writes

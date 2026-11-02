@@ -39,7 +39,7 @@ import './new-load-dialog.ts';
 import './shortcuts-dialog.ts';
 import { cloneSources } from '../state/load-copy.ts';
 import type { DocumentHeading } from './document-heading.ts';
-import { documentShortcut } from '../state/keyboard-shortcuts.ts';
+import { documentShortcut, isTextEntry } from '../state/keyboard-shortcuts.ts';
 import { documentSaver } from '../state/document-saving.ts';
 
 /**
@@ -153,6 +153,9 @@ export class AppShell extends LitElement {
       ${toolbar(
         {
           hasActiveLoad: active !== undefined,
+          canUndo: active !== undefined && this.store.canUndo(active.id),
+          canRedo: active !== undefined && this.store.canRedo(active.id),
+          canReopen: this.store.canReopen,
           openLoads: this.store.documents.length,
           view: this.view,
           converterOpen: this.converterOpen,
@@ -165,6 +168,9 @@ export class AppShell extends LitElement {
           openFiles: this.openFromInput,
           save: () => active && void this.saveToLibrary(active.id),
           exportFile: () => active && void this.exportFile(active.id),
+          undo: () => active && this.store.undo(active.id),
+          redo: () => active && this.store.redo(active.id),
+          reopen: () => this.reopenClosed(),
           toggleView: (view) => this.toggleView(view),
           setUnits: (system) => this.setUnits(system),
           customizeUnits: () => (this.unitsOpen = true),
@@ -354,7 +360,7 @@ export class AppShell extends LitElement {
     const result = extension === '.propellant' ? importGrtPropellant(text) : importGrtProjectiles(text);
     if (!result.ok) return result.issues.filter((issue) => issue.severity === 'error').map((issue) => issue.message);
     if (!Array.isArray(result.value)) {
-      this.store.update(active.id, withPropellant(active.load, result.value));
+      this.store.update(active.id, withPropellant(active.load, result.value), false);
     } else if (result.value.length === 1) {
       this.useProjectile(result.value[0]);
     } else {
@@ -383,7 +389,7 @@ export class AppShell extends LitElement {
     if (!active) return [this.context.t('components.noLoad')];
     const result = importGrtrace(text);
     if (!result.ok) return result.issues.filter((issue) => issue.severity === 'error').map((issue) => issue.message);
-    this.store.update(active.id, { ...active.load, measurements: [...active.load.measurements, result.value] });
+    this.store.update(active.id, { ...active.load, measurements: [...active.load.measurements, result.value] }, false);
     return [];
   }
 
@@ -398,13 +404,13 @@ export class AppShell extends LitElement {
 
   private addMeasurements(series: MeasurementSeries): void {
     const active = this.store.active;
-    if (active) this.store.update(active.id, { ...active.load, measurements: [...active.load.measurements, series] });
+    if (active) this.store.update(active.id, { ...active.load, measurements: [...active.load.measurements, series] }, false);
     this.chronograph = undefined;
   }
 
   private useProjectile(projectile: Projectile | undefined): void {
     const active = this.store.active;
-    if (active && projectile) this.store.update(active.id, withProjectile(active.load, projectile));
+    if (active && projectile) this.store.update(active.id, withProjectile(active.load, projectile), false);
   }
 
   private openFromInput = (event: Event) => {
@@ -489,14 +495,25 @@ export class AppShell extends LitElement {
 
   private handleShortcut = (event: KeyboardEvent): void => {
     if (this.querySelector('dialog[open]')) return;
-    const action = documentShortcut(event, this.settings.keyboardShortcuts);
+    const action = documentShortcut(event, this.settings.keyboardShortcuts, isTextEntry(event.target));
     const active = this.store.active;
-    if (!action || (action !== 'new' && !active)) return;
+    if (!action || (action !== 'new' && action !== 'reopen' && !active)) return;
     event.preventDefault();
     if (action === 'new') this.newLoadOpen = true;
+    else if (action === 'reopen') this.reopenClosed();
     else if (action === 'close') this.requestClose(active!.id);
+    else if (action === 'undo') this.store.undo(active!.id);
+    else if (action === 'redo') this.store.redo(active!.id);
     else void this.saveToLibrary(active!.id);
   };
+
+  /** Brings back the last closed load, in the editor. */
+  private reopenClosed(): void {
+    if (!this.store.canReopen) return;
+    this.store.reopenClosed();
+    this.view = 'editor';
+    void this.updateComplete.then(() => this.querySelector<HTMLButtonElement>('.tab.active .tab-name')?.focus());
+  }
 
   /** Keyboard commands do not blur the name input before saving or asking whether to discard it. */
   private commitName(id: number): void {
@@ -565,7 +582,7 @@ export class AppShell extends LitElement {
   /** The gun the user picked: the load is fired in it, under its name. */
   private useFirearm(firearm: Firearm): void {
     const active = this.store.active;
-    if (active) this.store.update(active.id, withFirearm(active.load, firearm));
+    if (active) this.store.update(active.id, withFirearm(active.load, firearm), false);
   }
 
   private async keepFirearm(firearm: Firearm | undefined, id: string | undefined): Promise<void> {

@@ -8,7 +8,7 @@ export type IconName =
   | 'cartridge' | 'projectile' | 'propellant' | 'barrel' | 'ladder' | 'measurement'
   | 'compare' | 'chart' | 'table' | 'harmonics'
   | 'temperature' | 'calculator' | 'language' | 'units' | 'pressure' | 'velocity'
-  | 'database' | 'search' | 'undo' | 'redo'
+  | 'database' | 'search' | 'undo' | 'redo' | 'reopen'
   | 'energy' | 'recoil' | 'sound' | 'cold' | 'hot'
   | 'charge' | 'notes' | 'target';
 
@@ -64,6 +64,8 @@ export const ICONS: Record<IconName, SVGTemplateResult> = {
   search: svg`<circle cx="10.5" cy="10.5" r="7"/><path d="M16 16l5 5"/>`,
   undo: svg`<path d="M9 14L4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>`,
   redo: svg`<path d="M15 14l5-5-5-5M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/>`,
+  // A tab (folder-like top edge) with an arrow coming back up into it.
+  reopen: svg`<path d="M3 20V8h5l2-3h5l2 3h4v12z"/><path d="M12 17v-6M9 13.5l3-3 3 3"/>`,
   // Lightning bolt: energy.
   energy: svg`<path d="M13 2.5L5 13.5h6l-1 8 8-11h-6z"/>`,
   // Arrow pushed back against a wall: the gun moving into the shoulder.

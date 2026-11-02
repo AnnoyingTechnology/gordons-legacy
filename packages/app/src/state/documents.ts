@@ -1,4 +1,5 @@
 import { importGrtLoad, parseLoad, serializeLoad, type ImportIssue, type Load } from '@gordons-legacy/formats';
+import { DocumentHistory } from './document-history.ts';
 
 /** A load open in a tab. */
 export interface OpenDocument {
@@ -16,6 +17,15 @@ export interface OpenDocument {
 
 const STORAGE_KEY = 'gordons-legacy.documents';
 
+/** Closed loads kept for Reopen, most recent last. Like the Undo steps, they live in memory only. */
+export const CLOSED_LIMIT = 10;
+
+/** A closed load, as it was when closed, unsaved changes included. */
+interface ClosedDocument {
+  document: Omit<OpenDocument, 'id'>;
+  history: DocumentHistory;
+}
+
 /**
  * The loads open in the application, and which one is shown. Listeners are told after every change;
  * the open loads are kept in the browser's storage so that a reload loses nothing.
@@ -30,9 +40,14 @@ export class DocumentStore {
   private nextId = 1;
   private readonly listeners = new Set<() => void>();
   private readonly storage: Storage | undefined;
+  private readonly histories = new Map<number, DocumentHistory>();
+  private closed: ClosedDocument[] = [];
+  private readonly now: () => number;
 
-  constructor(storage?: Storage) {
+  /** `now` is the clock that merges quick edits into one Undo step; tests pass their own. */
+  constructor(storage?: Storage, now: () => number = Date.now) {
     this.storage = storage;
+    this.now = now;
     this.restore();
   }
 
@@ -81,20 +96,63 @@ export class DocumentStore {
     this.changed();
   }
 
-  /** Replaces a document's load (after an edit). */
-  update(id: number, load: Load): void {
-    this.documents = this.documents.map((document) => (document.id === id ? { ...document, load } : document));
+  /**
+   * Replaces a document's load, as one Undo step. `merges` is for edits typed in a field: quick ones
+   * merge into a single step. A deliberate replacement (a powder, a projectile, a calibration) doesn't.
+   */
+  update(id: number, load: Load, merges = true): void {
+    const document = this.documents.find((candidate) => candidate.id === id);
+    if (!document) return;
+    this.historyOf(id).record({ name: document.name, load: document.load }, merges);
+    this.documents = this.documents.map((candidate) => (candidate.id === id ? { ...candidate, load } : candidate));
     this.changed();
   }
 
-  /** Changes the tab/file name and the title saved inside the load together. */
+  /** Changes the tab/file name and the title saved inside the load together, as one Undo step. */
   rename(id: number, title: string): void {
     const trimmed = title.trim().replace(/\.json$/i, '').trim();
-    if (!trimmed) return;
-    this.documents = this.documents.map((document) => document.id === id
-      ? { ...document, name: `${trimmed}.json`, load: { ...document.load, title: trimmed } }
-      : document);
+    const document = this.documents.find((candidate) => candidate.id === id);
+    if (!trimmed || !document) return;
+    this.historyOf(id).record({ name: document.name, load: document.load }, false);
+    this.documents = this.documents.map((candidate) => candidate.id === id
+      ? { ...candidate, name: `${trimmed}.json`, load: { ...candidate.load, title: trimmed } }
+      : candidate);
     this.changed();
+  }
+
+  canUndo(id: number): boolean {
+    return this.histories.get(id)?.canUndo ?? false;
+  }
+
+  canRedo(id: number): boolean {
+    return this.histories.get(id)?.canRedo ?? false;
+  }
+
+  /** Returns the document to its state before the last change. A saved document may become unsaved. */
+  undo(id: number): void {
+    this.travel(id, (history, current) => history.undo(current));
+  }
+
+  redo(id: number): void {
+    this.travel(id, (history, current) => history.redo(current));
+  }
+
+  private travel(id: number, step: (history: DocumentHistory, current: { name: string; load: Load }) => { name: string; load: Load } | undefined): void {
+    const document = this.documents.find((candidate) => candidate.id === id);
+    if (!document) return;
+    const target = step(this.historyOf(id), { name: document.name, load: document.load });
+    if (!target) return;
+    this.documents = this.documents.map((candidate) => (candidate.id === id ? { ...candidate, name: target.name, load: target.load } : candidate));
+    this.changed();
+  }
+
+  private historyOf(id: number): DocumentHistory {
+    let history = this.histories.get(id);
+    if (!history) {
+      history = new DocumentHistory(this.now);
+      this.histories.set(id, history);
+    }
+    return history;
   }
 
   /** Records the exact snapshot written, so an edit made while saving remains unsaved. */
@@ -116,10 +174,38 @@ export class DocumentStore {
     this.changed();
   }
 
+  /** Closes a tab. The load is kept, unsaved changes and Undo steps included, for `reopenClosed()`. */
   close(id: number): void {
     const index = this.documents.findIndex((document) => document.id === id);
-    this.documents = this.documents.filter((document) => document.id !== id);
+    const document = this.documents[index];
+    if (!document) return;
+    const { id: _closedId, ...kept } = document;
+    this.closed = [...this.closed, { document: kept, history: this.historyOf(id) }].slice(-CLOSED_LIMIT);
+    this.histories.delete(id);
+    this.documents = this.documents.filter((candidate) => candidate.id !== id);
     if (this.activeId === id) this.activeId = this.documents[Math.min(index, this.documents.length - 1)]?.id;
+    this.changed();
+  }
+
+  get canReopen(): boolean {
+    return this.closed.length > 0;
+  }
+
+  /**
+   * Opens the last closed load again, as it was. If its library entry has been opened in another tab
+   * since, that tab keeps the link and the reopened load comes back as an unsaved copy, so that two
+   * tabs never save over one entry.
+   */
+  reopenClosed(): void {
+    const last = this.closed[this.closed.length - 1];
+    if (!last) return;
+    this.closed = this.closed.slice(0, -1);
+    const { libraryId, ...rest } = last.document;
+    const linked = libraryId !== undefined && !this.documents.some((document) => document.libraryId === libraryId);
+    const document: OpenDocument = linked ? { ...rest, libraryId, id: this.nextId++ } : { ...rest, savedText: libraryId ? '' : rest.savedText, id: this.nextId++ };
+    this.histories.set(document.id, last.history);
+    this.documents = [...this.documents, document];
+    this.activeId = document.id;
     this.changed();
   }
 

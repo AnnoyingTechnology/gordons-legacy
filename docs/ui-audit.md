@@ -20,12 +20,12 @@ model. R2 is outside this work.
 | Compact results | The load name replaces the redundant simulation heading. The simulation notice is inside the review box, including its loading state, instead of a separate banner. |
 | Result cards | Speed legend is at the velocity card’s upper right. Velocity and pressure tracks align on shared rows; both axes use matching numeric labels and display units. Blast annotation sits beside its value, with the full explanation and model uncertainty retained in the tooltip. On phones the blast, case drawing and secondary details span the available width. |
 | Page spacing | One page gutter aligns the toolbar, tabs and load contents; input/results headings have no extra top gap. Development notice and build/date share a full-width footer flush with the bottom. The danger hatch follows the panel edges without moving content. |
+| Undo / Redo | Toolbar Undo and Redo per load, for every change: typed edits (quick keystrokes merge into one step within a second), component replacements, measurements, the gun, renames. Bounded to 100 steps a load, in memory only. With shortcuts enabled, Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z (or Ctrl+Y) act on the load only outside text fields, which keep their own undo. |
+| Reopen a closed load | Toolbar Reopen brings back the last closed load as it was, unsaved changes and Undo steps included; the last 10 closed loads are kept until the page is reloaded. Alt/Option+Shift+T with shortcuts enabled (Ctrl/Cmd+Shift+T stays the browser's). If the load's library entry has been opened again meanwhile, it comes back as an unsaved copy so that two tabs never save over one entry. |
 | Reload recovery | Open documents persist in localStorage, including their saved snapshots and library identities. Invalid entries are skipped independently with a recovery warning; valid tabs and their active selection survive. Invalid display preferences fall back independently. Existing storage-full warning remains visible. Library/guns have backup and restore. |
 
 ## Remaining work
 
-- No document-level Undo/Redo or Reopen closed load. Native text-field undo remains available; it does
-  not undo a component replacement or a closed tab. These need an explicit bounded history design.
 - Browser coverage so far is Chromium on Linux. Native macOS/Windows keyboard behavior and Firefox/
   Safari file downloads remain manual checks; browser-reserved shortcuts cannot be promised across
   platforms.
