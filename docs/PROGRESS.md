@@ -19,12 +19,20 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 
 ## Next steps
 
-Pickup 2026-11-02 (working checkout `/home/julien/Documents/Dev/gordons-legacy`; the older path below
-no longer exists): #22/#31 the pressure harness is rebuilt to #31's protocol and has read two published
-documents (Reload Swiss RS14, Western Powders 8.0); results in `docs/model/validation.md`, sources in
-`docs/model/pressure-sources.md`. Bottlenecks: powder models, bullet lengths, case capacities. #34
-Undo/Redo and Reopen closed are done. #35: R2 stays excluded (Julien, 2026-10-16); only its stale-docs
-finding was acted on. #32's second pass (editor input) and #39 are done; #30 has Wilson Combat, Nosler and Daniel Defense in data PR #2. #30's readable makers are done (Nighthawk, Magnum Research and Seekins need a browser). Next: more #22 data, #32's next pass.
+Pickup 2026-11-02, end of session (checkout `/home/julien/Documents/Dev/gordons-legacy`; the older
+path below no longer exists). Done today: #34 Undo/Redo and Reopen (closed), #39 tab fade (closed), #10
+stock and #21 bench ↔ phone QR sync (built; #21 open until tried on a real phone), #30 seven more makers
+in data PR #2 (35 makers; Nighthawk, Magnum Research, Seekins need a browser), #22/#31 pressure study on
+four published documents with the app's safety wording changed on Astra's advice, #32 three audit passes
+(editor input, the day's changes, untrusted files), #35 stale docs fixed (R2 excluded).
+
+Waiting on Julien: data PR #2 merge; #30's two questions (conflicting listings, archived snapshots);
+#31's licensing question (may makers' rows be committed as fixtures) and the new safety wording; #28
+(modal converter); #21 a real-device try. Another agent: #19.
+
+Next for an agent: more #22 data (the bottleneck is powder models and bullet lengths, not documents);
+#32's next pass (the engine and data packages have had none since 2026-10-19); native review of the
+translations needs people.
 
 Earlier pickup, 2026-10-16: #34 document workflow audit and #32 code audit. The requested guided
 review, compact name/review notice, consistent page spacing, full-width footer and edge-touching
