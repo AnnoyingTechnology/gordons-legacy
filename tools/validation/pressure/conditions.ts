@@ -54,8 +54,12 @@ export type PressureQuantity =
   /** The source does not say. */
   | 'not-stated';
 
-/** Whether the powder model may have been fitted to this very source (issue #31, fitting provenance). */
-export type FittingProvenance = 'independent' | 'known-overlap' | 'unknown';
+/**
+ * Whether the powder model may have been fitted to this very source (issue #31, fitting provenance).
+ * `suspected-overlap` is for conditions whose agreement suggests a calibration point without any record
+ * establishing it; they are reported apart, and the group is shown with and without them.
+ */
+export type FittingProvenance = 'independent' | 'known-overlap' | 'suspected-overlap' | 'unknown';
 
 /** A document that publishes measurements. */
 export interface PressureSource {

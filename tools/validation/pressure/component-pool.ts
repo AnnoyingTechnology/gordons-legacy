@@ -109,7 +109,7 @@ export type Resolution<T> = { found: Pooled<T> } | { missing: string };
 
 export function findCaliber(pool: ComponentPool, name: string): Resolution<CaliberDefinition> {
   const matches = pool.calibers.filter((entry) => normalisedName(entry.value.name) === normalisedName(name));
-  return single(matches, `caliber definition "${name}"`);
+  return single(matches, `caliber definition "${name}"`, (a, b) => physical(a) === physical(b));
 }
 
 export function findPowder(pool: ComponentPool, maker: string, product: string): Resolution<Propellant> {
@@ -124,8 +124,9 @@ export function findProjectile(pool: ComponentPool, name: string): Resolution<Pr
 }
 
 /** What the engines read of a component: everything but its provenance and the values kept verbatim. */
-function physical(component: Propellant | Projectile): string {
-  const { info: _info, unmapped: _unmapped, lot: _lot, ...rest } = component;
+function physical(component: Propellant | Projectile | CaliberDefinition): string {
+  const { info: _info, unmapped: _unmapped, ...rest } = component;
+  if ('lot' in rest) delete (rest as { lot?: string }).lot;
   return JSON.stringify(rest);
 }
 

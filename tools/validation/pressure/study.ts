@@ -168,16 +168,40 @@ export function summarizeGroup(group: string, results: ConditionResult[]): Group
   };
 }
 
-/** Every group the report shows: by method, then each scored method by pressure band. */
+/**
+ * Every group the report shows: by method, then each scored method by source and by pressure band.
+ *
+ * Conditions whose powder model is known to have been fitted to them are left out of every group and
+ * shown apart (issue #31: known overlap is excluded from confirmatory inference). Conditions only
+ * suspected of it are shown apart too, and the method's group once more with them included, since the
+ * suspicion came from their results (post hoc) and must not decide the comparison on its own.
+ */
 export function summarizeStudy(results: ConditionResult[], sources: PressureSource[]): GroupSummary[] {
   const methodOfSource = (result: ConditionResult) => sources.find((source) => source.id === result.condition.source)?.method ?? 'not-stated';
   const methodOf = (result: ConditionResult) => methodGroup(methodOfSource(result));
+  const fittingOf = (result: ConditionResult) => result.condition.fitting;
   const summaries: GroupSummary[] = [];
   const groups: MethodGroup[] = ['piezoelectric', 'method not stated', 'strain gauge'];
   for (const group of groups) {
-    const inGroup = results.filter((result) => methodOf(result) === group);
+    const ofMethod = results.filter((result) => methodOf(result) === group);
+    const known = ofMethod.filter((result) => fittingOf(result) === 'known-overlap');
+    const suspected = ofMethod.filter((result) => fittingOf(result) === 'suspected-overlap');
+    if (known.some(isPaired)) summaries.push(summarizeGroup(`${group}, powder model fitted to these conditions (not evidence)`, known));
+    if (suspected.some(isPaired)) {
+      summaries.push(summarizeGroup(`${group}, possible fitting overlap only (set apart after seeing the results)`, suspected));
+      summaries.push(summarizeGroup(`${group}, including the possible fitting overlap`, ofMethod.filter((result) => fittingOf(result) !== 'known-overlap')));
+    }
+    const inGroup = ofMethod.filter((result) => fittingOf(result) !== 'known-overlap' && fittingOf(result) !== 'suspected-overlap');
     if (inGroup.length === 0) continue;
     summaries.push(summarizeGroup(group, inGroup));
+    // Each publication on its own as well: one laboratory's habits are not another's.
+    const ids = [...new Set(inGroup.map((result) => result.condition.source))];
+    if (ids.length > 1) {
+      for (const id of ids) {
+        const fromSource = inGroup.filter((result) => result.condition.source === id);
+        if (fromSource.some(isPaired)) summaries.push(summarizeGroup(`${group}, ${id}`, fromSource));
+      }
+    }
     const bands: PressureBand[] = [NEAR_MAXIMUM, '3,000 bar or more', '2,000–3,000 bar', 'under 2,000 bar'];
     for (const band of bands) {
       const inBand = inGroup.filter(

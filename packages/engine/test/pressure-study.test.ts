@@ -6,6 +6,7 @@ import { communityPool } from '../../../tools/validation/pressure/component-pool
 import { input, type PressureCondition, type PressureSource } from '../../../tools/validation/pressure/conditions.ts';
 import { asymmetricLoss, logRatio, pairedLossDifference, summarize } from '../../../tools/validation/pressure/scoring.ts';
 import { readRs14Table, readRs14Temperatures } from '../../../tools/validation/pressure/sources/reload-swiss-rs14.ts';
+import { hodgdonConditions, readHodgdonRows } from '../../../tools/validation/pressure/sources/hodgdon-m1-garand.ts';
 import { readWesternRows } from '../../../tools/validation/pressure/sources/western-powders-8.ts';
 import { PERTURBATIONS, runConditions, summarizeStudy } from '../../../tools/validation/pressure/study.ts';
 
@@ -155,6 +156,44 @@ describe("reading the Western Powders guide's rows", () => {
   });
 });
 
+describe("reading Hodgdon's M1 Garand sheet", () => {
+  // Shaped like `pdftotext -layout` output of the sheet; invented figures.
+  const SHEET = [
+    '    BULLET          WEIGHT   POWDER     DIA.    OAL      START CHG   START FPS   START PRESS.   PSI/CUP   MAX CHG   MAX FPS   MAX PRESS.   PSI/CUP',
+    ' 150 GR. NOS BT      150      Varget    .308"   3.250"      46.0       2,800        42,000       CUP        47.0     2,840      44,000      CUP',
+    ' 150 GR. NOS BT      150     IMR 4166   .308"   3.250"      46.5       2,750        49,000        PSI       48.0     2,810      52,000       PSI',
+    '165 GR. HDY GMX      165     IMR 4166   .308"   3.225"      45.0       2,600        49,500        PSI       46.0     2,650      52,500       PSI',
+    '165 GR. SIE SPBT    165      Varget    .308"   3.300"      46.8        2,718',
+  ].join('\n');
+
+  it('reads each row, with the unit of each pressure, and lists a row it cannot read', () => {
+    const { rows, unread } = readHodgdonRows(SHEET);
+    expect(rows).toHaveLength(3);
+    expect(rows[1]).toMatchObject({
+      bullet: '150 GR. NOS BT',
+      powder: 'IMR 4166',
+      overallLength: 3.25,
+      start: { charge: 46.5, velocity: 2750, pressure: 49000, unit: 'PSI' },
+      maximum: { charge: 48, velocity: 2810, pressure: 52000, unit: 'PSI' },
+    });
+    expect(unread).toHaveLength(1);
+  });
+
+  it('keeps the velocity of a CUP row and never takes its CUP for a pressure', () => {
+    const [start] = hodgdonConditions(SHEET).conditions;
+    expect(start!.powder).toEqual({ maker: 'Hodgdon', product: 'Varget' });
+    expect(start!.pressure).toBeUndefined();
+    expect(start!.velocity!.value).toBeCloseTo(2800 * units.FOOT_PER_SECOND, 9);
+  });
+
+  it('assumes the barrel, which the sheet does not name, and marks the series the model was fitted to', () => {
+    const { conditions } = hodgdonConditions(SHEET);
+    expect(conditions[2]!.barrelLength).toMatchObject({ status: 'assumed', value: 24 * units.INCH });
+    expect(conditions[2]!.powder).toEqual({ maker: 'IMR', product: '4166' });
+    expect(conditions.map((condition) => condition.fitting)).toEqual(["unknown", "unknown", "unknown", "unknown", "suspected-overlap", "suspected-overlap"]);
+  });
+});
+
 const SOURCE: PressureSource = {
   id: 'invented',
   title: 'Invented test data',
@@ -254,6 +293,12 @@ describe('paired eligibility', () => {
     expect(summary!.pressure[0]!.geometricMeanBias).toBeCloseTo(0, 10);
     expect(summary!.pressure[1]!.geometricMeanBias).toBeCloseTo(-10, 10);
     expect(summary!.lossDifference!.mean).toBeCloseTo(asymmetricLoss(Math.log(0.9)), 12);
+  });
+
+  it('reports conditions the powder model was fitted to apart, never as evidence', () => {
+    const fitted = runConditions([condition({ id: 'fitted', series: 'fitted', fitting: 'known-overlap' })], pool, [fixed('a', 1900e5), fixed('b', 1900e5)]);
+    const groups = summarizeStudy(fitted, [SOURCE]).map((summary) => summary.group);
+    expect(groups).toEqual(['piezoelectric, powder model fitted to these conditions (not evidence)']);
   });
 
   it('moves only assumed inputs in the sensitivity check', () => {

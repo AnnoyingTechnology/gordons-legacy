@@ -6,7 +6,7 @@ absence. Results and their limits are written up in `docs/model/validation.md`.
 | Command | What it does |
 |---|---|
 | `node tools/validation/chronograph.ts [--engine research-1] <loads…>` | Simulated against measured muzzle velocities stored in `.grtload` or JSON loads |
-| `node tools/validation/pressure.ts --rs14 <pdf> --western <pdf> [--components <folder>] [--details]` | The pressure study of issue #31: both engines against published pressure measurements |
+| `node tools/validation/pressure.ts --rs14 <pdf> --western <pdf> --hodgdon-m1 <pdf> --hodgdon-subsonic <pdf> [--components <folder>] [--details]` | The pressure study of issue #31: both engines against published pressure measurements |
 
 ## `pressure/`, the pressure study
 
@@ -18,7 +18,7 @@ absence. Results and their limits are written up in `docs/model/validation.md`.
 | `projectile-specifications.ts` | Bullet lengths published by makers, or listed by retailers, for bullets the corpus lacks |
 | `scoring.ts` | Log ratios, the asymmetric loss, series counted once, the paired comparison |
 | `study.ts` | Runs the conditions through both engines, pairing, pressure bands, the sensitivity perturbations |
-| `sources/` | One reader per published document (Reload Swiss RS14, Western Powders guide 8.0) |
+| `sources/` | One reader per published document (Reload Swiss RS14, Western Powders guide 8.0, Hodgdon's M1 Garand and subsonic sheets) |
 
 The makers' documents are never copied here: the readers take your downloaded PDF, check its SHA-256
 and read it with `pdftotext` (Poppler). The sources and what each can support are listed in

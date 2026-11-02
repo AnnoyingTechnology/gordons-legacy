@@ -54,6 +54,7 @@ export const PROJECTILE_SPECIFICATIONS: ProjectileSpecification[] = [
   berger('30419', '30 Cal 210 gr Long Range BT Target', 210, 1.462),
   berger('30430', '30 Cal 230 gr Hybrid Target', 230, 1.668),
   berger('30514', '30 Cal 190 gr VLD Hunting', 190, 1.371),
+  berger('30112', '30 Cal 230 gr Hybrid OTM Tactical', 230, 1.608),
   {
     key: 'lapua-b416-200',
     maker: 'Lapua',
@@ -117,6 +118,58 @@ PROJECTILE_SPECIFICATIONS.push(
   listed('nosler-e-tip-180', 'Nosler', 'E-Tip 30 cal 180 gr, 59180', 180, 1.464, 'palmettostatearmory.com, grabagun.com, shootcenter.com; bluecollarreloading.com lists 1.485 in', 'rifle-solid-copper'),
   listed('barnes-ttsx-168', 'Barnes', 'Tipped TSX BT 30 cal 168 gr', 168, 1.406, 'grafs.com', 'rifle-solid-copper'),
   listed('barnes-ttsx-180', 'Barnes', 'Tipped TSX BT 30 cal 180 gr, 30372', 180, 1.488, 'x-reload.com, gotenda.com', 'rifle-solid-copper'),
+);
+
+// The bullets of Hodgdon's M1 Garand sheet.
+PROJECTILE_SPECIFICATIONS.push(
+  {
+    key: 'nosler-e-tip-150',
+    maker: 'Nosler',
+    product: 'E-Tip 30 cal 150 gr spitzer, 59378',
+    mass: 150 * units.GRAIN,
+    diameter: 0.308 * units.INCH,
+    length: 1.293 * units.INCH,
+    lengthStatus: 'specification',
+    lengthSource: 'Nosler\'s product page, "Overall Length (OAL) (in.): 1.293" (nosler.com, read 2026-11-02)',
+    base: { shape: 'flat' },
+    construction: 'rifle-solid-copper',
+  },
+  listed('nosler-ballistic-tip-150', 'Nosler', 'Ballistic Tip 30 cal 150 gr, 30150', 150, 1.28, 'kitterytradingpost.com, sportsmansden.com', 'rifle-jacketed'),
+  listed('hornady-gmx-165', 'Hornady', 'GMX 30 cal 165 gr, 30470', 165, 1.429, 'xxlreloading.com', 'rifle-solid-copper'),
+  listed('sierra-gameking-165-sbt', 'Sierra', 'GameKing SBT 30 cal 165 gr, 2145', 165, 1.186, 'bluecollarreloading.com', 'rifle-jacketed'),
+  listed('hornady-match-168', 'Hornady', 'Match BTHP 30 cal 168 gr, 30501', 168, 1.235, 'xxlreloading.com', 'rifle-jacketed'),
+  {
+    key: 'sierra-matchking-175',
+    maker: 'Sierra',
+    product: 'MatchKing HPBT 30 cal 175 gr, 2275',
+    mass: 175 * units.GRAIN,
+    diameter: 0.308 * units.INCH,
+    length: 1.242 * units.INCH,
+    lengthStatus: 'assumed',
+    lengthSource:
+      '1.242 in from Federal Premium, which loads this bullet in its Gold Medal GM308M2 and publishes its length; ' +
+      'bluecollarreloading.com lists 1.240 in (read 2026-11-02). Not a figure from Sierra',
+    base: { shape: 'flat' },
+    construction: 'rifle-jacketed',
+  },
+  listed('sierra-gameking-180-sbt', 'Sierra', 'GameKing SBT 30 cal 180 gr, 2160', 180, 1.288, 'bluecollarreloading.com, xxl-reloading.com', 'rifle-jacketed'),
+);
+
+// The bullets of Hodgdon's subsonic sheet.
+PROJECTILE_SPECIFICATIONS.push(
+  listed('sierra-matchking-220', 'Sierra', 'MatchKing HPBT 30 cal 220 gr, 2240', 220, 1.489, 'bluecollarreloading.com', 'rifle-jacketed'),
+  {
+    key: 'hornady-a-max-208',
+    maker: 'Hornady',
+    product: 'A-MAX 30 cal 208 gr, 30718',
+    mass: 208 * units.GRAIN,
+    diameter: 0.308 * units.INCH,
+    length: 1.532 * units.INCH,
+    lengthStatus: 'assumed',
+    lengthSource: '1.532 in measured by reloaders (snipershide.com forum, read 2026-11-02; one measured 1.527 in); discontinued, Hornady publishes no length',
+    base: { shape: 'flat' },
+    construction: 'rifle-jacketed',
+  },
 );
 
 export function projectileSpecification(key: string): ProjectileSpecification | undefined {

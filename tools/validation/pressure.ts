@@ -3,10 +3,11 @@
  * identical inputs, scored by the protocol fixed in #31 before any data was seen.
  *
  *     node tools/validation/pressure.ts [--rs14 <RS14 datasheet.pdf>] [--western <Western guide 8.0.pdf>]
+ *                                      [--hodgdon-m1 <Hodgdon M1 Garand sheet.pdf>] [--hodgdon-subsonic <Hodgdon subsonic sheet.pdf>]
  *                                      [--conditions <file.json>]... [--components <folder>]...
  *                                      [--details] [--json <results.json>]
  *
- * - `--rs14`, `--western`: the makers' PDFs as downloaded from their sites (see `docs/model/pressure-sources.md`).
+ * - `--rs14`, `--western`, `--hodgdon-m1`, `--hodgdon-subsonic`: the makers' PDFs as downloaded from their sites (see `docs/model/pressure-sources.md`).
  *   Their SHA-256 is checked, so that another edition is noticed instead of read wrongly. Reading them
  *   needs `pdftotext` (Poppler) on the path. The makers' tables are never copied into this repository.
  * - `--conditions`: conditions of your own, a JSON array of `PressureCondition` with a `sources` list
@@ -28,6 +29,8 @@ import { units } from '@gordons-legacy/formats';
 import { addLocalFiles, communityPool, type ComponentPool } from './pressure/component-pool.ts';
 import type { PressureCondition, PressureSource } from './pressure/conditions.ts';
 import { logRatio, type LogRatioSummary } from './pressure/scoring.ts';
+import { HODGDON_M1_SOURCE, hodgdonConditions } from './pressure/sources/hodgdon-m1-garand.ts';
+import { HODGDON_SUBSONIC_SOURCE, subsonicConditions } from './pressure/sources/hodgdon-subsonic.ts';
 import { RS14_SOURCE, rs14Conditions } from './pressure/sources/reload-swiss-rs14.ts';
 import { WESTERN_8_SOURCE, westernConditions } from './pressure/sources/western-powders-8.ts';
 import { PERTURBATIONS, runConditions, summarizeStudy, type ConditionResult, type GroupSummary } from './pressure/study.ts';
@@ -37,6 +40,8 @@ const ENGINES: [Engine, Engine] = [grtTraditional, researchEngine];
 interface Arguments {
   rs14?: string;
   western?: string;
+  hodgdonM1?: string;
+  hodgdonSubsonic?: string;
   conditions: string[];
   components: string[];
   details: boolean;
@@ -54,6 +59,14 @@ function parseArguments(args: string[]): Arguments {
         break;
       case '--western':
         if (value) parsed.western = value;
+        index++;
+        break;
+      case '--hodgdon-m1':
+        if (value) parsed.hodgdonM1 = value;
+        index++;
+        break;
+      case '--hodgdon-subsonic':
+        if (value) parsed.hodgdonSubsonic = value;
         index++;
         break;
       case '--conditions':
@@ -206,13 +219,15 @@ function main(): void {
   };
   if (args.rs14) read(RS14_SOURCE, rs14Conditions(documentText(args.rs14, RS14_SOURCE, '-layout')));
   if (args.western) read(WESTERN_8_SOURCE, westernConditions(documentText(args.western, WESTERN_8_SOURCE, '-raw')));
+  if (args.hodgdonM1) read(HODGDON_M1_SOURCE, hodgdonConditions(documentText(args.hodgdonM1, HODGDON_M1_SOURCE, '-layout')));
+  if (args.hodgdonSubsonic) read(HODGDON_SUBSONIC_SOURCE, subsonicConditions(documentText(args.hodgdonSubsonic, HODGDON_SUBSONIC_SOURCE, '-layout')));
   for (const path of args.conditions) {
     const file = JSON.parse(readFileSync(path, 'utf8')) as { sources: PressureSource[]; conditions: PressureCondition[] };
     sources.push(...file.sources);
     conditions.push(...file.conditions);
   }
   if (conditions.length === 0) {
-    console.error('No conditions: give --rs14, --western or --conditions (see the comment at the top of this file).');
+    console.error('No conditions: give --rs14, --western, --hodgdon-m1, --hodgdon-subsonic or --conditions (see the comment at the top of this file).');
     process.exitCode = 1;
     return;
   }
