@@ -35,6 +35,8 @@ export function renderResults(
   context: UiContext,
   axis: ChartAxis,
   onAxis: (axis: ChartAxis) => void,
+  /** The review of this load could not be computed: say so instead of "reviewing". */
+  reviewFailed = false,
 ): HTMLElement {
   const { t } = context;
   const container = element('section', { class: 'simulation' });
@@ -44,7 +46,7 @@ export function renderResults(
   if (review) render(assessmentView(review.assessment, load.charge.temperature, context), reviewPanel);
   else render(html`<section class="assessment">
     <p class="assessment-disclaimer">${t('safety.simulated')}</p>
-    <p class="note">${t('assessment.updating')}</p>
+    <p class=${reviewFailed ? 'warning' : 'note'}>${t(reviewFailed ? 'assessment.failed' : 'assessment.updating')}</p>
   </section>`, reviewPanel);
   const figures = element('div');
   render(keyFigures(load, shot, pressureLimits(load), context, renderDetails(load, shot, context)), figures);

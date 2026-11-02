@@ -15,7 +15,7 @@ const special = fixture('maintainer/TESTED_38sp_rhino_XTP_158gr_31g_A1.grtload')
 function range(load: Load) {
   const result = grtTraditional.simulate(load);
   if (!result.ok) throw new Error('simulation');
-  return temperatureRange(load, result.simulation, load.cartridge.maxPressure);
+  return temperatureRange(load, result.simulation, load.cartridge.maxPressure, grtTraditional);
 }
 
 test('the spans cover −50 to 50 °C without gaps', () => {

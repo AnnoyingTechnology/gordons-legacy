@@ -1,4 +1,4 @@
-import { grtTraditional, type Simulation } from '@gordons-legacy/engine';
+import type { Engine, Simulation } from '@gordons-legacy/engine';
 import type { Load } from '@gordons-legacy/formats';
 import { speedRegime } from './speed-of-sound.ts';
 
@@ -31,12 +31,13 @@ export interface TemperatureSpan {
 }
 
 /** The scale cut into spans of one state each, from cold to hot. `limit` is the lowest maximum, Pa. */
-export function temperatureRange(load: Load, shot: Simulation, limit: number): TemperatureSpan[] {
+export function temperatureRange(load: Load, shot: Simulation, limit: number, engine: Engine): TemperatureSpan[] {
   const own = load.charge.temperature;
   const regime = speedRegime(shot.muzzleVelocity, own);
   const burnsOut = shot.burntFractionAtMuzzle >= INCOMPLETE_BURN;
   const stateAt = (temperature: number): TemperatureState => {
-    const result = grtTraditional.simulate({ ...load, charge: { ...load.charge, temperature } });
+    // The engine the shot came from: mixing engines would put another model's limits beside its figures.
+    const result = engine.simulate({ ...load, charge: { ...load.charge, temperature } });
     if (!result.ok) return 'notSimulated';
     const simulation = result.simulation;
     if (simulation.maxPressure > limit) return 'aboveLimit';

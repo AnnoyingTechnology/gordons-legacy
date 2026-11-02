@@ -204,7 +204,7 @@ export function assessLoad(load: Load, shot: Simulation, engine: Engine): Assess
   const regime = speedRegime(shot.muzzleVelocity, temperature);
   if (regime === 'transonic') findings.push({ code: 'transonic', level: 'note', velocity: shot.muzzleVelocity, temperature });
 
-  const temperatures = temperatureRange(load, shot, lowest.pressure);
+  const temperatures = temperatureRange(load, shot, lowest.pressure, engine);
   const own = withinSpan(temperatures, temperature);
   if (own) {
     const index = temperatures.indexOf(own);

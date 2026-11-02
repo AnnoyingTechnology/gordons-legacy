@@ -586,4 +586,5 @@ export const es: Messages = {
   'components.chooseShort': "Elegir…",
   'designer.short': "Diseñar…",
   'assessment.updating': "Revisando la carga…",
+  'assessment.failed': "No se pudo calcular la revisión de esta carga: sus valores superan lo que el modelo trata. Los valores de abajo no están comprobados por ella.",
 };

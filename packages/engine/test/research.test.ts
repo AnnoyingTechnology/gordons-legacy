@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { importGrtLoad, type Load } from '@gordons-legacy/formats';
 import { describe, expect, it } from 'vitest';
-import { researchEngine } from '../src/index.ts';
+import { grtTraditional, researchEngine } from '../src/index.ts';
 import { ResearchModel } from '../src/research/model.ts';
 import { grtInputs } from '../src/grt-traditional/inputs.ts';
 
@@ -45,5 +45,15 @@ describe('research engine R1', () => {
     const result = researchEngine.simulate(jumped);
     expect(result.ok).toBe(false);
     expect(!result.ok && result.problems[0]!.code).toBe('not-modelled');
+  });
+});
+
+describe('a result that overflows (#32)', () => {
+  it('is a numerical failure in either engine, never an infinite figure shown as a result', () => {
+    const tiny = { ...load(), barrel: { ...load().barrel, gunMass: 1e-320 } };
+    for (const engine of [researchEngine, grtTraditional]) {
+      const result = engine.simulate(tiny);
+      expect(result.ok ? 'ok' : result.problems[0]!.code).toBe('numerical-failure');
+    }
   });
 });

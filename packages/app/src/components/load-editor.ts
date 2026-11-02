@@ -55,8 +55,11 @@ export class LoadEditor extends LitElement {
   declare picking: 'propellant' | 'projectile' | 'caliber' | undefined;
   /** Whether the cartridge designer is open. */
   declare designing: boolean;
-  /** The latest review from the worker, and the load it is for (an earlier one while a new one computes). */
-  declare review: { load: Load; review: Review | undefined } | undefined;
+  /**
+   * The latest review from the worker, and the load it is for (an earlier one while a new one computes);
+   * `failed` when the review of that load could not be computed.
+   */
+  declare review: { load: Load; review: Review | undefined; failed?: boolean } | undefined;
   private readonly reviews = new ReviewClient();
   /** The engine the shown review was computed with, so that changing the engine asks for a new one. */
   private reviewedEngine: string | undefined;
@@ -84,8 +87,9 @@ export class LoadEditor extends LitElement {
     if (changed.has('load') || engine.id !== this.reviewedEngine) {
       const load = this.load;
       this.reviewedEngine = engine.id;
-      void this.reviews.review(load, engine).then((review) => {
-        if (review !== undefined || this.load === load) this.review = { load, review };
+      void this.reviews.review(load, engine).then((outcome) => {
+        if (outcome === 'superseded') return;
+        this.review = outcome === 'failed' ? { load, review: undefined, failed: true } : { load, review: outcome };
       });
     }
   }
@@ -164,7 +168,7 @@ export class LoadEditor extends LitElement {
           <gl-document-heading .name=${this.documentName ?? this.load.title} .documentId=${this.documentId}
             .context=${this.context}></gl-document-heading>
           ${result.ok
-            ? renderResults(this.load, result.simulation, review, stale, this.context, this.axis, (axis) => (this.axis = axis))
+            ? renderResults(this.load, result.simulation, review, stale, this.context, this.axis, (axis) => (this.axis = axis), !stale && this.review?.failed === true)
             : html`${cartridgeDrawing(this.load, undefined, this.context)}${renderProblems(problems, this.context)}`}
           ${result.ok && this.components
             ? html`<gl-charge-synthesis .load=${this.load} .entries=${this.componentEntries} .context=${this.context}></gl-charge-synthesis>`

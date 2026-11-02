@@ -586,4 +586,5 @@ export const de: Messages = {
   'components.chooseShort': "Wählen…",
   'designer.short': "Entwerfen…",
   'assessment.updating': "Ladung wird geprüft…",
+  'assessment.failed': "Die Prüfung dieser Laborierung ließ sich nicht berechnen: Ihre Werte übersteigen, was das Modell verarbeitet. Die Werte unten sind von ihr nicht geprüft.",
 };

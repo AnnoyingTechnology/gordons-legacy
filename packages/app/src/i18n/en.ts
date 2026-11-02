@@ -588,6 +588,7 @@ export const en = {
   'components.chooseShort': "Choose…",
   'designer.short': "Design…",
   'assessment.updating': "Reviewing the load…",
+  'assessment.failed': "The review of this load could not be computed: its values are beyond what the model handles. The figures below are not checked by it.",
 } as const;
 
 export type MessageKey = keyof typeof en;

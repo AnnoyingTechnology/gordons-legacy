@@ -586,4 +586,5 @@ export const fr: Messages = {
   'components.chooseShort': "Choisir…",
   'designer.short': "Concevoir…",
   'assessment.updating': "Revue du chargement en cours…",
+  'assessment.failed': "La revue de ce chargement n’a pas pu être calculée : ses valeurs dépassent ce que le modèle sait traiter. Les valeurs ci-dessous ne sont pas vérifiées par elle.",
 };

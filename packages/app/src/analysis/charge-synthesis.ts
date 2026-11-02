@@ -158,6 +158,8 @@ function representable(low: number, high: number, resolution: number, check: (ch
   const steps = (charge: number) => Math.round(charge / resolution);
   const firstStep = Math.ceil(low / resolution - 1e-9);
   const lastStep = Math.floor(high / resolution + 1e-9);
+  // Past 2^53, `step + 1` is `step` again and the tries below never end (#32): not representable.
+  if (!Number.isSafeInteger(firstStep) || !Number.isSafeInteger(lastStep)) return undefined;
   let lowest: SynthesisPoint | undefined;
   for (let step = firstStep; step < firstStep + ROUNDING_TRIES && step <= lastStep && !lowest; step++) {
     const simulation = check(step * resolution);

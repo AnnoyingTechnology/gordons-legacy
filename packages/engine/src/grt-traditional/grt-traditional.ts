@@ -6,6 +6,7 @@ import { muzzleGasEnergy, optimalBarrelTime, recoil, tenPercentPeakTime } from '
 import { solve } from './solver.ts';
 import { chamberVolume } from './geometry.ts';
 import { caseFill, validateInputs } from './validation.ts';
+import { isFiniteSimulation } from '../simulation-check.ts';
 
 const PASCALS_PER_BAR = 1e5;
 const SECONDS_PER_MILLISECOND = 1e-3;
@@ -88,6 +89,8 @@ export const grtTraditional: Engine = {
       curve,
       warnings,
     };
+    // An input the format accepts can still overflow a derived figure (#32): never shown as a result.
+    if (!isFiniteSimulation(simulation)) return { ok: false, problems: [{ code: 'numerical-failure' }] };
     return { ok: true, simulation };
   },
 };

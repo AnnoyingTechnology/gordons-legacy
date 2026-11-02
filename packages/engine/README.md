@@ -51,6 +51,10 @@ src/grt-traditional/
   grt-traditional.ts  the Engine: results and warnings
 ```
 
+`src/simulation-check.ts` is shared by both engines: a result with any non-finite figure or curve point
+(an overflow, for example infinite recoil from a gun of near-zero mass) is refused as `numerical-failure`
+instead of being returned as a simulation.
+
 `src/research/` is the research engine R1 (docs/model/research-engine.md): not validated, offered in
 the application as a labelled research engine, never the default. `src/numerics/ode.ts` is an adaptive Dormand-Prince 5(4) integrator with events, for the research
 engine (docs/model/research-engine.md).

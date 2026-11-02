@@ -586,4 +586,5 @@ export const it: Messages = {
   'components.chooseShort': "Scegli…",
   'designer.short': "Progetta…",
   'assessment.updating': "Revisione della carica in corso…",
+  'assessment.failed': "Non è stato possibile calcolare la revisione di questa ricarica: i suoi valori superano ciò che il modello gestisce. I valori qui sotto non ne sono verificati.",
 };

@@ -6,6 +6,7 @@ import { optimalBarrelTime, recoil } from '../grt-traditional/results.ts';
 import { caseFill, validateInputs } from '../grt-traditional/validation.ts';
 import { integrate, type OdeOptions } from '../numerics/ode.ts';
 import { DEFAULT_RESEARCH_OPTIONS, ResearchModel, type ResearchOptions } from './model.ts';
+import { isFiniteSimulation } from '../simulation-check.ts';
 
 /** Points of the resampled curve, as GRT Traditional's grid. */
 const CURVE_POINTS = 2000;
@@ -73,7 +74,10 @@ export function simulateResearch(load: Load, options: ResearchOptions): Simulati
   if (!moving.completed) return { ok: false, problems: [{ code: 'numerical-failure' }] };
   if (!moving.eventReached) return { ok: false, problems: [{ code: 'projectile-stops', path: 'charge.mass' }] };
 
-  return { ok: true, simulation: results(load, model, samples, shotStart) };
+  const simulation = results(load, model, samples, shotStart);
+  // Extreme inputs the format accepts (a gun of 1e-320 kg) can overflow a derived figure: never a success.
+  if (!isFiniteSimulation(simulation)) return { ok: false, problems: [{ code: 'numerical-failure' }] };
+  return { ok: true, simulation };
 }
 
 function results(load: Load, model: ResearchModel, samples: Sample[], shotStart: number): Simulation {
@@ -82,7 +86,9 @@ function results(load: Load, model: ResearchModel, samples: Sample[], shotStart:
   let peak = samples[0]!;
   for (const sample of samples) if (sample.pressure > peak.pressure) peak = sample;
   const burnout = samples.find((sample) => sample.z >= 1);
-  const curve = resample(samples.filter((sample) => sample.x > 0 || sample === lastAtRest(samples)), model.travelToMuzzle, shotStart);
+  // Found once: searched again for every sample, it made a long integration take minutes (#32).
+  const atRest = lastAtRest(samples);
+  const curve = resample(samples.filter((sample) => sample.x > 0 || sample === atRest), model.travelToMuzzle, shotStart);
   const muzzleEnergy = 0.5 * inputs.projectileMass * muzzle.v * muzzle.v;
   // The lead time counts from 10 % of the peak, as GRT's.
   const tenPercent = samples.find((sample) => sample.pressure >= peak.pressure * 0.1);
