@@ -232,6 +232,18 @@ So the answer to "is that everything?" is: everything **read**, plus ten makers 
 have not been written yet. That is per-maker work, one extractor and one test each, and the order above
 is the order of least guesswork.
 
+### Three of them read, 2026-11-02
+
+| Maker | Guns | What their pages cost |
+|---|---|---|
+| Wilson Combat | 80 | `robots.txt` asks AI agents for **ten seconds** a page, so the crawl took two hours. Guns found through the 245 gun category pages, since the products sitemap is mostly parts. Left out: 32 other makers' guns the shop sells (Guncrafter Industries, SIG, CZ, Ruger conversions); pages whose heading names another cartridge than their `Caliber:` (a `300 HAM'R` sold as `Caliber: 300 Blackout`, an `8.6 Blackout` printed `.6 Blackout`); the NULA range's one weight, which names the configuration it was weighed in. |
+| Nosler | 27 | Nine Model 21 and Model 48 pages, each a labelled table; one misprinted twist (`1.8`) costs its gun the twist only. Five prose-only pages give nothing. |
+| Daniel Defense | 41 | Every product page of the sitemap (the categories show their first page only, and `?p=2` is disallowed); a gun is a page whose table names the `Magazine` it ships with. The DELTA 5 PRO print barrel and twist in one cell (`24" 1:8"`), each quoted apart. |
+
+`check-corpus.ts` and `quoted-figures.ts`: 148 records, 0 problems. The checker now reads `8 lbs, 15.4 oz`
+as one weight. Still unread: Bond Arms, then the link crawls (Nighthawk, Seekins, Montana) and the three
+whose products have to be found.
+
 Where a maker writes a cartridge in a form no reloader uses (`9MM`, `45 ACP`), the extractor maps it to
 the conventional name **in a table, one entry per form**, and keeps the maker's own word in
 `source.published.caliber`. That is a per-maker reading, not a guess: a mapping is written only where the

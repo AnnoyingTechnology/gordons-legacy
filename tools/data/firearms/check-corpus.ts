@@ -89,7 +89,8 @@ export function printedMasses(text: string): number[] {
     const kilograms = { kg: 1, g: units.GRAM, gr: units.GRAM, oz: ounce }[unit!.toLowerCase()] ?? units.POUND;
     return values(number!).map((figure) => figure * kilograms);
   });
-  const both = new RegExp(`${NUMBER}\\s*lbs?\\.?\\s*${NUMBER}\\s*oz`, 'i').exec(text);
+  // Wilson Combat prints `8 lbs, 15.4 oz`: the comma joins the pounds and ounces of one weight.
+  const both = new RegExp(`${NUMBER}\\s*lbs?\\.?,?\\s*${NUMBER}\\s*oz`, 'i').exec(text);
   return both ? [...masses, values(both[1]!)[0]! * units.POUND + values(both[2]!)[0]! * ounce] : masses;
 }
 
