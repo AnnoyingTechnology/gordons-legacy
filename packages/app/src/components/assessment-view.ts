@@ -4,6 +4,10 @@ import type { Assessment, AssessmentLevel, Finding } from '../analysis/load-asse
 import { icon } from '../icons/icons.ts';
 import type { UiContext } from './context.ts';
 import { limitName, temperatureScale } from './gauges.ts';
+import { REPOSITORY } from './about-dialog.ts';
+
+/** Where the engines' comparisons with measured pressures are written up, under-predictions included. */
+const VALIDATION_EVIDENCE = `${REPOSITORY}/blob/main/docs/model/validation.md`;
 
 const LEVELS: AssessmentLevel[] = ['none', 'note', 'caution', 'danger'];
 
@@ -27,7 +31,7 @@ export function assessmentView(assessment: Assessment, ownTemperature: number, c
           )}
         </ol>
       </div>
-      <p class="assessment-disclaimer">${t('safety.simulated')}</p>
+      <p class="assessment-disclaimer">${t('safety.simulated')} <a href=${VALIDATION_EVIDENCE} target="_blank" rel="noopener">${t('safety.evidence')}</a></p>
       ${general.length === 0
         ? html`<p class="assessment-none">${t('assessment.none')}</p>`
         : html`<ul class="findings">

@@ -141,6 +141,37 @@ laboratories, and the intervals reflect only the scatter between those series. N
 follows from it. It does agree in direction with the four IMR 4166 conditions above: near the maximum,
 R1 reads well under the measured peak.
 
+### Hodgdon's static data sheets (2026-11-02)
+
+Two of Hodgdon's PDF sheets carry pressures for powders we hold models of, through the maintainer's
+GRT files: IMR 4166 in the M1 Garand .30-06 sheet, Lil'Gun in the subsonic .300 AAC Blackout rows. Neither
+sheet states its method, barrel, case, temperature or shot count; a 24″ and a 16″ barrel are assumed.
+Reviewed by Astra before this was written.
+
+| Source | Conditions | GRT Traditional | R1 |
+|---|---|---|---|
+| M1 Garand .30-06, IMR 4166, 6 bullets, start and maximum, 47,800–53,000 psi | 12 in 6 series | **−17.7 %**, −13.3 % to −21.9 %, under on every series; velocity −4.9 % | −18.1 %, −8.6 % to −21.8 %; velocity −4.8 % |
+| Subsonic .300 BLK, Lil'Gun, 4 bullets, maximum only | 4 in 4 series | −10.2 %, under on every series; velocity **+17.4 %** | +14.2 %, over on every series; velocity +15.6 % |
+
+The 165 gr GMX series of the M1 sheet came out at the published pressure to 0.03 % at both charges with
+GRT Traditional, when the other bullets were 13–22 % under. That suggests the IMR 4166 model was
+calibrated on it, but nothing establishes it: it is set apart as a possible fitting overlap — a decision
+made after seeing its results — and the study shows the comparison with and without it.
+
+What it shows, conditional on the assumed inputs: **the default engine has read 13–22 % under published
+measured pressures** on one powder model and one publication, and 10 % under on another, while it read
+above on Western's MAGPRO and Reload Swiss's RS14. The error's sign changes with the powder model; its
+size reaches a fifth of the pressure. No correction factor follows from this, and no threshold covers it.
+
+What changed in the application (Astra's recommendations, 2026-11-02): the results notice says pressure
+may be substantially under- or over-predicted and that results must not be used to choose or increase a
+charge; the near-maximum finding no longer claims that 90 % leaves "less margin than the simulation's
+own uncertainty", which understated the observed error, but says that the comparison establishes no
+margin and that the actual pressure may exceed the limit; the gauge says "Simulated peak" and that being
+below the reference does not establish safety; the review's "no flag" no longer promises that a work-up
+can tell; the engine help says neither engine has established accuracy for load development; and the
+notice links to this page. The 90 % trigger stays, as a display proximity only.
+
 ## Research engine R1
 
 See [research-engine.md](research-engine.md), First results: with GRT's powder data as is, R1's mean

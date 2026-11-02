@@ -24,7 +24,11 @@ export type AssessmentLevel = ConcernLevel | 'none';
 export type FindingCode =
   /** The peak pressure is above a maximum (the load's, CIP's or SAAMI's). */
   | 'aboveLimit'
-  /** Within `NEAR_LIMIT_SHARE` of the lowest maximum: less margin than the model's own uncertainty. */
+  /**
+   * At or above `NEAR_LIMIT_SHARE` of the lowest maximum. A display-proximity trigger only: the
+   * simulation's error against measured pressures has been seen beyond 20 % (docs/model/validation.md),
+   * so no share of a maximum is a margin.
+   */
   | 'nearLimit'
   /** Ordinary bench variations together take the peak above the lowest maximum. */
   | 'benchVariationsAboveLimit'
@@ -102,7 +106,11 @@ export interface Assessment {
   temperatures: TemperatureSpan[];
 }
 
-/** Share of the lowest maximum from which the margin is thinner than the model's uncertainty. */
+/**
+ * Share of the lowest maximum from which the review raises a caution. It marks proximity on the display,
+ * not a margin: the engines have been seen 13–22 % under published measured pressures
+ * (docs/model/validation.md), and no threshold here would cover that (Astra's review, 2026-11-02).
+ */
 export const NEAR_LIMIT_SHARE = 0.9;
 /**
  * Up to this case fill, a double charge fills at most 110 % of the case: it pours in below the mouth

@@ -42,7 +42,11 @@ export function keyFigures(load: Load, shot: Simulation, limits: PressureLimit[]
           ${above ? html`<strong>▲ ${t('results.aboveMaximum')}:</strong> ` : nothing}
           ${t('gauge.ofLimit', { percent: number(share * 100, 0), limit: `${limitName(lowest, context)} ${quantity(lowest.pressure, 'pressure')}` })}
         </div>
-        ${pressureGauge(shot.maxPressure, limits, NEAR_LIMIT_SHARE, context)}
+        <div>
+          ${pressureGauge(shot.maxPressure, limits, NEAR_LIMIT_SHARE, context)}
+          <!-- Inside the gauge's row: the card's four rows are shared with the velocity card's, which aligns the two scales. -->
+          <div class="key-detail key-caveat">${t('gauge.notSafety')}</div>
+        </div>
       </section>
       ${card('energy', t('results.muzzleEnergy'), quantity(shot.muzzleEnergy, 'energy'), t('results.efficiencyDetail', { percent: number(shot.efficiency * 100, 1) }))}
       ${gun
