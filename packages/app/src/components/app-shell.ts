@@ -223,6 +223,15 @@ export class AppShell extends LitElement {
           ${__BUILD_DATE__}
         </span>
       </footer>
+      ${this.renderDialogs()}
+    `;
+  }
+
+  /** Every dialog of the application: each shows itself when its state asks it to. */
+  private renderDialogs() {
+    const { t } = this.context;
+    const active = this.store.active;
+    return html`
       <gl-about-dialog .open=${this.aboutOpen} .context=${this.context} @close=${this.closeAbout}></gl-about-dialog>
       <gl-choice-dialog
         .heading=${this.projectileChoice ? t('components.chooseProjectile') : undefined}
