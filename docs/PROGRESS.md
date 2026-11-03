@@ -19,12 +19,12 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 
 ## Next steps
 
-Pickup 2026-11-02, end of session (checkout `/home/julien/Documents/Dev/gordons-legacy`; the older
-path below no longer exists). Done today: #34 Undo/Redo and Reopen (closed), #39 tab fade (closed), #10
-stock and #21 bench ↔ phone QR sync (built; #21 open until tried on a real phone), #30 seven more makers
-in data PR #2 (35 makers; Nighthawk, Magnum Research, Seekins need a browser), #22/#31 pressure study on
-four published documents with the app's safety wording changed on Astra's advice, #32 six audit passes
-(editor input, the day's changes, untrusted files, engines and review worker, searches and assistants, shell and state), #35 stale docs fixed (R2 excluded).
+Pickup 2026-11-03 (checkout `/home/julien/Documents/Dev/gordons-legacy`). Done since the last pickup:
+#32's fourth to sixth audit passes (engines and review worker; searches, assistants, data and CLI;
+shell and state) and four Codex reviews of those fixes, until one found nothing new. They added entry
+revisions for loads, guns and stock (`entry-revision.ts`), one recovery-keeping tab
+(`recovery-lock.ts`), retried startup reads (`stored-reading.ts`), and the selected engine everywhere.
+See `docs/code-audit.md` and the Log. #32 is left open for Julien to close or extend.
 
 Waiting on Julien: data PR #2 merge; #30's two questions (conflicting listings, archived snapshots);
 #31's licensing question (may makers' rows be committed as fixtures) and the new safety wording; #28
