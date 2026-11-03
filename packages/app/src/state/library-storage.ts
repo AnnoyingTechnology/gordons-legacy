@@ -10,6 +10,12 @@ export interface LibraryEntry {
   load: Load;
   /** When the entry was last saved, ISO 8601. */
   updatedAt: string;
+  /**
+   * A token made anew at every write of the entry. A tab replaces the entry only while it still holds
+   * the revision it read, so that another tab's save is never overwritten unseen (#32); a date is no
+   * such token, since two saves can share a millisecond. Absent on entries written before 2026-11-03.
+   */
+  revision?: string;
 }
 
 /** Where library entries live: the browser's IndexedDB in the app, memory in tests. */

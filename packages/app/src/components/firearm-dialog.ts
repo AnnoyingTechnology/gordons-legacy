@@ -162,9 +162,11 @@ export class FirearmDialog extends LitElement {
           @change=${(event: Event) => {
             const text = (event.target as HTMLInputElement).value.trim();
             const parsed = parseNumber(text);
-            // The length is the one value a gun cannot be without: the engine needs it. Text that is no
-            // value stays in the field, marked, instead of the old value being saved behind it.
-            const valid = (text === '' && field.key !== 'length') || (parsed !== undefined && parsed > 0);
+            // The length is the one value a gun cannot be without: the engine needs it. A jump may be 0
+            // (a bullet seated touching the lands); the others are more. Text that is no value stays in
+            // the field, marked, instead of the old value being saved behind it.
+            const lowest = field.key === 'jumpToLands' ? 0 : Number.MIN_VALUE;
+            const valid = (text === '' && field.key !== 'length') || (parsed !== undefined && parsed >= lowest);
             this.invalid = valid ? this.invalid.filter((key) => key !== field.key) : [...new Set([...this.invalid, field.key])];
             if (!valid) return;
             this.editBarrel({ [field.key]: text === '' ? undefined : unit.toSi(parsed!) });
@@ -199,9 +201,9 @@ export class FirearmDialog extends LitElement {
     this.saving = 'saving';
     // The barrel carries the gun's name, so a load made with it says which gun it came from.
     const saved = await this.saveFirearm({ ...draft, name: draft.name.trim(), barrel: { ...draft.barrel, name: draft.name.trim() } });
-    if (this.draft !== draft) return;
     this.saving = saved ? 'idle' : 'failed';
-    if (saved) this.querySelector('dialog')?.close();
+    // An edit made while saving is not in what was saved: the dialog stays open for it.
+    if (saved && this.draft === draft) this.querySelector('dialog')?.close();
   };
 }
 

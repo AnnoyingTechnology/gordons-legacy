@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readBackup, writeBackup } from '../src/state/backup.ts';
 import { exampleLoad } from '../src/state/example-load.ts';
-import { FirearmLibrary } from '../src/state/firearms.ts';
+import { FirearmLibrary, newFirearm, type FirearmEntry } from '../src/state/firearms.ts';
 import { memoryStore } from '../src/state/indexed-db.ts';
 import { batchUses, Inventory, lowStock, type StockItem } from '../src/state/inventory.ts';
 import { Library } from '../src/state/library.ts';
@@ -83,5 +83,24 @@ describe('a batch', () => {
     };
     await expect(stock.use([{ id: powder, amount: 0.1 }, { id: bullets, amount: 50 }])).rejects.toThrow('disk full');
     expect(stock.entries.map((item) => item.quantity).sort()).toEqual([0.5, 100]);
+  });
+});
+
+describe('a store read slowly at startup (#32)', () => {
+  it('keeps a gun written before its first reading returned', async () => {
+    const storage = memoryStore<FirearmEntry>();
+    const reading = Promise.withResolvers<FirearmEntry[]>();
+    const list = storage.list.bind(storage);
+    let first = true;
+    storage.list = () => {
+      if (!first) return list();
+      first = false;
+      return reading.promise;
+    };
+    const firearms = new FirearmLibrary(storage);
+    const saving = firearms.save({ ...newFirearm(), name: 'Rhino 40DS' });
+    reading.resolve([]);
+    await saving;
+    expect(firearms.entries.map((entry) => entry.firearm.name)).toEqual(['Rhino 40DS']);
   });
 });

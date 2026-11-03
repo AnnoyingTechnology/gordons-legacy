@@ -587,12 +587,18 @@ export class AppShell extends LitElement {
   /**
    * Keyboard commands do not blur a field before saving or asking whether to discard: the name, a note
    * or a value being typed would commit only after the save or the close (#32). Blurring the focused
-   * field fires its `change` first, so its edit is in the load.
+   * field fires its `change` first, so its edit is in the load; focus and the selection then go back to
+   * it, so that typing, and the field's own Undo, carry on where they were.
    */
   private commitTyping(id: number): void {
     if (this.store.activeId !== id) return;
     const focused = document.activeElement;
-    if (focused instanceof HTMLElement && this.contains(focused) && isTextEntry(focused)) focused.blur();
+    if (!(focused instanceof HTMLElement && this.contains(focused) && isTextEntry(focused))) return;
+    const field = focused instanceof HTMLInputElement || focused instanceof HTMLTextAreaElement ? focused : undefined;
+    const selection = field ? { start: field.selectionStart, end: field.selectionEnd } : undefined;
+    focused.blur();
+    focused.focus({ preventScroll: true });
+    if (field && selection?.start != null && selection.end != null) field.setSelectionRange(selection.start, selection.end);
   }
 
   /** Arrow/Home/End navigation and Delete apply only while a load-tab button has focus. */
@@ -707,7 +713,7 @@ export class AppShell extends LitElement {
   private openEntry(libraryId: string): void {
     const entry = this.library.get(libraryId);
     if (!entry) return;
-    this.store.openSaved(`${entry.name}.json`, entry.load, entry.id);
+    this.store.openSaved(`${entry.name}.json`, entry.load, entry.id, entry.revision);
     this.view = 'editor';
   }
 

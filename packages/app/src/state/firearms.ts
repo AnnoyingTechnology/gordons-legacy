@@ -1,6 +1,7 @@
 import { checkFirearm, FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, type Firearm, type Load } from '@gordons-legacy/formats';
 import type { RecordStore } from './indexed-db.ts';
 import type { LibraryEntry } from './library-storage.ts';
+import { storedReading } from './stored-reading.ts';
 
 /**
  * The user's guns (issue #24): described once, used by every load fired in them. They live beside the
@@ -22,17 +23,25 @@ export type FirearmStorage = RecordStore<FirearmEntry>;
 
 export class FirearmLibrary {
   entries: FirearmEntry[] = [];
-  /** Settles once the stored guns are read. */
+  /** Settles once the stored guns are first read. */
   readonly ready: Promise<void>;
+  /**
+   * Resolves once the guns are read, reading them again if the first reading failed. Every write waits
+   * for it: a write made before the first reading returned (a backup restored at startup) was then
+   * replaced in `entries` by that reading's older list, and vanished from the view and the next backup (#32).
+   */
+  private readonly settled: () => Promise<void>;
   private readonly storage: FirearmStorage;
   private readonly listeners = new Set<() => void>();
 
   constructor(storage: FirearmStorage) {
     this.storage = storage;
-    this.ready = storage.list().then((entries) => {
+    const reading = storedReading(() => storage.list().then((entries) => {
       this.entries = entries.flatMap(checked);
       this.changed();
-    });
+    }));
+    this.ready = reading.first;
+    this.settled = reading.settled;
   }
 
   subscribe(listener: () => void): () => void {
@@ -42,6 +51,7 @@ export class FirearmLibrary {
 
   /** Saves a gun under `id`, or as a new entry; returns the entry's id. */
   async save(firearm: Firearm, id: string = crypto.randomUUID()): Promise<string> {
+    await this.settled();
     const entry: FirearmEntry = { id, firearm, updatedAt: new Date().toISOString() };
     await this.storage.put(entry);
     this.entries = [...this.entries.filter((candidate) => candidate.id !== id), entry];
@@ -50,6 +60,7 @@ export class FirearmLibrary {
   }
 
   async remove(id: string): Promise<void> {
+    await this.settled();
     await this.storage.remove(id);
     this.entries = this.entries.filter((entry) => entry.id !== id);
     this.changed();

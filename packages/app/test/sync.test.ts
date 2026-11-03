@@ -24,7 +24,7 @@ describe('an exchange', () => {
   it('carries the library and the stock, and merges by date: the newer edit wins on both sides', async () => {
     const bench = await side();
     const phone = await side();
-    await bench.library.save('Load', load, 'load-1');
+    await bench.library.save('Load', load, { id: 'load-1' });
     await bench.inventory.receive({ id: 'primers', kind: 'primer', name: 'CCI 200', quantity: 900, updatedAt: '2026-11-01T10:00:00.000Z' });
     await phone.inventory.receive({ id: 'primers', kind: 'primer', name: 'CCI 200', quantity: 850, updatedAt: '2026-11-02T10:00:00.000Z' });
 

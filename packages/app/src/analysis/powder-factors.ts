@@ -18,6 +18,8 @@ export interface PowderFactors {
 const PROGRESSIVE_EXPONENT = 0.3571;
 
 export function powderFactors(propellant: Propellant): PowderFactors {
+  // k = 1 would give factors of 0, which sort first; k below 1 has no root. Neither is a powder (#32).
+  if (!(propellant.heatCapacityRatio > 1)) return { brisance: Number.NaN, progressivity: Number.NaN, combined: Number.NaN };
   const { vivacity, a0, z1 } = propellant.burnModel;
   const brisance = (Math.sqrt(2 * (propellant.heatCapacityRatio - 1)) * vivacity * (propellant.heatOfExplosion / 1000)) / 10000;
   const progressivity = brisance * (1 + a0 * z1) ** PROGRESSIVE_EXPONENT;

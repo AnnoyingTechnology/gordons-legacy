@@ -1,5 +1,6 @@
 import { importGrtLoad, parseLoad, type Load } from '@gordons-legacy/formats';
 import type { LibraryEntry, LibraryStorage } from './library-storage.ts';
+import { storedReading } from './stored-reading.ts';
 
 export type { LibraryEntry } from './library-storage.ts';
 
@@ -9,17 +10,21 @@ export type { LibraryEntry } from './library-storage.ts';
  */
 export class Library {
   entries: LibraryEntry[] = [];
-  /** Settles once the stored entries are read. */
+  /** Settles once the stored entries are first read. */
   readonly ready: Promise<void>;
   private readonly storage: LibraryStorage;
   private readonly listeners = new Set<() => void>();
+  /** Resolves once the entries are read, reading them again if the first reading failed. */
+  private readonly settled: () => Promise<void>;
 
   constructor(storage: LibraryStorage) {
     this.storage = storage;
-    this.ready = storage.list().then((entries) => {
+    const reading = storedReading(() => storage.list().then((entries) => {
       this.entries = entries.flatMap(checked);
       this.changed();
-    });
+    }));
+    this.ready = reading.first;
+    this.settled = reading.settled;
   }
 
   subscribe(listener: () => void): () => void {
@@ -32,42 +37,45 @@ export class Library {
   }
 
   /**
-   * Saves a load under `id`, or as a new entry; returns the entry's id. An entry this library has read
-   * is replaced only if it is still the version read: another tab of the app may have saved it since,
-   * and its work is not overwritten unseen (#32). That case throws `LibraryConflict`.
+   * Saves a load as a new entry, or over the entry `target` names. That entry is replaced only while
+   * it is still the revision the caller read (`target.revision`): another tab of the app, or a sync, may
+   * have saved it since, and that work is not overwritten unseen (#32); the check and the write share
+   * one transaction. That case throws `LibraryConflict`. Returns the entry as saved, with its revision.
    */
-  async save(name: string, load: Load, id?: string): Promise<string> {
-    await this.ready;
-    const entry: LibraryEntry = { id: id ?? newId(), name, load, updatedAt: new Date().toISOString() };
-    if (id === undefined) {
+  async save(name: string, load: Load, target?: { id: string; revision?: string | undefined }): Promise<LibraryEntry> {
+    await this.settled();
+    const entry: LibraryEntry = { id: target?.id ?? newId(), name, load, updatedAt: new Date().toISOString(), revision: newId() };
+    if (target === undefined) {
       await this.storage.put(entry);
     } else {
-      const known = this.get(id)?.updatedAt;
-      const unchanged = (stored: unknown) => (stored as Partial<LibraryEntry> | undefined)?.updatedAt === known;
+      const unchanged = (stored: unknown) => revisionOf(stored) === target.revision;
       if (!(await this.storage.putIf(entry, unchanged))) throw new LibraryConflict(name);
     }
-    this.entries = [...this.entries.filter((candidate) => candidate.id !== entry.id), entry];
-    this.changed();
-    return entry.id;
+    this.replace(entry);
+    return entry;
   }
 
   /**
-   * Takes an entry from another device (sync/), keeping its id and date: it replaces the local entry of
-   * the same id only when it is newer. Returns whether it was taken.
+   * Takes an entry from another device (sync/), keeping its id and date: it replaces the stored entry
+   * of the same id only when it is newer than that one, compared in the write's own transaction, so a
+   * newer save from another tab is not replaced by an older entry this tab had not seen. Returns whether
+   * it was taken.
    */
   async receive(entry: LibraryEntry): Promise<boolean> {
+    await this.settled();
     // Dates are compared as instants: `…:00Z` and `…:00.001Z` don't sort as text, and a date that isn't one is refused.
     const time = Date.parse(entry.updatedAt);
     if (!Number.isFinite(time)) return false;
-    const local = this.get(entry.id);
-    if (local && Date.parse(local.updatedAt) >= time) return false;
-    await this.storage.put(entry);
-    this.entries = [...this.entries.filter((candidate) => candidate.id !== entry.id), entry];
-    this.changed();
+    const received: LibraryEntry = { ...entry, revision: newId() };
+    // A stored entry without a readable date (an older version's) counts as older than any.
+    const older = (stored: unknown) => !(Date.parse(dateOf(stored)) >= time);
+    if (!(await this.storage.putIf(received, older))) return false;
+    this.replace(received);
     return true;
   }
 
   async remove(id: string): Promise<void> {
+    await this.settled();
     await this.storage.remove(id);
     this.entries = this.entries.filter((entry) => entry.id !== id);
     this.changed();
@@ -95,9 +103,26 @@ export class Library {
     return outcome;
   }
 
+  private replace(entry: LibraryEntry): void {
+    this.entries = [...this.entries.filter((candidate) => candidate.id !== entry.id), entry];
+    this.changed();
+  }
+
   private changed(): void {
     for (const listener of this.listeners) listener();
   }
+}
+
+/** The revision of a stored record, read without trusting its shape. */
+function revisionOf(stored: unknown): string | undefined {
+  const revision = (stored as { revision?: unknown } | undefined)?.revision;
+  return typeof revision === 'string' ? revision : undefined;
+}
+
+/** The date of a stored record, or '' when it has none. */
+function dateOf(stored: unknown): string {
+  const date = (stored as { updatedAt?: unknown } | undefined)?.updatedAt;
+  return typeof date === 'string' ? date : '';
 }
 
 /** A save refused because another tab of the app changed or removed the entry since it was read. */
@@ -137,7 +162,9 @@ function checked(entry: LibraryEntry): LibraryEntry[] {
   if (!result.ok) return [];
   const name = typeof entry.name === 'string' && entry.name.trim() !== '' ? entry.name : (result.value.title || 'Untitled');
   const updatedAt = typeof entry.updatedAt === 'string' && entry.updatedAt !== '' ? entry.updatedAt : new Date(0).toISOString();
-  return [{ ...entry, load: result.value, name, updatedAt }];
+  // The revision is kept as stored, or left out: a save compares it with the stored one (save()).
+  const { revision, ...rest } = entry;
+  return [{ ...rest, load: result.value, name, updatedAt, ...(typeof revision === 'string' ? { revision } : {}) }];
 }
 
 /** Entries of one cartridge, by firearm. */

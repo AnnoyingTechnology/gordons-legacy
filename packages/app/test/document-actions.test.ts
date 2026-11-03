@@ -15,7 +15,7 @@ describe('document identity', () => {
     expect(store.active!.load.title).toBe('Renamed');
     expect(store.active!.libraryId).toBe('entry');
     expect(store.isDirty(store.active!)).toBe(true);
-    store.markSaved(store.active!.id, serializeLoad(load), 'entry');
+    store.markSaved(store.active!.id, serializeLoad(load), { id: 'entry' });
     expect(store.active!.name).toBe('Renamed.json');
     expect(store.isDirty(store.active!)).toBe(true);
     store.rename(store.active!.id, ' ');
@@ -122,7 +122,7 @@ describe('undo, redo and reopening a closed load', () => {
     const id = store.active!.id;
     store.update(id, withCharge(2));
     store.close(id);
-    store.markSaved(id, serializeLoad(withCharge(2)), 'entry');
+    store.markSaved(id, serializeLoad(withCharge(2)), { id: 'entry' });
     store.reopenClosed();
     expect(store.active!.id).toBe(id);
     expect(store.isDirty(store.active!)).toBe(false);

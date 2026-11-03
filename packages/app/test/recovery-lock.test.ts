@@ -65,3 +65,20 @@ test("a second tab neither reads nor wipes the first tab's recovery, and adopts 
   expect(second.recoveryElsewhere).toBe(false);
   expect(second.documents.map((document) => document.name)).toEqual(['Unsaved.json']);
 });
+
+test("a load the other tab had open from an entry open here too comes in as an unsaved copy, not a second link (#32)", async () => {
+  const storage = memoryLocalStorage();
+  const { locks, closeHolder } = fakeLocks();
+  const first = new DocumentStore(storage, Date.now, 'deferred');
+  claimRecovery(first, locks);
+  await Promise.resolve();
+  first.openSaved('Saved.json', load, 'entry-1', 'revision-1');
+  const second = new DocumentStore(storage, Date.now, 'deferred');
+  claimRecovery(second, locks);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  second.openSaved('Saved.json', load, 'entry-1', 'revision-1');
+  closeHolder();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(second.documents.map((document) => document.libraryId)).toEqual(['entry-1', undefined]);
+  expect(second.isDirty(second.documents[1]!)).toBe(true);
+});

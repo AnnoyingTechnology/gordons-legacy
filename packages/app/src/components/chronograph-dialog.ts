@@ -34,10 +34,10 @@ export class ChronographDialog extends LitElement {
   /** The charge as typed, in the display unit. */
   declare charge: string;
   /**
-   * The load's charge as it was shown, with its exact mass: an untouched charge is the load's own, not
-   * its text read back at the unit's few decimals (0.1234 g is shown 0.123 g, #32).
+   * The load's exact charge, while the field still shows it untouched: it is the load's own, not its text
+   * read back at the unit's few decimals (0.1234 g is shown 0.123 g, #32). Any typing drops it.
    */
-  private prefilled: { text: string; mass: number } | undefined;
+  private prefilledMass: number | undefined;
 
   constructor() {
     super();
@@ -58,7 +58,7 @@ export class ChronographDialog extends LitElement {
       this.unit = this.csv.statedUnit;
       const unit = displayUnit('chargeMass', this.context.units);
       this.charge = formatEditable(unit.fromSi(this.load.charge.mass), unit.decimals);
-      this.prefilled = { text: this.charge, mass: this.load.charge.mass };
+      this.prefilledMass = this.load.charge.mass;
     }
   }
 
@@ -108,7 +108,10 @@ export class ChronographDialog extends LitElement {
                   <th><label for="chronograph-charge">${t('field.chargeMass')}</label></th>
                   <td>
                     <input id="chronograph-charge" type="text" inputmode="decimal" .value=${this.charge}
-                      @input=${(event: Event) => (this.charge = (event.target as HTMLInputElement).value)} />
+                      @input=${(event: Event) => {
+                        this.prefilledMass = undefined;
+                        this.charge = (event.target as HTMLInputElement).value;
+                      }} />
                     ${chargeUnit.symbol}
                   </td>
                 </tr>
@@ -140,7 +143,7 @@ export class ChronographDialog extends LitElement {
   }
 
   private chargeMass(): number | undefined {
-    if (this.prefilled && this.charge === this.prefilled.text) return this.prefilled.mass;
+    if (this.prefilledMass !== undefined) return this.prefilledMass;
     const value = parseNumber(this.charge);
     return value !== undefined && value > 0 ? displayUnit('chargeMass', this.context.units).toSi(value) : undefined;
   }

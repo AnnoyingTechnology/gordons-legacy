@@ -1,5 +1,6 @@
 import type { Load } from '@gordons-legacy/formats';
 import type { RecordStore } from './indexed-db.ts';
+import { storedReading } from './stored-reading.ts';
 
 /**
  * The reloader's stock (issues #10 and #21): powders, primers, projectiles and cases, each with the
@@ -36,8 +37,14 @@ export interface Use {
 
 export class Inventory {
   entries: StockItem[] = [];
-  /** Settles once the stored items are read. */
+  /** Settles once the stored items are first read. */
   readonly ready: Promise<void>;
+  /**
+   * Resolves once the items are read, reading them again if the first reading failed. Every write waits
+   * for it: a write made before the first reading returned (a backup restored at startup) was then
+   * replaced in `entries` by that reading's older list, and vanished from the view and the next backup (#32).
+   */
+  private readonly settled: () => Promise<void>;
   private readonly storage: InventoryStorage;
   private readonly listeners = new Set<() => void>();
   private readonly now: () => Date;
@@ -45,10 +52,12 @@ export class Inventory {
   constructor(storage: InventoryStorage, now: () => Date = () => new Date()) {
     this.storage = storage;
     this.now = now;
-    this.ready = storage.list().then((entries) => {
+    const reading = storedReading(() => storage.list().then((entries) => {
       this.entries = entries.flatMap(checked);
       this.changed();
-    });
+    }));
+    this.ready = reading.first;
+    this.settled = reading.settled;
   }
 
   subscribe(listener: () => void): () => void {
@@ -58,6 +67,7 @@ export class Inventory {
 
   /** Saves an item, new when it has no id yet; returns its id. */
   async save(item: Omit<StockItem, 'id' | 'updatedAt'> & { id?: string }): Promise<string> {
+    await this.settled();
     const entry: StockItem = { ...item, id: item.id ?? crypto.randomUUID(), updatedAt: this.now().toISOString() };
     await this.storage.put(entry);
     this.entries = [...this.entries.filter((candidate) => candidate.id !== entry.id), entry];
@@ -66,23 +76,28 @@ export class Inventory {
   }
 
   /**
-   * Takes an item from another device (sync/), keeping its id and date: it replaces the local item of the
-   * same id only when it is newer. Returns whether it was taken.
+   * Takes an item from another device (sync/), keeping its id and date: it replaces the stored item of
+   * the same id only when it is newer than that one, compared in the write's own transaction (as
+   * `Library.receive`). Returns whether it was taken.
    */
   async receive(item: StockItem): Promise<boolean> {
+    await this.settled();
     const [checkedItem] = checked(item);
     // Dates are compared as instants, and one that isn't a date is refused (library.ts, `receive`).
     const time = checkedItem ? Date.parse(checkedItem.updatedAt) : Number.NaN;
     if (!checkedItem || !Number.isFinite(time) || !(typeof item.updatedAt === 'string' && Number.isFinite(Date.parse(item.updatedAt)))) return false;
-    const local = this.entries.find((entry) => entry.id === checkedItem.id);
-    if (local && Date.parse(local.updatedAt) >= time) return false;
-    await this.storage.put(checkedItem);
+    const older = (stored: unknown) => {
+      const date = (stored as { updatedAt?: unknown } | undefined)?.updatedAt;
+      return !(typeof date === 'string' && Date.parse(date) >= time);
+    };
+    if (!(await this.storage.putIf(checkedItem, older))) return false;
     this.entries = [...this.entries.filter((entry) => entry.id !== checkedItem.id), checkedItem];
     this.changed();
     return true;
   }
 
   async remove(id: string): Promise<void> {
+    await this.settled();
     await this.storage.remove(id);
     this.entries = this.entries.filter((entry) => entry.id !== id);
     this.changed();
@@ -93,6 +108,7 @@ export class Inventory {
    * batch used was miscounted, and zero is the truth that remains.
    */
   async use(uses: readonly Use[]): Promise<void> {
+    await this.settled();
     const updatedAt = this.now().toISOString();
     const changed = uses.flatMap(({ id, amount }) => {
       const item = this.entries.find((entry) => entry.id === id);
