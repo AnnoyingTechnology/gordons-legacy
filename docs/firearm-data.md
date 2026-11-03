@@ -366,3 +366,18 @@ exists.
   `unstated` and the figure is a starting point, not an answer.
 - A user's own gun always wins over a published record. The published figures are a convenience, never
   a measurement of the gun in front of them.
+
+## A gun listed twice (maintainer, 2026-11-03)
+
+Every extractor settles a name read again through `settleListing` (`tools/data/firearms/printed-figures.ts`):
+
+- another cartridge is another gun, named apart by its cartridge;
+- the same barrel length and twist make the same gun, and only one listing is kept: the **heaviest**,
+  whole, with its own page as its source, since a maker's heavier weight is most likely the gun with a
+  loaded magazine;
+- another barrel length or twist is another configuration, so another gun, named apart by what differs
+  as the maker printed it (`… 16.5"`, `… 1:8"`).
+
+Nothing is averaged: a figure no page printed never enters a record. Guns whose pages are gone may be
+read from archived snapshots, cited as the archive and its date (not done yet: the Internet Archive
+was offline on 2026-11-03).

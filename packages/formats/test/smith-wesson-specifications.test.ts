@@ -3,13 +3,13 @@ import { units } from '../src/index.ts';
 import {
   barrelLength,
   completeGun,
-  difference,
   firearmFrom,
   gunMass,
   productPage,
   readableName,
   twistLength,
 } from '../../../tools/data/firearms/smith-wesson.ts';
+import { difference } from '../../../tools/data/firearms/printed-figures.ts';
 
 /**
  * The reading of a maker's published specifications (tools/data/firearms/smith-wesson.ts, issue #30).

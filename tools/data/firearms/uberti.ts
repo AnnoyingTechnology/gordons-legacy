@@ -15,12 +15,12 @@
  * one `Avg. Weight` that does not say what it includes, so the mass basis is `unstated`. A revolver's
  * barrel length excludes its cylinder.
  */
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import { bareBore, loadableCartridge } from './loadable-cartridge.ts';
-import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, fetchPage, fetchText, fileName, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
+import { crawlArguments, fetchPage, fetchText, plainText, plausibleGunMass } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
+import { writeListing } from './printed-figures.ts';
 
 const SITEMAP = 'https://www.uberti-usa.com/sitemap.xml';
 
@@ -144,13 +144,6 @@ export function firearmsFrom(page: string, url: string, retrieved: string): Fire
   });
 }
 
-/** What the name clash `a` against `b` is about, in words, for the crawl's log. */
-function disagreement(a: Firearm, b: Firearm): string {
-  const parts = [`barrel ${(a.barrel.length * 1000).toFixed(1)} mm against ${(b.barrel.length * 1000).toFixed(1)} mm`];
-  if (a.barrel.gunMass !== b.barrel.gunMass) parts.push(`mass ${a.barrel.gunMass ?? 'none'} kg against ${b.barrel.gunMass ?? 'none'} kg`);
-  return parts.join(', ');
-}
-
 async function main(): Promise<void> {
   const args = crawlArguments('uberti', process.argv.slice(2));
   if (args === undefined) return;
@@ -163,7 +156,6 @@ async function main(): Promise<void> {
   console.log(`${pages.length} cartridge gun pages`);
   mkdirSync(folder, { recursive: true });
   const retrieved = new Date().toISOString().slice(0, 10);
-  let written = 0;
   const skipped: string[] = [];
   const taken = new Map<string, Firearm>();
   for (const url of pages) {
@@ -177,26 +169,12 @@ async function main(): Promise<void> {
     const firearms = firearmsFrom(page, url, retrieved);
     if (firearms.length === 0) skipped.push(`${url}: no row with a loadable caliber and a barrel length`);
     for (const firearm of firearms) {
-      const file = fileName(firearm);
-      const earlier = taken.get(file);
-      if (earlier !== undefined) {
-        // Two rows of one name: the name decides the file, so the second is not written, and the
-        // difference is printed rather than one of the two chosen silently.
-        skipped.push(`${url}: ${firearm.name} is already written; ${disagreement(earlier, firearm)}`);
-        continue;
-      }
-      const json = firearmJson(firearm);
-      if ('problem' in json) {
-        skipped.push(`${url}: ${json.problem}`);
-        continue;
-      }
-      taken.set(file, firearm);
-      writeFileSync(join(folder, file), json.text);
-      written++;
-      console.log(summaryLine(firearm));
+      const outcome = writeListing(folder, taken, firearm);
+      if ('skipped' in outcome) skipped.push(`${url}: ${outcome.skipped}`);
+      else if (outcome.note) skipped.push(`${url}: ${outcome.note}`);
     }
   }
-  console.log(`\n${written} guns written to ${folder}`);
+  console.log(`\n${taken.size} guns written to ${folder}`);
   if (skipped.length > 0) {
     console.log(`${skipped.length} skipped:`);
     for (const reason of skipped) console.log(' -', reason);

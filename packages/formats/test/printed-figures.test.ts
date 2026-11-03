@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { difference, firearmRecord, labelled, length, mass, readableName, twist, withMaker } from '../../../tools/data/firearms/printed-figures.ts';
+import { difference, firearmRecord, labelled, length, mass, readableName, settleListing, twist, withMaker } from '../../../tools/data/firearms/printed-figures.ts';
 
 /**
  * The figures the American makers print, as `tools/data/firearms/printed-figures.ts` reads them (issue
@@ -117,5 +117,30 @@ describe('the record every one of these extractors builds', () => {
     const second = firearmRecord({ ...FACTS, barrelLength: 0.4064, gunMass: 2.948851 });
     expect(difference(written, second)).toBe(', where the two pages disagree: barrel length 408.9 mm in the record, 406.4 mm on this page');
     expect(difference(written, written)).toBe('');
+  });
+});
+
+describe('a gun listed twice (the maintainer’s rules of 2026-11-03)', () => {
+  const byName = (firearm: { name: string }) => firearm.name;
+  const written = (first: ReturnType<typeof firearmRecord>) => new Map([[first.name, first]]);
+
+  it('keeps one listing of the same barrel and twist: the heaviest, whole, with its own page', () => {
+    const light = firearmRecord({ ...FACTS, gunMass: 2.9 });
+    const heavy = firearmRecord({ ...FACTS, gunMass: 3.4, url: 'https://example.invalid/carbine-le/' });
+    const settled = settleListing(written(light), heavy, byName);
+    expect(settled).toEqual({ write: heavy, replacing: light });
+    expect('skip' in settleListing(written(heavy), light, byName)).toBe(true);
+    expect('skip' in settleListing(written(light), firearmRecord(FACTS), byName)).toBe(true);
+  });
+
+  it('makes another barrel or twist another gun, named apart by what differs', () => {
+    const first = firearmRecord(FACTS);
+    const longer = firearmRecord({ ...FACTS, barrelLength: 0.508, published: { barrelLength: '20" (508 mm)' } });
+    const settled = settleListing(written(first), longer, byName);
+    expect('write' in settled && settled.write.name).toBe('Example Carbine 20"');
+    expect('write' in settled && settled.write.barrel.name).toBe('Example Carbine 20"');
+    const faster = firearmRecord({ ...FACTS, twistLength: 0.2032, published: { twist: '1:8' } });
+    const twisted = settleListing(written(first), faster, byName);
+    expect('write' in twisted && twisted.write.name).toBe('Example Carbine 1:8');
   });
 });

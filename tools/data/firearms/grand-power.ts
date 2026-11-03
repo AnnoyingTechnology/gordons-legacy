@@ -18,12 +18,12 @@
  * pages with no caliber and no barrel length. The twist is `1:8` with no unit on the pages that give
  * it: a number under 50 cannot be millimetres, so it is taken as inches (the same rule as Henry's).
  */
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import { loadableCartridge } from './loadable-cartridge.ts';
-import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, fetchPage, fetchText, fileName, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
+import { crawlArguments, fetchPage, fetchText, plainText, plausibleGunMass } from './maker-site.ts';
 import { publishedFigures, type MassBasis } from './published-figures.ts';
+import { writeListing } from './printed-figures.ts';
 
 const SITEMAP = 'https://grandpower.eu/product-sitemap.xml';
 
@@ -150,7 +150,6 @@ async function main(): Promise<void> {
   console.log(`${pages.length} product pages`);
   mkdirSync(folder, { recursive: true });
   const retrieved = new Date().toISOString().slice(0, 10);
-  let written = 0;
   const skipped: string[] = [];
   const taken = new Map<string, Firearm>();
   for (const url of pages) {
@@ -166,23 +165,11 @@ async function main(): Promise<void> {
       skipped.push(`${url}: no single caliber with a single barrel length`);
       continue;
     }
-    const file = fileName(firearm);
-    const earlier = taken.get(file);
-    if (earlier !== undefined) {
-      skipped.push(`${url}: ${firearm.name} is already written (${earlier.source?.url}); barrel ${earlier.barrel.length} m against ${firearm.barrel.length} m, mass ${earlier.barrel.gunMass} kg against ${firearm.barrel.gunMass} kg`);
-      continue;
-    }
-    const json = firearmJson(firearm);
-    if ('problem' in json) {
-      skipped.push(`${url}: ${json.problem}`);
-      continue;
-    }
-    taken.set(file, firearm);
-    writeFileSync(join(folder, file), json.text);
-    written++;
-    console.log(summaryLine(firearm));
+    const outcome = writeListing(folder, taken, firearm);
+    if ('skipped' in outcome) skipped.push(`${url}: ${outcome.skipped}`);
+    else if (outcome.note) skipped.push(`${url}: ${outcome.note}`);
   }
-  console.log(`\n${written} guns written to ${folder}`);
+  console.log(`\n${taken.size} guns written to ${folder}`);
   if (skipped.length > 0) {
     console.log(`${skipped.length} pages skipped:`);
     for (const reason of skipped) console.log(' -', reason);

@@ -24,12 +24,12 @@
  *    length for one (from the chamber mouth, with the cylinder gap in between) is not the published
  *    figure. No correction is made here: the files say `published`, and the application shows that.
  */
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import { loadableCartridge } from './loadable-cartridge.ts';
-import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, DELAY, fetchPage, fetchText, fileName, firearmJson, plainText, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
+import { crawlArguments, DELAY, fetchPage, fetchText, plainText, plausibleGunMass, sleep } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
+import { writeListing } from './printed-figures.ts';
 
 const SITEMAP = 'https://www.smith-wesson.com/sitemap.xml';
 
@@ -259,32 +259,6 @@ async function sitemapAddresses(url: string): Promise<string[]> {
   return lists.flat();
 }
 
-/**
- * What two listings of the same gun disagree on, for the skip list: Smith & Wesson lists some guns on
- * two pages, and the two pages do not always print the same weight. Empty when they agree.
- *
- * The second listing is skipped rather than merged: nothing on either page says which figure supersedes
- * the other, and a record that averaged them would hold a figure the maker never printed. The
- * disagreement belongs in the crawl's log, where a human can see it, until #30 settles how a record
- * should carry a conflict.
- */
-export function difference(written: Firearm, skipped: Firearm): string {
-  const figures: Array<[string, string, number | undefined, number | undefined]> = [
-    ['barrel length', 'mm', written.barrel.length, skipped.barrel.length],
-    ['weight', 'g', written.barrel.gunMass, skipped.barrel.gunMass],
-    ['twist', 'mm', written.barrel.twistLength, skipped.barrel.twistLength],
-  ];
-  const differing = figures
-    .filter(([, , kept, left]) => kept !== left)
-    .map(([what, unit, kept, left]) => `${what} ${reading(kept, unit)} in the record, ${reading(left, unit)} on this page`);
-  return differing.length === 0 ? '' : `, where the two pages disagree: ${differing.join('; ')}`;
-}
-
-/** A figure of a gun as the log writes it, in its milli-unit, or `none` where a page gave nothing. */
-function reading(value: number | undefined, unit: string): string {
-  return value === undefined ? 'none' : `${(value * 1000).toFixed(1)} ${unit}`;
-}
-
 async function main(): Promise<void> {
   const args = crawlArguments('smith-wesson', process.argv.slice(2));
   if (args === undefined) return;
@@ -293,7 +267,6 @@ async function main(): Promise<void> {
   console.log(`${products.length} product pages`);
   mkdirSync(folder, { recursive: true });
   const retrieved = new Date().toISOString().slice(0, 10);
-  let written = 0;
   const skipped: string[] = [];
   const writtenFiles = new Map<string, Firearm>();
   for (const url of products) {
@@ -310,35 +283,12 @@ async function main(): Promise<void> {
       continue;
     }
     // Two pages sometimes give one name: one model sold in two cartridges, or the same gun listed
-    // twice. The name is settled here, before the record is written, so that a file and the record
-    // inside it always carry the same name.
-    const taken = writtenFiles.get(fileName(firearm));
-    if (taken !== undefined) {
-      if (taken.cartridge !== firearm.cartridge) {
-        // A different cartridge is a different gun, so the cartridge belongs in its name.
-        firearm.name = `${firearm.name} ${firearm.cartridge}`;
-        firearm.barrel.name = firearm.name;
-      } else {
-        skipped.push(`${url}: ${firearm.name} is already written${difference(taken, firearm)}`);
-        continue;
-      }
-    }
-    const file = fileName(firearm);
-    if (writtenFiles.has(file)) {
-      skipped.push(`${url}: ${firearm.name} is already written`);
-      continue;
-    }
-    const json = firearmJson(firearm);
-    if ('problem' in json) {
-      skipped.push(`${url}: ${json.problem}`);
-      continue;
-    }
-    writtenFiles.set(file, firearm);
-    writeFileSync(join(folder, file), json.text);
-    written++;
-    console.log(summaryLine(firearm));
+    // twice, not always with the same weight (settleListing).
+    const outcome = writeListing(folder, writtenFiles, firearm);
+    if ('skipped' in outcome) skipped.push(`${url}: ${outcome.skipped}`);
+    else if (outcome.note) skipped.push(`${url}: ${outcome.note}`);
   }
-  console.log(`\n${written} guns written to ${folder}`);
+  console.log(`\n${writtenFiles.size} guns written to ${folder}`);
   if (skipped.length > 0) {
     console.log(`${skipped.length} pages skipped:`);
     for (const reason of skipped) console.log(' -', reason);

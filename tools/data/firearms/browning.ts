@@ -14,12 +14,12 @@
  * rate is the bare number of inches per turn (`10"` means 1:10"). The weight does not say what it
  * includes, so every record says `unstated`.
  */
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import { loadableCartridge } from './loadable-cartridge.ts';
-import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, fetchPage, fetchText, fileName, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
+import { crawlArguments, fetchPage, fetchText, plainText, plausibleGunMass } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
+import { writeListing } from './printed-figures.ts';
 
 const SITE = 'https://www.browning.com';
 const OUNCE = units.POUND / 16; // kg
@@ -192,9 +192,8 @@ async function main(): Promise<void> {
   console.log(`${pages.length} rifle pages`);
   mkdirSync(folder, { recursive: true });
   const retrieved = new Date().toISOString().slice(0, 10);
-  let written = 0;
   const skipped: string[] = [];
-  const names = new Map<string, { url: string; published: string }>();
+  const taken = new Map<string, Firearm>();
   for (const url of pages) {
     let page: string;
     try {
@@ -213,27 +212,12 @@ async function main(): Promise<void> {
     for (const skip of found.skipped) skipped.push(`${url}: ${skip.what}: ${skip.why}`);
     if (found.guns.length === 0 && found.skipped.length === 0) skipped.push(`${url}: no specification table`);
     for (const firearm of found.guns) {
-      const json = firearmJson(firearm);
-      if ('problem' in json) {
-        skipped.push(`${url}: ${firearm.name}: ${json.problem}`);
-        continue;
-      }
-      const file = fileName(firearm);
-      const earlier = names.get(file);
-      const published = JSON.stringify(firearm.source?.published);
-      if (earlier !== undefined) {
-        // The same gun on two pages: the first is kept, and a disagreement between them is said aloud.
-        const verdict = earlier.published === published ? 'same figures' : `FIGURES DISAGREE, ${earlier.published} against ${published}`;
-        skipped.push(`${url}: ${firearm.name} is already written from ${earlier.url} (${verdict})`);
-        continue;
-      }
-      names.set(file, { url, published });
-      writeFileSync(join(folder, file), json.text);
-      written++;
-      console.log(summaryLine(firearm));
+      const outcome = writeListing(folder, taken, firearm);
+      if ('skipped' in outcome) skipped.push(`${url}: ${outcome.skipped}`);
+      else if (outcome.note) skipped.push(`${url}: ${outcome.note}`);
     }
   }
-  console.log(`\n${written} guns written to ${folder}`);
+  console.log(`\n${taken.size} guns written to ${folder}`);
   if (skipped.length > 0) {
     console.log(`${skipped.length} skipped:`);
     for (const reason of skipped) console.log(' -', reason);
