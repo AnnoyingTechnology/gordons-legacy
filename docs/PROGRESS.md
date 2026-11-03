@@ -26,7 +26,7 @@ revisions for loads, guns and stock (`entry-revision.ts`), one recovery-keeping 
 (`recovery-lock.ts`), retried startup reads (`stored-reading.ts`), and the selected engine everywhere.
 See `docs/code-audit.md` and the Log. #32 is left open for Julien to close or extend.
 
-Waiting on Julien: data PR #2 merge, then PR #3 (the refresh under the listing rules); #30's two questions (conflicting listings, archived snapshots);
+Data PRs #2 and #3 merged 2026-11-03. Waiting on Julien: #30's two questions (conflicting listings, archived snapshots);
 #31's licensing question (may makers' rows be committed as fixtures) and the new safety wording; #28
 (modal converter); #21 a real-device try. Another agent: #19.
 
@@ -217,6 +217,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 
 | Date | Entry |
 |---|---|
+| 2026-11-03 | **Data PRs #2 and #3 merged** (Julien: "merge"). The live repository serves 9,216 guns in 35 maker files (49 archived), read by the app's synchroniser in 1.6 s with no problem. #30, #31 (R1 does not beat GRT Traditional on the evidence) and #32 closed. |
 | 2026-11-03 | **#30 Ruger GP100/SP101 from the Wayback Machine: 49 guns**, each citing its snapshot and capture date (`source.archived`), added to data PR #3 (439 Ruger, 9,216 guns in all). The archive reader now treats one page's addresses over the years as one page and retries a refused request twice (30 s, 2 min) before reporting the family. |
 | 2026-11-03 | **#22/#31 the pressure study widened from 22 to 48 paired conditions.** Twelve bullet lengths found and read first-hand (Nosler's own pages for three, Blue Collar Reloading's listings for nine, Sierra and Hornady printing none), and the Western reader no longer takes a pressure note for a cartridge name (660 rows). On MAGPRO's 20 piezo series: GRT Traditional L5 0.212, bias +6.6 %; R1 L5 1.007, bias −18.2 %, under in every series; paired difference 0.795 (0.575–1.004), clear of zero under every sensitivity variant. `docs/model/validation.md` rewritten for it. What still blocks most rows: powder models (Accurate, Ramshot) and caliber definitions, which the community components do not have (#19 is another agent's). |
 | 2026-11-03 | **#30 refresh done: data PR #3** (stacked on #2), all 35 makers read again under the listing rules: 9,167 guns, 488 files valid, 0 checker problems. Girsan rebuilt its site (extractor rewritten, 92 guns; `Weight (Empty)` now unstated basis); Kel-Tec answers behind a Cloudflare bot challenge, not circumvented, its 42 guns kept. The export keeps a published gun when a re-reading names another cartridge (added, named apart) or only lost figures. Left: the 43 Ruger GP100/SP101 guns from the Wayback Machine (`ruger.ts --archived gp100 --archived sp101`) once the archive answers again. |
