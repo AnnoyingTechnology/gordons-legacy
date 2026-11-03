@@ -13,7 +13,7 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
   documents (`tools/validation/pressure/`, `docs/model/validation.md`). The default engine has read up to
   22 % under published pressures on one powder model and 8 % over on another; the app's safety wording
   says so. Bottleneck: powder models and bullet lengths, not documents.
-- **Tests:** 995 (Vitest), `tsc`, production build; CI deploys GitHub Pages from `main`.
+- **Tests:** 994 (Vitest), `tsc`, production build; CI deploys GitHub Pages from `main`.
 - **Docs:** `docs/PLAN.md` (plan), `docs/model/` (engines, validation, pressure sources), `docs/formats/`,
   `docs/firearm-data.md`, `docs/ui-audit.md`, `docs/code-audit.md`, each package's README.
 
