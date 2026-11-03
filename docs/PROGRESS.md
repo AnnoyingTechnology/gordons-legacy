@@ -13,7 +13,7 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
   documents (`tools/validation/pressure/`, `docs/model/validation.md`). The default engine has read up to
   22 % under published pressures on one powder model and 8 % over on another; the app's safety wording
   says so. Bottleneck: powder models and bullet lengths, not documents.
-- **Tests:** 1,012 (Vitest), `tsc`, production build; CI deploys GitHub Pages from `main`.
+- **Tests:** 1,013 (Vitest), `tsc`, production build; CI deploys GitHub Pages from `main`.
 - **Docs:** `docs/PLAN.md` (plan), `docs/model/` (engines, validation, pressure sources), `docs/formats/`,
   `docs/firearm-data.md`, `docs/ui-audit.md`, `docs/code-audit.md`, each package's README.
 
@@ -217,6 +217,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 
 | Date | Entry |
 |---|---|
+| 2026-11-03 | **#30 Ruger GP100/SP101 from the Wayback Machine: 49 guns**, each citing its snapshot and capture date (`source.archived`), added to data PR #3 (439 Ruger, 9,216 guns in all). The archive reader now treats one page's addresses over the years as one page and retries a refused request twice (30 s, 2 min) before reporting the family. |
 | 2026-11-03 | **#22/#31 the pressure study widened from 22 to 48 paired conditions.** Twelve bullet lengths found and read first-hand (Nosler's own pages for three, Blue Collar Reloading's listings for nine, Sierra and Hornady printing none), and the Western reader no longer takes a pressure note for a cartridge name (660 rows). On MAGPRO's 20 piezo series: GRT Traditional L5 0.212, bias +6.6 %; R1 L5 1.007, bias −18.2 %, under in every series; paired difference 0.795 (0.575–1.004), clear of zero under every sensitivity variant. `docs/model/validation.md` rewritten for it. What still blocks most rows: powder models (Accurate, Ramshot) and caliber definitions, which the community components do not have (#19 is another agent's). |
 | 2026-11-03 | **#30 refresh done: data PR #3** (stacked on #2), all 35 makers read again under the listing rules: 9,167 guns, 488 files valid, 0 checker problems. Girsan rebuilt its site (extractor rewritten, 92 guns; `Weight (Empty)` now unstated basis); Kel-Tec answers behind a Cloudflare bot challenge, not circumvented, its 42 guns kept. The export keeps a published gun when a re-reading names another cartridge (added, named apart) or only lost figures. Left: the 43 Ruger GP100/SP101 guns from the Wayback Machine (`ruger.ts --archived gp100 --archived sp101`) once the archive answers again. |
 | 2026-11-03 | **Astra's #32 review: three findings, all fixed.** A sync merged the photos it does not carry from this tab's cached load, so it could delete a photo another tab had saved: the merge now reads the stored entry in the write's transaction (`RecordStore.update`, `Library.receive(entry, merged)`). A backup serialised this tab's lists, missing what other tabs had saved: the stores now `refresh()` before a backup. Text typed in the gun dialog during a save, still in its focused field, was lost when the dialog closed: it now stays open. |

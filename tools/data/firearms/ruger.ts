@@ -28,7 +28,7 @@ import { finest, type Reading } from './finest-reading.ts';
 import { loadableCartridge } from './loadable-cartridge.ts';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
 import { crawlArguments, decodeEntities, fetchPage, fetchText, plainText, plausibleGunMass } from './maker-site.ts';
-import { archivedPage, archivedPages, snapshotAddress, snapshotDate } from './archived-pages.ts';
+import { archivedPage, archivedPages, snapshotAddress, snapshotDate, type Snapshot } from './archived-pages.ts';
 import { writeListing } from './printed-figures.ts';
 
 const SITE = 'https://ruger.com';
@@ -241,7 +241,13 @@ async function main(): Promise<void> {
     else if (outcome.note) skipped.push(`${url}: ${outcome.note}`);
   }
   for (const family of archivedFamilies(process.argv.slice(2))) {
-    const snapshots = (await archivedPages(`ruger.com/products/${family}/specSheets/`)).slice(0, limit);
+    let snapshots: Snapshot[];
+    try {
+      snapshots = (await archivedPages(`ruger.com/products/${family}/specSheets/`)).slice(0, limit);
+    } catch (error) {
+      skipped.push(`${family}: the archive's index did not answer (${(error as Error).message})`);
+      continue;
+    }
     console.log(`${family}: ${snapshots.length} archived sheets`);
     for (const snapshot of snapshots) {
       const address = snapshotAddress(snapshot);

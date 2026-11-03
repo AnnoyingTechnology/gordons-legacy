@@ -28,8 +28,10 @@ export function indexQuery(prefix: string): string {
 }
 
 /**
- * The latest capture of each page in an index answer. The address is compared without its query and
- * fragment, as the extractors read them; a malformed answer gives no snapshot rather than a guess.
+ * The latest capture of each page in an index answer. The archive records one page under several
+ * addresses over the years (`http://www.ruger.com:80/…`, `https://ruger.com/…`): they are one page,
+ * compared without scheme, `www.`, default port, query and fragment. A malformed answer gives no
+ * snapshot rather than a guess.
  */
 export function latestSnapshots(answer: string): Snapshot[] {
   let rows: unknown;
@@ -48,9 +50,10 @@ export function latestSnapshots(answer: string): Snapshot[] {
     const original = capture[originalColumn];
     const timestamp = capture[timestampColumn];
     if (typeof original !== 'string' || typeof timestamp !== 'string' || !/^\d{14}$/.test(timestamp)) continue;
-    const page = original.replace(/[?#].*$/, '');
+    const address = original.replace(/[?#].*$/, '');
+    const page = address.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/:(80|443)\//, '/');
     const known = latest.get(page);
-    if (known === undefined || known.timestamp < timestamp) latest.set(page, { original: page, timestamp });
+    if (known === undefined || known.timestamp < timestamp) latest.set(page, { original: address, timestamp });
   }
   return [...latest.values()];
 }
@@ -68,12 +71,31 @@ export function snapshotDate(snapshot: Snapshot): string {
 
 /** The latest capture of every page under `prefix`. */
 export async function archivedPages(prefix: string): Promise<Snapshot[]> {
-  await sleep(DELAY);
-  return latestSnapshots(await fetchText(indexQuery(prefix)));
+  return latestSnapshots(await patiently(indexQuery(prefix)));
 }
 
-/** A snapshot's page, raw, a polite second after the last request. */
+/** A snapshot's page, raw. */
 export async function archivedPage(snapshot: Snapshot): Promise<string> {
-  await sleep(DELAY);
-  return fetchText(`${ARCHIVE}/${snapshot.timestamp}id_/${snapshot.original}`);
+  return patiently(`${ARCHIVE}/${snapshot.timestamp}id_/${snapshot.original}`);
+}
+
+/** Waits between tries of a refused request: the archive answers 503 for a while, then again. */
+const RETRY_DELAYS = [DELAY, 30_000, 120_000];
+
+/**
+ * A request to the archive, a second after the last, tried again twice after longer waits when it is
+ * refused: an archive that stops answering for a minute should not end a crawl of an hour. Throws
+ * when the last try fails too.
+ */
+async function patiently(url: string): Promise<string> {
+  let failure: unknown;
+  for (const delay of RETRY_DELAYS) {
+    await sleep(delay);
+    try {
+      return await fetchText(url);
+    } catch (error) {
+      failure = error;
+    }
+  }
+  throw failure;
 }

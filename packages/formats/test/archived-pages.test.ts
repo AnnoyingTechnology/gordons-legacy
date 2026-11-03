@@ -21,6 +21,16 @@ describe('the archive of a page that is gone', () => {
     ]);
   });
 
+  it('takes the addresses one page was archived under over the years for that one page', () => {
+    const years = JSON.stringify([
+      ['original', 'timestamp'],
+      ['http://www.ruger.com:80/products/gp100/specSheets/1702.html', '20100427050209'],
+      ['http://ruger.com/products/gp100/specSheets/1702.html', '20110108063037'],
+      ['https://ruger.com/products/gp100/specSheets/1702.html', '20250601000000'],
+    ]);
+    expect(latestSnapshots(years)).toEqual([{ original: 'https://ruger.com/products/gp100/specSheets/1702.html', timestamp: '20250601000000' }]);
+  });
+
   it('cites the snapshot and the day it was captured', () => {
     const [snapshot] = latestSnapshots(answer);
     expect(snapshotAddress(snapshot!)).toBe('https://web.archive.org/web/20250310120000/https://ruger.com/products/gp100/specSheets/1707.html');

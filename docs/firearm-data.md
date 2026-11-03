@@ -379,8 +379,8 @@ Every extractor settles a name read again through `settleListing` (`tools/data/f
   as the maker printed it (`… 16.5"`, `… 1:8"`).
 
 Nothing is averaged: a figure no page printed never enters a record. Guns whose pages are gone may be
-read from archived snapshots, cited as the archive and its date (not done yet: the Internet Archive
-was offline on 2026-11-03).
+read from archived snapshots, cited as the archive and its date: the Ruger GP100 and SP101, 49 guns,
+were read so on 2026-11-03 (`ruger.ts --archived gp100 --archived sp101`, `archived-pages.ts`).
 
 ## Refresh of 2026-11-03
 
