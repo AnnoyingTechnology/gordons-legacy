@@ -5,11 +5,17 @@
  *     node tools/validation/pressure.ts [--rs14 <RS14 datasheet.pdf>] [--western <Western guide 8.0.pdf>]
  *                                      [--hodgdon-m1 <Hodgdon M1 Garand sheet.pdf>] [--hodgdon-subsonic <Hodgdon subsonic sheet.pdf>]
  *                                      [--conditions <file.json>]... [--components <folder>]...
- *                                      [--details] [--json <results.json>]
+ *                                      [--details] [--json <results.json>] [--export <conditions.json>]
+ *
+ * With none of the source options, the study reads `pressure/published-conditions.json`: the rows the
+ * readers took from the four documents, each condition citing its source (title, address, SHA-256,
+ * date read). Committing them was decided by the maintainer on 2026-11-03; the PDFs are not committed.
  *
  * - `--rs14`, `--western`, `--hodgdon-m1`, `--hodgdon-subsonic`: the makers' PDFs as downloaded from their sites (see `docs/model/pressure-sources.md`).
  *   Their SHA-256 is checked, so that another edition is noticed instead of read wrongly. Reading them
- *   needs `pdftotext` (Poppler) on the path. The makers' tables are never copied into this repository.
+ *   needs `pdftotext` (Poppler) on the path.
+ * - `--export`: writes the conditions read, with their sources, in the format `--conditions` reads; this
+ *   is how `published-conditions.json` is made again after a reader changes.
  * - `--conditions`: conditions of your own, a JSON array of `PressureCondition` with a `sources` list
  *   (`{ "sources": [...], "conditions": [...] }`).
  * - `--components`: a folder of GRT files (`.grtload`, `.caliber`, `.propellant`, `.projectile`) whose
@@ -46,7 +52,11 @@ interface Arguments {
   components: string[];
   details: boolean;
   json?: string;
+  export?: string;
 }
+
+/** The committed rows of the four documents, read when no document is given. */
+export const PUBLISHED_CONDITIONS = new URL('./pressure/published-conditions.json', import.meta.url);
 
 function parseArguments(args: string[]): Arguments {
   const parsed: Arguments = { conditions: [], components: [], details: false };
@@ -81,6 +91,10 @@ function parseArguments(args: string[]): Arguments {
         if (value) parsed.json = value;
         index++;
         break;
+      case '--export':
+        if (value) parsed.export = value;
+        index++;
+        break;
       case '--details':
         parsed.details = true;
         break;
@@ -98,6 +112,11 @@ function documentText(path: string, source: PressureSource, mode: '-layout' | '-
     throw new Error(`${path} is not the document ${source.id} was read from (SHA-256 ${hash}, expected ${source.sha256}). Check the edition before reading it.`);
   }
   return execFileSync('pdftotext', [mode, path, '-'], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+}
+
+/** A conditions file: `{ sources, conditions }`, as `--export` writes it. */
+export function readConditionsFile(path: string | URL): { sources: PressureSource[]; conditions: PressureCondition[] } {
+  return JSON.parse(readFileSync(path, 'utf8')) as { sources: PressureSource[]; conditions: PressureCondition[] };
 }
 
 function percent(summary: LogRatioSummary | undefined, field: 'geometricMeanBias' | 'lowest' | 'median' | 'highest'): string {
@@ -221,10 +240,19 @@ function main(): void {
   if (args.western) read(WESTERN_8_SOURCE, westernConditions(documentText(args.western, WESTERN_8_SOURCE, '-raw')));
   if (args.hodgdonM1) read(HODGDON_M1_SOURCE, hodgdonConditions(documentText(args.hodgdonM1, HODGDON_M1_SOURCE, '-layout')));
   if (args.hodgdonSubsonic) read(HODGDON_SUBSONIC_SOURCE, subsonicConditions(documentText(args.hodgdonSubsonic, HODGDON_SUBSONIC_SOURCE, '-layout')));
-  for (const path of args.conditions) {
-    const file = JSON.parse(readFileSync(path, 'utf8')) as { sources: PressureSource[]; conditions: PressureCondition[] };
+  const fromDocuments = Boolean(args.rs14 || args.western || args.hodgdonM1 || args.hodgdonSubsonic);
+  if (args.export) {
+    // One condition a line: 12,000 rows indented would be 17 MB, and a re-export still diffs row by row.
+    const lines = conditions.map((condition) => JSON.stringify(condition));
+    writeFileSync(args.export, `{"sources":${JSON.stringify(sources, null, 2)},\n"conditions":[\n${lines.join(',\n')}\n]}\n`);
+    console.log(`${conditions.length} conditions from ${sources.length} documents written to ${args.export}`);
+  }
+  const files = !fromDocuments && args.conditions.length === 0 ? [PUBLISHED_CONDITIONS] : args.conditions;
+  for (const path of files) {
+    const file = readConditionsFile(path);
     sources.push(...file.sources);
     conditions.push(...file.conditions);
+    if (path === PUBLISHED_CONDITIONS) console.log(`published-conditions.json: ${file.conditions.length} conditions from ${file.sources.map((source) => source.id).join(', ')}`);
   }
   if (conditions.length === 0) {
     console.error('No conditions: give --rs14, --western, --hodgdon-m1, --hodgdon-subsonic or --conditions (see the comment at the top of this file).');

@@ -5,10 +5,11 @@ engines with it). A source is listed with what it measured, how, what it leaves 
 component data can simulate its conditions. "Candidate" means it holds relevant evidence, not that its
 independence or its fitness for a comparison is established.
 
-The makers' tables themselves are **not** in this repository: `tools/validation/pressure.ts` reads them
-from the user's own download, after checking the document's SHA-256, and only derived figures (log
-ratios) are recorded here. Whether rows may be committed as fixtures is the maintainer's call, still
-open on #31.
+The rows the readers take from the four documents are committed, each citing its source:
+`tools/validation/pressure/published-conditions.json` (12,316 conditions; maintainer, 2026-11-03: the
+project is open source throughout). The PDFs are not. `tools/validation/pressure.ts` reads that file by
+default, and re-reads a downloaded PDF, after checking its SHA-256, when a reader changes; a test pins
+the study's results on the committed rows, so every change to an engine is measured against them.
 
 ## Read by the study
 

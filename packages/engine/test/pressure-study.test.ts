@@ -1,4 +1,4 @@
-import type { Engine } from '@gordons-legacy/engine';
+import { grtTraditional, researchEngine, type Engine } from '@gordons-legacy/engine';
 import { units } from '@gordons-legacy/formats';
 import { describe, expect, it } from 'vitest';
 import { conditionLoad } from '../../../tools/validation/pressure/condition-load.ts';
@@ -9,6 +9,7 @@ import { readRs14Table, readRs14Temperatures } from '../../../tools/validation/p
 import { hodgdonConditions, readHodgdonRows } from '../../../tools/validation/pressure/sources/hodgdon-m1-garand.ts';
 import { readWesternRows } from '../../../tools/validation/pressure/sources/western-powders-8.ts';
 import { PERTURBATIONS, runConditions, summarizeStudy } from '../../../tools/validation/pressure/study.ts';
+import { PUBLISHED_CONDITIONS, readConditionsFile } from '../../../tools/validation/pressure.ts';
 
 /**
  * The pressure study's machinery (tools/validation/pressure/, issues #22 and #31). Every table below is
@@ -309,5 +310,27 @@ describe('paired eligibility', () => {
       return perturbation.adjust(built.load, built.inputs).cartridge.caseCapacity;
     });
     expect(new Set(capacities)).toEqual(new Set([3.5e-6]));
+  });
+});
+
+describe('the published rows, as committed (maintainer, 2026-11-03)', () => {
+  // The rows the readers took from the four documents; the results below are those of the PDFs
+  // themselves, with the community components alone. A change to an engine or to the study shows here.
+  const { sources, conditions } = readConditionsFile(PUBLISHED_CONDITIONS);
+  const results = runConditions(conditions, communityPool(), [grtTraditional, researchEngine]);
+  const piezoelectric = summarizeStudy(results, sources).find((summary) => summary.group === 'piezoelectric')!;
+
+  it('holds every row of the four documents, each citing its source', () => {
+    expect(sources.map((source) => source.id)).toEqual(['reload-swiss-rs14-2023', 'western-powders-8.0', 'hodgdon-m1-garand', 'hodgdon-subsonic']);
+    expect(conditions).toHaveLength(12316);
+    expect(conditions.every((condition) => sources.some((source) => source.id === condition.source))).toBe(true);
+  });
+
+  it('gives the study its results: GRT Traditional over the piezoelectric measurements, R1 under them', () => {
+    expect(results.filter((result) => result.status === 'paired')).toHaveLength(22);
+    const [grt, research] = piezoelectric.pressure;
+    expect(grt!.loss.factor5).toBeCloseTo(0.318, 3);
+    expect(research!.loss.factor5).toBeCloseTo(0.805, 3);
+    expect(research!.underPredicted).toBe(1);
   });
 });

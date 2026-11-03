@@ -6,7 +6,7 @@ absence. Results and their limits are written up in `docs/model/validation.md`.
 | Command | What it does |
 |---|---|
 | `node tools/validation/chronograph.ts [--engine research-1] <loads…>` | Simulated against measured muzzle velocities stored in `.grtload` or JSON loads |
-| `node tools/validation/pressure.ts --rs14 <pdf> --western <pdf> --hodgdon-m1 <pdf> --hodgdon-subsonic <pdf> [--components <folder>] [--details]` | The pressure study of issue #31: both engines against published pressure measurements |
+| `node tools/validation/pressure.ts [--rs14 <pdf> --western <pdf> --hodgdon-m1 <pdf> --hodgdon-subsonic <pdf> [--export <file>]] [--components <folder>] [--details]` | The pressure study of issue #31: both engines against published pressure measurements |
 
 ## `pressure/`, the pressure study
 
@@ -20,7 +20,10 @@ absence. Results and their limits are written up in `docs/model/validation.md`.
 | `study.ts` | Runs the conditions through both engines, pairing, pressure bands, the sensitivity perturbations |
 | `sources/` | One reader per published document (Reload Swiss RS14, Western Powders guide 8.0, Hodgdon's M1 Garand and subsonic sheets) |
 
-The makers' documents are never copied here: the readers take your downloaded PDF, check its SHA-256
-and read it with `pdftotext` (Poppler). The sources and what each can support are listed in
-`docs/model/pressure-sources.md`. Tests: `packages/engine/test/pressure-study.test.ts`, on invented
-rows shaped like the documents.
+The rows the readers took from the documents are committed in `pressure/published-conditions.json`,
+each citing its source (title, address, SHA-256), and the study reads them when it is given no PDF.
+The PDFs themselves are not committed: after a reader changes, run the study on your downloads with
+`--export pressure/published-conditions.json`; their SHA-256 is checked and they are read with
+`pdftotext` (Poppler). The sources and what each can support are listed in
+`docs/model/pressure-sources.md`. Tests: `packages/engine/test/pressure-study.test.ts`, on invented rows
+shaped like the documents, and on the committed rows, whose results it pins.
