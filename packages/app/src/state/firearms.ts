@@ -30,7 +30,7 @@ export class FirearmLibrary {
    * for it: a write made before the first reading returned (a backup restored at startup) was then
    * replaced in `entries` by that reading's older list, and vanished from the view and the next backup (#32).
    */
-  private readonly settled: () => Promise<void>;
+  readonly whenRead: () => Promise<void>;
   private readonly storage: FirearmStorage;
   private readonly listeners = new Set<() => void>();
 
@@ -41,7 +41,7 @@ export class FirearmLibrary {
       this.changed();
     }));
     this.ready = reading.first;
-    this.settled = reading.settled;
+    this.whenRead = reading.settled;
   }
 
   subscribe(listener: () => void): () => void {
@@ -51,7 +51,7 @@ export class FirearmLibrary {
 
   /** Saves a gun under `id`, or as a new entry; returns the entry's id. */
   async save(firearm: Firearm, id: string = crypto.randomUUID()): Promise<string> {
-    await this.settled();
+    await this.whenRead();
     const entry: FirearmEntry = { id, firearm, updatedAt: new Date().toISOString() };
     await this.storage.put(entry);
     this.entries = [...this.entries.filter((candidate) => candidate.id !== id), entry];
@@ -60,7 +60,7 @@ export class FirearmLibrary {
   }
 
   async remove(id: string): Promise<void> {
-    await this.settled();
+    await this.whenRead();
     await this.storage.remove(id);
     this.entries = this.entries.filter((entry) => entry.id !== id);
     this.changed();

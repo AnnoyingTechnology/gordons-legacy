@@ -15,7 +15,7 @@ export class Library {
   private readonly storage: LibraryStorage;
   private readonly listeners = new Set<() => void>();
   /** Resolves once the entries are read, reading them again if the first reading failed. */
-  private readonly settled: () => Promise<void>;
+  readonly whenRead: () => Promise<void>;
 
   constructor(storage: LibraryStorage) {
     this.storage = storage;
@@ -24,7 +24,7 @@ export class Library {
       this.changed();
     }));
     this.ready = reading.first;
-    this.settled = reading.settled;
+    this.whenRead = reading.settled;
   }
 
   subscribe(listener: () => void): () => void {
@@ -38,17 +38,18 @@ export class Library {
 
   /**
    * Saves a load as a new entry, or over the entry `target` names. That entry is replaced only while
-   * it is still the revision the caller read (`target.revision`): another tab of the app, or a sync, may
-   * have saved it since, and that work is not overwritten unseen (#32); the check and the write share
-   * one transaction. That case throws `LibraryConflict`. Returns the entry as saved, with its revision.
+   * it is still stored, at the revision the caller read (`target.revision`): another tab of the app, or
+   * a sync, may have saved or removed it since, and that is not undone unseen (#32); the check and the
+   * write share one transaction. That case throws `LibraryConflict`. Returns the entry as saved.
    */
   async save(name: string, load: Load, target?: { id: string; revision?: string | undefined }): Promise<LibraryEntry> {
-    await this.settled();
+    await this.whenRead();
     const entry: LibraryEntry = { id: target?.id ?? newId(), name, load, updatedAt: new Date().toISOString(), revision: newId() };
     if (target === undefined) {
       await this.storage.put(entry);
     } else {
-      const unchanged = (stored: unknown) => revisionOf(stored) === target.revision;
+      // The entry must still be there too: one removed meanwhile is not brought back unseen.
+      const unchanged = (stored: unknown) => stored !== undefined && revisionOf(stored) === target.revision;
       if (!(await this.storage.putIf(entry, unchanged))) throw new LibraryConflict(name);
     }
     this.replace(entry);
@@ -62,7 +63,7 @@ export class Library {
    * it was taken.
    */
   async receive(entry: LibraryEntry): Promise<boolean> {
-    await this.settled();
+    await this.whenRead();
     // Dates are compared as instants: `…:00Z` and `…:00.001Z` don't sort as text, and a date that isn't one is refused.
     const time = Date.parse(entry.updatedAt);
     if (!Number.isFinite(time)) return false;
@@ -75,7 +76,7 @@ export class Library {
   }
 
   async remove(id: string): Promise<void> {
-    await this.settled();
+    await this.whenRead();
     await this.storage.remove(id);
     this.entries = this.entries.filter((entry) => entry.id !== id);
     this.changed();

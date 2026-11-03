@@ -270,7 +270,7 @@ export class AppShell extends LitElement {
       <gl-firearm-dialog
         .firearm=${this.editedFirearm?.firearm}
         .context=${this.context}
-        .saveFirearm=${(firearm: Firearm) => this.writeFirearm(firearm, this.editedFirearm?.id)}
+        .saveFirearm=${(firearm: Firearm) => this.saveEditedFirearm(firearm)}
         @export=${(event: CustomEvent<Firearm>) => download(serializeFirearm(event.detail), `${event.detail.name.trim() || 'gun'}.firearm.json`)}
         @close=${() => (this.editedFirearm = undefined)}
       ></gl-firearm-dialog>
@@ -327,6 +327,7 @@ export class AppShell extends LitElement {
         @edit-firearm=${(event: CustomEvent<{ firearm: Firearm; id?: string }>) => (this.editedFirearm = event.detail)}
         @remove-firearm=${(event: CustomEvent<string>) => void this.keepFirearm(undefined, event.detail)}
         @open-entry=${(event: CustomEvent<string>) => this.openEntry(event.detail)}
+        @entry-removed=${(event: CustomEvent<string>) => this.store.unlink(event.detail)}
         @import-files=${(event: CustomEvent<File[]>) => void this.importToLibrary(event.detail)}
         @backup=${() => void this.downloadBackup()}
         @restore=${(event: CustomEvent<File>) => void this.restoreBackup(event.detail)}
@@ -699,6 +700,19 @@ export class AppShell extends LitElement {
     return written;
   }
 
+  /**
+   * Saves the gun of the open gun dialog. A new gun gets its id before the first write and keeps it for
+   * the dialog's whole opening: a second Save, after an edit made while the first was running, replaces
+   * that gun instead of adding another (#32).
+   */
+  private async saveEditedFirearm(firearm: Firearm): Promise<boolean> {
+    const edited = this.editedFirearm;
+    if (!edited) return false;
+    const id = edited.id ?? crypto.randomUUID();
+    if (edited.id === undefined) this.editedFirearm = { ...edited, id };
+    return this.writeFirearm(firearm, id);
+  }
+
   /** Saves a gun (or removes the gun `id` when there is none); false when the storage refused it. */
   private async writeFirearm(firearm: Firearm | undefined, id: string | undefined): Promise<boolean> {
     try {
@@ -754,7 +768,7 @@ export class AppShell extends LitElement {
   /** Waits for the stores to be read: a backup taken before would hold none of their entries (#32). */
   private async downloadBackup(): Promise<void> {
     try {
-      await Promise.all([this.library.ready, this.firearms.ready, this.inventory.ready]);
+      await Promise.all([this.library.whenRead(), this.firearms.whenRead(), this.inventory.whenRead()]);
     } catch {
       this.openErrors = [this.context.t('library.backupFailed')];
       return;

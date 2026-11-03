@@ -183,3 +183,25 @@ describe('undo shortcuts leave text fields their own undo', () => {
     expect(documentShortcut(key('t', { shiftKey: true }), true)).toBeUndefined();
   });
 });
+
+describe('library links (#32)', () => {
+  it('a removed entry leaves its loads open and unsaved, to be saved as new entries', () => {
+    const store = new DocumentStore();
+    store.openSaved('Saved.json', exampleLoad({ title: 'Saved', note: '' })!, 'entry-1', 'revision-1');
+    store.unlink('entry-1');
+    expect(store.active!.libraryId).toBeUndefined();
+    expect(store.isDirty(store.active!)).toBe(true);
+  });
+
+  it('a save finishing after its load was detached does not link two tabs to one entry', () => {
+    const store = new DocumentStore();
+    const load = exampleLoad({ title: 'Saved', note: '' })!;
+    store.openSaved('Saved.json', load, 'entry-1', 'revision-1');
+    const saving = store.active!.id;
+    store.close(saving);
+    store.openSaved('Saved.json', load, 'entry-1', 'revision-1');
+    store.reopenClosed();
+    store.markSaved(saving, serializeLoad(load), { id: 'entry-1', revision: 'revision-2' });
+    expect(store.documents.map((document) => document.libraryId)).toEqual(['entry-1', undefined]);
+  });
+});

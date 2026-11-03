@@ -45,6 +45,8 @@ export class FirearmDialog extends LitElement {
   declare invalid: ReadonlyArray<BarrelField['key']>;
   /** Where the last save stands: under way, or refused by the storage. */
   declare saving: 'idle' | 'saving' | 'failed';
+  /** Counts the dialog's openings: a save still running from an earlier one settles nothing here. */
+  private session = 0;
 
   constructor() {
     super();
@@ -61,6 +63,7 @@ export class FirearmDialog extends LitElement {
 
   protected override willUpdate(changed: Map<string, unknown>): void {
     if (changed.has('firearm')) {
+      this.session++;
       this.draft = this.firearm;
       this.invalid = [];
       this.saving = 'idle';
@@ -199,8 +202,10 @@ export class FirearmDialog extends LitElement {
     const draft = this.draft;
     if (!draft || draft.name.trim() === '' || this.invalid.length > 0 || !this.saveFirearm) return;
     this.saving = 'saving';
+    const session = this.session;
     // The barrel carries the gun's name, so a load made with it says which gun it came from.
     const saved = await this.saveFirearm({ ...draft, name: draft.name.trim(), barrel: { ...draft.barrel, name: draft.name.trim() } });
+    if (session !== this.session) return;
     this.saving = saved ? 'idle' : 'failed';
     // An edit made while saving is not in what was saved: the dialog stays open for it.
     if (saved && this.draft === draft) this.querySelector('dialog')?.close();

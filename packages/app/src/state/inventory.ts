@@ -44,7 +44,7 @@ export class Inventory {
    * for it: a write made before the first reading returned (a backup restored at startup) was then
    * replaced in `entries` by that reading's older list, and vanished from the view and the next backup (#32).
    */
-  private readonly settled: () => Promise<void>;
+  readonly whenRead: () => Promise<void>;
   private readonly storage: InventoryStorage;
   private readonly listeners = new Set<() => void>();
   private readonly now: () => Date;
@@ -57,7 +57,7 @@ export class Inventory {
       this.changed();
     }));
     this.ready = reading.first;
-    this.settled = reading.settled;
+    this.whenRead = reading.settled;
   }
 
   subscribe(listener: () => void): () => void {
@@ -67,7 +67,7 @@ export class Inventory {
 
   /** Saves an item, new when it has no id yet; returns its id. */
   async save(item: Omit<StockItem, 'id' | 'updatedAt'> & { id?: string }): Promise<string> {
-    await this.settled();
+    await this.whenRead();
     const entry: StockItem = { ...item, id: item.id ?? crypto.randomUUID(), updatedAt: this.now().toISOString() };
     await this.storage.put(entry);
     this.entries = [...this.entries.filter((candidate) => candidate.id !== entry.id), entry];
@@ -81,7 +81,7 @@ export class Inventory {
    * `Library.receive`). Returns whether it was taken.
    */
   async receive(item: StockItem): Promise<boolean> {
-    await this.settled();
+    await this.whenRead();
     const [checkedItem] = checked(item);
     // Dates are compared as instants, and one that isn't a date is refused (library.ts, `receive`).
     const time = checkedItem ? Date.parse(checkedItem.updatedAt) : Number.NaN;
@@ -97,7 +97,7 @@ export class Inventory {
   }
 
   async remove(id: string): Promise<void> {
-    await this.settled();
+    await this.whenRead();
     await this.storage.remove(id);
     this.entries = this.entries.filter((entry) => entry.id !== id);
     this.changed();
@@ -108,7 +108,7 @@ export class Inventory {
    * batch used was miscounted, and zero is the truth that remains.
    */
   async use(uses: readonly Use[]): Promise<void> {
-    await this.settled();
+    await this.whenRead();
     const updatedAt = this.now().toISOString();
     const changed = uses.flatMap(({ id, amount }) => {
       const item = this.entries.find((entry) => entry.id === id);

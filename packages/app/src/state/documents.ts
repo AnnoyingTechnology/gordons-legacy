@@ -207,10 +207,29 @@ export class DocumentStore {
    * finishes after its tab was closed is recorded on the closed load too, for Reopen.
    */
   markSaved(id: number, savedText: string, entry?: { id: string; revision?: string | undefined }): void {
+    // A save that finishes after its load was detached, because another tab now holds its entry (a
+    // closed load reopened beside it, a recovered one), leaves it detached and unsaved: two tabs linked
+    // to one entry would each save over the other (#32).
+    if (entry !== undefined && this.documents.some((document) => document.id !== id && document.libraryId === entry.id)) return;
     const linked = entry === undefined ? {} : { libraryId: entry.id, ...(entry.revision === undefined ? {} : { libraryRevision: entry.revision }) };
     const saved = (document: OpenDocument) => (document.id === id ? { ...document, savedText, ...linked } : document);
     this.documents = this.documents.map(saved);
     this.closed = this.closed.map((entry) => ({ ...entry, document: saved(entry.document) }));
+    this.changed();
+  }
+
+  /**
+   * The library entry `libraryId` was removed: the loads opened from it stay open, unsaved, and a save
+   * makes them a new entry instead of failing over the one that is gone.
+   */
+  unlink(libraryId: string): void {
+    const detach = (document: OpenDocument): OpenDocument => {
+      if (document.libraryId !== libraryId) return document;
+      const { libraryId: _libraryId, libraryRevision: _libraryRevision, ...rest } = document;
+      return { ...rest, savedText: '' };
+    };
+    this.documents = this.documents.map(detach);
+    this.closed = this.closed.map((entry) => ({ ...entry, document: detach(entry.document) }));
     this.changed();
   }
 

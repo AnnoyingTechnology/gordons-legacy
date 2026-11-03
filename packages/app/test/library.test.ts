@@ -292,3 +292,14 @@ test('a library whose first reading failed reads again before the next save (#32
   await library.save('Load', glock);
   expect(library.entries.map((entry) => entry.name)).toEqual(['Load']);
 });
+
+test('a save over an entry removed meanwhile does not bring it back unseen (#32)', async () => {
+  const storage = memoryStorage();
+  await storage.put({ id: 'old', name: 'Old', load: glock, updatedAt: '2026-01-01T00:00:00.000Z' });
+  const library = new Library(storage);
+  await library.ready;
+  const opened = library.get('old')!;
+  await storage.remove('old');
+  await expect(library.save('Old, edited', glock, opened)).rejects.toBeInstanceOf(LibraryConflict);
+  expect(await storage.list()).toEqual([]);
+});

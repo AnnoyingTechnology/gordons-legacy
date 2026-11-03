@@ -239,6 +239,7 @@ export class LibraryView extends LitElement {
     try {
       await this.library.remove(entry.id);
       this.removeFailed = undefined;
+      this.fire('entry-removed', entry.id);
     } catch {
       this.removeFailed = entry.name;
     }
