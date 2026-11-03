@@ -144,3 +144,24 @@ describe('a gun listed twice (the maintainer’s rules of 2026-11-03)', () => {
     expect('write' in twisted && twisted.write.name).toBe('Example Carbine 1:8');
   });
 });
+
+describe('a gun listed twice, one page leaving a figure out', () => {
+  it('is the same gun: a twist left out disagrees with nothing', () => {
+    const withTwist = firearmRecord({ ...FACTS, gunMass: 2.9 });
+    const without = firearmRecord({ ...FACTS, twistLength: undefined, gunMass: 2.9, published: { barrelLength: '16.1" (408.9 mm)' } });
+    expect('skip' in settleListing(new Map([[withTwist.name, withTwist]]), without, (firearm) => firearm.name)).toBe(true);
+  });
+});
+
+describe('a gun read again under a published name', () => {
+  it('replaces it when its figures changed, but not when the page only went quiet or names another cartridge', async () => {
+    const { mergedReading } = await import('../../../tools/data/export-repository.ts');
+    const published = firearmRecord({ ...FACTS, gunMass: 2.9 });
+    const heavier = firearmRecord({ ...FACTS, gunMass: 3.1 });
+    expect(mergedReading(published, heavier)).toEqual([heavier]);
+    const quiet = firearmRecord(FACTS);
+    expect(mergedReading(published, quiet)).toEqual([published]);
+    const other = firearmRecord({ ...FACTS, cartridge: '.300 BLK' });
+    expect(mergedReading(published, other).map((gun) => gun.name)).toEqual(['Example Carbine', 'Example Carbine .300 BLK']);
+  });
+});

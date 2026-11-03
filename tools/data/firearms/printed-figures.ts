@@ -251,7 +251,7 @@ export type Settled =
 /**
  * Settles a gun listed again under a name already written (the maintainer's rules of 2026-11-03, #30).
  * Another cartridge is another gun, named apart by its cartridge. The same barrel and twist make the
- * same gun, and only one listing is kept: the heaviest, since a
+ * same gun (a twist one page leaves out disagrees with nothing), and only one listing is kept: the heaviest, since a
  * maker's heavier weight is most likely the gun with a loaded magazine; it is kept whole, with its own
  * page as its source, rather than merged. Another barrel length or twist is another configuration, so
  * another gun, named apart by what differs (`… 16.5"`, `… 1:8"`). Nothing is averaged: a figure no
@@ -269,7 +269,9 @@ export function settleListing(written: ReadonlyMap<string, Firearm>, firearm: Fi
       candidate = renamed(candidate, `${candidate.name} ${candidate.cartridge}`);
       continue;
     }
-    if (first.barrel.length === candidate.barrel.length && first.barrel.twistLength === candidate.barrel.twistLength) {
+    // A figure one page leaves out is no disagreement: unknown is not another value.
+    const sameTwist = first.barrel.twistLength === undefined || candidate.barrel.twistLength === undefined || first.barrel.twistLength === candidate.barrel.twistLength;
+    if (first.barrel.length === candidate.barrel.length && sameTwist) {
       const mass = candidate.barrel.gunMass;
       if (mass !== undefined && !(first.barrel.gunMass !== undefined && first.barrel.gunMass >= mass)) return { write: candidate, replacing: first };
       return { skip: `${candidate.name} is already written${difference(first, candidate)}${mass === undefined ? '' : ', the heavier kept'}` };
