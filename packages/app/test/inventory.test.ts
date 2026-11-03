@@ -107,6 +107,14 @@ describe('a store read slowly at startup (#32)', () => {
 });
 
 describe('the stock in two tabs (#32)', () => {
+  it('counts two uses of one item as one use of their sum', async () => {
+    const stock = await inventory();
+    const id = await stock.save({ kind: 'primer', name: 'CCI 200', quantity: 100 });
+    await stock.use([{ id, amount: 20 }, { id, amount: 30 }]);
+    await stock.use([{ id, amount: 10 }]);
+    expect(stock.entries[0]!.quantity).toBe(40);
+  });
+
   it('never counts away a batch another tab recorded, and shows the stored count to try again from', async () => {
     const storage = memoryStore<StockItem>();
     const thisTab = new Inventory(storage);

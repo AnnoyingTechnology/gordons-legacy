@@ -13,7 +13,7 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
   documents (`tools/validation/pressure/`, `docs/model/validation.md`). The default engine has read up to
   22 % under published pressures on one powder model and 8 % over on another; the app's safety wording
   says so. Bottleneck: powder models and bullet lengths, not documents.
-- **Tests:** 997 (Vitest), `tsc`, production build; CI deploys GitHub Pages from `main`.
+- **Tests:** 998 (Vitest), `tsc`, production build; CI deploys GitHub Pages from `main`.
 - **Docs:** `docs/PLAN.md` (plan), `docs/model/` (engines, validation, pressure sources), `docs/formats/`,
   `docs/firearm-data.md`, `docs/ui-audit.md`, `docs/code-audit.md`, each package's README.
 
@@ -213,6 +213,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 
 | Date | Entry |
 |---|---|
+| 2026-11-03 | **#32 review of the gun and stock revisions (caa2294, 3817bb8).** Codex found no IndexedDB ordering fault and seven smaller defects, all fixed: a refused stock edit kept showing the typed value (inputs now `live()`); two uses of one item in a batch undercounted (summed now); an earlier batch's write closed a newer batch dialog; batch errors showed behind the modal (now in it); an empty `putAllIf` disagreed between stores; the gun conflict message gave no way to the stored version (the gun library now re-reads on a conflict, and the message says to reopen); gun import and removal failures spoke of a load. Checked in Chromium. |
 | 2026-11-03 | **#32 stock in two tabs.** The same gap as guns: a batch recorded in one tab subtracted from the count that tab had read, so another tab's batch was counted away, and an edit overwrote a newer count. Stock items now carry revisions; a batch writes all its items only over the revisions it read (`RecordStore.putAllIf`), and a conflict reads the shelf again and says so (`stock.conflict`, and `stock.saveFailed` in place of the library's message). Tested; the stock flow checked in Chromium. |
 | 2026-11-03 | **#32 third review, of d1bcb44: no new defect.** Codex confirmed its six fixes. It noted one older defect of the same kind: a gun edited in one tab was overwritten or recreated after another tab changed or removed it. Guns now carry revisions too (`entry-revision.ts`, shared with the library; `LibraryConflict` became `EntryConflict`), and the gun dialog says so on a conflict. Tested; the ordinary gun flow checked in Chromium. |
 | 2026-11-03 | **#32 second review, of the fix commit 112a8f7.** Codex confirmed the twelve fixes and found six more: concurrent retries of a failed first read were not shared; a save from an earlier opening of the gun dialog settled the current one; a new gun edited during its first save was saved twice under two ids; a save over an entry removed meanwhile brought it back; a late save relinked a detached copy; a backup after a successful retry still saw the failed first read. All fixed with tests (`whenRead()`, a dialog session and one id per opening, `DocumentStore.unlink` on removal, `markSaved` refusing a second link); the gun dialog checked in Chromium. |

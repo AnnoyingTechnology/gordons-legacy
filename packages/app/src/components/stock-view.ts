@@ -1,4 +1,5 @@
 import { html, LitElement, nothing } from 'lit';
+import { live } from 'lit/directives/live.js';
 import { repeat } from 'lit/directives/repeat.js';
 import { icon } from '../icons/icons.ts';
 import { lowStock, STOCK_KINDS, type StockItem, type StockKind } from '../state/inventory.ts';
@@ -8,7 +9,8 @@ import type { UiContext } from './context.ts';
 /**
  * `<gl-stock-view>`: the stock on the shelf (issues #10, #21), in the library view below the guns. Every
  * cell is edited in place and saved when it is left. Rows are keyed by item, so that a row moving in the
- * order after a rename keeps its own inputs, focus included. Fires `save-stock` with an item (no `id` for a new
+ * order after a rename keeps its own inputs, focus included. Inputs show the stored value live: an edit
+ * refused (another tab changed the item first) goes back to what is stored, not the text typed (#32). Fires `save-stock` with an item (no `id` for a new
  * one) and `remove-stock` with an id; the shell keeps the stock.
  */
 export class StockView extends LitElement {
@@ -65,7 +67,7 @@ export class StockView extends LitElement {
         </select>
       </td>
       <td>
-        <input type="text" aria-label=${t('field.name')} .value=${item.name}
+        <input type="text" aria-label=${t('field.name')} .value=${live(item.name)}
           @change=${(event: Event) => this.fire('save-stock', { ...item, name: (event.target as HTMLInputElement).value.trim() })} />
       </td>
       <td class="number">${this.amountInput(item, 'quantity')}</td>
@@ -85,7 +87,7 @@ export class StockView extends LitElement {
     const unit = item.kind === 'powder' ? displayUnit('powderStock', this.context.units) : undefined;
     const value = item[field];
     const shown = value === undefined ? '' : unit ? formatEditable(unit.fromSi(value), unit.decimals) : String(value);
-    return html`<input type="text" inputmode="decimal" class="amount" aria-label=${t(field === 'quantity' ? 'stock.quantity' : 'stock.lowLevel')} .value=${shown}
+    return html`<input type="text" inputmode="decimal" class="amount" aria-label=${t(field === 'quantity' ? 'stock.quantity' : 'stock.lowLevel')} .value=${live(shown)}
       @change=${(event: Event) => {
         const input = event.target as HTMLInputElement;
         const text = input.value.trim();

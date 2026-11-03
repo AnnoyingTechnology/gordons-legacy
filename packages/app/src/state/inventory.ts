@@ -120,10 +120,13 @@ export class Inventory {
   async use(uses: readonly Use[]): Promise<void> {
     await this.whenRead();
     const updatedAt = this.now().toISOString();
+    // Two uses of one item are one use of their sum: each written alone would undo the other.
+    const totals = new Map<string, number>();
+    for (const { id, amount } of uses) if (amount > 0) totals.set(id, (totals.get(id) ?? 0) + amount);
     const read = new Map<string, StockItem>();
-    const changed = uses.flatMap(({ id, amount }) => {
+    const changed = [...totals].flatMap(([id, amount]) => {
       const item = this.entries.find((entry) => entry.id === id);
-      if (!item || !(amount > 0)) return [];
+      if (!item) return [];
       read.set(id, item);
       return [{ ...item, quantity: Math.max(0, item.quantity - amount), updatedAt, revision: newRevision() }];
     });

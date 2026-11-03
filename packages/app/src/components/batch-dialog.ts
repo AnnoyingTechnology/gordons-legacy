@@ -19,6 +19,7 @@ export class BatchDialog extends LitElement {
     roundsText: { state: true },
     ticked: { state: true },
     busy: { attribute: false },
+    error: { attribute: false },
   };
 
   declare batch: { name: string; load: Load } | undefined;
@@ -29,6 +30,8 @@ export class BatchDialog extends LitElement {
   declare ticked: Set<string>;
   /** True while the shell takes the batch off the shelf: confirming twice would take it twice. */
   declare busy: boolean;
+  /** Why the last confirmation was not written, shown in the dialog itself; '' when none. */
+  declare error: string;
 
   constructor() {
     super();
@@ -37,6 +40,7 @@ export class BatchDialog extends LitElement {
     this.roundsText = '50';
     this.ticked = new Set();
     this.busy = false;
+    this.error = '';
   }
 
   protected override createRenderRoot(): HTMLElement {
@@ -93,6 +97,7 @@ export class BatchDialog extends LitElement {
             </label>`;
           })}
         </fieldset>
+        ${this.error ? html`<p class="error" role="alert">${this.error}</p>` : nothing}
         <div class="dialog-actions">
           <button ?disabled=${this.busy || this.rounds() === undefined || uses.size === 0} @click=${this.confirm}>${t('stock.confirm')}</button>
           <form method="dialog"><button>${t('app.close')}</button></form>

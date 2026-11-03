@@ -70,6 +70,8 @@ function open(factory: IDBFactory): Promise<IDBDatabase> {
 export function indexedDbStore<T extends { id: string }>(name: StoreName, factory: IDBFactory = indexedDB): RecordStore<T> {
   // Every record is read, then all are written or none, in one transaction: no other tab writes between.
   const putAllIf = async (records: readonly T[], unchanged: (stored: unknown, record: T) => boolean): Promise<boolean> => {
+    // Nothing to write is written, as in memory: no read would ever decide it.
+    if (records.length === 0) return true;
     const database = await open(factory);
     return new Promise<boolean>((resolve, reject) => {
       const transaction = database.transaction(name, 'readwrite');

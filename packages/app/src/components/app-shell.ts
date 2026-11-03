@@ -69,6 +69,7 @@ export class AppShell extends LitElement {
     batch: { state: true },
     syncOpen: { state: true },
     batchBusy: { state: true },
+    batchError: { state: true },
     firearmPickerOpen: { state: true },
     publishedGuns: { state: true },
     closingDocument: { state: true },
@@ -97,6 +98,8 @@ export class AppShell extends LitElement {
   declare syncOpen: boolean;
   /** True while a batch is being taken off the shelf. */
   declare batchBusy: boolean;
+  /** Why the open batch could not be taken off the shelf, shown in its dialog. */
+  declare batchError: string;
   /** True while the user is choosing the gun of the active load (issue #30). */
   declare firearmPickerOpen: boolean;
   /** The makers' published guns, read when the user first looks for one; undefined until then. */
@@ -140,6 +143,7 @@ export class AppShell extends LitElement {
     this.newLoadOpen = false;
     this.syncOpen = false;
     this.batchBusy = false;
+    this.batchError = '';
     this.shortcutsOpen = false;
     // The dedication and safety notice open on a browser's first visit, over an example load, so that the
     // tool shows what it does instead of an empty page (#29).
@@ -279,7 +283,7 @@ export class AppShell extends LitElement {
       ></gl-firearm-dialog>
       <gl-sync-dialog .open=${this.syncOpen} .library=${this.library} .inventory=${this.inventory} .context=${this.context}
         @close=${() => (this.syncOpen = false)}></gl-sync-dialog>
-      <gl-batch-dialog .batch=${this.batch} .items=${this.inventory.entries} .busy=${this.batchBusy} .context=${this.context}
+      <gl-batch-dialog .batch=${this.batch} .items=${this.inventory.entries} .busy=${this.batchBusy} .error=${this.batchError} .context=${this.context}
         @use-stock=${(event: CustomEvent<Use[]>) => void this.useStock(event.detail)}
         @close=${() => (this.batch = undefined)}></gl-batch-dialog>
       <gl-converter-dialog .open=${this.converterOpen} .context=${this.context} @close=${() => (this.converterOpen = false)}></gl-converter-dialog>
@@ -328,7 +332,7 @@ export class AppShell extends LitElement {
         @record-batch=${(event: CustomEvent<string>) => this.recordBatch(event.detail)}
         @sync=${() => (this.syncOpen = true)}
         @edit-firearm=${(event: CustomEvent<{ firearm: Firearm; id?: string; revision?: string }>) => (this.editedFirearm = event.detail)}
-        @remove-firearm=${(event: CustomEvent<string>) => void this.keepFirearm(undefined, event.detail)}
+        @remove-firearm=${(event: CustomEvent<string>) => void this.removeFirearm(event.detail)}
         @open-entry=${(event: CustomEvent<string>) => this.openEntry(event.detail)}
         @entry-removed=${(event: CustomEvent<string>) => this.store.unlink(event.detail)}
         @import-files=${(event: CustomEvent<File[]>) => void this.importToLibrary(event.detail)}
@@ -642,7 +646,7 @@ export class AppShell extends LitElement {
     const result = parseFirearm(text);
     if (!result.ok) return [this.context.t('library.importFailed', { name })];
     // Its failure is this file's error, not a message the batch's own list would then replace (#32).
-    return (await this.writeFirearm(result.value, undefined)) ? [] : [this.context.t('library.saveFailed')];
+    return (await this.writeFirearm(result.value, undefined)) ? [] : [this.context.t('firearm.importFailed', { name })];
   }
 
   /** Opens the gun chooser, and reads the published database the first time it is asked for (#30). */
@@ -672,7 +676,10 @@ export class AppShell extends LitElement {
   /** A batch of a saved load: what it used comes off the shelf (batch-dialog.ts). */
   private recordBatch(entryId: string): void {
     const entry = this.library.entries.find((candidate) => candidate.id === entryId);
-    if (entry) this.batch = { name: entry.name, load: entry.load };
+    if (entry) {
+      this.batch = { name: entry.name, load: entry.load };
+      this.batchError = '';
+    }
   }
 
   /** Runs a change to the stock, reporting a failed write instead of losing it silently; true when written. */
@@ -688,19 +695,26 @@ export class AppShell extends LitElement {
     }
   }
 
-  /** Takes a batch off the shelf; the dialog stays open, with its error, if the write failed. */
+  /**
+   * Takes a batch off the shelf; the dialog stays open, with its error in it, if the write failed. A
+   * write finishing after its dialog was closed, and another batch opened, leaves that one alone (#32).
+   */
   private async useStock(uses: Use[]): Promise<void> {
-    if (this.batchBusy) return;
+    const batch = this.batch;
+    if (this.batchBusy || !batch) return;
     this.batchBusy = true;
+    this.batchError = '';
     const written = await this.keepStock(() => this.inventory.use(uses));
     this.batchBusy = false;
+    if (this.batch !== batch) return;
     if (written) this.batch = undefined;
+    else this.batchError = this.openErrors[0] ?? '';
   }
 
-  /** Saves or removes a gun from its dialog; a refused write is reported. True when written. */
-  private async keepFirearm(firearm: Firearm | undefined, id: string | undefined): Promise<boolean> {
-    const written = await this.writeFirearm(firearm, id);
-    if (!written) this.openErrors = [this.context.t('library.saveFailed')];
+  /** Removes a gun from the library view; a refused removal is reported. True when written. */
+  private async removeFirearm(id: string): Promise<boolean> {
+    const written = await this.writeFirearm(undefined, id);
+    if (!written) this.openErrors = [this.context.t('firearm.removeFailed')];
     return written;
   }
 

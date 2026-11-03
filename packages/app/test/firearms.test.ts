@@ -150,6 +150,8 @@ describe('a gun edited in two tabs (#32)', () => {
     await otherTab.ready;
     await otherTab.save({ ...newFirearm(), name: 'Rhino 40DS, new grips' }, otherTab.entries[0]!);
     await expect(thisTab.save({ ...newFirearm(), name: 'Rhino 40DS, stale' }, read)).rejects.toBeInstanceOf(EntryConflict);
+    // Read again: opening the gun anew edits the stored version.
+    expect(thisTab.entries.map((entry) => entry.firearm.name)).toEqual(['Rhino 40DS, new grips']);
     await otherTab.remove(read.id);
     await expect(thisTab.save({ ...newFirearm(), name: 'Rhino 40DS, stale' }, read)).rejects.toBeInstanceOf(EntryConflict);
     expect(await storage.list()).toEqual([]);

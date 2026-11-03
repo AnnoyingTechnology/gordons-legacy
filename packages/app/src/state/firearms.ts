@@ -54,14 +54,19 @@ export class FirearmLibrary {
 
   /**
    * Saves a gun as a new entry, or over the one `target` names while it is still stored at the revision
-   * the edit started from (another tab may have changed or removed it, #32); that case throws
-   * `EntryConflict`. Returns the entry as saved.
+   * the edit started from (another tab may have changed or removed it, #32); that case reads the guns
+   * again, so that opening the gun anew edits the stored version, and throws `EntryConflict`. Returns
+   * the entry as saved.
    */
   async save(firearm: Firearm, target?: { id: string; revision?: string | undefined }): Promise<FirearmEntry> {
     await this.whenRead();
     const entry: FirearmEntry = { id: target?.id ?? crypto.randomUUID(), firearm, updatedAt: new Date().toISOString(), revision: newRevision() };
     if (target === undefined) await this.storage.put(entry);
-    else if (!(await this.storage.putIf(entry, (stored) => isRevision(stored, target.revision)))) throw new EntryConflict(firearm.name);
+    else if (!(await this.storage.putIf(entry, (stored) => isRevision(stored, target.revision)))) {
+      this.entries = (await this.storage.list()).flatMap(checked);
+      this.changed();
+      throw new EntryConflict(firearm.name);
+    }
     this.entries = [...this.entries.filter((candidate) => candidate.id !== entry.id), entry];
     this.changed();
     return entry;
