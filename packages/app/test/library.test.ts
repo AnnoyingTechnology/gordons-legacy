@@ -4,7 +4,7 @@ import { importGrtLoad, serializeLoad, type Load } from '@gordons-legacy/formats
 import { describe, expect, test } from 'vitest';
 import { summarizeLoad } from '../src/analysis/load-summary.ts';
 import { memoryStorage, type LibraryEntry } from '../src/state/library-storage.ts';
-import { Library, shelves } from '../src/state/library.ts';
+import { Library, LibraryConflict, shelves } from '../src/state/library.ts';
 import { readBackup, writeBackup } from '../src/state/backup.ts';
 import { choosableFirearms, FirearmLibrary, newFirearm, type FirearmEntry } from '../src/state/firearms.ts';
 import { memoryStore } from '../src/state/indexed-db.ts';
@@ -44,11 +44,11 @@ describe('Library', () => {
 
   test('imports a folder of GRT files, naming entries after the files, and reports unreadable ones', async () => {
     const library = new Library(memoryStorage());
-    const failed = await library.importFiles([
+    const outcome = await library.importFiles([
       { name: 'glock17_eng5_n340_115grain_xtp_PLUS-P.grtload', text: fixtureText('maintainer/glock17_eng5_n340_115grain_xtp_PLUS-P.grtload') },
       { name: 'broken.json', text: '{' },
     ]);
-    expect(failed).toEqual(['broken.json']);
+    expect(outcome).toEqual({ unreadable: ['broken.json'], unsaved: [] });
     expect(library.entries.map((entry) => entry.name)).toEqual(['glock17_eng5_n340_115grain_xtp_PLUS-P']);
   });
 
@@ -216,4 +216,39 @@ describe('summarizeLoad', () => {
     const grouped: Load = { ...blackout, shotGroups: [{ title: '', distance: 100, hits: [{ x: 0, y: 0 }, { x: 0.02909, y: 0 }], note: '' }] };
     expect(summarizeLoad(grouped, grtTraditional).bestGroup!.angle * (180 / Math.PI) * 60).toBeCloseTo(1, 2);
   });
+});
+
+test('a load the storage refuses is reported apart from unreadable files, and the others still come in (#32)', async () => {
+  const storage = memoryStorage();
+  const library = new Library(storage);
+  const put = storage.put.bind(storage);
+  let writes = 0;
+  storage.put = async (entry) => {
+    writes++;
+    if (writes === 2) throw new DOMException('full', 'QuotaExceededError');
+    await put(entry);
+  };
+  const text = fixtureText('maintainer/glock17_eng5_n340_115grain_xtp_PLUS-P.grtload');
+  const outcome = await library.importFiles([
+    { name: 'a.grtload', text },
+    { name: 'b.grtload', text },
+    { name: 'c.grtload', text },
+  ]);
+  expect(outcome).toEqual({ unreadable: [], unsaved: ['b.grtload'] });
+  expect(library.entries.map((entry) => entry.name).sort()).toEqual(['a', 'c']);
+});
+
+test("a save never overwrites what another tab of the app saved since this one read the entry (#32)", async () => {
+  const storage = memoryStorage();
+  const thisTab = new Library(storage);
+  const id = await thisTab.save('Load', glock);
+  const otherTab = new Library(storage);
+  await otherTab.ready;
+  await new Promise((resolve) => setTimeout(resolve, 2));
+  await otherTab.save('Load, edited elsewhere', glock, id);
+  await expect(thisTab.save('Load, edited here', glock, id)).rejects.toBeInstanceOf(LibraryConflict);
+  expect((await storage.list()).map((entry) => entry.name)).toEqual(['Load, edited elsewhere']);
+  // The other tab, which read its own save, saves again as usual.
+  await otherTab.save('Load, edited again', glock, id);
+  expect((await storage.list()).map((entry) => entry.name)).toEqual(['Load, edited again']);
 });

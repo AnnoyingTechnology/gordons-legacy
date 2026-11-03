@@ -3,7 +3,7 @@ import type { Load } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
 import { fieldConcerns, type Field, type FieldGroup, type NumberField } from '../editor/fields.ts';
 import { icon, type IconName } from '../icons/icons.ts';
-import { displayUnit, formatNumber, isAmbiguousNumber, parseNumber } from '../units/units.ts';
+import { displayUnit, formatEditable, formatNumber, isAmbiguousNumber, parseNumber } from '../units/units.ts';
 import type { UiContext } from './context.ts';
 import { loadChangeEvent } from '../state/load-change.ts';
 
@@ -181,9 +181,9 @@ export class PropertyTable extends LitElement {
   private format(field: NumberField): string {
     const value = field.get(this.load);
     if (value === undefined) return '';
-    if (field.kind === 'plain') return formatNumber(value, field.decimals ?? 3, 'en').replace(/,/g, '');
+    if (field.kind === 'plain') return formatEditable(value, field.decimals ?? 3);
     const unit = displayUnit(field.kind, this.context.units);
-    return formatNumber(unit.fromSi(value), unit.decimals, 'en').replace(/,/g, '');
+    return formatEditable(unit.fromSi(value), unit.decimals);
   }
 
   private validate(field: NumberField, text: string): string | undefined {

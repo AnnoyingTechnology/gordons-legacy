@@ -1,7 +1,7 @@
 import { MAXIMUM_SHOT_GROUP_HITS, type Load, type Picture, type ShotGroup } from '@gordons-legacy/formats';
 import { html, LitElement, nothing, svg } from 'lit';
 import { groupStatistics, milliradians, minutesOfAngle, type Hit } from '../analysis/shot-group.ts';
-import { displayUnit, formatNumber, parseNumber } from '../units/units.ts';
+import { displayUnit, formatEditable, parseNumber } from '../units/units.ts';
 import type { UiContext } from './context.ts';
 import { loadChangeEvent } from '../state/load-change.ts';
 
@@ -84,7 +84,7 @@ export class ShotGroupDialog extends LitElement {
       this.scalePoints = [];
       this.scaleLength = '';
       const unit = displayUnit('distance', this.context.units);
-      this.distanceText = formatNumber(unit.fromSi(this.group.distance), unit.decimals, 'en');
+      this.distanceText = formatEditable(unit.fromSi(this.group.distance), unit.decimals);
     }
   }
 

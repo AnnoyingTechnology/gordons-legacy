@@ -1,12 +1,14 @@
 import type { Load } from '@gordons-legacy/formats';
-import type { Simulation } from '../engine.ts';
+import type { Engine, Simulation } from '../engine.ts';
 import { DEFAULT_COLD_COEFFICIENT, DEFAULT_HOT_COEFFICIENT } from './burn.ts';
 import { grtTraditional } from './grt-traditional.ts';
 
 /**
  * The searches of GRT's OBT tool (grt-traditional.md, OBT tool): fitting the powder to a measured muzzle
  * velocity, and finding the charge whose lead time matches a barrel-harmonics node. Both step through
- * simulations, coarse to fine, as GRT does; their results are simulations, not load data.
+ * simulations, coarse to fine, as GRT does; their results are simulations, not load data. Each takes
+ * the engine to simulate with, GRT Traditional unless told otherwise, so that the app's figures all come
+ * from the engine its user chose.
  */
 
 /** Relative steps of k and Ba, coarse to fine. */
@@ -36,7 +38,7 @@ export interface Calibration {
  * until the simulated muzzle velocity, rounded to 0.1 m/s, matches `muzzleVelocity` (m/s). Undefined
  * when the load can't be simulated.
  */
-export function calibrateToVelocity(load: Load, muzzleVelocity: number): Calibration | undefined {
+export function calibrateToVelocity(load: Load, muzzleVelocity: number, engine: Engine = grtTraditional): Calibration | undefined {
   // A target that is no velocity would compare false everywhere and be reported reached (#32).
   if (!(Number.isFinite(muzzleVelocity) && muzzleVelocity > 0)) return undefined;
   const k0 = load.propellant.heatCapacityRatio;
@@ -46,7 +48,7 @@ export function calibrateToVelocity(load: Load, muzzleVelocity: number): Calibra
     ...load,
     propellant: { ...load.propellant, heatCapacityRatio: k, burnModel: { ...load.propellant.burnModel, vivacity: ba } },
   });
-  let state = evaluate(load);
+  let state = evaluate(load, engine);
   if (!state) return undefined;
   let k = k0;
   let ba = ba0;
@@ -66,9 +68,11 @@ export function calibrateToVelocity(load: Load, muzzleVelocity: number): Calibra
       limited = true;
       return false;
     }
-    const next = evaluate(withPowder(nextK, nextBa));
+    const next = evaluate(withPowder(nextK, nextBa), engine);
     simulations++;
-    if (!next || next.tenPercentPeakTime === undefined) {
+    // GRT stops at a step without a 10 %-of-peak time; R1 has none whenever its pressure starts at
+    // a tenth of its peak, so for another engine a step need only simulate.
+    if (!next || (engine === grtTraditional && next.tenPercentPeakTime === undefined)) {
       limited = true;
       return false;
     }
@@ -94,15 +98,15 @@ export function calibrateToVelocity(load: Load, muzzleVelocity: number): Calibra
  * Changes the charge until the lead time crosses `leadTime` (s), coarse to fine; a longer lead time
  * needs less powder. Undefined when the load can't be simulated or has no lead time.
  */
-export function chargeForLeadTime(load: Load, leadTime: number): Calibration | undefined {
+export function chargeForLeadTime(load: Load, leadTime: number, engine: Engine = grtTraditional): Calibration | undefined {
   if (!(Number.isFinite(leadTime) && leadTime > 0)) return undefined;
   let mass = load.charge.mass;
-  let state = evaluate(load);
+  let state = evaluate(load, engine);
   if (state?.leadTime === undefined) return undefined;
   let simulations = 0;
   const leadTimeAt = (charge: number) => {
     simulations++;
-    const simulation = evaluate({ ...load, charge: { ...load.charge, mass: charge } });
+    const simulation = evaluate({ ...load, charge: { ...load.charge, mass: charge } }, engine);
     return simulation?.leadTime === undefined ? undefined : simulation;
   };
   // A step to a charge without a lead time (too little powder for the initial pressure, or one that
@@ -128,8 +132,8 @@ export function chargeForLeadTime(load: Load, leadTime: number): Calibration | u
   return { load: { ...load, charge: { ...load.charge, mass } }, simulation: state!, reached };
 }
 
-function evaluate(load: Load): Simulation | undefined {
-  const result = grtTraditional.simulate(load);
+function evaluate(load: Load, engine: Engine): Simulation | undefined {
+  const result = engine.simulate(load);
   return result.ok ? result.simulation : undefined;
 }
 
@@ -170,8 +174,9 @@ export function fitTemperatureCoefficients(
   normal: TemperatureMeasurement,
   cold: TemperatureMeasurement | undefined,
   hot: TemperatureMeasurement | undefined,
+  engine: Engine = grtTraditional,
 ): TemperatureCoefficients | undefined {
-  const atNormal = evaluate({ ...load, charge: { ...load.charge, temperature: normal.temperature } });
+  const atNormal = evaluate({ ...load, charge: { ...load.charge, temperature: normal.temperature } }, engine);
   if (!atNormal) return undefined;
   const offset = atNormal.muzzleVelocity - normal.velocity;
   // The coefficients the model actually uses: a powder with both at 0 gets GRT's defaults.
@@ -197,7 +202,7 @@ export function fitTemperatureCoefficients(
         ...load,
         propellant: { ...load.propellant, burnModel },
         charge: { ...load.charge, temperature: measurement.temperature },
-      });
+      }, engine);
       return simulation?.muzzleVelocity;
     };
     // Velocity rises with either coefficient (the vivacity does), so bisection finds the match.

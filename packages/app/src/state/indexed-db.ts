@@ -14,6 +14,11 @@ export interface RecordStore<T extends { id: string }> {
   put(record: T): Promise<void>;
   /** Puts several records in one transaction: all of them are written, or none. */
   putAll(records: readonly T[]): Promise<void>;
+  /**
+   * Puts the record only if `unchanged` accepts the one stored under its id (undefined when none), read
+   * in the same transaction, so that no other tab writes in between. Resolves whether it was written.
+   */
+  putIf(record: T, unchanged: (stored: unknown) => boolean): Promise<boolean>;
   remove(id: string): Promise<void>;
 }
 
@@ -80,6 +85,23 @@ export function indexedDbStore<T extends { id: string }>(name: StoreName, factor
       // One transaction: the requests share it, and an abort undoes all of them.
       await run('readwrite', (store) => records.map((record) => store.put(record)).at(-1)!);
     },
+    putIf: async (record, unchanged) => {
+      const database = await open(factory);
+      return new Promise<boolean>((resolve, reject) => {
+        const transaction = database.transaction(name, 'readwrite');
+        const store = transaction.objectStore(name);
+        let written = false;
+        const read = store.get(record.id);
+        read.onsuccess = () => {
+          if (!unchanged(read.result)) return;
+          store.put(record);
+          written = true;
+        };
+        read.onerror = () => reject(read.error);
+        transaction.oncomplete = () => resolve(written);
+        transaction.onabort = () => reject(transaction.error ?? new DOMException('Transaction aborted', 'AbortError'));
+      });
+    },
     remove: async (id) => void (await run('readwrite', (store) => store.delete(id))),
   };
 }
@@ -91,6 +113,11 @@ export function memoryStore<T extends { id: string }>(): RecordStore<T> {
     list: async () => [...records.values()].map((record) => structuredClone(record)),
     put: async (record) => void records.set(record.id, structuredClone(record)),
     putAll: async (list) => void list.forEach((record) => records.set(record.id, structuredClone(record))),
+    putIf: async (record, unchanged) => {
+      if (!unchanged(records.get(record.id))) return false;
+      records.set(record.id, structuredClone(record));
+      return true;
+    },
     remove: async (id) => void records.delete(id),
   };
 }

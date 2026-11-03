@@ -87,7 +87,8 @@ src/
                         (new-load.ts), cartridge preselection (cartridge-choice.ts), independent input copies
                         (load-copy.ts), shortcut matching
                         (keyboard-shortcuts.ts), ordered snapshot saves (document-saving.ts), each load's
-                        Undo/Redo steps (document-history.ts)
+                        Undo/Redo steps (document-history.ts), the one tab of the app that keeps open
+                        loads for recovery (recovery-lock.ts)
   data/                 community-components.json: the CC0 community components bundled for a first
                         offline visit (tools/data/build-community.ts); online, the app takes them from
                         the data repository through @gordons-legacy/data

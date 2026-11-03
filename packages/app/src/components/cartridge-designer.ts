@@ -3,7 +3,7 @@ import { html, LitElement, nothing } from 'lit';
 import { technicalDrawing } from '../drawing/technical-drawing.ts';
 import type { MessageKey } from '../i18n/i18n.ts';
 import { icon } from '../icons/icons.ts';
-import { displayUnit, formatNumber, parseNumber, type QuantityKind } from '../units/units.ts';
+import { displayUnit, formatEditable, formatNumber, parseNumber, type QuantityKind } from '../units/units.ts';
 import type { UiContext } from './context.ts';
 
 /** One editable value of a caliber definition: its letter on the standard's drawing, its label and its kind. */
@@ -235,7 +235,7 @@ export class CartridgeDesigner extends LitElement {
           id=${id}
           type="text"
           inputmode="decimal"
-          .value=${formatNumber(shown, decimals ?? unit?.decimals ?? 2, 'en').replace(/,/g, '')}
+          .value=${formatEditable(shown, decimals ?? unit?.decimals ?? 2)}
           @change=${(event: Event) => {
             const parsed = parseNumber((event.target as HTMLInputElement).value);
             if (parsed !== undefined && parsed >= 0) set(unit ? unit.toSi(parsed) : parsed);

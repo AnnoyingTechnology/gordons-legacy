@@ -2,7 +2,7 @@ import type { Load, MeasurementSeries } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
 import type { ChronographCsv, VelocityUnit } from '../measurements/chronograph-csv.ts';
 import { shotStatistics } from '../measurements/statistics.ts';
-import { displayUnit, formatNumber, parseNumber } from '../units/units.ts';
+import { displayUnit, formatEditable, parseNumber } from '../units/units.ts';
 import type { UiContext } from './context.ts';
 
 const FEET_PER_SECOND = 0.3048;
@@ -33,6 +33,11 @@ export class ChronographDialog extends LitElement {
   declare unit: VelocityUnit | undefined;
   /** The charge as typed, in the display unit. */
   declare charge: string;
+  /**
+   * The load's charge as it was shown, with its exact mass: an untouched charge is the load's own, not
+   * its text read back at the unit's few decimals (0.1234 g is shown 0.123 g, #32).
+   */
+  private prefilled: { text: string; mass: number } | undefined;
 
   constructor() {
     super();
@@ -52,7 +57,8 @@ export class ChronographDialog extends LitElement {
       this.column = this.csv.suggestedColumn;
       this.unit = this.csv.statedUnit;
       const unit = displayUnit('chargeMass', this.context.units);
-      this.charge = formatNumber(unit.fromSi(this.load.charge.mass), unit.decimals, 'en');
+      this.charge = formatEditable(unit.fromSi(this.load.charge.mass), unit.decimals);
+      this.prefilled = { text: this.charge, mass: this.load.charge.mass };
     }
   }
 
@@ -134,6 +140,7 @@ export class ChronographDialog extends LitElement {
   }
 
   private chargeMass(): number | undefined {
+    if (this.prefilled && this.charge === this.prefilled.text) return this.prefilled.mass;
     const value = parseNumber(this.charge);
     return value !== undefined && value > 0 ? displayUnit('chargeMass', this.context.units).toSi(value) : undefined;
   }

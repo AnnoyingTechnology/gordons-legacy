@@ -30,6 +30,10 @@ interface ClosedDocument {
 /**
  * The loads open in the application, and which one is shown. Listeners are told after every change;
  * the open loads are kept in the browser's storage so that a reload loses nothing.
+ *
+ * That record is one for the whole site, so one tab of the app at a time keeps it (recovery-lock.ts):
+ * a second tab that read and rewrote it would wipe the first tab's unsaved loads (#32). A store made
+ * with `recovery: 'deferred'` neither reads nor writes it until `takeRecovery()`.
  */
 export class DocumentStore {
   documents: OpenDocument[] = [];
@@ -38,6 +42,10 @@ export class DocumentStore {
   storageFull = false;
   /** Some saved tabs were unreadable; keep this visible while the recovered session is open. */
   recoveryFailed = false;
+  /** True while another tab of the app keeps the recovery record: the loads open here are not kept. */
+  recoveryElsewhere = false;
+  /** Whether this store reads and writes the recovery record. */
+  private recovering: boolean;
   private nextId = 1;
   private readonly listeners = new Set<() => void>();
   private readonly storage: Storage | undefined;
@@ -46,10 +54,35 @@ export class DocumentStore {
   private readonly now: () => number;
 
   /** `now` is the clock that merges quick edits into one Undo step; tests pass their own. */
-  constructor(storage?: Storage, now: () => number = Date.now) {
+  constructor(storage?: Storage, now: () => number = Date.now, recovery: 'immediate' | 'deferred' = 'immediate') {
     this.storage = storage;
     this.now = now;
+    this.recovering = recovery === 'immediate';
+    if (this.recovering) this.restore();
+  }
+
+  /**
+   * Takes the recovery record over: the loads it holds open beside those already open, and from now on
+   * this store keeps it. A tab that waited for another to close so adopts the loads that tab left.
+   */
+  takeRecovery(): void {
+    if (this.recovering) return;
+    const open = this.documents;
+    const active = this.activeId;
+    this.documents = [];
+    this.activeId = undefined;
     this.restore();
+    this.documents = [...open, ...this.documents];
+    this.activeId = active ?? this.activeId;
+    this.recovering = true;
+    this.recoveryElsewhere = false;
+    this.changed();
+  }
+
+  /** Another tab keeps the recovery record; this one says so until it can take it over. */
+  waitForRecovery(): void {
+    this.recoveryElsewhere = true;
+    for (const listener of this.listeners) listener();
   }
 
   get active(): OpenDocument | undefined {
@@ -217,6 +250,7 @@ export class DocumentStore {
   }
 
   private persist(): void {
+    if (!this.recovering) return;
     const saved = this.documents.map(({ name, load, savedText, libraryId }) => ({ name, load, savedText, libraryId }));
     try {
       this.storage?.setItem(STORAGE_KEY, JSON.stringify({ documents: saved, active: this.documents.findIndex((d) => d.id === this.activeId) }));

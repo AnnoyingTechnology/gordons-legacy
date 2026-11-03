@@ -1,4 +1,4 @@
-import { grtTraditional, type SimulationResult } from '@gordons-legacy/engine';
+import type { Engine, SimulationResult } from '@gordons-legacy/engine';
 import { ladderChargeMasses, type Load } from '@gordons-legacy/formats';
 import { element, headerRow } from '../dom.ts';
 import type { UiContext } from './context.ts';
@@ -9,9 +9,9 @@ export interface LadderShot {
   result: SimulationResult;
 }
 
-export function simulateLadder(load: Load): LadderShot[] {
+export function simulateLadder(load: Load, engine: Engine): LadderShot[] {
   if (load.ladder === undefined) return [];
-  return ladderChargeMasses(load).map((mass) => ({ mass, result: grtTraditional.simulate({ ...load, charge: { ...load.charge, mass } }) }));
+  return ladderChargeMasses(load).map((mass) => ({ mass, result: engine.simulate({ ...load, charge: { ...load.charge, mass } }) }));
 }
 
 /** Opacity of a ladder's reduced charges in the charts: the further from the load's charge, the fainter. */

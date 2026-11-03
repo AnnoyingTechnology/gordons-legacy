@@ -1,4 +1,4 @@
-import { calibrateToVelocity, grtTraditional } from '@gordons-legacy/engine';
+import { calibrateToVelocity } from '@gordons-legacy/engine';
 import type { Load, MeasuredCharge, MeasurementSeries } from '@gordons-legacy/formats';
 import { element, headerRow } from '../dom.ts';
 import { shotStatistics } from '../measurements/statistics.ts';
@@ -42,7 +42,7 @@ function measuresPressure(series: MeasurementSeries): boolean {
 function renderCharge(load: Load, charge: MeasuredCharge, withPressure: boolean, context: UiContext): HTMLElement {
   const { quantity, number } = context;
   const statistics = shotStatistics(charge.shots.map((shot) => shot.velocity))!;
-  const result = grtTraditional.simulate({ ...load, charge: { ...load.charge, mass: charge.chargeMass } });
+  const result = context.engine.simulate({ ...load, charge: { ...load.charge, mass: charge.chargeMass } });
   const simulated = result.ok ? result.simulation.muzzleVelocity : undefined;
   const difference = simulated === undefined ? '' : `${number(((simulated - statistics.mean) / statistics.mean) * 100, 1)} %`;
   const peak = result.ok ? result.simulation.maxPressure : undefined;
@@ -69,7 +69,7 @@ function renderCharge(load: Load, charge: MeasuredCharge, withPressure: boolean,
   const calibrate = element('button', { type: 'button', title: context.t('measurements.calibrateHelp') }, [context.t('measurements.calibrate')]);
   calibrate.addEventListener('click', () => {
     const measured = { ...load, charge: { ...load.charge, mass: charge.chargeMass } };
-    const calibration = result.ok ? calibrateToVelocity(measured, statistics.mean) : undefined;
+    const calibration = result.ok ? calibrateToVelocity(measured, statistics.mean, context.engine) : undefined;
     // The fit is recorded with the powder model, so that it stays visible wherever the copy goes.
     const fitted =
       calibration && result.ok

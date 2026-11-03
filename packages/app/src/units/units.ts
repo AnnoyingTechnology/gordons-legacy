@@ -176,6 +176,14 @@ export function formatNumber(value: number, decimals: number, locale = 'en'): st
 }
 
 /**
+ * A value as an input shows it for editing: a dot as decimal separator and no thousands commas, which
+ * `parseNumber` would refuse as ambiguous (a distance of 1,000 yards read back as nothing).
+ */
+export function formatEditable(value: number, decimals: number): string {
+  return formatNumber(value, decimals, 'en').replace(/,/g, '');
+}
+
+/**
  * Reads a number typed by a user, accepting a comma or a dot as decimal separator. Returns undefined
  * for anything that isn't a finite number, and for a comma that may be a thousands separator
  * (`isAmbiguousNumber`).

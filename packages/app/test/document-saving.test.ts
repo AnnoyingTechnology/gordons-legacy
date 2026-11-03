@@ -20,6 +20,12 @@ describe('ordered document saves', () => {
       if (++writes === 1) { started.resolve(); await release.promise; }
       await originalPut(entry);
     };
+    // A save over the entry is a conditional write (library.ts): counted the same.
+    const originalPutIf = storage.putIf;
+    storage.putIf = async (entry, unchanged) => {
+      writes++;
+      return originalPutIf(entry, unchanged);
+    };
     const library = new Library(storage);
     await library.ready;
     const save = documentSaver(store, library);

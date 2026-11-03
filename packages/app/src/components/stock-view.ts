@@ -2,7 +2,7 @@ import { html, LitElement, nothing } from 'lit';
 import { repeat } from 'lit/directives/repeat.js';
 import { icon } from '../icons/icons.ts';
 import { lowStock, STOCK_KINDS, type StockItem, type StockKind } from '../state/inventory.ts';
-import { displayUnit, formatNumber, parseNumber } from '../units/units.ts';
+import { displayUnit, formatEditable, parseNumber } from '../units/units.ts';
 import type { UiContext } from './context.ts';
 
 /**
@@ -84,7 +84,7 @@ export class StockView extends LitElement {
     const { t } = this.context;
     const unit = item.kind === 'powder' ? displayUnit('powderStock', this.context.units) : undefined;
     const value = item[field];
-    const shown = value === undefined ? '' : unit ? formatNumber(unit.fromSi(value), unit.decimals, 'en').replace(/,/g, '') : String(value);
+    const shown = value === undefined ? '' : unit ? formatEditable(unit.fromSi(value), unit.decimals) : String(value);
     return html`<input type="text" inputmode="decimal" class="amount" aria-label=${t(field === 'quantity' ? 'stock.quantity' : 'stock.lowLevel')} .value=${shown}
       @change=${(event: Event) => {
         const input = event.target as HTMLInputElement;

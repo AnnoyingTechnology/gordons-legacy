@@ -31,13 +31,24 @@ export class Library {
     return this.entries.find((entry) => entry.id === id);
   }
 
-  /** Saves a load under `id`, or as a new entry; returns the entry's id. */
-  async save(name: string, load: Load, id: string = newId()): Promise<string> {
-    const entry: LibraryEntry = { id, name, load, updatedAt: new Date().toISOString() };
-    await this.storage.put(entry);
-    this.entries = [...this.entries.filter((candidate) => candidate.id !== id), entry];
+  /**
+   * Saves a load under `id`, or as a new entry; returns the entry's id. An entry this library has read
+   * is replaced only if it is still the version read: another tab of the app may have saved it since,
+   * and its work is not overwritten unseen (#32). That case throws `LibraryConflict`.
+   */
+  async save(name: string, load: Load, id?: string): Promise<string> {
+    await this.ready;
+    const entry: LibraryEntry = { id: id ?? newId(), name, load, updatedAt: new Date().toISOString() };
+    if (id === undefined) {
+      await this.storage.put(entry);
+    } else {
+      const known = this.get(id)?.updatedAt;
+      const unchanged = (stored: unknown) => (stored as Partial<LibraryEntry> | undefined)?.updatedAt === known;
+      if (!(await this.storage.putIf(entry, unchanged))) throw new LibraryConflict(name);
+    }
+    this.entries = [...this.entries.filter((candidate) => candidate.id !== entry.id), entry];
     this.changed();
-    return id;
+    return entry.id;
   }
 
   /**
@@ -63,23 +74,48 @@ export class Library {
   }
 
   /**
-   * Adds loads from files (`.grtload` or saved `.json`); returns the names of those that couldn't be
-   * read. A GRT folder can come in at once.
+   * Adds loads from files (`.grtload` or saved `.json`); says which couldn't be read and which the
+   * storage refused. A GRT folder can come in at once, and one file that fails stops none of the others.
    */
-  async importFiles(files: Array<{ name: string; text: string }>): Promise<string[]> {
-    const failed: string[] = [];
+  async importFiles(files: Array<{ name: string; text: string }>): Promise<ImportOutcome> {
+    const outcome: ImportOutcome = { unreadable: [], unsaved: [] };
     for (const { name, text } of files) {
       const isGrt = name.toLowerCase().endsWith('.grtload');
       const result = isGrt ? importGrtLoad(text, { fileName: name }) : parseLoad(text);
-      if (result.ok) await this.save(name.replace(/\.(grtload|json)$/i, ''), result.value);
-      else failed.push(name);
+      if (!result.ok) {
+        outcome.unreadable.push(name);
+        continue;
+      }
+      try {
+        await this.save(name.replace(/\.(grtload|json)$/i, ''), result.value);
+      } catch {
+        outcome.unsaved.push(name);
+      }
     }
-    return failed;
+    return outcome;
   }
 
   private changed(): void {
     for (const listener of this.listeners) listener();
   }
+}
+
+/** A save refused because another tab of the app changed or removed the entry since it was read. */
+export class LibraryConflict extends Error {
+  readonly entryName: string;
+
+  constructor(entryName: string) {
+    super(`The library entry ${entryName} changed in another tab since it was read.`);
+    this.entryName = entryName;
+  }
+}
+
+/** What became of the files given to `importFiles`, by name. */
+export interface ImportOutcome {
+  /** Files that are no load. */
+  unreadable: string[];
+  /** Loads the browser's storage refused (unavailable or full). */
+  unsaved: string[];
 }
 
 function newId(): string {

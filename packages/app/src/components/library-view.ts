@@ -23,6 +23,7 @@ export class LibraryView extends LitElement {
     stock: { attribute: false },
     context: { attribute: false },
     filter: { state: true },
+    removeFailed: { state: true },
   };
 
   declare library: Library;
@@ -35,10 +36,13 @@ export class LibraryView extends LitElement {
   declare context: UiContext;
   /** Words that every shown load must contain, in any of its names. */
   declare filter: string;
+  /** The name of a load the storage refused to remove, until a removal succeeds. */
+  declare removeFailed: string | undefined;
 
   constructor() {
     super();
     this.filter = '';
+    this.removeFailed = undefined;
     this.firearms = [];
     this.stock = [];
   }
@@ -80,6 +84,7 @@ export class LibraryView extends LitElement {
           </label>
         </header>
         <p class="note">${t('library.help')}</p>
+        ${this.removeFailed === undefined ? nothing : html`<p class="error" role="alert">${t('library.removeFailed', { name: this.removeFailed })}</p>`}
         ${this.entries.length === 0
           ? html`<p class="empty-message">${t('library.empty')}</p>`
           : html`<div class="table-scroll"><table class="library-table">
@@ -204,7 +209,7 @@ export class LibraryView extends LitElement {
         <button class="icon-button" aria-label=${t('stock.recordBatchOf', { name: entry.name })} title=${t('stock.recordBatchOf', { name: entry.name })}
           @click=${() => this.fire('record-batch', entry.id)}>${icon('charge')}</button>
         <button class="remove" aria-label=${t('library.remove', { name: entry.name })} title=${t('library.remove', { name: entry.name })}
-          @click=${() => this.removeEntry(entry)}>${icon('close')}</button>
+          @click=${() => void this.removeEntry(entry)}>${icon('close')}</button>
       </td>
     </tr>`;
   }
@@ -228,8 +233,15 @@ export class LibraryView extends LitElement {
     setTimeout(step, 0);
   }
 
-  private removeEntry(entry: LibraryEntry): void {
-    if (window.confirm(this.context.t('library.confirmRemove', { name: entry.name }))) void this.library.remove(entry.id);
+  /** A removal the storage refuses keeps the entry and says so, instead of failing unseen (#32). */
+  private async removeEntry(entry: LibraryEntry): Promise<void> {
+    if (!window.confirm(this.context.t('library.confirmRemove', { name: entry.name }))) return;
+    try {
+      await this.library.remove(entry.id);
+      this.removeFailed = undefined;
+    } catch {
+      this.removeFailed = entry.name;
+    }
   }
 
   private importFiles = (event: Event) => {
