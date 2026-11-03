@@ -5,6 +5,9 @@ import { displayUnit, formatEditable, parseNumber, type QuantityKind } from '../
 import type { MessageKey } from '../i18n/i18n.ts';
 import type { UiContext } from './context.ts';
 
+/** How a save of the dialog's gun ended: the storage refused it, or another tab changed the gun first. */
+export type FirearmSave = 'saved' | 'failed' | 'conflict';
+
 /** The numbers of a gun the engine reads, in the order a user measures them. */
 interface BarrelField {
   key: 'length' | 'twistLength' | 'gunMass' | 'jumpToLands';
@@ -38,13 +41,13 @@ export class FirearmDialog extends LitElement {
   /** The gun to edit; undefined when the dialog is closed. */
   declare firearm: Firearm | undefined;
   declare context: UiContext;
-  /** Stores the gun; false when the browser's storage refused it. */
-  declare saveFirearm: ((firearm: Firearm) => Promise<boolean>) | undefined;
+  /** Stores the gun, and says how that went. */
+  declare saveFirearm: ((firearm: Firearm) => Promise<FirearmSave>) | undefined;
   declare draft: Firearm | undefined;
   /** Barrel fields whose typed text is no value: the gun isn't saved until they are corrected. */
   declare invalid: ReadonlyArray<BarrelField['key']>;
   /** Where the last save stands: under way, or refused by the storage. */
-  declare saving: 'idle' | 'saving' | 'failed';
+  declare saving: 'idle' | 'saving' | 'failed' | 'conflict';
   /** Counts the dialog's openings: a save still running from an earlier one settles nothing here. */
   private session = 0;
 
@@ -118,6 +121,7 @@ export class FirearmDialog extends LitElement {
         ${draft.name.trim() === '' ? html`<p class="error">${t('firearm.nameNeeded')}</p>` : nothing}
         ${this.invalid.length > 0 ? html`<p class="error">${t('firearm.numbersInvalid')}</p>` : nothing}
         ${this.saving === 'failed' ? html`<p class="error" role="alert">${t('firearm.saveFailed')}</p>` : nothing}
+        ${this.saving === 'conflict' ? html`<p class="error" role="alert">${t('firearm.saveConflict')}</p>` : nothing}
         <form method="dialog">
           <button
             type="button"
@@ -204,11 +208,11 @@ export class FirearmDialog extends LitElement {
     this.saving = 'saving';
     const session = this.session;
     // The barrel carries the gun's name, so a load made with it says which gun it came from.
-    const saved = await this.saveFirearm({ ...draft, name: draft.name.trim(), barrel: { ...draft.barrel, name: draft.name.trim() } });
+    const outcome = await this.saveFirearm({ ...draft, name: draft.name.trim(), barrel: { ...draft.barrel, name: draft.name.trim() } });
     if (session !== this.session) return;
-    this.saving = saved ? 'idle' : 'failed';
+    this.saving = outcome === 'saved' ? 'idle' : outcome;
     // An edit made while saving is not in what was saved: the dialog stays open for it.
-    if (saved && this.draft === draft) this.querySelector('dialog')?.close();
+    if (outcome === 'saved' && this.draft === draft) this.querySelector('dialog')?.close();
   };
 }
 

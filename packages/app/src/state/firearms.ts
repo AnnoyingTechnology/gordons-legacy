@@ -1,6 +1,7 @@
 import { checkFirearm, FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, type Firearm, type Load } from '@gordons-legacy/formats';
 import type { RecordStore } from './indexed-db.ts';
 import type { LibraryEntry } from './library-storage.ts';
+import { EntryConflict, isRevision, newRevision } from './entry-revision.ts';
 import { storedReading } from './stored-reading.ts';
 
 /**
@@ -17,6 +18,8 @@ export interface FirearmEntry {
   firearm: Firearm;
   /** When the entry was last saved, ISO 8601. */
   updatedAt: string;
+  /** Made anew at every write; an edit replaces the gun only at the revision it opened (entry-revision.ts). */
+  revision?: string;
 }
 
 export type FirearmStorage = RecordStore<FirearmEntry>;
@@ -49,14 +52,19 @@ export class FirearmLibrary {
     return () => this.listeners.delete(listener);
   }
 
-  /** Saves a gun under `id`, or as a new entry; returns the entry's id. */
-  async save(firearm: Firearm, id: string = crypto.randomUUID()): Promise<string> {
+  /**
+   * Saves a gun as a new entry, or over the one `target` names while it is still stored at the revision
+   * the edit started from (another tab may have changed or removed it, #32); that case throws
+   * `EntryConflict`. Returns the entry as saved.
+   */
+  async save(firearm: Firearm, target?: { id: string; revision?: string | undefined }): Promise<FirearmEntry> {
     await this.whenRead();
-    const entry: FirearmEntry = { id, firearm, updatedAt: new Date().toISOString() };
-    await this.storage.put(entry);
-    this.entries = [...this.entries.filter((candidate) => candidate.id !== id), entry];
+    const entry: FirearmEntry = { id: target?.id ?? crypto.randomUUID(), firearm, updatedAt: new Date().toISOString(), revision: newRevision() };
+    if (target === undefined) await this.storage.put(entry);
+    else if (!(await this.storage.putIf(entry, (stored) => isRevision(stored, target.revision)))) throw new EntryConflict(firearm.name);
+    this.entries = [...this.entries.filter((candidate) => candidate.id !== entry.id), entry];
     this.changed();
-    return id;
+    return entry;
   }
 
   async remove(id: string): Promise<void> {
@@ -80,7 +88,8 @@ function checked(entry: FirearmEntry): FirearmEntry[] {
   const result = checkFirearm(entry.firearm);
   if (!result.ok) return [];
   const updatedAt = typeof entry.updatedAt === 'string' && entry.updatedAt !== '' ? entry.updatedAt : new Date(0).toISOString();
-  return [{ ...entry, firearm: result.value, updatedAt }];
+  const { revision, ...rest } = entry;
+  return [{ ...rest, firearm: result.value, updatedAt, ...(typeof revision === 'string' ? { revision } : {}) }];
 }
 
 /** An empty gun, to fill in: a barrel with nothing but a length the editor will ask for. */

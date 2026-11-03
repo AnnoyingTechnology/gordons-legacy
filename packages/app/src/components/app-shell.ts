@@ -23,7 +23,8 @@ import './compare-view.ts';
 import type { CalibratedLoad } from './measurements-view.ts';
 import './library-view.ts';
 import './load-editor.ts';
-import { Library, LibraryConflict } from '../state/library.ts';
+import { Library } from '../state/library.ts';
+import { EntryConflict } from '../state/entry-revision.ts';
 import { indexedDbStorage } from '../state/library-storage.ts';
 import { ComponentLibrary, type ComponentEntry } from '../state/components.ts';
 import { choosableFirearms, FirearmLibrary, firearmFromLoad, withFirearm, type FirearmEntry } from '../state/firearms.ts';
@@ -32,6 +33,7 @@ import { readBackup, writeBackup } from '../state/backup.ts';
 import { Inventory, type StockItem, type Use } from '../state/inventory.ts';
 import './batch-dialog.ts';
 import './sync-dialog.ts';
+import type { FirearmSave } from './firearm-dialog.ts';
 import './firearm-dialog.ts';
 import './firearm-picker.ts';
 import { indexedDbStore } from '../state/indexed-db.ts';
@@ -87,7 +89,8 @@ export class AppShell extends LitElement {
   /** A chronograph export waiting for the user to confirm its column and unit. */
   declare chronograph: { csv: ChronographCsv; fileName: string; documentId: number } | undefined;
   /** The gun being described, with the id of the entry it replaces when it is an edit (issue #24). */
-  declare editedFirearm: { firearm: Firearm; id?: string } | undefined;
+  /** The gun in the gun dialog: its stored id and revision once it has been saved. */
+  declare editedFirearm: { firearm: Firearm; id?: string; revision?: string } | undefined;
   /** The saved load a batch is being recorded of (batch-dialog.ts); undefined when none. */
   declare batch: { name: string; load: Load } | undefined;
   /** Whether the bench ↔ phone exchange is open (sync-dialog.ts). */
@@ -324,7 +327,7 @@ export class AppShell extends LitElement {
         @remove-stock=${(event: CustomEvent<string>) => void this.keepStock(() => this.inventory.remove(event.detail))}
         @record-batch=${(event: CustomEvent<string>) => this.recordBatch(event.detail)}
         @sync=${() => (this.syncOpen = true)}
-        @edit-firearm=${(event: CustomEvent<{ firearm: Firearm; id?: string }>) => (this.editedFirearm = event.detail)}
+        @edit-firearm=${(event: CustomEvent<{ firearm: Firearm; id?: string; revision?: string }>) => (this.editedFirearm = event.detail)}
         @remove-firearm=${(event: CustomEvent<string>) => void this.keepFirearm(undefined, event.detail)}
         @open-entry=${(event: CustomEvent<string>) => this.openEntry(event.detail)}
         @entry-removed=${(event: CustomEvent<string>) => this.store.unlink(event.detail)}
@@ -503,7 +506,7 @@ export class AppShell extends LitElement {
       return saved;
     } catch (error) {
       // Another tab's newer version is not overwritten (library.ts); the edits stay open here.
-      this.lastSaveError = error instanceof LibraryConflict
+      this.lastSaveError = error instanceof EntryConflict
         ? this.context.t('library.saveConflict', { name: error.entryName })
         : this.context.t('library.saveFailed');
       this.openErrors = [this.lastSaveError];
@@ -701,22 +704,27 @@ export class AppShell extends LitElement {
   }
 
   /**
-   * Saves the gun of the open gun dialog. A new gun gets its id before the first write and keeps it for
-   * the dialog's whole opening: a second Save, after an edit made while the first was running, replaces
-   * that gun instead of adding another (#32).
+   * Saves the gun of the open gun dialog, over the revision it opened. The entry saved, id and revision,
+   * becomes the dialog's: a second Save in the same opening (after an edit made while the first was
+   * running) replaces that gun instead of adding another (#32).
    */
-  private async saveEditedFirearm(firearm: Firearm): Promise<boolean> {
+  private async saveEditedFirearm(firearm: Firearm): Promise<FirearmSave> {
     const edited = this.editedFirearm;
-    if (!edited) return false;
-    const id = edited.id ?? crypto.randomUUID();
-    if (edited.id === undefined) this.editedFirearm = { ...edited, id };
-    return this.writeFirearm(firearm, id);
+    if (!edited) return 'failed';
+    try {
+      const target = edited.id === undefined ? undefined : { id: edited.id, revision: edited.revision };
+      const entry = await this.firearms.save(firearm, target);
+      if (this.editedFirearm === edited) this.editedFirearm = { ...edited, id: entry.id, ...(entry.revision === undefined ? {} : { revision: entry.revision }) };
+      return 'saved';
+    } catch (error) {
+      return error instanceof EntryConflict ? 'conflict' : 'failed';
+    }
   }
 
   /** Saves a gun (or removes the gun `id` when there is none); false when the storage refused it. */
   private async writeFirearm(firearm: Firearm | undefined, id: string | undefined): Promise<boolean> {
     try {
-      if (firearm) await this.firearms.save(firearm, id);
+      if (firearm) await this.firearms.save(firearm);
       else if (id) await this.firearms.remove(id);
       return true;
     } catch {

@@ -456,6 +456,7 @@ export const fr: Messages = {
   'firearm.nameNeeded': 'Une arme a besoin d’un nom.',
   'firearm.numbersInvalid': "Certaines valeurs ne sont pas des nombres supérieurs à 0. Corrigez-les avant d'enregistrer ; la longueur du canon est obligatoire.",
   'firearm.saveFailed': "L'arme n'a pas pu être enregistrée (stockage du navigateur indisponible ou plein). Vos modifications sont conservées.",
+  'firearm.saveConflict': "Cette arme a été modifiée ou supprimée dans un autre onglet depuis l'ouverture de cette fenêtre ; elle n'a donc pas été écrasée. Vos modifications sont conservées ici : exportez l'arme dans un fichier pour les garder.",
   'firearm.empty': 'Aucune arme. Ajoutez-en une, ou enregistrez le canon d’un chargement ouvert.',
   'firearm.publishedNote': 'Une longueur de canon publiée est nominale : ce n’est pas toujours la distance entre la face de culasse et la bouche dont la simulation a besoin.',
   'firearm.choose': 'Choisir une arme…',

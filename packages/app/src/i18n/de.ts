@@ -456,6 +456,7 @@ export const de: Messages = {
   'firearm.nameNeeded': 'Eine Waffe braucht einen Namen.',
   'firearm.numbersInvalid': "Einige Werte sind keine Zahlen größer als 0. Korrigieren Sie sie vor dem Speichern; die Lauflänge ist erforderlich.",
   'firearm.saveFailed': "Die Waffe konnte nicht gespeichert werden (Browserspeicher nicht verfügbar oder voll). Ihre Änderungen sind noch da.",
+  'firearm.saveConflict': "Diese Waffe wurde in einem anderen Tab geändert oder entfernt, seit dieser Dialog sie geöffnet hat; sie wurde daher nicht überschrieben. Ihre Änderungen sind noch hier: Exportieren Sie die Waffe in eine Datei, um sie zu behalten.",
   'firearm.empty': 'Noch keine Waffe. Fügen Sie eine hinzu oder speichern Sie den Lauf einer geöffneten Ladung.',
   'firearm.publishedNote': 'Eine veröffentlichte Lauflänge ist nominal: Sie ist nicht immer die Länge vom Stoßboden bis zur Mündung, die die Simulation braucht.',
   'firearm.choose': 'Waffe wählen…',

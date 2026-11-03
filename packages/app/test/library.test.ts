@@ -4,7 +4,8 @@ import { importGrtLoad, serializeLoad, type Load } from '@gordons-legacy/formats
 import { describe, expect, test, vi } from 'vitest';
 import { summarizeLoad } from '../src/analysis/load-summary.ts';
 import { memoryStorage, type LibraryEntry } from '../src/state/library-storage.ts';
-import { Library, LibraryConflict, shelves } from '../src/state/library.ts';
+import { EntryConflict } from '../src/state/entry-revision.ts';
+import { Library, shelves } from '../src/state/library.ts';
 import { readBackup, writeBackup } from '../src/state/backup.ts';
 import { choosableFirearms, FirearmLibrary, newFirearm, type FirearmEntry } from '../src/state/firearms.ts';
 import { memoryStore } from '../src/state/indexed-db.ts';
@@ -248,7 +249,7 @@ test("a save never overwrites what another tab of the app saved since this one r
     const otherTab = new Library(storage);
     await otherTab.ready;
     const elsewhere = await otherTab.save('Load, edited elsewhere', glock, otherTab.get(read.id)!);
-    await expect(thisTab.save('Load, edited here', glock, read)).rejects.toBeInstanceOf(LibraryConflict);
+    await expect(thisTab.save('Load, edited here', glock, read)).rejects.toBeInstanceOf(EntryConflict);
     expect((await storage.list()).map((entry) => entry.name)).toEqual(['Load, edited elsewhere']);
     // The other tab, which holds the revision it wrote, saves again as usual.
     await otherTab.save('Load, edited again', glock, elsewhere);
@@ -300,6 +301,6 @@ test('a save over an entry removed meanwhile does not bring it back unseen (#32)
   await library.ready;
   const opened = library.get('old')!;
   await storage.remove('old');
-  await expect(library.save('Old, edited', glock, opened)).rejects.toBeInstanceOf(LibraryConflict);
+  await expect(library.save('Old, edited', glock, opened)).rejects.toBeInstanceOf(EntryConflict);
   expect(await storage.list()).toEqual([]);
 });

@@ -456,6 +456,7 @@ export const it: Messages = {
   'firearm.nameNeeded': 'Un’arma ha bisogno di un nome.',
   'firearm.numbersInvalid': "Alcuni valori non sono numeri maggiori di 0. Correggeteli prima di salvare; la lunghezza della canna è obbligatoria.",
   'firearm.saveFailed': "L'arma non è stata salvata (memoria del browser non disponibile o piena). Le vostre modifiche sono ancora qui.",
+  'firearm.saveConflict': "Quest'arma è stata modificata o rimossa in un'altra scheda da quando questa finestra l'ha aperta, quindi non è stata sovrascritta. Le vostre modifiche sono ancora qui: esportate l'arma in un file per conservarle.",
   'firearm.empty': 'Nessuna arma. Aggiungetene una, o salvate la canna di una ricarica aperta.',
   'firearm.publishedNote': 'Una lunghezza di canna pubblicata è nominale: non è sempre la distanza dalla faccia dell’otturatore alla volata che la simulazione richiede.',
   'firearm.choose': 'Scegli un’arma…',

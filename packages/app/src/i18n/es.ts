@@ -456,6 +456,7 @@ export const es: Messages = {
   'firearm.nameNeeded': 'Un arma necesita un nombre.',
   'firearm.numbersInvalid': "Algunos valores no son números mayores que 0. Corríjalos antes de guardar; la longitud del cañón es obligatoria.",
   'firearm.saveFailed': "El arma no se pudo guardar (almacenamiento del navegador no disponible o lleno). Sus cambios siguen aquí.",
+  'firearm.saveConflict': "Esta arma se modificó o eliminó en otra pestaña desde que este diálogo la abrió, así que no se sobrescribió. Sus cambios siguen aquí: exporte el arma a un archivo para conservarlos.",
   'firearm.empty': 'Ningún arma todavía. Añada una, o guarde el cañón de una carga abierta.',
   'firearm.publishedNote': 'Una longitud de cañón publicada es nominal: no siempre es la distancia desde la cara del cierre hasta la boca que la simulación necesita.',
   'firearm.choose': 'Elegir un arma…',

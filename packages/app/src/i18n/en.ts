@@ -458,6 +458,7 @@ export const en = {
   'firearm.nameNeeded': 'A gun needs a name.',
   'firearm.numbersInvalid': "Some values are not numbers greater than 0. Correct them before saving; the barrel length is required.",
   'firearm.saveFailed': "The gun couldn't be saved (browser storage unavailable or full). Your edits are still here.",
+  'firearm.saveConflict': "This gun was changed or removed in another tab since this dialog opened it, so it was not overwritten. Your edits are still here: export the gun to a file to keep them.",
   'firearm.empty': 'No gun yet. Add one, or save the barrel of a load you have open.',
   'firearm.publishedNote': 'A published barrel length is nominal: it is not always the bolt face to muzzle length the simulation needs.',
   'firearm.choose': 'Choose a gun…',

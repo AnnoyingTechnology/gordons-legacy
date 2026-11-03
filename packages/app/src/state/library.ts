@@ -1,5 +1,6 @@
 import { importGrtLoad, parseLoad, type Load } from '@gordons-legacy/formats';
 import type { LibraryEntry, LibraryStorage } from './library-storage.ts';
+import { EntryConflict, isRevision, newRevision } from './entry-revision.ts';
 import { storedReading } from './stored-reading.ts';
 
 export type { LibraryEntry } from './library-storage.ts';
@@ -40,17 +41,16 @@ export class Library {
    * Saves a load as a new entry, or over the entry `target` names. That entry is replaced only while
    * it is still stored, at the revision the caller read (`target.revision`): another tab of the app, or
    * a sync, may have saved or removed it since, and that is not undone unseen (#32); the check and the
-   * write share one transaction. That case throws `LibraryConflict`. Returns the entry as saved.
+   * write share one transaction. That case throws `EntryConflict` (entry-revision.ts). Returns the entry as saved.
    */
   async save(name: string, load: Load, target?: { id: string; revision?: string | undefined }): Promise<LibraryEntry> {
     await this.whenRead();
-    const entry: LibraryEntry = { id: target?.id ?? newId(), name, load, updatedAt: new Date().toISOString(), revision: newId() };
+    const entry: LibraryEntry = { id: target?.id ?? newId(), name, load, updatedAt: new Date().toISOString(), revision: newRevision() };
     if (target === undefined) {
       await this.storage.put(entry);
     } else {
       // The entry must still be there too: one removed meanwhile is not brought back unseen.
-      const unchanged = (stored: unknown) => stored !== undefined && revisionOf(stored) === target.revision;
-      if (!(await this.storage.putIf(entry, unchanged))) throw new LibraryConflict(name);
+      if (!(await this.storage.putIf(entry, (stored) => isRevision(stored, target.revision)))) throw new EntryConflict(name);
     }
     this.replace(entry);
     return entry;
@@ -67,7 +67,7 @@ export class Library {
     // Dates are compared as instants: `…:00Z` and `…:00.001Z` don't sort as text, and a date that isn't one is refused.
     const time = Date.parse(entry.updatedAt);
     if (!Number.isFinite(time)) return false;
-    const received: LibraryEntry = { ...entry, revision: newId() };
+    const received: LibraryEntry = { ...entry, revision: newRevision() };
     // A stored entry without a readable date (an older version's) counts as older than any.
     const older = (stored: unknown) => !(Date.parse(dateOf(stored)) >= time);
     if (!(await this.storage.putIf(received, older))) return false;
@@ -114,26 +114,10 @@ export class Library {
   }
 }
 
-/** The revision of a stored record, read without trusting its shape. */
-function revisionOf(stored: unknown): string | undefined {
-  const revision = (stored as { revision?: unknown } | undefined)?.revision;
-  return typeof revision === 'string' ? revision : undefined;
-}
-
 /** The date of a stored record, or '' when it has none. */
 function dateOf(stored: unknown): string {
   const date = (stored as { updatedAt?: unknown } | undefined)?.updatedAt;
   return typeof date === 'string' ? date : '';
-}
-
-/** A save refused because another tab of the app changed or removed the entry since it was read. */
-export class LibraryConflict extends Error {
-  readonly entryName: string;
-
-  constructor(entryName: string) {
-    super(`The library entry ${entryName} changed in another tab since it was read.`);
-    this.entryName = entryName;
-  }
 }
 
 /** What became of the files given to `importFiles`, by name. */

@@ -149,11 +149,11 @@ export class LibraryView extends LitElement {
               <tbody>
                 ${[...shown]
                   .sort((a, b) => a.firearm.name.localeCompare(b.firearm.name, undefined, { numeric: true }))
-                  .map(({ id, firearm }) => {
+                  .map(({ id, firearm, revision }) => {
                     const name = firearmLabel(firearm);
                     return html`<tr>
                       <td>
-                        <button class="link" title=${t('firearm.edit', { name })} @click=${() => this.fire('edit-firearm', { firearm, id })}>${name}</button>
+                        <button class="link" title=${t('firearm.edit', { name })} @click=${() => this.fire('edit-firearm', { firearm, id, ...(revision === undefined ? {} : { revision }) })}>${name}</button>
                       </td>
                       <td>${firearm.maker ?? ''}</td>
                       <td>${firearm.cartridge ?? ''}</td>
