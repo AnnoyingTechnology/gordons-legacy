@@ -1,4 +1,4 @@
-import { importGrtLoad, parseLoad, serializeLoad, type ImportIssue, type Load } from '@gordons-legacy/formats';
+import { isGrtLoadFile, parseLoad, readLoadFile, serializeLoad, type ImportIssue, type Load } from '@gordons-legacy/formats';
 import { DocumentHistory } from './document-history.ts';
 
 /** A load open in a tab. */
@@ -63,8 +63,8 @@ export class DocumentStore {
 
   /** Opens a `.grtload` or saved JSON load from its text. Returns the issues when it can't be read. */
   open(name: string, text: string): { ok: boolean; issues: ImportIssue[] } {
-    const isGrt = name.toLowerCase().endsWith('.grtload');
-    const result = isGrt ? importGrtLoad(text, { fileName: name }) : parseLoad(text);
+    const isGrt = isGrtLoadFile(name);
+    const result = readLoadFile(name, text);
     if (!result.ok) return { ok: false, issues: result.issues };
     const jsonName = isGrt ? name.replace(/\.grtload$/i, '.json') : name;
     // An imported GRT file counts as unsaved until saved in our format.

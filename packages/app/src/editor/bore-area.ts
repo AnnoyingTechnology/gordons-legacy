@@ -24,6 +24,20 @@ export function landWidth({ boreDiameter, grooveWidth, grooves }: Rifling): numb
   return (boreDiameter * Math.PI - grooves * grooveWidth) / grooves;
 }
 
+/**
+ * Whether these dimensions describe a barrel that can exist, so that the area computed from them means
+ * something. The grooves must be deeper than the lands and, where their width counts, leave room for
+ * lands on the bore circle; a polygon needs at least three sides. Outside these, GRT's formulas still
+ * give a number: wider grooves than the bore holds give an area above the groove circle, which lowers
+ * the simulated pressure, and a two-sided polygon gives an area of almost nothing.
+ */
+export function isPossibleRifling(rifling: Rifling): boolean {
+  const { profile, boreDiameter, grooveDiameter, grooveWidth, grooves } = rifling;
+  if (!(boreDiameter > 0 && grooveDiameter > boreDiameter && grooveWidth > 0)) return false;
+  if (!Number.isInteger(grooves) || grooves < (profile === 'grooved' ? 1 : 3)) return false;
+  return profile === 'polygonal-rounded' || landWidth(rifling) > 0;
+}
+
 export function effectiveBoreArea(rifling: Rifling): number {
   const { profile, boreDiameter, grooveDiameter, grooveWidth, grooves } = rifling;
   const grooveCircle = grooveDiameter ** 2 * 0.7853981633974483;

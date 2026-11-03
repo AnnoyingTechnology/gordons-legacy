@@ -9,9 +9,9 @@
  * muzzle velocity; and a measurement note may name another gun than the load's barrel.
  */
 import { readFileSync } from 'node:fs';
-import { basename, extname } from 'node:path';
+import { basename } from 'node:path';
 import { grtTraditional, researchEngine, type Engine } from '@gordons-legacy/engine';
-import { importGrtLoad, parseLoad, type Load } from '@gordons-legacy/formats';
+import { readLoadFile, type Load } from '@gordons-legacy/formats';
 
 interface Comparison {
   file: string;
@@ -27,8 +27,7 @@ interface Comparison {
 }
 
 function readLoad(path: string): Load | undefined {
-  const text = readFileSync(path, 'utf8');
-  const result = extname(path).toLowerCase() === '.grtload' ? importGrtLoad(text) : parseLoad(text);
+  const result = readLoadFile(basename(path), readFileSync(path, 'utf8'));
   return result.ok ? result.value : undefined;
 }
 
@@ -64,11 +63,33 @@ function percentile(sorted: number[], fraction: number): number {
   return sorted[Math.min(sorted.length - 1, Math.floor(fraction * sorted.length))]!;
 }
 
+/** The engines `--engine` can name, by their id. */
+const ENGINES: readonly Engine[] = [grtTraditional, researchEngine];
+
+/**
+ * The command line: the engine to compare (GRT Traditional unless `--engine` names another) and the load
+ * files. An engine id that names no engine is a problem, not a silent fallback, since the summary would
+ * otherwise be read as the statistics of an engine that never ran.
+ */
+export function chronographArguments(argv: readonly string[]): { engine: Engine; paths: string[] } | { problem: string } {
+  const engineIndex = argv.indexOf('--engine');
+  if (engineIndex < 0) return { engine: grtTraditional, paths: [...argv] };
+  const engineId = argv[engineIndex + 1];
+  const engine = ENGINES.find((candidate) => candidate.id === engineId);
+  if (engine === undefined) {
+    return { problem: `--engine takes one of ${ENGINES.map((candidate) => candidate.id).join(', ')}, not ${engineId ?? 'nothing'}` };
+  }
+  return { engine, paths: argv.filter((_, index) => index !== engineIndex && index !== engineIndex + 1) };
+}
+
 function main(): void {
-  const args = process.argv.slice(2);
-  const engineIndex = args.indexOf('--engine');
-  const engine = engineIndex >= 0 && args[engineIndex + 1] === researchEngine.id ? researchEngine : grtTraditional;
-  const paths = args.filter((_, index) => index !== engineIndex && index !== engineIndex + 1);
+  const args = chronographArguments(process.argv.slice(2));
+  if ('problem' in args) {
+    console.error(`${args.problem}\nusage: node tools/validation/chronograph.ts [--engine research-1] <file.grtload | file.json>...`);
+    process.exitCode = 1;
+    return;
+  }
+  const { engine, paths } = args;
   console.log(`engine: ${engine.name}`);
   const comparisons = compare(paths, engine);
   const errors = comparisons.map((entry) => (entry.simulated - entry.measured) / entry.measured);

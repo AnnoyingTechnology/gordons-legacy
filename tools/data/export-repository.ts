@@ -167,16 +167,29 @@ function readFirearms(folders: readonly string[]): Map<string, Map<string, Firea
   return byMaker;
 }
 
-/** The guns a maker's file already holds, so that a new reading of a catalogue does not drop them. */
-function existingFirearms(repository: string, maker: string): Firearm[] {
-  const path = join(repository, 'firearms', `${maker}.json`);
-  if (!existsSync(path)) return [];
-  const document = readDocument(readFileSync(path, 'utf8'));
+/**
+ * The guns a maker's published file holds, so that a new reading of a catalogue does not drop them;
+ * none when there is no file yet (`text` undefined).
+ *
+ * A file that is there but does not read as a gun file — broken JSON, a gun the format has since come
+ * to reject, another kind — stops the export. Taking it for an empty catalogue would replace every gun
+ * it publishes with the new reading alone, and guns that have left a catalogue are still owned and
+ * loaded for; they are the ones no new reading can bring back.
+ */
+export function publishedFirearms(path: string, text: string | undefined): Firearm[] {
+  if (text === undefined) return [];
+  const document = readDocument(text);
   if (document?.kind !== 'firearm') {
-    console.log(`  firearms/${maker}.json: not a gun file this version reads; it is left as it is`);
-    return [];
+    throw new Error(`${path} is there but is not a gun file this version reads; the export stops rather than replace its published guns with the new reading alone. Repair the file (git history has the last good one) and run the export again.`);
   }
   return document.value;
+}
+
+/** The guns a maker's file already holds in the repository (`publishedFirearms`). */
+function existingFirearms(repository: string, maker: string): Firearm[] {
+  const path = `firearms/${maker}.json`;
+  const file = join(repository, path);
+  return publishedFirearms(path, existsSync(file) ? readFileSync(file, 'utf8') : undefined);
 }
 
 /**
@@ -209,17 +222,23 @@ export function supersededNames(published: readonly Firearm[], read: ReadonlyMap
   return superseded;
 }
 
+/** One maker's file of the gun database, ready to write: its path, its text, and the maker's name. */
+interface MakerFile {
+  path: string;
+  text: string;
+  name: string;
+}
+
 /**
- * Writes the gun database: one file per maker, holding that maker's guns by name, with the guns the
- * repository already holds kept where the new reading no longer has them — a gun that has left a
- * catalogue is still owned and loaded for. Returns the index entries.
+ * The gun database: one file per maker, holding that maker's guns by name, with the guns the repository
+ * already holds kept where the new reading no longer has them — a gun that has left a catalogue is
+ * still owned and loaded for. Nothing is written here, so that a published file which does not read
+ * (`publishedFirearms`) stops the export before any file of the repository has changed.
  */
-async function writeFirearms(repository: string, folders: readonly string[]): Promise<DataIndexEntry[]> {
+function makerFiles(repository: string, folders: readonly string[]): MakerFile[] {
   const read = readFirearms(folders);
   const makers = new Set([...read.keys(), ...(existsSync(join(repository, 'firearms')) ? readdirSync(join(repository, 'firearms')).map((name) => name.replace(/\.json$/, '')) : [])]);
-  if (makers.size === 0) return [];
-  mkdirSync(join(repository, 'firearms'), { recursive: true });
-  const entries: DataIndexEntry[] = [];
+  const files: MakerFile[] = [];
   for (const maker of [...makers].sort()) {
     const published = existingFirearms(repository, maker);
     const fresh = read.get(maker) ?? new Map<string, Firearm>();
@@ -230,10 +249,18 @@ async function writeFirearms(repository: string, folders: readonly string[]): Pr
     const value = [...guns.values()].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
     if (value.length === 0) continue;
     const document = { format: 'gordons-legacy.component', version: 1, kind: 'firearm', provenance: firearmProvenance(value), value };
-    const text = `${JSON.stringify(document, null, 2)}\n`;
-    const path = `firearms/${maker}.json`;
+    files.push({ path: `firearms/${maker}.json`, text: `${JSON.stringify(document, null, 2)}\n`, name: value[0]!.maker ?? maker });
+  }
+  return files;
+}
+
+/** Writes the gun database's files and returns their index entries. */
+async function writeMakerFiles(repository: string, files: readonly MakerFile[]): Promise<DataIndexEntry[]> {
+  if (files.length > 0) mkdirSync(join(repository, 'firearms'), { recursive: true });
+  const entries: DataIndexEntry[] = [];
+  for (const { path, text, name } of files) {
     writeFileSync(join(repository, path), text);
-    entries.push({ path, kind: 'firearm', name: value[0]!.maker ?? maker, sha256: await sha256(text) });
+    entries.push({ path, kind: 'firearm', name, sha256: await sha256(text) });
   }
   return entries;
 }
@@ -265,6 +292,8 @@ function commandLine(argv: readonly string[]): { repository: string; firearmFold
 async function main(): Promise<void> {
   const { repository, firearmFolders } = commandLine(process.argv.slice(2));
   const snapshot = JSON.parse(readFileSync(SNAPSHOT, 'utf8')) as Snapshot;
+  // The guns first: everything that can stop the export is read before any file is removed or written.
+  const guns = makerFiles(repository, firearmFolders);
   for (const folder of ['powders', 'projectiles', 'calibers']) {
     rmSync(join(repository, folder), { recursive: true, force: true });
     mkdirSync(join(repository, folder), { recursive: true });
@@ -277,11 +306,11 @@ async function main(): Promise<void> {
     writeFileSync(join(repository, path), text);
     files.push({ path, kind: component.kind, name: component.name, sha256: await sha256(text) });
   }
-  const makerFiles = await writeFirearms(repository, firearmFolders);
-  files.push(...makerFiles);
+  const firearmEntries = await writeMakerFiles(repository, guns);
+  files.push(...firearmEntries);
   files.sort((a, b) => a.path.localeCompare(b.path));
   writeFileSync(join(repository, 'index.json'), `${JSON.stringify({ format: 'gordons-legacy.data-index', version: 1, files }, null, 1)}\n`);
-  console.log(`${files.length} files → ${repository}${makerFiles.length === 0 ? '' : ` (${makerFiles.length} makers' guns)`}`);
+  console.log(`${files.length} files → ${repository}${firearmEntries.length === 0 ? '' : ` (${firearmEntries.length} makers' guns)`}`);
 }
 
 /**

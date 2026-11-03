@@ -29,10 +29,11 @@ export type { MeasuredCharge, MeasurementSeries, Shot } from './load/measurement
 export type { Projectile, ProjectileBase } from './load/projectile.ts';
 export type { GrtBurnModel, Propellant, PropellantCalibration } from './load/propellant.ts';
 
-export type { ImportIssue, ImportResult, IssueSeverity } from './import-issues.ts';
+export { errorMessages, type ImportIssue, type ImportResult, type IssueSeverity } from './import-issues.ts';
 export { checkCaliber, checkFirearm, checkProjectile, checkPropellant, parseFirearm, parseLoad, serializeFirearm, serializeLoad } from './json/load-json.ts';
 export { importGrtCaliber, importGrtProjectiles, importGrtPropellant } from './grt/component-import.ts';
 export { importGrtrace } from './grt/grtrace-import.ts';
 export { importGrtLoad, type GrtLoadImportOptions } from './grt/grtload-import.ts';
+export { isGrtLoadFile, readLoadFile } from './load-file.ts';
 
 export * as units from './units.ts';

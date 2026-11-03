@@ -12,8 +12,9 @@ import './stock-view.ts';
  * The user's library: every saved load, by cartridge and firearm, with what tells loads apart at a
  * glance (velocity, energy, share of the maximum, the review's level, the best group, the measured
  * velocity), the user's guns and the stock. Fires `open-entry` with an entry's id to open it in a tab,
- * `record-batch` with an entry's id, `import-files` with files to add, `backup` to download the library,
- * `restore` with a backup file, `sync` to exchange with another device.
+ * `remove-entry` with the id of an entry to delete, `record-batch` with an entry's id, `import-files` with
+ * files to add, `backup` to download the library, `restore` with a backup file, `sync` to exchange with
+ * another device.
  */
 export class LibraryView extends LitElement {
   static override properties = {
@@ -228,8 +229,9 @@ export class LibraryView extends LitElement {
     setTimeout(step, 0);
   }
 
+  /** The shell deletes it, so that a failed write is reported with the other storage errors. */
   private removeEntry(entry: LibraryEntry): void {
-    if (window.confirm(this.context.t('library.confirmRemove', { name: entry.name }))) void this.library.remove(entry.id);
+    if (window.confirm(this.context.t('library.confirmRemove', { name: entry.name }))) this.fire('remove-entry', entry.id);
   }
 
   private importFiles = (event: Event) => {

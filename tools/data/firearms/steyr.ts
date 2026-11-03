@@ -33,7 +33,7 @@ import { loadableCartridge } from './loadable-cartridge.ts';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, type Firearm } from '@gordons-legacy/formats';
 import { clashes, printedLength, printedMass, printedTwist } from './metric-figures.ts';
-import { crawlArguments, fetchPage, fetchText, fileName, firearmJson, plainText, plausibleGunMass, sitemapLocations, summaryLine } from './maker-site.ts';
+import { claimFileName, crawlArguments, fetchPage, fetchText, firearmJson, plainText, plausibleGunMass, sitemapLocations, summaryLine } from './maker-site.ts';
 import { publishedFigures, type MassBasis } from './published-figures.ts';
 
 const SITEMAP = 'https://www.steyr-arms.com/en/page-sitemap.xml';
@@ -176,6 +176,7 @@ async function main(): Promise<void> {
     skipped.push(`name clash, only the first is written: ${name} (${same.map((gun) => gun.source?.url).join(', ')})`);
   }
   const written = new Set<string>();
+  const fileNames = new Map<string, string>(); // what claimFileName has given out, so two names never share a file
   for (const gun of guns) {
     if (written.has(gun.name)) continue;
     const json = firearmJson(gun);
@@ -183,7 +184,7 @@ async function main(): Promise<void> {
       skipped.push(`${gun.name}: ${json.problem}`);
       continue;
     }
-    writeFileSync(join(folder, fileName(gun)), json.text);
+    writeFileSync(join(folder, claimFileName(fileNames, gun)), json.text);
     written.add(gun.name);
     console.log(summaryLine(gun));
   }

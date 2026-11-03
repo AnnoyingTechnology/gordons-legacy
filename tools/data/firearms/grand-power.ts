@@ -22,7 +22,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { loadableCartridge } from './loadable-cartridge.ts';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, fetchPage, fetchText, fileName, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
+import { claimFileName, crawlArguments, fetchPage, fetchText, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
 import { publishedFigures, type MassBasis } from './published-figures.ts';
 
 const SITEMAP = 'https://grandpower.eu/product-sitemap.xml';
@@ -151,6 +151,7 @@ async function main(): Promise<void> {
   mkdirSync(folder, { recursive: true });
   const retrieved = new Date().toISOString().slice(0, 10);
   let written = 0;
+  const fileNames = new Map<string, string>(); // what claimFileName has given out, so two names never share a file
   const skipped: string[] = [];
   const taken = new Map<string, Firearm>();
   for (const url of pages) {
@@ -166,7 +167,7 @@ async function main(): Promise<void> {
       skipped.push(`${url}: no single caliber with a single barrel length`);
       continue;
     }
-    const file = fileName(firearm);
+    const file = claimFileName(fileNames, firearm);
     const earlier = taken.get(file);
     if (earlier !== undefined) {
       skipped.push(`${url}: ${firearm.name} is already written (${earlier.source?.url}); barrel ${earlier.barrel.length} m against ${firearm.barrel.length} m, mass ${earlier.barrel.gunMass} kg against ${firearm.barrel.gunMass} kg`);

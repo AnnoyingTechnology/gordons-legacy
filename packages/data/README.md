@@ -11,7 +11,8 @@ CC0, with an `index.json` of SHA-256 hashes. No DOM: the cache and the fetch fun
 | `synchronise(baseUrl, cache, fetch, kinds?)` | Brings a cache in line with the repository: downloads new or changed files (16 at a time), checks each against its SHA-256 and the load format, drops files no longer listed. Throws before cache changes when the index is malformed or duplicates a path. `kinds` takes one or more kinds at a time, so the gun database is fetched when a user looks for their gun and not on a first visit; whatever the filter, a file the index no longer lists is dropped from the cache. |
 | `cachedDocuments(cache)` | The cached components alone, checked again, for use offline. |
 | `readDocument(text)` | One component file, checked; undefined if it isn't one. |
-| `validateRepository(index, files)` | The repository's problems: unlisted, missing or duplicated files, wrong hashes, invalid components. Used by the data repository's CI. |
+| `validateRepository(index, files)` | The repository's problems: unlisted, missing or duplicated files, wrong hashes, invalid components, and published guns with a barrel, twist or mass no gun has. Used by the data repository's CI (`tools/data/validate-repository.ts`). |
+| `implausibleFigures(firearm)`, `BARREL_LENGTH_RANGE`, `TWIST_LENGTH_RANGE`, `GUN_MASS_RANGE` | The figures a published gun can have at all, SI. Shared by the CI check, the extractors and `check-corpus.ts`, so the three hold guns to one set of ranges. |
 | `sha256(text)` | Web Crypto SHA-256, hexadecimal. |
 | `DATA_REPOSITORY_URL` | Where the files are served (raw GitHub, which allows cross-origin reads). |
 | `ComponentDocument`, `Provenance`, `DataIndex` | The repository's file formats. |
@@ -40,5 +41,6 @@ src/
   sync.ts         synchronisation, cache interface, checks
   index-shape.ts  shared runtime checks of the complete manifest
   validation.ts   the repository's consistency checks
+  firearm-plausibility.ts   the barrel, twist and mass a published gun can have
 test/             a fake server: new, unchanged, tampered, invalid and removed files
 ```

@@ -240,6 +240,14 @@ export function pressureLimits(load: Load): PressureLimit[] {
   return limits.sort((a, b) => a.pressure - b.pressure);
 }
 
+/**
+ * The lowest of the load's maxima: what every "above maximum" flag and percentage is measured against,
+ * so that no tool judges a charge by a looser maximum than the review does.
+ */
+export function lowestPressureLimit(load: Load): PressureLimit {
+  return pressureLimits(load)[0]!;
+}
+
 function simulate(load: Load, engine: Engine): Simulation | undefined {
   const result = engine.simulate(load);
   return result.ok ? result.simulation : undefined;

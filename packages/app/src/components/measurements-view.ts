@@ -1,5 +1,6 @@
 import { calibrateToVelocity, grtTraditional } from '@gordons-legacy/engine';
 import type { Load, MeasuredCharge, MeasurementSeries } from '@gordons-legacy/formats';
+import { lowestPressureLimit } from '../analysis/load-assessment.ts';
 import { element, headerRow } from '../dom.ts';
 import { shotStatistics } from '../measurements/statistics.ts';
 import type { UiContext } from './context.ts';
@@ -46,7 +47,7 @@ function renderCharge(load: Load, charge: MeasuredCharge, withPressure: boolean,
   const simulated = result.ok ? result.simulation.muzzleVelocity : undefined;
   const difference = simulated === undefined ? '' : `${number(((simulated - statistics.mean) / statistics.mean) * 100, 1)} %`;
   const peak = result.ok ? result.simulation.maxPressure : undefined;
-  const share = peak === undefined ? undefined : peak / load.cartridge.maxPressure;
+  const share = peak === undefined ? undefined : peak / lowestPressureLimit(load).pressure;
   const shareCell: Node | string =
     share === undefined
       ? ''

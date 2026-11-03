@@ -18,7 +18,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { loadableCartridge } from './loadable-cartridge.ts';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, fetchPage, fetchText, fileName, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
+import { claimFileName, crawlArguments, fetchPage, fetchText, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const SITE = 'https://www.browning.com';
@@ -193,6 +193,7 @@ async function main(): Promise<void> {
   mkdirSync(folder, { recursive: true });
   const retrieved = new Date().toISOString().slice(0, 10);
   let written = 0;
+  const fileNames = new Map<string, string>(); // what claimFileName has given out, so two names never share a file
   const skipped: string[] = [];
   const names = new Map<string, { url: string; published: string }>();
   for (const url of pages) {
@@ -218,7 +219,7 @@ async function main(): Promise<void> {
         skipped.push(`${url}: ${firearm.name}: ${json.problem}`);
         continue;
       }
-      const file = fileName(firearm);
+      const file = claimFileName(fileNames, firearm);
       const earlier = names.get(file);
       const published = JSON.stringify(firearm.source?.published);
       if (earlier !== undefined) {

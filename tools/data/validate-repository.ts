@@ -8,7 +8,7 @@
  */
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { validateRepository, type DataIndex } from '@gordons-legacy/data';
+import { validateRepository, type RepositoryProblem } from '@gordons-legacy/data';
 
 /** The folders that hold component files; a repository need not have them all yet. */
 const COMPONENT_FOLDERS = ['powders', 'projectiles', 'calibers', 'firearms'];
@@ -25,14 +25,38 @@ function readComponentFiles(repository: string): Map<string, string> {
   return files;
 }
 
+/**
+ * `index.json` as JSON, whatever it holds, or `undefined` when it is missing or no JSON at all. Its
+ * shape is `validateRepository`'s question, not this one's: a `null`, a list or a broken file is an
+ * invalid index to report, never a crash of the checker that should have reported it.
+ */
+function readIndex(repository: string): unknown {
+  try {
+    return JSON.parse(readFileSync(join(repository, 'index.json'), 'utf8')) as unknown;
+  } catch {
+    return undefined;
+  }
+}
+
+/** The repository's problems, and how many files its index lists (none when there is no usable index). */
+export async function checkRepository(repository: string): Promise<{ listedFiles: number; problems: RepositoryProblem[] }> {
+  const index = readIndex(repository);
+  const problems = await validateRepository(index, readComponentFiles(repository));
+  const files = (index as { files?: unknown } | null | undefined)?.files;
+  return { listedFiles: Array.isArray(files) ? files.length : 0, problems };
+}
+
 async function main(): Promise<void> {
   const repository = process.argv[2];
   if (!repository) throw new Error('usage: validate-repository.ts <repository folder>');
-  const index = JSON.parse(readFileSync(join(repository, 'index.json'), 'utf8')) as DataIndex;
-  const problems = await validateRepository(index, readComponentFiles(repository));
-  console.log(`${index.files.length} files checked, ${problems.length} problems`);
-  for (const { path, problem } of problems) console.log(`  ${path}: ${problem}`);
+  const { listedFiles, problems } = await checkRepository(repository);
+  console.log(`${listedFiles} files checked, ${problems.length} problems`);
+  for (const { path, problem, detail } of problems) console.log(`  ${path}: ${problem}${detail === undefined ? '' : ` (${detail})`}`);
   process.exitCode = problems.length > 0 ? 1 : 0;
 }
 
-await main();
+/**
+ * Only when this file is the program, so that a test can import `checkRepository`. The file name is the
+ * fallback for a runner that leaves `import.meta.main` undefined, as in export-repository.ts.
+ */
+if (import.meta.main ?? (process.argv[1] ?? '').endsWith('validate-repository.ts')) await main();

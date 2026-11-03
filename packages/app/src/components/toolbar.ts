@@ -47,8 +47,8 @@ export interface ToolbarActions {
   showShortcuts: () => void;
 }
 
-/** The files the Open button accepts: loads, components, pressure traces and chronograph exports. */
-const OPENED_FILES = '.grtload,.json,.propellant,.projectile,.grtrace,.csv';
+/** The files the Open button accepts: loads, guns, components, pressure traces and chronograph exports (state/file-opening.ts). */
+const OPENED_FILES = '.grtload,.json,.propellant,.projectile,.caliber,.grtrace,.csv';
 
 /** The application's toolbar: full-height buttons in groups, icon above label (issue #1). */
 export function toolbar(state: ToolbarState, actions: ToolbarActions, context: UiContext) {

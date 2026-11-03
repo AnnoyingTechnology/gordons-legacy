@@ -1,7 +1,7 @@
 import type { Engine, Simulation } from '@gordons-legacy/engine';
 import type { Load, Propellant } from '@gordons-legacy/formats';
 import { withPropellant } from '../editor/components.ts';
-import { pressureLimits } from './load-assessment.ts';
+import { lowestPressureLimit } from './load-assessment.ts';
 
 /**
  * GRT's generic tolerance synthesis (manual p. 53): for each powder, the charges with which the load,
@@ -96,7 +96,7 @@ export function synthesizeCharges(
   const own = simulate(load, load.charge.mass, engine);
   if (!own || criteriaProblems(criteria).length > 0 || !(resolution > 0)) return { matches: [], sampled };
   const base = withPropellant(load, propellant);
-  const maximum = pressureLimits(load)[0]!.pressure;
+  const maximum = lowestPressureLimit(load).pressure;
 
   const statusAt = (charge: number): { status: ChargeStatus; simulation?: Simulation } => {
     const simulation = simulate(base, charge, engine);

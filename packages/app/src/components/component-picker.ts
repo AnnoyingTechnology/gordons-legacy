@@ -69,12 +69,17 @@ export class ComponentPicker extends LitElement {
   }
 
   protected override render() {
-    if (!this.kind) return html`<dialog class="component-picker"></dialog>`;
+    // The same <dialog> element stays in place, open or closed, like every other dialog of the app:
+    // closing it with close() hands the focus back to the button that opened it, where removing an open
+    // dialog from the page drops the focus to the top of the page.
+    return html`<dialog class="component-picker" @close=${this.close}>${this.kind ? this.renderContents(this.kind) : nothing}</dialog>`;
+  }
+
+  private renderContents(kind: 'propellant' | 'projectile' | 'caliber') {
     const { t } = this.context;
     return html`
-      <dialog class="component-picker" @close=${this.close}>
         <header class="picker-head">
-          <h2>${icon(this.kind === 'caliber' ? 'cartridge' : this.kind)} ${t(TITLES[this.kind])}</h2>
+          <h2>${icon(kind === 'caliber' ? 'cartridge' : kind)} ${t(TITLES[kind])}</h2>
           <input
             type="search"
             placeholder=${t('components.filter')}
@@ -85,15 +90,14 @@ export class ComponentPicker extends LitElement {
           <span class="spacer"></span>
           <label class="button">
             ${icon('open')} ${t('components.importFiles')}
-            <input type="file" accept=${`.${this.kind}`} multiple class="file-input" @change=${this.importFiles} />
+            <input type="file" accept=${`.${kind}`} multiple class="file-input" @change=${this.importFiles} />
           </label>
           <button aria-label=${t('app.close')} @click=${this.close}>${icon('close')}</button>
         </header>
-        <p class="warning">${t(NOTICES[this.kind])}</p>
+        <p class="warning">${t(NOTICES[kind])}</p>
         <p class="note">${t(`components.source.${this.library.communitySource}`)}</p>
         ${this.importErrors.length > 0 ? html`<ul class="issues">${this.importErrors.map((message) => html`<li class="error">${message}</li>`)}</ul>` : nothing}
-        ${this.kind === 'propellant' ? this.renderPowders() : this.kind === 'projectile' ? this.renderProjectiles() : this.renderCalibers()}
-      </dialog>
+        ${kind === 'propellant' ? this.renderPowders() : kind === 'projectile' ? this.renderProjectiles() : this.renderCalibers()}
     `;
   }
 

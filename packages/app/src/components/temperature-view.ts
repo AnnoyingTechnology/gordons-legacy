@@ -1,4 +1,5 @@
 import type { Load } from '@gordons-legacy/formats';
+import { lowestPressureLimit } from '../analysis/load-assessment.ts';
 import type { TemperatureRow } from '../analysis/review.ts';
 import { element, headerRow } from '../dom.ts';
 import type { UiContext } from './context.ts';
@@ -12,13 +13,14 @@ import type { TemperatureFit } from './temperature-fit.ts';
  */
 export function renderTemperatures(load: Load, table: readonly TemperatureRow[], context: UiContext): HTMLElement {
   const { t, quantity, number } = context;
+  const maximum = lowestPressureLimit(load).pressure;
   let firstAboveMaximum: number | undefined;
   const rows = table.map(({ temperature, peakPressure, muzzleVelocity }) => {
     if (peakPressure === undefined || muzzleVelocity === undefined) {
       return element('tr', {}, [quantity(temperature, 'temperature'), t('results.notSimulated'), '', '', ''].map((cell) => element('td', {}, [cell])));
     }
     const shot = { maxPressure: peakPressure, muzzleVelocity };
-    const share = shot.maxPressure / load.cartridge.maxPressure;
+    const share = shot.maxPressure / maximum;
     if (share > 1 && firstAboveMaximum === undefined) firstAboveMaximum = temperature;
     const flag = share > 1 ? [element('span', { class: 'severity error' }, [`▲ ${t('results.aboveMaximum')}`])] : [];
     return element('tr', {}, [

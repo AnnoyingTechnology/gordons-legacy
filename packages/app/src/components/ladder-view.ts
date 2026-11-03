@@ -1,5 +1,6 @@
 import { grtTraditional, type SimulationResult } from '@gordons-legacy/engine';
 import { ladderChargeMasses, type Load } from '@gordons-legacy/formats';
+import { lowestPressureLimit } from '../analysis/load-assessment.ts';
 import { element, headerRow } from '../dom.ts';
 import type { UiContext } from './context.ts';
 
@@ -31,13 +32,14 @@ export function renderLegend(ladder: LadderShot[], context: UiContext): HTMLElem
 /** One row per charge of the load's ladder, heaviest first. */
 export function renderLadder(load: Load, ladder: LadderShot[], context: UiContext): HTMLElement {
   const { t, quantity, number } = context;
+  const maximum = lowestPressureLimit(load).pressure;
   const rows = ladder.map(({ mass, result }) => {
     if (!result.ok) {
       const cells = [quantity(mass, 'chargeMass'), t('results.notSimulated'), '', '', '', ''];
       return element('tr', {}, cells.map((cell) => element('td', {}, [cell])));
     }
     const shot = result.simulation;
-    const share = shot.maxPressure / load.cartridge.maxPressure;
+    const share = shot.maxPressure / maximum;
     const note = share > 1 ? [element('span', { class: 'severity error' }, [t('results.aboveMaximum')])] : [];
     return element('tr', {}, [
       ...[

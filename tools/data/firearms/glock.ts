@@ -17,7 +17,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { loadableCartridge } from './loadable-cartridge.ts';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, fetchPage, fetchText, fileName, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
+import { claimFileName, crawlArguments, fetchPage, fetchText, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
 
 const SITEMAP = 'https://us.glock.com/sitemap.xml';
 
@@ -117,6 +117,7 @@ async function main(): Promise<void> {
   mkdirSync(folder, { recursive: true });
   const retrieved = new Date().toISOString().slice(0, 10);
   let written = 0;
+  const fileNames = new Map<string, string>(); // what claimFileName has given out, so two names never share a file
   const skipped: string[] = [];
   // Two pages sometimes describe the same gun (a commercial and a law-enforcement listing).
   const names = new Set<string>();
@@ -138,7 +139,7 @@ async function main(): Promise<void> {
       skipped.push(`${url}: ${json.problem}`);
       continue;
     }
-    const file = fileName(firearm);
+    const file = claimFileName(fileNames, firearm);
     if (names.has(file)) {
       skipped.push(`${url}: ${firearm.name} is already written`);
       continue;

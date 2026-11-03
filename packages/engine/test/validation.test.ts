@@ -96,11 +96,29 @@ describe('input validation', () => {
       'gas-leak-out-of-range',
       'barrel.gasLeaks.0.height',
     ],
+    [
+      'a bore area larger than the groove circle',
+      (l) => ({ ...l, cartridge: { ...l.cartridge, effectiveBoreArea: (Math.PI / 4) * l.cartridge.grooveDiameter ** 2 * 1.1 } }),
+      'bore-area-too-large',
+      'cartridge.effectiveBoreArea',
+    ],
   ])('refuses %s', (_, change, code, path) => {
     expect(problemsOf(change)).toContainEqual({ code, path });
   });
 
   it('refuses a twist so short that the velocity becomes undefined, rather than returning NaN', () => {
     expect(problemsOf((l) => ({ ...l, barrel: { ...l.barrel, twistLength: 1e-8 } }))).toEqual([{ code: 'numerical-failure' }]);
+  });
+
+  // The pressure jumps by about 1e11 bar in one step; the 10 % time used to resample that jump in as many
+  // spline samples and ran out of memory. The editor simulates on every keystroke, so this crashed the tab.
+  it.each<[string, (load: Load) => Load]>([
+    ['a vivacity a thousand times too high', (l) => withBurnModel(l, { vivacity: l.propellant.burnModel.vivacity * 1000 })],
+    ['a powder temperature of a million degrees', (l) => ({ ...l, charge: { ...l.charge, temperature: 1e6 } })],
+  ])('finishes quickly on %s, far above any maximum', (_, change) => {
+    const started = performance.now();
+    const result = grtTraditional.simulate(change(baseLoad()));
+    expect(performance.now() - started).toBeLessThan(1000);
+    if (result.ok) expect(result.simulation.maxPressure).toBeGreaterThan(1e12);
   });
 });

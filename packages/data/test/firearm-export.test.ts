@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, type Firearm } from '@gordons-legacy/formats';
-import { comparableName, supersededNames } from '../../../tools/data/export-repository.ts';
+import { comparableName, publishedFirearms, supersededNames } from '../../../tools/data/export-repository.ts';
 
 /**
  * What the published gun database keeps when a catalogue is read again
@@ -48,5 +48,25 @@ describe('publishing a catalogue read again', () => {
     expect(comparableName('Bergara B14 Sporter 6.5&#215;55 SE')).toBe(comparableName('Bergara B14 Sporter 6.5x55 SE'));
     expect(comparableName('CZ SHADOW 2 9×19 10r.')).toBe(comparableName('CZ SHADOW 2 9x19 10r.'));
     expect(comparableName('Colt Python 4.25"')).not.toBe(comparableName('Colt Python 6"'));
+  });
+});
+
+describe("reading a maker's published file before adding to it", () => {
+  const provenance = { origin: 'test', source: 'test', file: '', author: '', date: '', method: 'test', status: 'test' };
+
+  it('takes the guns it publishes, so that a new reading adds to them', () => {
+    const text = JSON.stringify({ format: 'gordons-legacy.component', version: 1, kind: 'firearm', provenance, value: [gun('Ruger GP100 1715')] });
+    expect(publishedFirearms('firearms/ruger.json', text).map((firearm) => firearm.name)).toEqual(['Ruger GP100 1715']);
+  });
+
+  it('starts a maker with no file yet from nothing', () => {
+    expect(publishedFirearms('firearms/ruger.json', undefined)).toEqual([]);
+  });
+
+  it('stops the export when the file is there but does not read, rather than publish the new reading alone over it', () => {
+    const truncated = JSON.stringify({ format: 'gordons-legacy.component', version: 1, kind: 'firearm', provenance, value: [gun('Ruger GP100 1715')] }).slice(0, 80);
+    expect(() => publishedFirearms('firearms/ruger.json', truncated)).toThrow(/firearms\/ruger\.json is there but is not a gun file/);
+    const powder = JSON.stringify({ format: 'gordons-legacy.component', version: 1, kind: 'powder', provenance, value: {} });
+    expect(() => publishedFirearms('firearms/ruger.json', powder)).toThrow(/the export stops/);
   });
 });

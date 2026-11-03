@@ -28,7 +28,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { loadableCartridge } from './loadable-cartridge.ts';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, DELAY, fetchPage, fetchText, fileName, firearmJson, plainText, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
+import { claimFileName, crawlArguments, DELAY, fetchPage, fetchText, fileName, firearmJson, plainText, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const SITEMAP = 'https://www.smith-wesson.com/sitemap.xml';
@@ -294,6 +294,7 @@ async function main(): Promise<void> {
   mkdirSync(folder, { recursive: true });
   const retrieved = new Date().toISOString().slice(0, 10);
   let written = 0;
+  const fileNames = new Map<string, string>(); // what claimFileName has given out, so two names never share a file
   const skipped: string[] = [];
   const writtenFiles = new Map<string, Firearm>();
   for (const url of products) {
@@ -318,12 +319,13 @@ async function main(): Promise<void> {
         // A different cartridge is a different gun, so the cartridge belongs in its name.
         firearm.name = `${firearm.name} ${firearm.cartridge}`;
         firearm.barrel.name = firearm.name;
-      } else {
+      } else if (taken.name === firearm.name) {
+        // The same name again; a different name that only makes the same file is claimFileName's clash.
         skipped.push(`${url}: ${firearm.name} is already written${difference(taken, firearm)}`);
         continue;
       }
     }
-    const file = fileName(firearm);
+    const file = claimFileName(fileNames, firearm);
     if (writtenFiles.has(file)) {
       skipped.push(`${url}: ${firearm.name} is already written`);
       continue;

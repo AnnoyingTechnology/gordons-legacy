@@ -1,6 +1,7 @@
 import { grtTraditional, type Simulation } from '@gordons-legacy/engine';
 import type { Load } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
+import { lowestPressureLimit } from '../analysis/load-assessment.ts';
 import { LineChart } from '../charts/line-chart.ts';
 import { element } from '../dom.ts';
 import type { OpenDocument } from '../state/documents.ts';
@@ -175,7 +176,7 @@ export class CompareView extends LitElement {
         </thead>
         <tbody>
           ${compared.map(({ name, load, simulation, color }, index) => {
-            const share = simulation.maxPressure / load.cartridge.maxPressure;
+            const share = simulation.maxPressure / lowestPressureLimit(load).pressure;
             return html`<tr>
               <td class="name">
                 <span class="swatch" style="border-top-color: ${color}"></span>

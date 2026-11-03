@@ -22,7 +22,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, fetchPage, fetchText, fileName, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
+import { claimFileName, crawlArguments, fetchPage, fetchText, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const SITE = 'https://christensenarms.com';
@@ -223,13 +223,14 @@ async function main(): Promise<void> {
   const settled = settleNames(found);
   skipped.push(...settled.skipped);
   let written = 0;
+  const fileNames = new Map<string, string>(); // what claimFileName has given out, so two names never share a file
   for (const firearm of settled.kept) {
     const json = firearmJson(firearm);
     if ('problem' in json) {
       skipped.push(`${firearm.source?.url}: ${json.problem}`);
       continue;
     }
-    writeFileSync(join(folder, fileName(firearm)), json.text);
+    writeFileSync(join(folder, claimFileName(fileNames, firearm)), json.text);
     written++;
     console.log(summaryLine(firearm));
   }

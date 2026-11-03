@@ -25,37 +25,44 @@ export function tenPercentPeakTime(
     rising.push([point.time * 10, point.pressure]);
     if (threshold < point.pressure) break;
   }
-  const samples = catmullRomSamples(rising);
-  let time = 0;
-  for (let index = samples.length - 1; index >= 0; index--) {
-    const [x, pressure] = samples[index]!;
-    time = x / 10;
-    if (!(threshold < pressure)) break;
+  // The samples are scanned as they come rather than kept: an extreme load can make millions of them.
+  let first: number | undefined;
+  let lastAtOrBelow: number | undefined;
+  for (const [x, pressure] of catmullRomSamples(rising)) {
+    first ??= x;
+    if (!(threshold < pressure)) lastAtOrBelow = x;
   }
+  const time = (lastAtOrBelow ?? first ?? 0) / 10;
   return time > 0 ? time : undefined;
 }
 
 /**
+ * Most samples taken on one segment. GRT's count grows with the pressure jump across the segment, in bar,
+ * without bound: a burn rate typed a hundred times too high made a gigabyte of samples and a thousand
+ * times too high exhausted memory. Real loads stay far below this, so their results still match GRT's.
+ */
+const MAXIMUM_DIVISIONS = 100_000;
+
+/**
  * GRT's spline resampling of a polyline: each segment from point i to i + 1 is sampled at t = k / D,
  * k = 0 … ⌊D − 1⌋, with D = max(2, |x_{i−1} − x_{i+2}| + |y_{i−1} − y_{i+1}|) (GRT pairs x with the
- * point after next and y with the next point). Ends repeat the first and last points.
+ * point after next and y with the next point), D capped at `MAXIMUM_DIVISIONS`. Ends repeat the first
+ * and last points.
  */
-function catmullRomSamples(points: ReadonlyArray<[number, number]>): Array<[number, number]> {
+function* catmullRomSamples(points: ReadonlyArray<[number, number]>): Generator<[number, number]> {
   const last = points.length - 1;
-  const samples: Array<[number, number]> = [];
   for (let index = 0; index < last; index++) {
     const p0 = points[Math.max(0, index - 1)]!;
     const p1 = points[index]!;
     const p2 = index > last - 2 ? points[last]! : points[index + 1]!;
     const p3 = index > last - 2 ? points[last]! : points[index + 2]!;
-    const divisions = Math.max(2, Math.abs(p0[0] - p3[0]) + Math.abs(p0[1] - p2[1]));
+    const divisions = Math.min(MAXIMUM_DIVISIONS, Math.max(2, Math.abs(p0[0] - p3[0]) + Math.abs(p0[1] - p2[1])));
     const count = Math.trunc(divisions - 1);
     for (let step = 0; step <= count; step++) {
       const t = step / divisions;
-      samples.push([catmullRom(p0[0], p1[0], p2[0], p3[0], t), catmullRom(p0[1], p1[1], p2[1], p3[1], t)]);
+      yield [catmullRom(p0[0], p1[0], p2[0], p3[0], t), catmullRom(p0[1], p1[1], p2[1], p3[1], t)];
     }
   }
-  return samples;
 }
 
 /** The Catmull-Rom spline between p1 and p2 at t, written in GRT's order of operations. */

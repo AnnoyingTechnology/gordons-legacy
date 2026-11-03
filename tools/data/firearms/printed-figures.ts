@@ -15,7 +15,7 @@ import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
 import { finest, type Reading } from './finest-reading.ts';
 import { publishedFigures, type MassBasis } from './published-figures.ts';
-import { crawlArguments, DELAY, fetchPage, fileName, firearmJson, plausibleGunMass, summaryLine } from './maker-site.ts';
+import { claimFileName, crawlArguments, DELAY, fetchPage, fileName, firearmJson, plausibleGunMass, summaryLine } from './maker-site.ts';
 
 /** A line that names a figure instead of giving one: `Overall Length: 39.63"`, `Twist Rate`. */
 function isLabel(line: string | undefined): boolean {
@@ -265,6 +265,7 @@ export async function crawl(
   const retrieved = new Date().toISOString().slice(0, 10);
   const skipped: Array<{ url: string; reason: string }> = [];
   const writtenFiles = new Map<string, Firearm>();
+  const fileNames = new Map<string, string>(); // what claimFileName has given out, so two names never share a file
   for (const url of pages) {
     let page: string;
     try {
@@ -284,7 +285,7 @@ export async function crawl(
         firearm.name = `${firearm.name} ${firearm.cartridge}`;
         firearm.barrel.name = firearm.name;
       }
-      const file = fileName(firearm);
+      const file = claimFileName(fileNames, firearm);
       const same = writtenFiles.get(file);
       if (same !== undefined) {
         skipped.push({ url, reason: `${firearm.name} is already written${difference(same, firearm)}` });

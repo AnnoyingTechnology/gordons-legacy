@@ -1,4 +1,5 @@
 import type { Load } from '@gordons-legacy/formats';
+import { lowestPressureLimit } from '../analysis/load-assessment.ts';
 import type { Sensitivity } from '../analysis/sensitivity.ts';
 import { element, headerRow } from '../dom.ts';
 import type { UiContext } from './context.ts';
@@ -10,9 +11,10 @@ import type { UiContext } from './context.ts';
 export function renderSensitivity(load: Load, results: Sensitivity[] | undefined, context: UiContext): HTMLElement | undefined {
   if (!results) return undefined;
   const { t, quantity, number } = context;
-  const aboveMaximum = results.some((entry) => entry.peakPressure !== undefined && entry.peakPressure > load.cartridge.maxPressure);
+  const maximum = lowestPressureLimit(load).pressure;
+  const aboveMaximum = results.some((entry) => entry.peakPressure !== undefined && entry.peakPressure > maximum);
   const rows = results.map(({ variation, peakPressure, change }) => {
-    const share = peakPressure === undefined ? undefined : peakPressure / load.cartridge.maxPressure;
+    const share = peakPressure === undefined ? undefined : peakPressure / maximum;
     const flag = share !== undefined && share > 1 ? [element('span', { class: 'severity error' }, [`▲ ${t('results.aboveMaximum')}`])] : [];
     return element('tr', variation === 'combined' ? { class: 'combined' } : {}, [
       ...[

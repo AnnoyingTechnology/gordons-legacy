@@ -123,6 +123,18 @@ describe('Library', () => {
     expect(library.entries.map(entry => entry.name)).toEqual(['First', 'Last']);
     expect(guns.entries).toEqual([]);
   });
+
+  test('a delete the storage refuses fails loudly and keeps the load and the gun', async () => {
+    const refused = async () => { throw new DOMException('Transaction aborted', 'AbortError'); };
+    const library = new Library({ ...memoryStorage(), remove: refused });
+    const guns = new FirearmLibrary({ ...memoryStore<FirearmEntry>(), remove: refused });
+    const loadId = await library.save('Load', glock);
+    const gunId = await guns.save({ ...newFirearm(), name: 'Rhino 40DS' });
+    await expect(library.remove(loadId)).rejects.toThrow('Transaction aborted');
+    await expect(guns.remove(gunId)).rejects.toThrow('Transaction aborted');
+    expect(library.get(loadId)?.name).toBe('Load');
+    expect(guns.entries.map((entry) => entry.firearm.name)).toEqual(['Rhino 40DS']);
+  });
 });
 
 /**

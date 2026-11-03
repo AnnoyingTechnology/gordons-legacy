@@ -1,4 +1,4 @@
-import { importGrtLoad, parseLoad, type Load } from '@gordons-legacy/formats';
+import { parseLoad, readLoadFile, type Load } from '@gordons-legacy/formats';
 import type { LibraryEntry, LibraryStorage } from './library-storage.ts';
 
 export type { LibraryEntry } from './library-storage.ts';
@@ -69,8 +69,7 @@ export class Library {
   async importFiles(files: Array<{ name: string; text: string }>): Promise<string[]> {
     const failed: string[] = [];
     for (const { name, text } of files) {
-      const isGrt = name.toLowerCase().endsWith('.grtload');
-      const result = isGrt ? importGrtLoad(text, { fileName: name }) : parseLoad(text);
+      const result = readLoadFile(name, text);
       if (result.ok) await this.save(name.replace(/\.(grtload|json)$/i, ''), result.value);
       else failed.push(name);
     }

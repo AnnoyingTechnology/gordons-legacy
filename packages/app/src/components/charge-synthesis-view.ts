@@ -1,7 +1,7 @@
 import type { Load, Propellant } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
 import { criteriaProblems, DEFAULT_CRITERIA, synthesizeCharges, type SynthesisCriteria, type SynthesisPoint, type SynthesisResult } from '../analysis/charge-synthesis.ts';
-import { assessLoad, pressureLimits } from '../analysis/load-assessment.ts';
+import { assessLoad, lowestPressureLimit } from '../analysis/load-assessment.ts';
 import { powderFactors } from '../analysis/powder-factors.ts';
 import { withPropellant } from '../editor/components.ts';
 import { synthesisCandidate } from '../editor/synthesis-candidate.ts';
@@ -66,7 +66,7 @@ export class ChargeSynthesisView extends LitElement {
   protected override render() {
     const { t, quantity } = this.context;
     const velocityUnit = displayUnit('velocity', this.context.units);
-    const lowest = pressureLimits(this.load)[0]!;
+    const lowest = lowestPressureLimit(this.load);
     const candidates = this.candidates();
     const problems = criteriaProblems(this.criteria);
     const percent = (share: number) => String(Math.round(share * 100));
@@ -172,7 +172,7 @@ export class ChargeSynthesisView extends LitElement {
   /** A simulated end of a match: charge, peak, velocity, fill, and its own review and engine warnings. */
   private endCell(run: Run, propellant: Propellant, point: SynthesisPoint) {
     const { t, quantity, number } = this.context;
-    const limit = pressureLimits(run.load)[0]!.pressure;
+    const limit = lowestPressureLimit(run.load).pressure;
     const load = { ...withPropellant(run.load, propellant), charge: { ...run.load.charge, mass: point.charge } };
     const assessment = assessLoad(load, point.simulation, this.context.engine);
     const { maxPressure, muzzleVelocity, caseFill, warnings } = point.simulation;

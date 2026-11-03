@@ -25,6 +25,11 @@ export type ImportResult<T> =
   | { ok: true; value: T; issues: ImportIssue[] }
   | { ok: false; issues: ImportIssue[] };
 
+/** The messages of the errors among some issues: why an import failed, to show the user. */
+export function errorMessages(issues: readonly ImportIssue[]): string[] {
+  return issues.filter((issue) => issue.severity === 'error').map((issue) => issue.message);
+}
+
 /** Collects issues during an import. */
 export class IssueLog {
   readonly issues: ImportIssue[] = [];

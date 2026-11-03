@@ -1,5 +1,6 @@
 import { chargeForLeadTime, obtNodeTimes, type Simulation } from '@gordons-legacy/engine';
 import type { Load } from '@gordons-legacy/formats';
+import { lowestPressureLimit } from '../analysis/load-assessment.ts';
 import { element, headerRow } from '../dom.ts';
 import type { UiContext } from './context.ts';
 
@@ -42,7 +43,7 @@ function renderNode(load: Load, entry: { node: number; time: number }, isNearest
     return element('tr', {}, [name, quantity(entry.time, 'time', 4), t('results.notSimulated'), '', '', '', ''].map((cell) => element('td', {}, [cell])));
   }
   const { simulation } = found;
-  const share = simulation.maxPressure / load.cartridge.maxPressure;
+  const share = simulation.maxPressure / lowestPressureLimit(load).pressure;
   const status = [
     ...(share > 1 ? [element('span', { class: 'severity error' }, [`▲ ${t('results.aboveMaximum')}`])] : []),
     ...(found.reached ? [] : [element('span', { class: 'severity' }, [` ${t('obt.notReached')}`])]),

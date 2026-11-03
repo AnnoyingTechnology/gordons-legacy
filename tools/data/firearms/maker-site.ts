@@ -11,6 +11,7 @@
  *
  *     deno run -A tools/data/firearms/<maker>.ts <output folder> [--limit 5]
  */
+import { GUN_MASS_RANGE } from '@gordons-legacy/data';
 import { parseFirearm, serializeFirearm, units, type Firearm } from '@gordons-legacy/formats';
 import { cachedPage, keepPage } from './page-cache.ts';
 
@@ -165,17 +166,33 @@ export function fileName(firearm: Firearm): string {
 }
 
 /**
- * The lightest and the heaviest a gun can be, kg. A pocket pistol is about 250 g and a .50 BMG rifle
- * about 14 kg, so anything outside this is not a gun's weight at all: a shipping weight, a figure in
- * the wrong unit, or a page's own placeholder — Savage's pages print `9999 lbs` where they hold no
- * weight, which converts to a 4,535 kg rifle.
+ * A gun's file name, refused when another gun of the same crawl already has it. `fileName` folds case
+ * and punctuation, so two names a maker prints apart — `SP-01` and `SP 01` — make one file, and the
+ * second write would replace the first on disk without a word. That is an error naming both guns, to be
+ * settled in the extractor by telling the two apart in their names (a cartridge, a barrel length), not
+ * by a file renamed behind the reader's back. The same name again is the same gun read off a second
+ * page, which is not a clash: the caller skips or reports it as it did before.
+ *
+ * `claimed` is the crawl's record of the file names it has given out, each with the name of the gun it
+ * went to; an extractor keeps one for the whole crawl. A name is claimed when it is asked for, so a gun
+ * that is then left out (a record the format rejects) still holds its file name: a second gun that would
+ * have taken it is a clash all the same.
  */
-const GUN_MASS_RANGE = { lightest: 0.1, heaviest: 25 };
+export function claimFileName(claimed: Map<string, string>, firearm: Firearm): string {
+  const file = fileName(firearm);
+  const holder = claimed.get(file);
+  if (holder !== undefined && holder !== firearm.name) {
+    throw new Error(`"${holder}" and "${firearm.name}" both make the file name ${file}, and the second would replace the first; tell the two guns apart in their names`);
+  }
+  claimed.set(file, firearm.name);
+  return file;
+}
 
 /**
- * A published mass, or nothing when the figure cannot be a gun's. A mass that reaches a record becomes
- * the mass the engine recoils, so a figure nobody can believe must not get that far; the maker's own
- * string stays in `source.published`, where it says what the page printed.
+ * A published mass, or nothing when the figure cannot be a gun's (`GUN_MASS_RANGE`, which the data
+ * repository's CI holds every published gun to). A mass that reaches a record becomes the mass the
+ * engine recoils, so a figure nobody can believe must not get that far; the maker's own string stays in
+ * `source.published`, where it says what the page printed.
  */
 export function plausibleGunMass(mass: number | undefined): number | undefined {
   if (mass === undefined) return undefined;

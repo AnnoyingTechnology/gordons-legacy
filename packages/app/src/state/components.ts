@@ -2,6 +2,7 @@ import {
   checkCaliber,
   checkProjectile,
   checkPropellant,
+  errorMessages,
   importGrtCaliber,
   importGrtProjectiles,
   importGrtPropellant,
@@ -147,15 +148,15 @@ export class ComponentLibrary {
     const added: ComponentEntry[] = [];
     if (extension === '.propellant') {
       const result = importGrtPropellant(text);
-      if (!result.ok) return result.issues.filter((issue) => issue.severity === 'error').map((issue) => issue.message);
+      if (!result.ok) return errorMessages(result.issues);
       added.push({ id: crypto.randomUUID(), kind: 'propellant', source, value: result.value });
     } else if (extension === '.projectile') {
       const result = importGrtProjectiles(text);
-      if (!result.ok) return result.issues.filter((issue) => issue.severity === 'error').map((issue) => issue.message);
+      if (!result.ok) return errorMessages(result.issues);
       for (const projectile of result.value) added.push({ id: crypto.randomUUID(), kind: 'projectile', source, value: projectile });
     } else if (extension === '.caliber') {
       const result = importGrtCaliber(text);
-      if (!result.ok) return result.issues.filter((issue) => issue.severity === 'error').map((issue) => issue.message);
+      if (!result.ok) return errorMessages(result.issues);
       added.push({ id: crypto.randomUUID(), kind: 'caliber', source, value: result.value });
     } else {
       return [`${name}: not a .propellant, .projectile or .caliber file`];

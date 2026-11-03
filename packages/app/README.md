@@ -18,7 +18,7 @@ public/                 copied to the build unchanged: manifest, icon
 src/
   main.ts               entry point
   components/           Lit elements and render functions
-    app-shell.ts          <gl-app>: the views, open and save, drag and drop, settings, footer
+    app-shell.ts          <gl-app>: the views, the dialogs, save and close, settings, footer
     toolbar.ts            the toolbar (full-height buttons in groups)
     tab-bar.ts            one tab per open load, with its badges
     tab-strip.ts          <gl-tab-strip>: fades the tabs that don't fit, previews one whole on hover or focus
@@ -70,6 +70,7 @@ src/
     context.ts            UiContext: language and units handed down to every component
   editor/fields.ts      which load values the editor shows, grouped as in GRT, and how to set them
   editor/components.ts  swapping the powder or projectile of a load
+  editor/shot-groups.ts removing a shot group with the photo only it used
   editor/bore-area.ts   effective bore area from the rifling (GRT's formulas)
   editor/synthesis-candidate.ts  the load opened from a synthesis match (nothing measured)
   charts/               SVG line chart and axis ticks, no chart library
@@ -83,6 +84,8 @@ src/
                         firearms.ts, components.ts, inventory.ts for the stock); the published gun database, read on the first
                         search (published-firearms.ts); the backup file holding them all (backup.ts);
                         the data repository's cache (data-cache.ts); saving files (file-saving.ts);
+                        what an opened, dropped or imported file is and where it goes, the same from the
+                        editor and the library (file-opening.ts);
                         the example load of a first visit (example-load.ts); validated document creation
                         (new-load.ts), cartridge preselection (cartridge-choice.ts), independent input copies
                         (load-copy.ts), shortcut matching

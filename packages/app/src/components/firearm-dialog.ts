@@ -58,12 +58,17 @@ export class FirearmDialog extends LitElement {
   }
 
   protected override render() {
-    const { t } = this.context;
+    // The same <dialog> element stays in place, open or closed, like every other dialog of the app:
+    // closing it with close() hands the focus back to the button that opened it, where removing an open
+    // dialog from the page drops the focus to the top of the page.
     const draft = this.draft;
-    if (!draft) return html`<dialog class="firearm-dialog"></dialog>`;
+    return html`<dialog class="firearm-dialog" aria-labelledby="firearm-title" @close=${() => this.dispatchEvent(new Event('close'))}>${draft ? this.renderContents(draft) : nothing}</dialog>`;
+  }
+
+  private renderContents(draft: Firearm) {
+    const { t } = this.context;
     const published = draft.source?.kind === 'published';
     return html`
-      <dialog class="firearm-dialog" aria-labelledby="firearm-title" @close=${() => this.dispatchEvent(new Event('close'))}>
         <h2 id="firearm-title">${icon('barrel')} ${t('firearm.one')}</h2>
         <table class="property-table">
           <tbody>
@@ -108,7 +113,6 @@ export class FirearmDialog extends LitElement {
           <button>${t('choice.cancel')}</button>
           <button ?disabled=${draft.name.trim() === ''} @click=${this.save}>${icon('save')} ${t('toolbar.save')}</button>
         </form>
-      </dialog>
     `;
   }
 

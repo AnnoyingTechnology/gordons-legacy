@@ -78,12 +78,17 @@ export class FirearmPicker extends LitElement {
   }
 
   protected override render() {
-    if (!this.open) return html`<dialog class="component-picker"></dialog>`;
+    // The same <dialog> element stays in place, open or closed, like every other dialog of the app:
+    // closing it with close() hands the focus back to the button that opened it, where removing an open
+    // dialog from the page drops the focus to the top of the page.
+    return html`<dialog class="component-picker" @close=${this.close}>${this.open ? this.renderContents() : nothing}</dialog>`;
+  }
+
+  private renderContents() {
     const { t, quantity } = this.context;
     const { rows, total, hidden } = this.matching();
     const cartridge = this.load.cartridge.name.trim();
     return html`
-      <dialog class="component-picker" @close=${this.close}>
         <header class="picker-head">
           <h2>${icon('barrel')} ${t('firearm.pickTitle')}</h2>
           <input
@@ -145,7 +150,6 @@ export class FirearmPicker extends LitElement {
           </table>
         </div>
         ${total > rows.length ? html`<p class="note">${t('firearm.showingFirst', { shown: String(rows.length), total: String(total) })}</p>` : nothing}
-      </dialog>
     `;
   }
 

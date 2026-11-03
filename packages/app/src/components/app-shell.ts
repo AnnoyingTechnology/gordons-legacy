@@ -1,23 +1,23 @@
 import type { Firearm, Load, MeasurementSeries, Projectile } from '@gordons-legacy/formats';
-import { FIREARM_FORMAT, importGrtProjectiles, importGrtPropellant, importGrtrace, parseFirearm, serializeFirearm, serializeLoad } from '@gordons-legacy/formats';
+import { serializeFirearm, serializeLoad } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
-import type { Language } from '../i18n/i18n.ts';
+import type { MessageKey } from '../i18n/i18n.ts';
 import { browserStorage, remember, remembered } from '../state/browser-storage.ts';
 import { DocumentStore } from '../state/documents.ts';
 import { engineById, isResearchEngine } from '../state/engine-choice.ts';
 import { loadSettings, saveSettings, type Settings } from '../state/settings.ts';
-import { presetPreferences, type UnitPreferences, type UnitSystem } from '../units/units.ts';
+import { presetPreferences, type UnitPreferences } from '../units/units.ts';
 import { indexedDbDataCache } from '../state/data-cache.ts';
 import { exampleLoad } from '../state/example-load.ts';
 import { download, saveTextFile } from '../state/file-saving.ts';
 import { createContext, type UiContext } from './context.ts';
 import { tabBar } from './tab-bar.ts';
 import { toolbar } from './toolbar.ts';
-import { withProjectile, withPropellant } from '../editor/components.ts';
+import { withProjectile } from '../editor/components.ts';
 import { REPOSITORY } from './about-dialog.ts';
 import './choice-dialog.ts';
 import './chronograph-dialog.ts';
-import { readChronographCsv, type ChronographCsv } from '../measurements/chronograph-csv.ts';
+import type { ChronographCsv } from '../measurements/chronograph-csv.ts';
 import './compare-view.ts';
 import type { CalibratedLoad } from './measurements-view.ts';
 import './library-view.ts';
@@ -45,13 +45,16 @@ import type { DocumentHeading } from './document-heading.ts';
 import { documentShortcut, isTextEntry } from '../state/keyboard-shortcuts.ts';
 import { documentSaver } from '../state/document-saving.ts';
 import type { LoadChange } from '../state/load-change.ts';
+import { importIntoLibrary, openInEditor, readFiles, type FileDestinations } from '../state/file-opening.ts';
 
-/**
- * The application: toolbar, one tab per open load, and the active load's editor. Owns the document
- * store and the settings, and hands a UI context (language, units) down to the editor.
- */
 const WELCOME_SEEN_KEY = 'gordons-legacy.welcome-seen';
 
+/**
+ * The application: toolbar, one tab per open load, and the active load's editor, the comparison or the
+ * library. Owns the document store, the libraries and the settings, and hands a UI context (language,
+ * units, engine) down to every view. What an opened or dropped file becomes is decided in
+ * state/file-opening.ts.
+ */
 export class AppShell extends LitElement {
   static override properties = {
     context: { state: true },
@@ -113,6 +116,12 @@ export class AppShell extends LitElement {
   private readonly components = new ComponentLibrary(indexedDbStore<ComponentEntry>('components'));
   private readonly firearms = new FirearmLibrary(indexedDbStore<FirearmEntry>('firearms'));
   private readonly inventory = new Inventory(indexedDbStore<StockItem>('inventory'));
+  private readonly fileDestinations: FileDestinations = {
+    documents: this.store,
+    components: this.components,
+    firearms: this.firearms,
+    library: this.library,
+  };
   private settings: Settings = loadSettings(this.storage, navigator.languages);
 
   constructor() {
@@ -189,11 +198,13 @@ export class AppShell extends LitElement {
           redo: () => active && this.store.redo(active.id),
           reopen: () => this.reopenClosed(),
           toggleView: (view) => this.toggleView(view),
-          setUnits: (system) => this.setUnits(system),
+          // Choosing a preset sets every kind of quantity to its unit.
+          setUnits: (system) => this.changeSettings({ unitSystem: system, units: presetPreferences(system) }),
           customizeUnits: () => (this.unitsOpen = true),
           toggleConverter: () => (this.converterOpen = !this.converterOpen),
-          setLanguage: (language) => this.setLanguage(language),
-          setEngine: (id) => this.setEngine(id),
+          setLanguage: (language) => this.changeSettings({ language }),
+          // The open loads are simulated again with the engine chosen (engine-choice.ts).
+          setEngine: (id) => this.changeSettings({ engine: id }),
           showAbout: () => (this.aboutOpen = true),
           showShortcuts: () => (this.shortcutsOpen = true),
         },
@@ -264,7 +275,7 @@ export class AppShell extends LitElement {
       <gl-firearm-dialog
         .firearm=${this.editedFirearm?.firearm}
         .context=${this.context}
-        @save=${(event: CustomEvent<Firearm>) => void this.keepFirearm(event.detail, this.editedFirearm?.id)}
+        @save=${(event: CustomEvent<Firearm>) => void this.reportWrite('library.saveFailed', () => this.firearms.save(event.detail, this.editedFirearm?.id))}
         @export=${(event: CustomEvent<Firearm>) => download(serializeFirearm(event.detail), `${event.detail.name.trim() || 'gun'}.firearm.json`)}
         @close=${() => (this.editedFirearm = undefined)}
       ></gl-firearm-dialog>
@@ -282,10 +293,7 @@ export class AppShell extends LitElement {
         @create-load=${(event: CustomEvent<Load>) => this.createDocument(event.detail)}
         @close=${() => (this.newLoadOpen = false)}></gl-new-load-dialog>
       <gl-shortcuts-dialog .open=${this.shortcutsOpen} .enabled=${this.settings.keyboardShortcuts} .context=${this.context}
-        @shortcuts-change=${(event: CustomEvent<boolean>) => {
-          this.settings = { ...this.settings, keyboardShortcuts: event.detail };
-          this.applySettings();
-        }}
+        @shortcuts-change=${(event: CustomEvent<boolean>) => this.changeSettings({ keyboardShortcuts: event.detail })}
         @close=${() => (this.shortcutsOpen = false)}></gl-shortcuts-dialog>
       <gl-close-document-dialog
         .name=${this.store.documents.find((document) => document.id === this.closingDocument)?.name}
@@ -297,7 +305,7 @@ export class AppShell extends LitElement {
       <gl-units-dialog
         .open=${this.unitsOpen}
         .context=${this.context}
-        @units-change=${(event: CustomEvent<UnitPreferences>) => this.setUnitPreferences(event.detail)}
+        @units-change=${(event: CustomEvent<UnitPreferences>) => this.changeSettings({ units: event.detail })}
         @close=${() => (this.unitsOpen = false)}
       ></gl-units-dialog>
     `;
@@ -314,12 +322,13 @@ export class AppShell extends LitElement {
         .firearms=${this.firearms.entries}
         .stock=${this.inventory.entries}
         .context=${this.context}
-        @save-stock=${(event: CustomEvent<StockItem>) => void this.keepStock(() => this.inventory.save(event.detail))}
-        @remove-stock=${(event: CustomEvent<string>) => void this.keepStock(() => this.inventory.remove(event.detail))}
+        @save-stock=${(event: CustomEvent<StockItem>) => void this.reportWrite('library.saveFailed', () => this.inventory.save(event.detail))}
+        @remove-stock=${(event: CustomEvent<string>) => void this.reportWrite('library.removeFailed', () => this.inventory.remove(event.detail))}
         @record-batch=${(event: CustomEvent<string>) => this.recordBatch(event.detail)}
         @sync=${() => (this.syncOpen = true)}
         @edit-firearm=${(event: CustomEvent<{ firearm: Firearm; id?: string }>) => (this.editedFirearm = event.detail)}
-        @remove-firearm=${(event: CustomEvent<string>) => void this.keepFirearm(undefined, event.detail)}
+        @remove-firearm=${(event: CustomEvent<string>) => void this.reportWrite('library.removeFailed', () => this.firearms.remove(event.detail))}
+        @remove-entry=${(event: CustomEvent<string>) => void this.reportWrite('library.removeFailed', () => this.library.remove(event.detail))}
         @open-entry=${(event: CustomEvent<string>) => this.openEntry(event.detail)}
         @import-files=${(event: CustomEvent<File[]>) => void this.importToLibrary(event.detail)}
         @backup=${() => this.downloadBackup()}
@@ -355,54 +364,13 @@ export class AppShell extends LitElement {
     `;
   }
 
-  /**
-   * Opens loads in new tabs; powder and projectile files replace the active load's component instead.
-   */
+  /** Files opened from the toolbar or dropped on the main area (file-opening.ts). */
   private async openFiles(files: Iterable<File>): Promise<void> {
-    const errors: string[] = [];
-    for (const file of files) {
-      const text = await file.text();
-      const extension = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
-      if (extension === '.propellant' || extension === '.projectile') {
-        errors.push(...this.openComponent(extension, text));
-        // Kept for later too, in the component library.
-        await this.components.importFile(file.name, text);
-        continue;
-      }
-      if (extension === '.grtrace') {
-        errors.push(...this.openTrace(text));
-        continue;
-      }
-      if (extension === '.csv') {
-        errors.push(...this.openChronograph(file.name, text));
-        continue;
-      }
-      // A gun is JSON too: told apart by what it says it is, not by its name.
-      if (text.includes(FIREARM_FORMAT)) {
-        errors.push(...(await this.openFirearm(file.name, text)));
-        continue;
-      }
-      const result = this.store.open(file.name, text);
-      if (result.ok) this.view = 'editor';
-      else errors.push(...result.issues.filter((issue) => issue.severity === 'error').map((issue) => issue.message));
-    }
-    this.openErrors = errors;
-  }
-
-  /** Puts a powder or projectile into the active load; returns error messages. */
-  private openComponent(extension: string, text: string): string[] {
-    const active = this.store.active;
-    if (!active) return [this.context.t('components.noLoad')];
-    const result = extension === '.propellant' ? importGrtPropellant(text) : importGrtProjectiles(text);
-    if (!result.ok) return result.issues.filter((issue) => issue.severity === 'error').map((issue) => issue.message);
-    if (!Array.isArray(result.value)) {
-      this.store.update(active.id, withPropellant(active.load, result.value));
-    } else if (result.value.length === 1) {
-      this.useProjectile(result.value[0]);
-    } else {
-      this.projectileChoice = result.value;
-    }
-    return [];
+    const opened = await openInEditor(await readFiles(files), this.fileDestinations, this.context.t);
+    if (opened.loadOpened) this.view = 'editor';
+    if (opened.projectileChoice) this.projectileChoice = opened.projectileChoice;
+    if (opened.chronograph) this.chronograph = opened.chronograph;
+    this.openErrors = opened.errors;
   }
 
   /** Opens a load fitted to a measured velocity as a new, unsaved document; the original stays. */
@@ -417,25 +385,6 @@ export class AppShell extends LitElement {
     const suffix = calibration.reached ? t('measurements.calibratedSuffix', { velocity }) : t('measurements.fitNotReachedSuffix', { velocity });
     this.store.openNew(`${base} ${suffix}.json`, calibration.load);
     this.openErrors = calibration.reached ? [] : [t('measurements.calibrationLimited', { velocity })];
-  }
-
-  /** Adds a PressureTrace recording to the active load's measurements; returns error messages. */
-  private openTrace(text: string): string[] {
-    const active = this.store.active;
-    if (!active) return [this.context.t('components.noLoad')];
-    const result = importGrtrace(text);
-    if (!result.ok) return result.issues.filter((issue) => issue.severity === 'error').map((issue) => issue.message);
-    this.store.update(active.id, { ...active.load, measurements: [...active.load.measurements, result.value] });
-    return [];
-  }
-
-  /** Reads a chronograph export and asks the user to confirm it; returns error messages. */
-  private openChronograph(fileName: string, text: string): string[] {
-    if (!this.store.active) return [this.context.t('components.noLoad')];
-    const csv = readChronographCsv(text);
-    if (!csv) return [this.context.t('chronograph.nothing', { file: fileName })];
-    this.chronograph = { csv, fileName };
-    return [];
   }
 
   private addMeasurements(series: MeasurementSeries): void {
@@ -467,14 +416,7 @@ export class AppShell extends LitElement {
   /** Saves the load in the library: no file to choose; the tab stays linked to its entry. */
   private async saveToLibrary(id: number): Promise<boolean> {
     this.commitName(id);
-    try {
-      const saved = await this.saveDocument(id);
-      if (saved) this.openErrors = this.openErrors.filter((message) => message !== this.context.t('library.saveFailed'));
-      return saved;
-    } catch {
-      this.openErrors = [this.context.t('library.saveFailed')];
-      return false;
-    }
+    return this.reportWrite('library.saveFailed', () => this.saveDocument(id));
   }
 
   private requestClose(id: number): void {
@@ -589,14 +531,6 @@ export class AppShell extends LitElement {
     void this.updateComplete.then(() => this.querySelector<HTMLElement>(`[data-document-id="${target.id}"] .tab-name`)?.focus());
   }
 
-  /** A gun file, into the gun library: the same place "Save as a gun" puts one. */
-  private async openFirearm(name: string, text: string): Promise<string[]> {
-    const result = parseFirearm(text);
-    if (!result.ok) return [this.context.t('library.importFailed', { name })];
-    await this.keepFirearm(result.value, undefined);
-    return [];
-  }
-
   /** Opens the gun chooser, and reads the published database the first time it is asked for (#30). */
   private pickFirearm(): void {
     this.firearmPickerOpen = true;
@@ -627,33 +561,30 @@ export class AppShell extends LitElement {
     if (entry) this.batch = { name: entry.name, load: entry.load };
   }
 
-  /** Runs a change to the stock, reporting a failed write instead of losing it silently; true when written. */
-  private async keepStock(change: () => Promise<unknown>): Promise<boolean> {
-    try {
-      await change();
-      this.openErrors = this.openErrors.filter((message) => message !== this.context.t('library.saveFailed'));
-      return true;
-    } catch {
-      this.openErrors = [this.context.t('library.saveFailed')];
-      return false;
-    }
-  }
-
   /** Takes a batch off the shelf; the dialog stays open, with its error, if the write failed. */
   private async useStock(uses: Use[]): Promise<void> {
     if (this.batchBusy) return;
     this.batchBusy = true;
-    const written = await this.keepStock(() => this.inventory.use(uses));
+    const written = await this.reportWrite('library.saveFailed', () => this.inventory.use(uses));
     this.batchBusy = false;
     if (written) this.batch = undefined;
   }
 
-  private async keepFirearm(firearm: Firearm | undefined, id: string | undefined): Promise<void> {
+  /**
+   * Runs a write to the library or to a file. If it fails, `failure` is shown: a failed delete, for one,
+   * leaves the entry in place, and without a message the user would take the click for a delete. Once a
+   * write goes through, an earlier `failure` is cleared; one that returns false (nothing written, or the
+   * user cancelled) leaves the messages as they are. True when the write went through.
+   */
+  private async reportWrite(failure: MessageKey, write: () => Promise<unknown>): Promise<boolean> {
+    const message = this.context.t(failure);
     try {
-      if (firearm) await this.firearms.save(firearm, id);
-      else if (id) await this.firearms.remove(id);
+      const written = (await write()) !== false;
+      if (written) this.openErrors = this.openErrors.filter((shown) => shown !== message);
+      return written;
     } catch {
-      this.openErrors = [this.context.t('library.saveFailed')];
+      this.openErrors = [message];
+      return false;
     }
   }
 
@@ -664,17 +595,9 @@ export class AppShell extends LitElement {
     this.view = 'editor';
   }
 
-  /** Loads go to the library; powder, projectile and caliber files to the component library. */
+  /** Files imported from the library view (file-opening.ts). */
   private async importToLibrary(files: File[]): Promise<void> {
-    const read = await Promise.all(files.map(async (file) => ({ name: file.name, text: await file.text() })));
-    const isComponent = (name: string) => /\.(propellant|projectile|caliber)$/i.test(name);
-    const isFirearm = ({ text }: { text: string }) => text.includes(FIREARM_FORMAT);
-    const errors: string[] = [];
-    for (const file of read.filter(({ name }) => isComponent(name))) errors.push(...(await this.components.importFile(file.name, file.text)));
-    for (const file of read.filter(isFirearm)) errors.push(...(await this.openFirearm(file.name, file.text)));
-    const loads = read.filter((file) => !isComponent(file.name) && !isFirearm(file));
-    const failed = await this.library.importFiles(loads);
-    this.openErrors = [...failed.map((name) => this.context.t('library.importFailed', { name })), ...errors];
+    this.openErrors = await importIntoLibrary(await readFiles(files), this.fileDestinations, this.context.t);
   }
 
   private downloadBackup(): void {
@@ -698,17 +621,7 @@ export class AppShell extends LitElement {
     this.commitName(id);
     const document = this.store.documents.find((candidate) => candidate.id === id);
     if (!document) return;
-    try {
-      const exported = await saveTextFile(serializeLoad(document.load), document.name);
-      if (exported) this.openErrors = this.openErrors.filter((message) => message !== this.context.t('documents.exportFailed'));
-    } catch {
-      this.openErrors = [this.context.t('documents.exportFailed')];
-    }
-  }
-
-  private setUnits(system: UnitSystem): void {
-    this.settings = { ...this.settings, unitSystem: system, units: presetPreferences(system) };
-    this.applySettings();
+    await this.reportWrite('documents.exportFailed', () => saveTextFile(serializeLoad(document.load), document.name));
   }
 
   private showDocument(id: number): void {
@@ -728,35 +641,22 @@ export class AppShell extends LitElement {
     remember(this.storage, WELCOME_SEEN_KEY, '1');
   };
 
-  /** Units chosen one kind at a time; the preset shown stays the one they started from. */
   /** Folds an input group away, or brings it back; kept with the settings, not with the load (#25). */
   private foldGroup(title: string): void {
     const folded = this.settings.foldedGroups.includes(title)
       ? this.settings.foldedGroups.filter((group) => group !== title)
       : [...this.settings.foldedGroups, title];
-    this.settings = { ...this.settings, foldedGroups: folded };
-    this.applySettings();
+    this.changeSettings({ foldedGroups: folded });
   }
 
-  private setUnitPreferences(units: UnitPreferences): void {
-    this.settings = { ...this.settings, units };
-    this.applySettings();
-  }
-
-  /** The engine every view computes with; the open loads are simulated again with it (engine-choice.ts). */
-  private setEngine(id: string): void {
-    this.settings = { ...this.settings, engine: id };
-    this.applySettings();
-  }
-
-  private setLanguage(language: Language): void {
-    this.settings = { ...this.settings, language };
-    document.documentElement.lang = language;
-    this.applySettings();
-  }
-
-  private applySettings(): void {
+  /**
+   * Changes some settings, keeps them in the browser and hands the components a new context. Units chosen
+   * one kind at a time leave `unitSystem` alone: the preset shown stays the one they started from.
+   */
+  private changeSettings(change: Partial<Settings>): void {
+    this.settings = { ...this.settings, ...change };
     saveSettings(this.storage, this.settings);
+    document.documentElement.lang = this.settings.language;
     this.context = createContext(this.settings.language, this.settings.units, engineById(this.settings.engine));
   }
 }

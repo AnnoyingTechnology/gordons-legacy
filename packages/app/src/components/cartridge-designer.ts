@@ -122,14 +122,19 @@ export class CartridgeDesigner extends LitElement {
   }
 
   protected override render() {
-    const { t } = this.context;
+    // The same <dialog> element stays in place, open or closed, like every other dialog of the app:
+    // closing it with close() hands the focus back to the button that opened it, where removing an open
+    // dialog from the page drops the focus to the top of the page.
     const draft = this.draft;
-    if (!this.open || !draft) return html`<dialog class="cartridge-designer"></dialog>`;
+    return html`<dialog class="cartridge-designer" @close=${() => this.dispatchEvent(new Event('close'))}>${this.open && draft ? this.renderContents(draft) : nothing}</dialog>`;
+  }
+
+  private renderContents(draft: CaliberDefinition) {
+    const { t } = this.context;
     const check = checkCaliber(draft);
     const lengthUnit = displayUnit('length', this.context.units);
     const format = (metres: number) => `${formatNumber(lengthUnit.fromSi(metres), lengthUnit.decimals, this.context.language)}`;
     return html`
-      <dialog class="cartridge-designer" @close=${() => this.dispatchEvent(new Event('close'))}>
         <header class="picker-head">
           <h2>${icon('cartridge')} ${t('designer.title')}</h2>
           <span class="spacer"></span>
@@ -194,7 +199,6 @@ export class CartridgeDesigner extends LitElement {
           <button ?disabled=${!check.ok} @click=${() => this.fire('save-caliber')}>${icon('database')} ${t('designer.save')}</button>
           <button ?disabled=${!check.ok} @click=${() => this.fire('apply-caliber')}>${icon('cartridge')} ${t('designer.apply')}</button>
         </footer>
-      </dialog>
     `;
   }
 

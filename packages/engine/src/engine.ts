@@ -47,6 +47,8 @@ export type SimulationProblemCode =
   | 'expansion-too-large'
   /** The initial pressure is too high for the charge to start the projectile in GRT's model. */
   | 'initial-pressure-too-high'
+  /** The effective bore area is larger than the groove circle, which no rifling can give. */
+  | 'bore-area-too-large'
   /** A gas leak has a type the engine doesn't know. */
   | 'unknown-gas-leak'
   /** A gas leak's height doesn't suit its type: a square hole needs one, a slot one up to the bore radius. */

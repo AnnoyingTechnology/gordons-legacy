@@ -1,6 +1,7 @@
 import type { Load } from '@gordons-legacy/formats';
 import { html, LitElement } from 'lit';
 import { groupStatistics } from '../analysis/shot-group.ts';
+import { withoutShotGroup } from '../editor/shot-groups.ts';
 import { icon } from '../icons/icons.ts';
 import type { UiContext } from './context.ts';
 import './shot-group-dialog.ts';
@@ -60,8 +61,7 @@ export class ShotGroupsPanel extends LitElement {
   }
 
   private removeGroup(index: number): void {
-    const shotGroups = (this.load.shotGroups ?? []).filter((_, position) => position !== index);
-    this.dispatchEvent(loadChangeEvent({ ...this.load, shotGroups }));
+    this.dispatchEvent(loadChangeEvent(withoutShotGroup(this.load, index)));
   }
 }
 

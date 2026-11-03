@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
-import { extname } from 'node:path';
+import { basename } from 'node:path';
 import { grtTraditional, type Simulation } from '@gordons-legacy/engine';
-import { importGrtLoad, parseLoad, type ImportResult, type Load } from '@gordons-legacy/formats';
+import { readLoadFile, type ImportResult, type Load } from '@gordons-legacy/formats';
 
 export const SAFETY_NOTICE =
   'Simulated values, not load data. Check every charge against published data from the powder or ' +
@@ -9,8 +9,7 @@ export const SAFETY_NOTICE =
 
 /** Reads a load from a `.grtload` file or a saved JSON load. */
 export function readLoad(path: string): ImportResult<Load> {
-  const text = readFileSync(path, 'utf8');
-  return extname(path).toLowerCase() === '.grtload' ? importGrtLoad(text) : parseLoad(text);
+  return readLoadFile(basename(path), readFileSync(path, 'utf8'));
 }
 
 /** A short, human-readable summary of a simulation, in the units reloaders use. */

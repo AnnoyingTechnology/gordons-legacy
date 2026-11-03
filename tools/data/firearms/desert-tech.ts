@@ -13,7 +13,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
 import { loadableCartridge } from './loadable-cartridge.ts';
-import { crawlArguments, DELAY, fetchText, fileName, firearmJson, plainText, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
+import { claimFileName, crawlArguments, DELAY, fetchText, firearmJson, plainText, plausibleGunMass, sleep, summaryLine } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const SITE = 'https://deserttech.com';
@@ -106,6 +106,7 @@ async function main(): Promise<void> {
   const retrieved = new Date().toISOString().slice(0, 10);
   const names = new Set<string>();
   let written = 0;
+  const fileNames = new Map<string, string>(); // what claimFileName has given out, so two names never share a file
   for (const url of pages) {
     await sleep(DELAY);
     // Stop on a refusal instead of retrying a different route to the same material.
@@ -114,7 +115,7 @@ async function main(): Promise<void> {
     for (const firearm of parsed.firearms) {
       const json = firearmJson(firearm);
       if ('problem' in json) throw new Error(`${firearm.name}: ${json.problem}`);
-      const file = fileName(firearm);
+      const file = claimFileName(fileNames, firearm);
       if (names.has(file)) throw new Error(`Duplicate firearm: ${firearm.name}`);
       names.add(file);
       writeFileSync(join(args.folder, file), json.text);

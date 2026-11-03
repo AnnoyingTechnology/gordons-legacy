@@ -1,6 +1,6 @@
 import type { Load } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
-import { effectiveBoreArea, type BoreProfile } from '../editor/bore-area.ts';
+import { effectiveBoreArea, isPossibleRifling, type BoreProfile } from '../editor/bore-area.ts';
 import { displayUnit, formatNumber, parseNumber } from '../units/units.ts';
 import type { UiContext } from './context.ts';
 import { loadChangeEvent } from '../state/load-change.ts';
@@ -116,8 +116,10 @@ export class BoreAreaDialog extends LitElement {
     const grooveWidth = read('width');
     const grooves = parseNumber(this.values.grooves);
     if (boreDiameter === undefined || grooveDiameter === undefined || grooveWidth === undefined) return undefined;
-    if (grooves === undefined || !Number.isInteger(grooves) || grooves < 1 || !(grooveDiameter > boreDiameter)) return undefined;
-    const area = effectiveBoreArea({ profile: this.profile, boreDiameter, grooveDiameter, grooveWidth, grooves });
+    if (grooves === undefined) return undefined;
+    const rifling = { profile: this.profile, boreDiameter, grooveDiameter, grooveWidth, grooves };
+    if (!isPossibleRifling(rifling)) return undefined;
+    const area = effectiveBoreArea(rifling);
     return area > 0 && Number.isFinite(area) ? area : undefined;
   }
 

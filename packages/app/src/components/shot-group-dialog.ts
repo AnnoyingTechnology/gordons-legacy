@@ -29,6 +29,7 @@ export class ShotGroupDialog extends LitElement {
     scaleLength: { state: true },
     distanceText: { state: true },
     cursor: { state: true },
+    unreadablePhoto: { state: true },
   };
 
   declare load: Load;
@@ -45,6 +46,8 @@ export class ShotGroupDialog extends LitElement {
   declare distanceText: string;
   /** Where the keyboard's crosshair sits, in the photo's pixels; undefined until a key moves it. */
   declare cursor: Hit | undefined;
+  /** The name of the last chosen file that could not be decoded as an image; undefined otherwise. */
+  declare unreadablePhoto: string | undefined;
 
   constructor() {
     super();
@@ -56,6 +59,7 @@ export class ShotGroupDialog extends LitElement {
     this.scaleLength = '';
     this.distanceText = '';
     this.cursor = undefined;
+    this.unreadablePhoto = undefined;
   }
 
   protected override createRenderRoot(): HTMLElement {
@@ -68,6 +72,7 @@ export class ShotGroupDialog extends LitElement {
       this.group = existing ?? { title: this.context.t('shotGroups.newTitle'), distance: DEFAULT_DISTANCE, hits: [], note: '' };
       this.picture = existing?.picture ? this.load.pictures[existing.picture.index] : undefined;
       this.mode = existing?.picture ? 'hits' : 'scale';
+      this.unreadablePhoto = undefined;
       this.scalePoints = [];
       this.scaleLength = '';
       const unit = displayUnit('distance', this.context.units);
@@ -112,7 +117,10 @@ export class ShotGroupDialog extends LitElement {
             ${this.context.t('shotGroups.takePhoto')}
             <input type="file" accept="image/*" capture="environment" class="file-input" @change=${this.choosePhoto} />
           </label>`
-        : nothing}`;
+        : nothing}
+      ${this.unreadablePhoto === undefined
+        ? nothing
+        : html`<p class="error" role="alert">${this.context.t('shotGroups.photoUnreadable', { name: this.unreadablePhoto })}</p>`}`;
   }
 
   private renderTarget(picture: Picture) {
@@ -276,10 +284,22 @@ export class ShotGroupDialog extends LitElement {
     this.mode = 'hits';
   };
 
+  /**
+   * A file the browser can't decode (a HEIC photo outside Safari, for example) is reported, not
+   * ignored: without the message, choosing it would look like nothing happened.
+   */
   private choosePhoto = async (event: Event) => {
-    const file = (event.target as HTMLInputElement).files?.[0];
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    // Cleared so that choosing the same file again, once converted, fires `change` again.
+    input.value = '';
     if (!file) return;
-    this.picture = await downscale(file);
+    try {
+      this.picture = await downscale(file);
+      this.unreadablePhoto = undefined;
+    } catch {
+      this.unreadablePhoto = file.name;
+    }
   };
 
   /** Puts the group (and its photo, if new) into the load. */
@@ -299,18 +319,31 @@ export class ShotGroupDialog extends LitElement {
   };
 }
 
-/** A photo as a JPEG no larger than MAXIMUM_PICTURE_SIZE on its longer side. */
+/**
+ * A photo as a JPEG no larger than MAXIMUM_PICTURE_SIZE on its longer side. Rejects when the browser
+ * can't decode the file.
+ *
+ * The decoded bitmap holds the full-size photo uncompressed (48 MB for a 12-megapixel phone photo), and
+ * the browser frees it only on `close()` or whenever its garbage collector gets to it, so it is closed
+ * as soon as it is drawn, or when drawing fails.
+ */
 async function downscale(file: File): Promise<Picture> {
   const bitmap = await createImageBitmap(file);
-  const ratio = Math.min(1, MAXIMUM_PICTURE_SIZE / Math.max(bitmap.width, bitmap.height));
-  const width = Math.round(bitmap.width * ratio);
-  const height = Math.round(bitmap.height * ratio);
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  canvas.getContext('2d')!.drawImage(bitmap, 0, 0, width, height);
-  const data = canvas.toDataURL('image/jpeg', 0.85).split(',')[1] ?? '';
-  return { name: file.name, mediaType: 'image/jpeg', width, height, data };
+  try {
+    const ratio = Math.min(1, MAXIMUM_PICTURE_SIZE / Math.max(bitmap.width, bitmap.height));
+    const width = Math.round(bitmap.width * ratio);
+    const height = Math.round(bitmap.height * ratio);
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('No 2D canvas to downscale the photo on');
+    context.drawImage(bitmap, 0, 0, width, height);
+    const data = canvas.toDataURL('image/jpeg', 0.85).split(',')[1] ?? '';
+    return { name: file.name, mediaType: 'image/jpeg', width, height, data };
+  } finally {
+    bitmap.close();
+  }
 }
 
 customElements.define('gl-shot-group-dialog', ShotGroupDialog);

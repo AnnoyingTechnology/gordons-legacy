@@ -12,6 +12,12 @@ export function caseFill(inputs: GrtInputs, chamber: number): number {
   return inputs.chargeMass / inputs.bulkDensity / chamber;
 }
 
+/**
+ * How far the effective bore area may exceed the groove circle: rounding of converted values only. The
+ * lands always take some of the circle, and an area too large lowers the simulated pressure.
+ */
+const BORE_AREA_ROUNDING = 0.005;
+
 /** Inputs that must be finite and above zero, with their place in the load. */
 const POSITIVE: ReadonlyArray<readonly [keyof GrtInputs, string]> = [
   ['projectileMass', 'projectile.mass'],
@@ -76,6 +82,10 @@ export function validateInputs(inputs: GrtInputs): SimulationProblem[] {
 
   if (!(inputs.heatCapacityRatio > 1)) {
     problems.push({ code: 'heat-capacity-ratio-too-low', path: 'propellant.heatCapacityRatio' });
+  }
+  const grooveCircle = (Math.PI / 4) * inputs.grooveDiameter ** 2;
+  if (inputs.boreArea > grooveCircle * (1 + BORE_AREA_ROUNDING)) {
+    problems.push({ code: 'bore-area-too-large', path: 'cartridge.effectiveBoreArea' });
   }
   if (!new FormFunction(inputs).isDefined) problems.push({ code: 'burn-model-undefined', path: 'propellant.burnModel' });
   if (!(vivacityAtTemperature(inputs) > 0)) problems.push({ code: 'vivacity-not-positive', path: 'charge.temperature' });

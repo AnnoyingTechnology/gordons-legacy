@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { grtTraditional } from '@gordons-legacy/engine';
 import { importGrtLoad, units, type Load } from '@gordons-legacy/formats';
 import { describe, expect, test } from 'vitest';
-import { assessLoad, pressureLimits } from '../src/analysis/load-assessment.ts';
+import { assessLoad, lowestPressureLimit, pressureLimits } from '../src/analysis/load-assessment.ts';
 import { communityComponents } from '../src/state/components.ts';
 
 function fixture(path: string): Load {
@@ -40,6 +40,12 @@ describe('pressure', () => {
     expect(pressureLimits(own)[0]).toEqual({ source: 'load', pressure: 3885 * units.BAR });
     const rounded = { ...blackout, cartridge: { ...blackout.cartridge, maxPressure: 3910 * units.BAR } };
     expect(pressureLimits(rounded)).toEqual([{ source: 'CIP', pressure: 3900 * units.BAR }]);
+  });
+
+  test('the lowest maximum is the one the tools measure against, whichever source gives it', () => {
+    const saami = { ...blackout, cartridge: { ...blackout.cartridge, standardMaxPressures: { saami: 3792 * units.BAR } } };
+    expect(lowestPressureLimit(saami)).toEqual({ source: 'SAAMI', pressure: 3792 * units.BAR });
+    expect(lowestPressureLimit(saami).pressure).toBeLessThan(saami.cartridge.maxPressure);
   });
 
   test("the load's own maximum is listed only when it differs from the standards'", () => {

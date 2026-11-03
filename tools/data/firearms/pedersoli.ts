@@ -27,7 +27,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { loadableCartridge, namedCartridge } from './loadable-cartridge.ts';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, fetchPage, fetchText, fileName, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
+import { claimFileName, crawlArguments, fetchPage, fetchText, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const SITEMAP = 'https://www.davidepedersoli.com/sitemap.xml';
@@ -183,6 +183,7 @@ async function main(): Promise<void> {
   mkdirSync(folder, { recursive: true });
   const retrieved = new Date().toISOString().slice(0, 10);
   let written = 0;
+  const fileNames = new Map<string, string>(); // what claimFileName has given out, so two names never share a file
   let muzzleLoaders = 0;
   const skipped: string[] = [];
   const taken = new Map<string, Firearm>();
@@ -198,7 +199,7 @@ async function main(): Promise<void> {
     if (guns.length === 0 && rejected.length === 0) muzzleLoaders++;
     for (const { cartridge, reason } of rejected) skipped.push(`${url}: ${cartridge} left out, ${reason}`);
     for (const firearm of guns) {
-      const file = fileName(firearm);
+      const file = claimFileName(fileNames, firearm);
       const earlier = taken.get(file);
       if (earlier !== undefined) {
         skipped.push(`${url}: ${firearm.name} is already written (${earlier.source?.url}); barrel ${earlier.barrel.length} m against ${firearm.barrel.length} m, mass ${earlier.barrel.gunMass} kg against ${firearm.barrel.gunMass} kg`);

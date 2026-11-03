@@ -22,7 +22,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { loadableCartridge } from './loadable-cartridge.ts';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { crawlArguments, fetchPage, fetchText, fileName, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
+import { claimFileName, crawlArguments, fetchPage, fetchText, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const SITEMAP = 'https://www.czfirearms.com/sitemap.xml';
@@ -187,6 +187,7 @@ async function main(): Promise<void> {
   mkdirSync(folder, { recursive: true });
   const retrieved = new Date().toISOString().slice(0, 10);
   let written = 0;
+  const fileNames = new Map<string, string>(); // what claimFileName has given out, so two names never share a file
   const skipped: string[] = [];
   const names = new Set<string>();
   for (const url of pages) {
@@ -208,7 +209,7 @@ async function main(): Promise<void> {
         skipped.push(`${url}: ${json.problem}`);
         continue;
       }
-      const file = fileName(firearm);
+      const file = claimFileName(fileNames, firearm);
       if (names.has(file)) continue; // a series page lists what the product pages list too
       names.add(file);
       writeFileSync(join(folder, file), json.text);

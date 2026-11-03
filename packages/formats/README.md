@@ -14,8 +14,9 @@ Everything is exported from [`src/index.ts`](src/index.ts).
 | `checkPropellant(value)`, `checkProjectile(value)`, `checkCaliber(value)` | Check a component kept apart from a load (a component library), as in a saved load. |
 | `Firearm`, `serializeFirearm`, `parseFirearm`, `checkFirearm` | A gun saved on its own: what tells it apart and the barrel the simulation reads from it. |
 | `importGrtLoad(text)` | Imports a `.grtload` file. |
+| `readLoadFile(fileName, text)`, `isGrtLoadFile(fileName)` | Reads a load file, `.grtload` or saved JSON, told apart by its name. |
 | `importGrtCaliber`, `importGrtProjectiles`, `importGrtPropellant` | Import GRT component files. A `.projectile` file may hold several projectiles. |
-| `ImportResult`, `ImportIssue` | What importers return: the value, or a failure, with the issues found. |
+| `ImportResult`, `ImportIssue`, `errorMessages(issues)` | What importers return: the value, or a failure, with the issues found; the messages of the errors among them. |
 | `seatingDepth(load)` | Derived value: the load format stores the overall length, not the seating depth. |
 | `standardMaxPressures(cartridge)` | The CIP and SAAMI maximum pressures known for a cartridge: the user's entries, else the caliber definition's. |
 | `units` | SI conversion factors (`units.GRAIN`, `units.BAR`…). |
@@ -42,7 +43,8 @@ Values the format has no field for are kept verbatim in `unmapped` properties, s
 src/
   index.ts             public API
   units.ts             SI conversion factors
-  import-issues.ts     ImportResult, ImportIssue, IssueLog
+  import-issues.ts     ImportResult, ImportIssue, IssueLog, errorMessages
+  load-file.ts         readLoadFile: a .grtload or a saved JSON load, by its file name
   optional-property.ts helper for optional properties in object literals
   load/                the load format: one file per part, types only
   json/                saving and reading JSON loads

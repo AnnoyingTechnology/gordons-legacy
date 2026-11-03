@@ -27,7 +27,7 @@ import { loadableCartridge } from './loadable-cartridge.ts';
 import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, type Firearm } from '@gordons-legacy/formats';
 import { clashes, printedLength, printedMass, printedTwist } from './metric-figures.ts';
-import { crawlArguments, fetchPage, fetchText, fileName, firearmJson, plausibleGunMass, summaryLine, textLines } from './maker-site.ts';
+import { claimFileName, crawlArguments, fetchPage, fetchText, firearmJson, plausibleGunMass, summaryLine, textLines } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
 
 const CATALOGUE = 'https://schmeisser-germany.com/en/all-products/';
@@ -138,13 +138,14 @@ async function main(): Promise<void> {
     }
   }
   let written = 0;
+  const fileNames = new Map<string, string>(); // what claimFileName has given out, so two names never share a file
   for (const gun of guns) {
     const json = firearmJson(gun);
     if ('problem' in json) {
       skipped.push(`${gun.name}: ${json.problem}`);
       continue;
     }
-    writeFileSync(join(folder, fileName(gun)), json.text);
+    writeFileSync(join(folder, claimFileName(fileNames, gun)), json.text);
     written++;
     console.log(summaryLine(gun));
   }

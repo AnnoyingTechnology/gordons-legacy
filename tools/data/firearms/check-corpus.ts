@@ -23,18 +23,12 @@
  */
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { implausibleFigures } from '@gordons-legacy/data';
 import { parseFirearm, units, type Firearm } from '@gordons-legacy/formats';
 import { loadableCartridge } from './loadable-cartridge.ts';
-import { plausibleGunMass } from './maker-site.ts';
 
 /** A number as a maker writes it, with either decimal mark: `9.5` and `9,5` are the same figure. */
 const NUMBER = String.raw`([0-9]+(?:[.,][0-9]+)?)`;
-
-/** The shortest and longest a barrel can be, m: a 1.9" derringer to a 36" long-range rifle, with room. */
-const BARREL_LENGTH_RANGE = { shortest: 0.04, longest: 1.0 };
-
-/** The shortest and longest turn of rifling, m: a 1:6" pistol barrel to a 1:40" muzzle-loader, with room. */
-const TWIST_RANGE = { shortest: 0.1, longest: 1.2 };
 
 /** How close a figure must be to its printed string: half a millimetre, or half a percent of it. */
 const TOLERANCE = { length: 0.0006, mass: 0.002, relative: 0.005 };
@@ -172,15 +166,8 @@ export function auditFirearm(firearm: Firearm): string[] {
   if (!loadableCartridge(firearm.cartridge)) {
     problems.push(`"${firearm.cartridge ?? 'no cartridge'}" is not a cartridge a reloader loads`);
   }
-  if (length < BARREL_LENGTH_RANGE.shortest || length > BARREL_LENGTH_RANGE.longest) {
-    problems.push(`a barrel of ${(length * 1000).toFixed(1)} mm is not a barrel`);
-  }
-  if (gunMass !== undefined && plausibleGunMass(gunMass) === undefined) {
-    problems.push(`a gun of ${gunMass.toFixed(3)} kg is not a gun`);
-  }
-  if (twistLength !== undefined && (twistLength < TWIST_RANGE.shortest || twistLength > TWIST_RANGE.longest)) {
-    problems.push(`a turn of ${(twistLength * 1000).toFixed(1)} mm is not a twist`);
-  }
+  // The same ranges the data repository's CI holds every published gun to (@gordons-legacy/data).
+  problems.push(...implausibleFigures(firearm));
   const barrelLength = published['barrelLength'];
   if (barrelLength !== undefined) {
     const printed = printedLengths(barrelLength);
