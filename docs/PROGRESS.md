@@ -13,7 +13,7 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
   documents (`tools/validation/pressure/`, `docs/model/validation.md`). The default engine has read up to
   22 % under published pressures on one powder model and 8 % over on another; the app's safety wording
   says so. Bottleneck: powder models and bullet lengths, not documents.
-- **Tests:** 1,002 (Vitest), `tsc`, production build; CI deploys GitHub Pages from `main`.
+- **Tests:** 1,009 (Vitest), `tsc`, production build; CI deploys GitHub Pages from `main`.
 - **Docs:** `docs/PLAN.md` (plan), `docs/model/` (engines, validation, pressure sources), `docs/formats/`,
   `docs/firearm-data.md`, `docs/ui-audit.md`, `docs/code-audit.md`, each package's README.
 
@@ -217,6 +217,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 
 | Date | Entry |
 |---|---|
+| 2026-11-03 | **Astra's #32 review: three findings, all fixed.** A sync merged the photos it does not carry from this tab's cached load, so it could delete a photo another tab had saved: the merge now reads the stored entry in the write's transaction (`RecordStore.update`, `Library.receive(entry, merged)`). A backup serialised this tab's lists, missing what other tabs had saved: the stores now `refresh()` before a backup. Text typed in the gun dialog during a save, still in its focused field, was lost when the dialog closed: it now stays open. |
 | 2026-11-03 | **Astra (`gpt-6-astra`, medium) used for #32's final review**, as Julien asked: the data-safety code changed by the audit (state/, entry revisions, recovery lock, engine finiteness, review worker). Why Astra: the last check before #32 is closed, on code that guards users' saved work. Its remarks are weighed against the code-quality rules, not all applied. |
 | 2026-11-03 | **#30 the maintainer's listing rules, in code** (43a5784): `settleListing` in `printed-figures.ts` decides for every extractor; the twelve that skipped a second listing their own way now write through `writeListing`. A re-crawl of all 35 makers runs in the background (`/tmp/gl/recrawl/`, pages cached in `/tmp/gl/recrawl-pages`) for a follow-up data PR once Julien merges PR #2. Archived snapshots for the 43 Ruger GP100/SP101 guns wait: the Internet Archive was offline. |
 | 2026-11-03 | **#31 the published pressure rows are committed** (Julien's decision): `tools/validation/pressure/published-conditions.json`, 12,316 conditions from the four documents, one a line (11 MB, about 0.5 MB in git), each citing its source. The study reads it by default; `--export` makes it again from the PDFs, and the PDF and file runs give identical results. A test pins them: 22 paired conditions with the community components alone, piezoelectric L5 0.318 (GRT Traditional) and 0.805 (R1), R1 under in every series. |

@@ -50,6 +50,11 @@ export class FirearmDialog extends LitElement {
   declare saving: 'idle' | 'saving' | 'failed' | 'conflict';
   /** Counts the dialog's openings: a save still running from an earlier one settles nothing here. */
   private session = 0;
+  /**
+   * Whether anything was typed since the running save began. A field commits on `change`, so text typed
+   * into a field still focused is not in the draft yet: closing the dialog would lose it (#32).
+   */
+  private typedWhileSaving = false;
 
   constructor() {
     super();
@@ -86,7 +91,8 @@ export class FirearmDialog extends LitElement {
     if (!draft) return html`<dialog class="firearm-dialog"></dialog>`;
     const published = draft.source?.kind === 'published';
     return html`
-      <dialog class="firearm-dialog" aria-labelledby="firearm-title" @close=${() => this.dispatchEvent(new Event('close'))}>
+      <dialog class="firearm-dialog" aria-labelledby="firearm-title" @close=${() => this.dispatchEvent(new Event('close'))}
+        @input=${() => { if (this.saving === 'saving') this.typedWhileSaving = true; }}>
         <h2 id="firearm-title">${icon('barrel')} ${t('firearm.one')}</h2>
         <table class="property-table">
           <tbody>
@@ -206,13 +212,14 @@ export class FirearmDialog extends LitElement {
     const draft = this.draft;
     if (!draft || draft.name.trim() === '' || this.invalid.length > 0 || !this.saveFirearm) return;
     this.saving = 'saving';
+    this.typedWhileSaving = false;
     const session = this.session;
     // The barrel carries the gun's name, so a load made with it says which gun it came from.
     const outcome = await this.saveFirearm({ ...draft, name: draft.name.trim(), barrel: { ...draft.barrel, name: draft.name.trim() } });
     if (session !== this.session) return;
     this.saving = outcome === 'saved' ? 'idle' : outcome;
     // An edit made while saving is not in what was saved: the dialog stays open for it.
-    if (outcome === 'saved' && this.draft === draft) this.querySelector('dialog')?.close();
+    if (outcome === 'saved' && this.draft === draft && !this.typedWhileSaving) this.querySelector('dialog')?.close();
   };
 }
 

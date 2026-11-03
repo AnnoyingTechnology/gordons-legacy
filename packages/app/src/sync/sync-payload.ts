@@ -72,9 +72,9 @@ export async function receiveSync(text: string, library: Library, inventory: Inv
       continue;
     }
     try {
-      const local = library.get(id);
-      const load = local ? withPhotosOf(parsed.value, local.load) : parsed.value;
-      if (await library.receive({ id, name, updatedAt, load })) taken++;
+      // The photos come from the entry as stored, read in the write's transaction (Library.receive).
+      const keepPhotos = (stored: Load | undefined) => (stored ? withPhotosOf(parsed.value, stored) : parsed.value);
+      if (await library.receive({ id, name, updatedAt, load: parsed.value }, keepPhotos)) taken++;
     } catch {
       unreadable++;
     }

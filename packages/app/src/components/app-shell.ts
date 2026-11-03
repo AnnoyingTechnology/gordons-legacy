@@ -788,10 +788,11 @@ export class AppShell extends LitElement {
     ];
   }
 
-  /** Waits for the stores to be read: a backup taken before would hold none of their entries (#32). */
+  /** Reads the stores first: a backup taken before they were read held none of their entries (#32). */
   private async downloadBackup(): Promise<void> {
     try {
-      await Promise.all([this.library.whenRead(), this.firearms.whenRead(), this.inventory.whenRead()]);
+      // What is stored, other tabs' saves included, not what this tab last read.
+      await Promise.all([this.library.refresh(), this.firearms.refresh(), this.inventory.refresh()]);
     } catch {
       this.openErrors = [this.context.t('library.backupFailed')];
       return;

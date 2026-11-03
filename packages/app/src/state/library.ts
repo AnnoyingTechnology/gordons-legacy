@@ -33,6 +33,16 @@ export class Library {
     return () => this.listeners.delete(listener);
   }
 
+  /**
+   * Reads the stored entries again: another tab of the app may have saved some since this one read
+   * them. A backup does so first, so that it holds what is stored rather than what this tab saw (#32).
+   */
+  async refresh(): Promise<void> {
+    await this.whenRead();
+    this.entries = (await this.storage.list()).flatMap(checked);
+    this.changed();
+  }
+
   get(id: string): LibraryEntry | undefined {
     return this.entries.find((entry) => entry.id === id);
   }
@@ -58,19 +68,23 @@ export class Library {
 
   /**
    * Takes an entry from another device (sync/), keeping its id and date: it replaces the stored entry
-   * of the same id only when it is newer than that one, compared in the write's own transaction, so a
-   * newer save from another tab is not replaced by an older entry this tab had not seen. Returns whether
-   * it was taken.
+   * of the same id only when it is newer than that one. `merged` makes the load to write from the
+   * stored one (sync gives back the photos a phone was never sent); both the comparison and the merge
+   * read the stored entry in the write's own transaction, so a newer save, or a photo, from another tab
+   * is never replaced by what this tab had cached (#32). Returns whether it was taken.
    */
-  async receive(entry: LibraryEntry): Promise<boolean> {
+  async receive(entry: LibraryEntry, merged: (stored: Load | undefined) => Load = () => entry.load): Promise<boolean> {
     await this.whenRead();
     // Dates are compared as instants: `…:00Z` and `…:00.001Z` don't sort as text, and a date that isn't one is refused.
     const time = Date.parse(entry.updatedAt);
     if (!Number.isFinite(time)) return false;
-    const received: LibraryEntry = { ...entry, revision: newRevision() };
-    // A stored entry without a readable date (an older version's) counts as older than any.
-    const older = (stored: unknown) => !(Date.parse(dateOf(stored)) >= time);
-    if (!(await this.storage.putIf(received, older))) return false;
+    const received = await this.storage.update(entry.id, (stored) => {
+      // A stored entry without a readable date (an older version's) counts as older than any.
+      if (Date.parse(dateOf(stored)) >= time) return undefined;
+      const [readable] = stored === undefined ? [] : checked(stored as LibraryEntry);
+      return { ...entry, load: merged(readable?.load), revision: newRevision() };
+    });
+    if (received === undefined) return false;
     this.replace(received);
     return true;
   }

@@ -21,6 +21,11 @@ export interface RecordStore<T extends { id: string }> {
   putIf(record: T, unchanged: (stored: unknown) => boolean): Promise<boolean>;
   /** The same for several records in one transaction: all are written if `unchanged` accepts each one's stored record, or none. */
   putAllIf(records: readonly T[], unchanged: (stored: unknown, record: T) => boolean): Promise<boolean>;
+  /**
+   * Reads the record stored under `id` (undefined when none), and writes what `change` makes of it, in
+   * one transaction; `change` returns undefined to write nothing. Resolves the record written, if any.
+   */
+  update(id: string, change: (stored: unknown) => T | undefined): Promise<T | undefined>;
   remove(id: string): Promise<void>;
 }
 
@@ -115,6 +120,23 @@ export function indexedDbStore<T extends { id: string }>(name: StoreName, factor
     },
     putIf: (record, unchanged) => putAllIf([record], (stored) => unchanged(stored)),
     putAllIf: (records, unchanged) => putAllIf(records, unchanged),
+    update: async (id, change) => {
+      const database = await open(factory);
+      return new Promise<T | undefined>((resolve, reject) => {
+        const transaction = database.transaction(name, 'readwrite');
+        const store = transaction.objectStore(name);
+        let written: T | undefined;
+        const read = store.get(id);
+        read.onerror = () => reject(read.error);
+        // A `change` that throws aborts the transaction, which rejects below: nothing is written.
+        read.onsuccess = () => {
+          written = change(read.result);
+          if (written !== undefined) store.put(written);
+        };
+        transaction.oncomplete = () => resolve(written);
+        transaction.onabort = () => reject(transaction.error ?? new DOMException('Transaction aborted', 'AbortError'));
+      });
+    },
     remove: async (id) => void (await run('readwrite', (store) => store.delete(id))),
   };
 }
@@ -135,6 +157,11 @@ export function memoryStore<T extends { id: string }>(): RecordStore<T> {
       if (!list.every((record) => unchanged(records.get(record.id), record))) return false;
       for (const record of list) records.set(record.id, structuredClone(record));
       return true;
+    },
+    update: async (id, change) => {
+      const written = change(structuredClone(records.get(id)));
+      if (written !== undefined) records.set(id, structuredClone(written));
+      return written;
     },
     remove: async (id) => void records.delete(id),
   };

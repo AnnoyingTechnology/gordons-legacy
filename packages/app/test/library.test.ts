@@ -304,3 +304,14 @@ test('a save over an entry removed meanwhile does not bring it back unseen (#32)
   await expect(library.save('Old, edited', glock, opened)).rejects.toBeInstanceOf(EntryConflict);
   expect(await storage.list()).toEqual([]);
 });
+
+test("a refreshed library holds what another tab saved, for a backup to carry it (#32)", async () => {
+  const storage = memoryStorage();
+  const thisTab = new Library(storage);
+  await thisTab.save('Load', glock);
+  const otherTab = new Library(storage);
+  await otherTab.ready;
+  await otherTab.save('Saved in another tab', blackout);
+  await thisTab.refresh();
+  expect(thisTab.entries.map((entry) => entry.name).sort()).toEqual(['Load', 'Saved in another tab']);
+});

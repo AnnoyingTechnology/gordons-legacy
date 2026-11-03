@@ -63,13 +63,19 @@ export class FirearmLibrary {
     const entry: FirearmEntry = { id: target?.id ?? crypto.randomUUID(), firearm, updatedAt: new Date().toISOString(), revision: newRevision() };
     if (target === undefined) await this.storage.put(entry);
     else if (!(await this.storage.putIf(entry, (stored) => isRevision(stored, target.revision)))) {
-      this.entries = (await this.storage.list()).flatMap(checked);
-      this.changed();
+      await this.refresh();
       throw new EntryConflict(firearm.name);
     }
     this.entries = [...this.entries.filter((candidate) => candidate.id !== entry.id), entry];
     this.changed();
     return entry;
+  }
+
+  /** Reads the stored guns again, as `Library.refresh` does. */
+  async refresh(): Promise<void> {
+    await this.whenRead();
+    this.entries = (await this.storage.list()).flatMap(checked);
+    this.changed();
   }
 
   async remove(id: string): Promise<void> {

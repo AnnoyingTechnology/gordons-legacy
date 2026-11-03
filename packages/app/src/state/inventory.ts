@@ -138,10 +138,16 @@ export class Inventory {
     this.changed();
   }
 
-  /** Reads the shelf again, so that the next try starts from what is stored, and refuses the write. */
-  private async conflict(name: string): Promise<never> {
+  /** Reads the stored items again, as `Library.refresh` does. */
+  async refresh(): Promise<void> {
+    await this.whenRead();
     this.entries = (await this.storage.list()).flatMap(checked);
     this.changed();
+  }
+
+  /** Reads the shelf again, so that the next try starts from what is stored, and refuses the write. */
+  private async conflict(name: string): Promise<never> {
+    await this.refresh();
     throw new EntryConflict(name);
   }
 
