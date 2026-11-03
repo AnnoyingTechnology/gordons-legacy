@@ -14,7 +14,8 @@ const AIR_MOLAR_MASS = 0.0289644;
 
 /** Speed of sound in dry air at the given temperature, m/s. 340.3 m/s at 15 °C (ISO 2533). */
 export function speedOfSound(temperature: number): number {
-  return Math.sqrt((AIR_HEAT_CAPACITY_RATIO * GAS_CONSTANT * temperature) / AIR_MOLAR_MASS);
+  // The constants apart from the temperature, so that no product overflows before the root (#32).
+  return Math.sqrt((AIR_HEAT_CAPACITY_RATIO * GAS_CONSTANT) / AIR_MOLAR_MASS) * Math.sqrt(temperature);
 }
 
 /**

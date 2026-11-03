@@ -37,6 +37,8 @@ export interface Calibration {
  * when the load can't be simulated.
  */
 export function calibrateToVelocity(load: Load, muzzleVelocity: number): Calibration | undefined {
+  // A target that is no velocity would compare false everywhere and be reported reached (#32).
+  if (!(Number.isFinite(muzzleVelocity) && muzzleVelocity > 0)) return undefined;
   const k0 = load.propellant.heatCapacityRatio;
   const ba0 = load.propellant.burnModel.vivacity;
   const target = roundTo(muzzleVelocity, 1);
@@ -93,6 +95,7 @@ export function calibrateToVelocity(load: Load, muzzleVelocity: number): Calibra
  * needs less powder. Undefined when the load can't be simulated or has no lead time.
  */
 export function chargeForLeadTime(load: Load, leadTime: number): Calibration | undefined {
+  if (!(Number.isFinite(leadTime) && leadTime > 0)) return undefined;
   let mass = load.charge.mass;
   let state = evaluate(load);
   if (state?.leadTime === undefined) return undefined;
@@ -153,6 +156,8 @@ const COEFFICIENT_RANGE = 2;
 /** 21 °C, the temperature powder models refer to, K. */
 const REFERENCE_TEMPERATURE = 294.15;
 const BISECTIONS = 60;
+/** How close the fitted coefficient's velocity must come to its target, m/s: a tenth, as GRT shows. */
+const FIT_TOLERANCE = 0.1;
 
 /**
  * Fits the powder's temperature coefficients to velocities measured with the load's charge at a cold,
@@ -207,7 +212,10 @@ export function fitTemperatureCoefficients(
       if (velocity === undefined || velocity < target) low = middle;
       else high = middle;
     }
-    return (low + high) / 2;
+    // A coefficient the bisection closed on beside loads that can't be simulated is no fit (#32).
+    const fitted = (low + high) / 2;
+    const velocity = velocityWith(fitted);
+    return velocity !== undefined && Math.abs(velocity - target) <= FIT_TOLERANCE ? fitted : undefined;
   };
   const result: TemperatureCoefficients = {};
   // A coefficient acts only on its side of 21 °C.

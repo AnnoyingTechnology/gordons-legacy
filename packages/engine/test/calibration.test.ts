@@ -77,4 +77,19 @@ describe('fitTemperatureCoefficients', () => {
     const at = (celsius: number, velocity: number) => ({ temperature: celsius + 273.15, velocity });
     expect(fitTemperatureCoefficients(load(), at(21, 410), at(25, 400), undefined)).toEqual({});
   });
+
+  it('gives no coefficient when the one it closes on cannot be simulated (#32)', () => {
+    // 100 m/s at 50 °C is far below anything the powder gives: the bisection runs into coefficients so
+    // low that the load no longer starts, and used to return one of them.
+    const at = (celsius: number, velocity: number) => ({ temperature: celsius + 273.15, velocity });
+    expect(fitTemperatureCoefficients(load(), at(21, 410), undefined, at(50, 100))).toEqual({});
+  });
+});
+
+describe('a search target that is no number (#32)', () => {
+  it('is refused, never reported reached', () => {
+    expect(calibrateToVelocity(load(), Number.NaN)).toBeUndefined();
+    expect(chargeForLeadTime(load(), Number.NaN)).toBeUndefined();
+    expect(chargeForLeadTime(load(), -1e-3)).toBeUndefined();
+  });
 });

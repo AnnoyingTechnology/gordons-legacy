@@ -77,8 +77,8 @@ const TEXT_FIELDS: Array<{ key: TextKey; label: MessageKey }> = [
 /**
  * GRT's cartridge designer: the load's caliber definition (general data, the case's and the chamber's
  * outlines, the rifling) beside a technical drawing that follows every edit. Fires `apply-caliber` with
- * the definition to fill the load from it, `save-caliber` to keep it as one of the user's components, and
- * `close`.
+ * the definition to fill the load from it and `close`; `saveCaliber` keeps it as one of the user's
+ * components, and the designer says it is saved only once the store has it.
  */
 export class CartridgeDesigner extends LitElement {
   static override properties = {
@@ -86,7 +86,8 @@ export class CartridgeDesigner extends LitElement {
     load: { attribute: false },
     context: { attribute: false },
     draft: { state: true },
-    saved: { state: true },
+    saveCaliber: { attribute: false },
+    saving: { state: true },
   };
 
   declare open: boolean;
@@ -94,13 +95,17 @@ export class CartridgeDesigner extends LitElement {
   declare context: UiContext;
   /** The definition being edited; undefined until opened. */
   declare draft: CaliberDefinition | undefined;
-  declare saved: boolean;
+  /** Keeps a definition among the user's components; rejects when the browser's storage refuses it. */
+  declare saveCaliber: ((definition: CaliberDefinition) => Promise<void>) | undefined;
+  /** Where the last save of the open draft stands. */
+  declare saving: 'idle' | 'saving' | 'saved' | 'failed';
 
   constructor() {
     super();
     this.open = false;
     this.draft = undefined;
-    this.saved = false;
+    this.saveCaliber = undefined;
+    this.saving = 'idle';
   }
 
   protected override createRenderRoot(): HTMLElement {
@@ -110,7 +115,7 @@ export class CartridgeDesigner extends LitElement {
   protected override willUpdate(changed: Map<string, unknown>): void {
     if (changed.has('open') && this.open) {
       this.draft = startingDefinition(this.load);
-      this.saved = false;
+      this.saving = 'idle';
     }
   }
 
@@ -190,8 +195,9 @@ export class CartridgeDesigner extends LitElement {
         </div>
         ${check.ok ? nothing : html`<ul class="issues">${check.issues.map((issue) => html`<li class="error">${issue.path}: ${issue.message}</li>`)}</ul>`}
         <footer class="designer-actions">
-          ${this.saved ? html`<span class="note">${t('designer.saved')}</span>` : nothing}
-          <button ?disabled=${!check.ok} @click=${() => this.fire('save-caliber')}>${icon('database')} ${t('designer.save')}</button>
+          ${this.saving === 'saved' ? html`<span class="note">${t('designer.saved')}</span>` : nothing}
+          ${this.saving === 'failed' ? html`<span class="note" role="alert">${t('designer.saveFailed')}</span>` : nothing}
+          <button ?disabled=${!check.ok || this.saving === 'saving'} @click=${() => void this.save()}>${icon('database')} ${t('designer.save')}</button>
           <button ?disabled=${!check.ok} @click=${() => this.fire('apply-caliber')}>${icon('cartridge')} ${t('designer.apply')}</button>
         </footer>
       </dialog>
@@ -242,7 +248,7 @@ export class CartridgeDesigner extends LitElement {
 
   private edit(change: Partial<CaliberDefinition>): void {
     this.draft = { ...this.draft!, ...change };
-    this.saved = false;
+    this.saving = 'idle';
   }
 
   private editCase(key: keyof CaseDimensions, value: number): void {
@@ -264,9 +270,21 @@ export class CartridgeDesigner extends LitElement {
     this.edit({ rifling: { ...current, [key]: value } });
   }
 
-  private fire(name: 'apply-caliber' | 'save-caliber'): void {
+  private fire(name: 'apply-caliber'): void {
     this.dispatchEvent(new CustomEvent(name, { detail: this.draft, bubbles: true }));
-    if (name === 'save-caliber') this.saved = true;
+  }
+
+  /** A save the storage refuses leaves the draft open and says so, instead of "Saved" (#32). */
+  private async save(): Promise<void> {
+    const draft = this.draft;
+    if (!draft || !this.saveCaliber) return;
+    this.saving = 'saving';
+    try {
+      await this.saveCaliber(draft);
+      if (this.draft === draft) this.saving = 'saved';
+    } catch {
+      if (this.draft === draft) this.saving = 'failed';
+    }
   }
 }
 

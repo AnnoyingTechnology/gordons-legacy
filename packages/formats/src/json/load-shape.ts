@@ -3,7 +3,7 @@ import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, type Firearm, type FirearmSourc
 import type { CaliberDefinition, Cartridge, CaseDimensions, ChamberDimensions, Rifling, StandardMaxPressures } from '../load/cartridge.ts';
 import type { ComponentInfo } from '../load/component-info.ts';
 import type { Charge, ImportOrigin, Ladder, Load, Note, Picture, ShotGroup } from '../load/load.ts';
-import { LOAD_FORMAT, LOAD_SCHEMA_VERSION } from '../load/load.ts';
+import { LOAD_FORMAT, LOAD_SCHEMA_VERSION, MAXIMUM_SHOT_GROUP_HITS } from '../load/load.ts';
 import type { MeasuredCharge, MeasurementSeries, Shot } from '../load/measurement.ts';
 import type { Projectile, ProjectileBase } from '../load/projectile.ts';
 import type { GrtBurnModel, Propellant, PropellantCalibration } from '../load/propellant.ts';
@@ -244,7 +244,7 @@ const picture = {
 const shotGroup = {
   title: 'string',
   distance: 'positive',
-  hits: { arrayOf: { object: { x: 'number', y: 'number' } } },
+  hits: { arrayOf: { object: { x: 'number', y: 'number' } }, atMost: MAXIMUM_SHOT_GROUP_HITS },
   picture: { optional: { object: { index: 'integer', metresPerPixel: 'positive' } } },
   note: 'string',
 } satisfies ShapeOf<ShotGroup>;

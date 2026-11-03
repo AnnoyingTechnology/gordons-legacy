@@ -33,6 +33,12 @@ export interface Load {
   unmapped?: Record<string, string>;
 }
 
+/**
+ * The most hits a group holds. A target carries a few dozen; the group's statistics compare every pair
+ * of hits, and a crafted file of 100,000 hung the app (#32).
+ */
+export const MAXIMUM_SHOT_GROUP_HITS = 1000;
+
 /** A group of hits on a target, measured on a photo of the target or entered by hand. */
 export interface ShotGroup {
   title: string;

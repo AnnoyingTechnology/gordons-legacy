@@ -20,7 +20,8 @@ export type FieldSpec =
   | { optional: FieldSpec }
   | { literal: string | number }
   | { object: Shape }
-  | { arrayOf: FieldSpec }
+  /** A list; `atMost` bounds its length where a long one would cost quadratic work. */
+  | { arrayOf: FieldSpec; atMost?: number }
   /** An object whose values are all strings, such as `unmapped`. */
   | 'stringRecord'
   /** Objects told apart by the value of one field, such as a projectile base's `shape`. */
@@ -65,6 +66,7 @@ export function checkValue(value: unknown, spec: FieldSpec, path: string, log: I
   if ('literal' in spec) return expect(value === spec.literal, value, JSON.stringify(spec.literal), path, log);
   if ('arrayOf' in spec) {
     if (!Array.isArray(value)) return expect(false, value, 'a list', path, log);
+    if (spec.atMost !== undefined && value.length > spec.atMost) return expect(false, value, `a list of at most ${spec.atMost}`, path, log);
     return value.map((item, index) => checkValue(item, spec.arrayOf, `${path}[${index}]`, log));
   }
   if ('object' in spec) return checkObject(value, spec.object, path, log);

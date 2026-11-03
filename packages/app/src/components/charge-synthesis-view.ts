@@ -2,7 +2,7 @@ import type { Load, Propellant } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
 import { criteriaProblems, DEFAULT_CRITERIA, synthesizeCharges, type SynthesisCriteria, type SynthesisPoint, type SynthesisResult } from '../analysis/charge-synthesis.ts';
 import { assessLoad, pressureLimits } from '../analysis/load-assessment.ts';
-import { powderFactors } from '../analysis/powder-factors.ts';
+import { byCombinedFactor, powderFactors } from '../analysis/powder-factors.ts';
 import { withPropellant } from '../editor/components.ts';
 import { synthesisCandidate } from '../editor/synthesis-candidate.ts';
 import { originLabel, type ComponentEntry } from '../state/components.ts';
@@ -210,7 +210,7 @@ export class ChargeSynthesisView extends LitElement {
     return this.entries
       .filter((entry): entry is PowderEntry => entry.kind === 'propellant')
       .filter((entry) => scope === 'all' || Math.abs(powderFactors(entry.value).combined / own - 1) <= scope)
-      .sort((a, b) => powderFactors(a.value).combined - powderFactors(b.value).combined);
+      .sort((a, b) => byCombinedFactor(powderFactors(a.value), powderFactors(b.value)));
   }
 
   private isStale(run: Run): boolean {

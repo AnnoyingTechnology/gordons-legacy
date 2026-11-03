@@ -37,10 +37,11 @@ Load
 ├─ propellant    the powder model (Propellant), with burnModel, and calibration when the model
 │                was fitted to a measured velocity (target, result, pressures before and after)
 ├─ charge        mass and temperature
-├─ ladder        optional
+├─ ladder        optional: 2 to 10 charges (GRT's range) and the mass each step subtracts
 ├─ measurements  chronograph data (MeasurementSeries → MeasuredCharge → Shot)
 ├─ notes, pictures
-├─ shotGroups    optional: groups on targets (distance, hits in m, a photo by index with its scale)
+├─ shotGroups    optional: groups on targets (distance, at most 1,000 hits in m, a photo by index
+│                with its scale)
 ├─ importedFrom  optional: source format, writer version, file name
 └─ unmapped      optional
 ```

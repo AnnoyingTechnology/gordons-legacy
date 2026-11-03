@@ -13,7 +13,7 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
   documents (`tools/validation/pressure/`, `docs/model/validation.md`). The default engine has read up to
   22 % under published pressures on one powder model and 8 % over on another; the app's safety wording
   says so. Bottleneck: powder models and bullet lengths, not documents.
-- **Tests:** 970 (Vitest), `tsc`, production build; CI deploys GitHub Pages from `main`.
+- **Tests:** 980 (Vitest), `tsc`, production build; CI deploys GitHub Pages from `main`.
 - **Docs:** `docs/PLAN.md` (plan), `docs/model/` (engines, validation, pressure sources), `docs/formats/`,
   `docs/firearm-data.md`, `docs/ui-audit.md`, `docs/code-audit.md`, each package's README.
 
@@ -23,15 +23,15 @@ Pickup 2026-11-02, end of session (checkout `/home/julien/Documents/Dev/gordons-
 path below no longer exists). Done today: #34 Undo/Redo and Reopen (closed), #39 tab fade (closed), #10
 stock and #21 bench ↔ phone QR sync (built; #21 open until tried on a real phone), #30 seven more makers
 in data PR #2 (35 makers; Nighthawk, Magnum Research, Seekins need a browser), #22/#31 pressure study on
-four published documents with the app's safety wording changed on Astra's advice, #32 four audit passes
-(editor input, the day's changes, untrusted files, engines and review worker), #35 stale docs fixed (R2 excluded).
+four published documents with the app's safety wording changed on Astra's advice, #32 five audit passes
+(editor input, the day's changes, untrusted files, engines and review worker, searches and assistants), #35 stale docs fixed (R2 excluded).
 
 Waiting on Julien: data PR #2 merge; #30's two questions (conflicting listings, archived snapshots);
 #31's licensing question (may makers' rows be committed as fixtures) and the new safety wording; #28
 (modal converter); #21 a real-device try. Another agent: #19.
 
 Next for an agent: more #22 data (the bottleneck is powder models and bullet lengths, not documents);
-#32's fifth pass (the engine's searches, the app's assistants, the data and CLI packages; under way); native review of the
+#32: every package has now had a pass; a next one could take the UI shell and dialogs not yet read (app-shell, library-view, new-load-dialog); native review of the
 translations needs people.
 
 Earlier pickup, 2026-10-16: #34 document workflow audit and #32 code audit. The requested guided
@@ -211,6 +211,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 
 | Date | Entry |
 |---|---|
+| 2026-11-02 | **#32 fifth pass: the engine's searches, the app's assistants, the data and CLI packages.** Codex (`gpt-6.1-sol`, xhigh) reproduced fourteen faults; data and CLI had none of its own, and two CLI faults and two argument overflows were found beside it. Notable: the cartridge designer said "Saved" on a refused save, an older photo replaced a newer one, the temperature fit could return an unsimulatable coefficient, ticks looped for ever, 100,000 hits hung the display. Figures that are no number now show as `—`; a shot group holds at most 1,000 hits (format change, documented in `docs/formats/json-v1.md`). All fixed with tests; UI messages checked in Chromium. |
 | 2026-11-02 | **#32 fourth pass: the engines and the review worker.** Codex (`gpt-6.1-sol`, xhigh) reproduced six faults with extreme but valid loads: R1 quadratic in its samples (minutes), infinite recoil returned as a success by both engines (near-zero gun mass), an endless retry in charge synthesis past 2^53, R1's temperature review running GRT Traditional and exhausting memory, a crashed worker leaving the review pending for ever, a superseded review delivered without a worker. All fixed with tests; the app now says when a review failed (`assessment.failed`, five languages). See `docs/code-audit.md`. |
 | 2026-11-02 | **#32 third pass: the parsers of files a user opens.** Codex (`gpt-6.1-sol`, xhigh) reproduced eleven faults — exceptions out of every XML importer (a bad character reference, deep nesting), quadratic time or memory (a long number, GRTrace shots and notes, ragged CSV), argument overflows (`Math.max(...)`, `push(...)`), an endless ladder, a `__proto__` variant tag passing validation. All fixed, each kept as a test (`hostile-files.test.ts`, `chronograph-csv.test.ts`); `docs/code-audit.md` has the row. 968 tests. |
 | 2026-11-02 | **Codex (`gpt-6.1-sol`, xhigh) reviewed the stock and the sync; nine defects fixed.** What a camera reads is untrusted: a frame may no longer claim more than 2,000 frames (one claiming four billion threw, one claiming a million allocated), a frame claiming another count no longer discards what was read, and an exchange stops decompressing at 20 MB (a few kB inflated to 40 MB are refused, tested). Entries are read one at a time, a `null` or unreadable one counted instead of aborting the exchange half applied; dates are compared as instants and a non-date refused (`…:00Z` sorted after `…:00.001Z` as text). A camera granted after the dialog closed is stopped (a generation counter), and a failed `play()` releases it. Stock rows are keyed by item, so a rename that reorders the table keeps focus on its own row. A batch is written in one IndexedDB transaction (`RecordStore.putAll`), all or nothing, the confirm button disabled while it writes, and the dialog closes only when it succeeded. A sender with more than 2,000 frames says to use a backup file. 960 tests; both browser walks pass again. |

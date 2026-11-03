@@ -15,6 +15,7 @@ export { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, type Firearm, type FirearmSourc
 export {
   LOAD_FORMAT,
   LOAD_SCHEMA_VERSION,
+  MAXIMUM_SHOT_GROUP_HITS,
   seatingDepth,
   type Charge,
   type ImportOrigin,

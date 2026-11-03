@@ -154,7 +154,7 @@ export class LoadEditor extends LitElement {
               this.emit(withCaliber(this.load, event.detail));
               this.designing = false;
             }}
-            @save-caliber=${(event: CustomEvent<CaliberDefinition>) => void this.components?.addCaliber(event.detail)}
+            .saveCaliber=${this.components ? (definition: CaliberDefinition) => this.components!.addCaliber(definition) : undefined}
             @close=${() => (this.designing = false)}
           ></gl-cartridge-designer>
           <gl-bore-area-dialog

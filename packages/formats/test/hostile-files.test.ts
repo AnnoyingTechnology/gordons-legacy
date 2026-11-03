@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { importGrtCaliber, importGrtLoad, importGrtrace, ladderChargeMasses, parseLoad, serializeLoad } from '@gordons-legacy/formats';
+import { importGrtCaliber, importGrtLoad, importGrtrace, ladderChargeMasses, MAXIMUM_SHOT_GROUP_HITS, parseLoad, serializeLoad } from '@gordons-legacy/formats';
 import { parseGrtNumber } from '../src/grt/grt-number.ts';
 import { readFixture } from './fixtures.ts';
 
@@ -59,6 +59,13 @@ describe('a hostile saved load', () => {
     const result = parseLoad(JSON.stringify({ ...valid, ladder: { steps: 1e308, massStep: 5e-324 } }));
     expect(result.ok).toBe(false);
     expect(ladderChargeMasses({ charge: { mass: 0.001, temperature: 294 }, ladder: { steps: 1e308, massStep: 5e-324 } })).toHaveLength(10);
+  });
+
+  it('refuses a shot group of more hits than any target holds', () => {
+    const hits = Array.from({ length: MAXIMUM_SHOT_GROUP_HITS + 1 }, (_, index) => ({ x: index * 0.001, y: 0 }));
+    const group = { title: 'Group', distance: 100, hits, note: '' };
+    expect(parseLoad(JSON.stringify({ ...valid, shotGroups: [group] })).ok).toBe(false);
+    expect(parseLoad(JSON.stringify({ ...valid, shotGroups: [{ ...group, hits: hits.slice(1) }] })).ok).toBe(true);
   });
 
   it('refuses a variant tag that names an inherited property', () => {
