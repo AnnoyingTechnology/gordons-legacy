@@ -13,7 +13,7 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
   documents (`tools/validation/pressure/`, `docs/model/validation.md`). The default engine has read up to
   22 % under published pressures on one powder model and 8 % over on another; the app's safety wording
   says so. Bottleneck: powder models and bullet lengths, not documents.
-- **Tests:** 1,009 (Vitest), `tsc`, production build; CI deploys GitHub Pages from `main`.
+- **Tests:** 1,011 (Vitest), `tsc`, production build; CI deploys GitHub Pages from `main`.
 - **Docs:** `docs/PLAN.md` (plan), `docs/model/` (engines, validation, pressure sources), `docs/formats/`,
   `docs/firearm-data.md`, `docs/ui-audit.md`, `docs/code-audit.md`, each package's README.
 
@@ -26,7 +26,7 @@ revisions for loads, guns and stock (`entry-revision.ts`), one recovery-keeping 
 (`recovery-lock.ts`), retried startup reads (`stored-reading.ts`), and the selected engine everywhere.
 See `docs/code-audit.md` and the Log. #32 is left open for Julien to close or extend.
 
-Waiting on Julien: data PR #2 merge; #30's two questions (conflicting listings, archived snapshots);
+Waiting on Julien: data PR #2 merge, then PR #3 (the refresh under the listing rules); #30's two questions (conflicting listings, archived snapshots);
 #31's licensing question (may makers' rows be committed as fixtures) and the new safety wording; #28
 (modal converter); #21 a real-device try. Another agent: #19.
 
@@ -217,6 +217,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 
 | Date | Entry |
 |---|---|
+| 2026-11-03 | **#30 refresh done: data PR #3** (stacked on #2), all 35 makers read again under the listing rules: 9,167 guns, 488 files valid, 0 checker problems. Girsan rebuilt its site (extractor rewritten, 92 guns; `Weight (Empty)` now unstated basis); Kel-Tec answers behind a Cloudflare bot challenge, not circumvented, its 42 guns kept. The export keeps a published gun when a re-reading names another cartridge (added, named apart) or only lost figures. Left: the 43 Ruger GP100/SP101 guns from the Wayback Machine (`ruger.ts --archived gp100 --archived sp101`) once the archive answers again. |
 | 2026-11-03 | **Astra's #32 review: three findings, all fixed.** A sync merged the photos it does not carry from this tab's cached load, so it could delete a photo another tab had saved: the merge now reads the stored entry in the write's transaction (`RecordStore.update`, `Library.receive(entry, merged)`). A backup serialised this tab's lists, missing what other tabs had saved: the stores now `refresh()` before a backup. Text typed in the gun dialog during a save, still in its focused field, was lost when the dialog closed: it now stays open. |
 | 2026-11-03 | **Astra (`gpt-6-astra`, medium) used for #32's final review**, as Julien asked: the data-safety code changed by the audit (state/, entry revisions, recovery lock, engine finiteness, review worker). Why Astra: the last check before #32 is closed, on code that guards users' saved work. Its remarks are weighed against the code-quality rules, not all applied. |
 | 2026-11-03 | **#30 the maintainer's listing rules, in code** (43a5784): `settleListing` in `printed-figures.ts` decides for every extractor; the twelve that skipped a second listing their own way now write through `writeListing`. A re-crawl of all 35 makers runs in the background (`/tmp/gl/recrawl/`, pages cached in `/tmp/gl/recrawl-pages`) for a follow-up data PR once Julien merges PR #2. Archived snapshots for the 43 Ruger GP100/SP101 guns wait: the Internet Archive was offline. |

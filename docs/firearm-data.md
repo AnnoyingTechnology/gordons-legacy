@@ -381,3 +381,13 @@ Every extractor settles a name read again through `settleListing` (`tools/data/f
 Nothing is averaged: a figure no page printed never enters a record. Guns whose pages are gone may be
 read from archived snapshots, cited as the archive and its date (not done yet: the Internet Archive
 was offline on 2026-11-03).
+
+## Refresh of 2026-11-03
+
+All 35 makers read again under the listing rules above (data PR #3): 9,167 guns. Two sites had changed:
+
+- **Girsan** left WordPress: the pages are now `product-detail.php?weapon=…`, each declaring its gun to
+  its script (`girsan.ts`). The new weight label, `Weight (Empty)`, does not say whether the magazine
+  is in, so its masses are `unstated` where they were `without-magazine`.
+- **Kel-Tec** answers every request, its `robots.txt` included, with a Cloudflare bot challenge. A
+  challenge is a refusal: it is not circumvented, and the 42 published Kel-Tec guns are kept as read.
