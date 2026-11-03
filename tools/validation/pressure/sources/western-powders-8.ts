@@ -53,6 +53,11 @@ const CONTINUED = / \(continued\)$/;
 
 /** A line that looks like a row of the tables. */
 const ROW_LIKE = /^\d{2,3}\D.*\d\.\d{3}C?$/;
+/**
+ * A pressure note some cartridges print between their name and their `Barrel:` line (`55,000 PSI --
+ * STANDARD SAAMI COMMERCIAL SPECIFICATIONS` under `223 REMINGTON`): the name is the line above it.
+ */
+const PRESSURE_NOTE = /^\d[\d,]*\s*(?:PSI|CUP)\b/;
 
 /**
  * Reads every complete row, with the cartridge, powder, barrel and case it is printed under. A line that
@@ -69,7 +74,7 @@ export function readWesternRows(text: string): { rows: WesternRow[]; unread: str
   lines.forEach((line, index) => {
     const next = lines[index + 1] ?? '';
     if (next.startsWith('Barrel:')) {
-      cartridge = line.replace(CONTINUED, '');
+      cartridge = (PRESSURE_NOTE.test(line) ? (lines[index - 1] ?? '') : line).replace(CONTINUED, '');
       barrels.set(cartridge, next.replace(/\s/g, ''));
       const caseLine = lines[index + 2] ?? '';
       if (caseLine.startsWith('Case:')) cases.set(cartridge, /^Case:([^¦]*)/.exec(caseLine)?.[1]?.replace(/\s/g, '') ?? '');
@@ -79,6 +84,7 @@ export function readWesternRows(text: string): { rows: WesternRow[]; unread: str
       cartridge = line.replace(CONTINUED, '');
       return;
     }
+    if (PRESSURE_NOTE.test(line)) return;
     const powderMatch = POWDER.exec(line);
     if (powderMatch) {
       powder = `${powderMatch[1]} ${powderMatch[2]}`;
@@ -143,6 +149,19 @@ const PROJECTILES: Record<string, string> = {
   '180NOSLERE-TIP': 'nosler-e-tip-180',
   '168BARNESTTSX': 'barnes-ttsx-168',
   '180BARNESTTSX': 'barnes-ttsx-180',
+  '168SIERRATMK': 'sierra-tmk-168',
+  '175SIERRATMK': 'sierra-tmk-175',
+  '110SIERRAHP': 'sierra-hp-110',
+  '165SIERRAHPBTGK': 'sierra-gameking-165-hpbt',
+  '180SIERRASBTGK': 'sierra-gameking-180-sbt',
+  '168HDYA-MAX': 'hornady-a-max-168',
+  '150HDYBTSP': 'hornady-btsp-150',
+  '165HDYSST': 'hornady-sst-165',
+  '200BARNESLRXBT': 'barnes-lrx-200',
+  '150NOSLERA-BOND': 'nosler-accubond-150',
+  '200NOSLERA-BOND': 'nosler-accubond-200',
+  '220NOSLERPART': 'nosler-partition-220',
+  // Not mapped: `225 HDYBTHP`, which Hornady sells today only as the ELD Match, a different bullet.
 };
 
 /** The guide's powder heading as a maker and product: `ACCURATE MAGPRO` → Accurate, MAGPRO. */

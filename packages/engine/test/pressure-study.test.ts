@@ -149,6 +149,22 @@ describe("reading the Western Powders guide's rows", () => {
     expect(rows[1]).toMatchObject({ cartridge: '300 WINCHESTER SHORT MAGNUM (WSM)', powder: 'RAMSHOT BIG GAME', start: { velocity: 950 } });
   });
 
+  it('names a cartridge whose pressure note stands between its name and its barrel, and keeps it across pages', () => {
+    const guide = [
+      '223 REMINGTON',
+      '55,000 PSI -- STANDARD SAAMI COMMERCIAL SPECIFICATIONS',
+      'Barrel: 2 4 ” ¦ Tw ist: 1 - 1 2 ” ¦ Primer: WIN WSR ¦ Bullet D iameter: 0 .2 2 4 ”',
+      'Case: WIN ¦ Max Case Length: 1 .7 6 0 ” ¦ Trim Length: 1 .7 5 0 ”',
+      'ACCURATE 5744',
+      '5 5 SIE R R A SBT 2 1 .5 2 , 6 4 1 2 3 .8 2 , 9 8 5 4 3 , 5 0 0 2 .1 2 0 C',
+      '223 REMINGTON (continued)',
+      '55,000 PSI -- STANDARD SAAMI COMMERCIAL SPECIFICATIONS',
+      'ACCURATE LT-30',
+      '4 0 BE R GE R FBV 2 1 .0 3 , 3 5 6 2 3 .4 3 , 6 7 6 5 4 , 9 3 6 2 .2 0 0',
+    ].join('\n');
+    expect(readWesternRows(guide).rows.map((row) => row.cartridge)).toEqual(['223 REMINGTON', '223 REMINGTON']);
+  });
+
   it('reports, rather than reads, a row whose mould number would be read as a charge', () => {
     const { rows, unread } = readWesternRows(GUIDE);
     expect(rows.map((row) => row.mass)).toEqual([240, 200]);
@@ -327,10 +343,11 @@ describe('the published rows, as committed (maintainer, 2026-11-03)', () => {
   });
 
   it('gives the study its results: GRT Traditional over the piezoelectric measurements, R1 under them', () => {
-    expect(results.filter((result) => result.status === 'paired')).toHaveLength(22);
+    expect(results.filter((result) => result.status === 'paired')).toHaveLength(48);
     const [grt, research] = piezoelectric.pressure;
-    expect(grt!.loss.factor5).toBeCloseTo(0.318, 3);
-    expect(research!.loss.factor5).toBeCloseTo(0.805, 3);
+    expect(grt!.series).toBe(20);
+    expect(grt!.loss.factor5).toBeCloseTo(0.212, 3);
+    expect(research!.loss.factor5).toBeCloseTo(1.007, 3);
     expect(research!.underPredicted).toBe(1);
   });
 });

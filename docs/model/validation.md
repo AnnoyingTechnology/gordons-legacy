@@ -108,19 +108,24 @@ marked published, specification or assumed, and a sensitivity check that moves e
 the conditions paired in the baseline. Sources and their limits: [pressure-sources.md](pressure-sources.md).
 Reviewed by Astra (`gpt-6-astra`, medium) before this was written; its corrections are in.
 
-Of 12,182 conditions read from the two documents, 22 can be simulated: the others need a powder model,
+Of the 12,316 conditions read from the four documents (committed, `tools/validation/pressure/
+published-conditions.json`), 48 can be simulated with the community components alone (2026-11-03: 22
+before twelve more bullet lengths were found and a reader fault fixed): the others need a powder model,
 a caliber definition or a bullet length we don't have. Every powder model's fitting provenance is
 unknown, and case capacity, several bullet lengths (retailer listings, forum measurements), boat-tail
-geometry (a flat base is assumed) and powder temperature are assumed.
+geometry (a flat base is assumed) and powder temperature are assumed. A test pins these results, so
+every change to an engine is measured against them.
 
-**Western Powders guide 8.0, SAAMI piezo, Accurate MAGPRO, 7 maximum-charge conditions (7 series,
-.300 WSM, .300 PRC, .30 Nosler).** GRT Traditional had lower asymmetric pressure loss than R1: L5 0.318
-against 0.805. Geometric mean biases were +8.4 % and −14.9 %; GRT Traditional under-predicted two
-conditions, R1 all seven. The symmetric mean absolute log errors were almost identical, 0.160 and
-0.161: the preference reflects mainly the explicit penalty for under-prediction. The paired difference
-L5(R1) − L5(GRT) was +0.487, with an exploratory series-bootstrap interval of 0.139 to 0.847; with case
-capacity 2 % smaller, or GRT's high shot-start pressure for monolithic copper bullets, that interval
-includes zero, though the point estimate still favours GRT Traditional.
+**Western Powders guide 8.0, SAAMI piezo, Accurate MAGPRO, 20 maximum-charge conditions (20 series,
+.300 WSM, .300 PRC, .30 Nosler).** GRT Traditional had much lower asymmetric pressure loss than R1: L5
+0.212 against 1.007. Geometric mean biases were +6.6 % and −18.2 % (medians +4.9 % and −21.2 %); GRT
+Traditional under-predicted 30 % of the series, R1 all of them. The symmetric mean absolute log errors
+were 0.113 and 0.201, so the preference no longer rests mainly on the under-prediction penalty, as it
+did on the first seven series. The paired difference L5(R1) − L5(GRT) was +0.795, exploratory
+series-bootstrap interval 0.575 to 1.004, and stays clear of zero under every sensitivity variant
+(case capacity ±2 %, bullet length ±0.5 mm, powder temperature ±5 °C, shot start at either end of
+GRT's range; the narrowest, case capacity −2 %, gives 0.433 to 0.903). Within 90 % of the SAAMI
+maximum (10 series), GRT Traditional read +7.9 %, never more than 0.5 % under; R1 −17.9 %.
 
 The largest discrepancy was GRT Traditional's +43.4 % on the .300 WSM, 240 gr Sierra MatchKing,
 compressed MAGPRO condition. Its reconstruction assumes the case capacity, a forum-sourced bullet length

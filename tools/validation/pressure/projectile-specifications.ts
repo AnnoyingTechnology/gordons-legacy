@@ -98,7 +98,7 @@ export const PROJECTILE_SPECIFICATIONS: ProjectileSpecification[] = [
 ];
 
 /** A length that retailers list for a maker's bullet, the maker's own page giving none we could read. */
-function listed(key: string, maker: string, product: string, grains: number, inches: number, where: string, construction: ProjectileConstruction): ProjectileSpecification {
+function listed(key: string, maker: string, product: string, grains: number, inches: number, where: string, construction: ProjectileConstruction, read = '2026-11-02'): ProjectileSpecification {
   return {
     key,
     maker,
@@ -107,7 +107,7 @@ function listed(key: string, maker: string, product: string, grains: number, inc
     diameter: 0.308 * units.INCH,
     length: inches * units.INCH,
     lengthStatus: 'assumed',
-    lengthSource: `${inches} in, retailers' listings (${where}, read 2026-11-02)`,
+    lengthSource: `${inches} in, retailers' listings (${where}, read ${read})`,
     base: { shape: 'flat' },
     construction,
   };
@@ -170,6 +170,39 @@ PROJECTILE_SPECIFICATIONS.push(
     base: { shape: 'flat' },
     construction: 'rifle-jacketed',
   },
+);
+
+/** A length from Nosler's own product page, which prints "Overall Length (OAL) (in.)". */
+function nosler(key: string, product: string, grains: number, inches: number, page: string, note = ''): ProjectileSpecification {
+  return {
+    key,
+    maker: 'Nosler',
+    product,
+    mass: grains * units.GRAIN,
+    diameter: 0.308 * units.INCH,
+    length: inches * units.INCH,
+    lengthStatus: 'specification',
+    lengthSource: `Nosler's product page, "Overall Length (OAL) (in.): ${inches.toFixed(3)}" (nosler.com/${page}, read 2026-11-03)${note}`,
+    // Nosler names the base (boat tail or flat) but gives none of a boat-tail's dimensions: flat, as for the others.
+    base: { shape: 'flat' },
+    construction: 'rifle-jacketed',
+  };
+}
+
+// The magnum bullets of Western's guide that its MAGPRO rows name (#22, 2026-11-03). Sierra's and
+// Hornady's own pages print no length, so these are Blue Collar Reloading's listings, read first-hand.
+PROJECTILE_SPECIFICATIONS.push(
+  listed('sierra-tmk-168', 'Sierra', 'Tipped MatchKing 30 cal 168 gr, 7768', 168, 1.357, 'bluecollarreloading.com', 'rifle-jacketed', '2026-11-03'),
+  listed('sierra-tmk-175', 'Sierra', 'Tipped MatchKing 30 cal 175 gr, 7775', 175, 1.384, 'bluecollarreloading.com', 'rifle-jacketed', '2026-11-03'),
+  listed('sierra-hp-110', 'Sierra', 'Varminter HP 30 cal 110 gr, 2110', 110, 0.795, 'bluecollarreloading.com', 'rifle-jacketed', '2026-11-03'),
+  listed('sierra-gameking-165-hpbt', 'Sierra', 'GameKing HPBT 30 cal 165 gr, 2140', 165, 1.195, 'bluecollarreloading.com', 'rifle-jacketed', '2026-11-03'),
+  listed('hornady-a-max-168', 'Hornady', 'A-MAX 30 cal 168 gr, 30502', 168, 1.282, 'bluecollarreloading.com', 'rifle-jacketed', '2026-11-03'),
+  listed('hornady-btsp-150', 'Hornady', 'InterLock BTSP 30 cal 150 gr, 3033', 150, 1.096, 'bluecollarreloading.com', 'rifle-jacketed', '2026-11-03'),
+  listed('hornady-sst-165', 'Hornady', 'SST 30 cal 165 gr, 30452', 165, 1.274, 'bluecollarreloading.com', 'rifle-jacketed', '2026-11-03'),
+  listed('barnes-lrx-200', 'Barnes', 'LRX BT 30 cal 200 gr, 30374', 200, 1.624, 'bluecollarreloading.com', 'rifle-solid-copper', '2026-11-03'),
+  nosler('nosler-accubond-150', 'AccuBond 30 cal 150 gr, 56719', 150, 1.2, '30-caliber-150gr-accubond-50ct.html', '; bluecollarreloading.com lists 1.230 in'),
+  nosler('nosler-accubond-200', 'AccuBond 30 cal 200 gr, 54618', 200, 1.485, '30-caliber-200gr-accubond-50ct.html'),
+  nosler('nosler-partition-220', 'Partition 30 cal 220 gr semi-spitzer, 16332', 220, 1.37, '30-caliber-220gr-partition-50ct.html'),
 );
 
 export function projectileSpecification(key: string): ProjectileSpecification | undefined {
