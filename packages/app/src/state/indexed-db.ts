@@ -19,6 +19,8 @@ export interface RecordStore<T extends { id: string }> {
    * in the same transaction, so that no other tab writes in between. Resolves whether it was written.
    */
   putIf(record: T, unchanged: (stored: unknown) => boolean): Promise<boolean>;
+  /** The same for several records in one transaction: all are written if `unchanged` accepts each one's stored record, or none. */
+  putAllIf(records: readonly T[], unchanged: (stored: unknown, record: T) => boolean): Promise<boolean>;
   remove(id: string): Promise<void>;
 }
 
@@ -66,6 +68,30 @@ function open(factory: IDBFactory): Promise<IDBDatabase> {
 }
 
 export function indexedDbStore<T extends { id: string }>(name: StoreName, factory: IDBFactory = indexedDB): RecordStore<T> {
+  // Every record is read, then all are written or none, in one transaction: no other tab writes between.
+  const putAllIf = async (records: readonly T[], unchanged: (stored: unknown, record: T) => boolean): Promise<boolean> => {
+    const database = await open(factory);
+    return new Promise<boolean>((resolve, reject) => {
+      const transaction = database.transaction(name, 'readwrite');
+      const store = transaction.objectStore(name);
+      const stored: unknown[] = [];
+      let written = false;
+      records.forEach((record, index) => {
+        const read = store.get(record.id);
+        read.onerror = () => reject(read.error);
+        read.onsuccess = () => {
+          stored[index] = read.result;
+          // Requests of a transaction complete in order: the last read sees them all.
+          if (index !== records.length - 1) return;
+          if (!records.every((candidate, position) => unchanged(stored[position], candidate))) return;
+          for (const candidate of records) store.put(candidate);
+          written = true;
+        };
+      });
+      transaction.oncomplete = () => resolve(written);
+      transaction.onabort = () => reject(transaction.error ?? new DOMException('Transaction aborted', 'AbortError'));
+    });
+  };
   const run = async <R>(mode: IDBTransactionMode, action: (store: IDBObjectStore) => IDBRequest<R>): Promise<R> => {
     const database = await open(factory);
     return new Promise((resolve, reject) => {
@@ -85,23 +111,8 @@ export function indexedDbStore<T extends { id: string }>(name: StoreName, factor
       // One transaction: the requests share it, and an abort undoes all of them.
       await run('readwrite', (store) => records.map((record) => store.put(record)).at(-1)!);
     },
-    putIf: async (record, unchanged) => {
-      const database = await open(factory);
-      return new Promise<boolean>((resolve, reject) => {
-        const transaction = database.transaction(name, 'readwrite');
-        const store = transaction.objectStore(name);
-        let written = false;
-        const read = store.get(record.id);
-        read.onsuccess = () => {
-          if (!unchanged(read.result)) return;
-          store.put(record);
-          written = true;
-        };
-        read.onerror = () => reject(read.error);
-        transaction.oncomplete = () => resolve(written);
-        transaction.onabort = () => reject(transaction.error ?? new DOMException('Transaction aborted', 'AbortError'));
-      });
-    },
+    putIf: (record, unchanged) => putAllIf([record], (stored) => unchanged(stored)),
+    putAllIf: (records, unchanged) => putAllIf(records, unchanged),
     remove: async (id) => void (await run('readwrite', (store) => store.delete(id))),
   };
 }
@@ -116,6 +127,11 @@ export function memoryStore<T extends { id: string }>(): RecordStore<T> {
     putIf: async (record, unchanged) => {
       if (!unchanged(records.get(record.id))) return false;
       records.set(record.id, structuredClone(record));
+      return true;
+    },
+    putAllIf: async (list, unchanged) => {
+      if (!list.every((record) => unchanged(records.get(record.id), record))) return false;
+      for (const record of list) records.set(record.id, structuredClone(record));
       return true;
     },
     remove: async (id) => void records.delete(id),

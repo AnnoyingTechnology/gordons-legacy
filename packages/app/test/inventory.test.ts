@@ -3,6 +3,7 @@ import { readBackup, writeBackup } from '../src/state/backup.ts';
 import { exampleLoad } from '../src/state/example-load.ts';
 import { FirearmLibrary, newFirearm, type FirearmEntry } from '../src/state/firearms.ts';
 import { memoryStore } from '../src/state/indexed-db.ts';
+import { EntryConflict } from '../src/state/entry-revision.ts';
 import { batchUses, Inventory, lowStock, type StockItem } from '../src/state/inventory.ts';
 import { Library } from '../src/state/library.ts';
 import { memoryStorage } from '../src/state/library-storage.ts';
@@ -78,7 +79,7 @@ describe('a batch', () => {
     await stock.ready;
     const powder = await stock.save({ kind: 'powder', name: 'N140', quantity: 0.5 });
     const bullets = await stock.save({ kind: 'projectile', name: 'SMK 168', quantity: 100 });
-    storage.putAll = async () => {
+    storage.putAllIf = async () => {
       throw new Error('disk full');
     };
     await expect(stock.use([{ id: powder, amount: 0.1 }, { id: bullets, amount: 50 }])).rejects.toThrow('disk full');
@@ -102,5 +103,33 @@ describe('a store read slowly at startup (#32)', () => {
     reading.resolve([]);
     await saving;
     expect(firearms.entries.map((entry) => entry.firearm.name)).toEqual(['Rhino 40DS']);
+  });
+});
+
+describe('the stock in two tabs (#32)', () => {
+  it('never counts away a batch another tab recorded, and shows the stored count to try again from', async () => {
+    const storage = memoryStore<StockItem>();
+    const thisTab = new Inventory(storage);
+    const id = await thisTab.save({ kind: 'primer', name: 'CCI 200', quantity: 100 });
+    const otherTab = new Inventory(storage);
+    await otherTab.ready;
+    await otherTab.use([{ id, amount: 50 }]);
+    await expect(thisTab.use([{ id, amount: 20 }])).rejects.toBeInstanceOf(EntryConflict);
+    expect(thisTab.entries[0]!.quantity).toBe(50);
+    await thisTab.use([{ id, amount: 20 }]);
+    expect((await storage.list())[0]!.quantity).toBe(30);
+  });
+
+  it('refuses an edit of a count another tab changed', async () => {
+    const storage = memoryStore<StockItem>();
+    const thisTab = new Inventory(storage);
+    const id = await thisTab.save({ kind: 'case', name: 'Lapua .308', quantity: 100 });
+    const shown = thisTab.entries[0]!;
+    const otherTab = new Inventory(storage);
+    await otherTab.ready;
+    await otherTab.save({ ...otherTab.entries[0]!, quantity: 80 });
+    await expect(thisTab.save({ ...shown, quantity: 120 })).rejects.toBeInstanceOf(EntryConflict);
+    expect((await storage.list())[0]!.quantity).toBe(80);
+    expect(id).toBe(shown.id);
   });
 });

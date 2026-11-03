@@ -107,6 +107,8 @@ export const de: Messages = {
   'quantity.ballisticCoefficient': 'Ballistischer Koeffizient',
   'quantity.angle': "Streukreise",
   'quantity.powderStock': "Pulver auf Lager",
+  'stock.saveFailed': "Der Bestand konnte nicht geändert werden (Browserspeicher nicht verfügbar oder voll).",
+  'stock.conflict': "Der Bestand wurde in einem anderen Tab geändert, seit dieser Tab ihn gelesen hat; hier wurde daher nichts geändert. Die angezeigten Mengen sind jetzt die gespeicherten: Versuchen Sie es von ihnen aus erneut.",
   'stock.title': "Lager",
   'stock.help': "Was im Regal steht. Wer eine Serie einer Laborierung erfasst, bucht ihr Pulver und ihre Geschosse nach Namen ab; Zündhütchen und Hülsen werden beim Erfassen gewählt.",
   'stock.empty': "Noch nichts auf Lager.",

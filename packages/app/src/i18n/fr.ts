@@ -107,6 +107,8 @@ export const fr: Messages = {
   'quantity.ballisticCoefficient': 'Coefficient balistique',
   'quantity.angle': "Taille des groupements",
   'quantity.powderStock': "Poudre en stock",
+  'stock.saveFailed': "Le stock n'a pas pu être modifié (stockage du navigateur indisponible ou plein).",
+  'stock.conflict': "Le stock a été modifié dans un autre onglet depuis que cet onglet l'a lu ; rien n'a donc été modifié ici. Les quantités affichées sont maintenant celles enregistrées : réessayez à partir d'elles.",
   'stock.title': "Stock",
   'stock.help': "Ce qui est sur l’étagère. Enregistrer une série d’un chargement en retire la poudre et les projectiles, d’après leur nom ; amorces et étuis se choisissent à l’enregistrement.",
   'stock.empty': "Rien en stock pour l’instant.",

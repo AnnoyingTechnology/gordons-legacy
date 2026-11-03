@@ -107,6 +107,8 @@ export const es: Messages = {
   'quantity.ballisticCoefficient': 'Coeficiente balístico',
   'quantity.angle': "Tamaño de agrupaciones",
   'quantity.powderStock': "Pólvora en existencia",
+  'stock.saveFailed': "No se pudo cambiar el inventario (almacenamiento del navegador no disponible o lleno).",
+  'stock.conflict': "El inventario se cambió en otra pestaña desde que esta pestaña lo leyó, así que aquí no se cambió nada. Las cantidades mostradas son ahora las guardadas: vuelva a intentarlo a partir de ellas.",
   'stock.title': "Existencias",
   'stock.help': "Lo que hay en la estantería. Registrar una serie de una carga descuenta su pólvora y sus proyectiles, por su nombre; fulminantes y vainas se eligen al registrar.",
   'stock.empty': "Todavía no hay nada en existencia.",

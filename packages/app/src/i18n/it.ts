@@ -107,6 +107,8 @@ export const it: Messages = {
   'quantity.ballisticCoefficient': 'Coefficiente balistico',
   'quantity.angle': "Dimensione delle rosate",
   'quantity.powderStock': "Polvere in magazzino",
+  'stock.saveFailed': "Le scorte non sono state modificate (memoria del browser non disponibile o piena).",
+  'stock.conflict': "Le scorte sono state modificate in un'altra scheda da quando questa scheda le ha lette, quindi qui non è stato modificato nulla. Le quantità mostrate sono ora quelle salvate: riprovate a partire da esse.",
   'stock.title': "Magazzino",
   'stock.help': "Ciò che c'è sullo scaffale. Registrare una serie di una ricarica ne scala la polvere e le palle, per nome; inneschi e bossoli si scelgono alla registrazione.",
   'stock.empty': "Ancora niente in magazzino.",

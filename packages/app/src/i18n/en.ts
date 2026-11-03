@@ -106,6 +106,8 @@ export const en = {
   'quantity.ballisticCoefficient': 'Ballistic coefficient',
   'quantity.angle': "Group sizes",
   'quantity.powderStock': "Powder in stock",
+  'stock.saveFailed': "The stock couldn't be changed (browser storage unavailable or full).",
+  'stock.conflict': "The stock was changed in another tab since this tab read it, so nothing was changed here. The quantities shown are now the stored ones: try again from them.",
   'stock.title': "Stock",
   'stock.help': "What is on the shelf. Recording a batch of a load takes its powder and projectiles off, by name; primers and cases are chosen when recording.",
   'stock.empty': "Nothing in stock yet.",

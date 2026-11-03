@@ -677,12 +677,13 @@ export class AppShell extends LitElement {
 
   /** Runs a change to the stock, reporting a failed write instead of losing it silently; true when written. */
   private async keepStock(change: () => Promise<unknown>): Promise<boolean> {
+    const messages = [this.context.t('stock.saveFailed'), this.context.t('stock.conflict')];
     try {
       await change();
-      this.openErrors = this.openErrors.filter((message) => message !== this.context.t('library.saveFailed'));
+      this.openErrors = this.openErrors.filter((message) => !messages.includes(message));
       return true;
-    } catch {
-      this.openErrors = [this.context.t('library.saveFailed')];
+    } catch (error) {
+      this.openErrors = [error instanceof EntryConflict ? this.context.t('stock.conflict') : this.context.t('stock.saveFailed')];
       return false;
     }
   }
