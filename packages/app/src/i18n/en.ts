@@ -455,6 +455,7 @@ export const en = {
   'firearm.publishedShort': '(nominal)',
   'firearm.publishedBy': 'A published figure, from {publisher}: a nominal barrel length is not always the bolt face to muzzle length the simulation needs.',
   'firearm.sourceKind': 'Where the figures come from',
+  'firearm.archived': "archived page, {date}",
   'firearm.publisher': 'Published by',
   'firearm.url': 'Page',
   'firearm.nameNeeded': 'A gun needs a name.',

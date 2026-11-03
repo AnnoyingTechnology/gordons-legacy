@@ -453,6 +453,7 @@ export const it: Messages = {
   'firearm.publishedShort': '(nominale)',
   'firearm.publishedBy': 'Un valore pubblicato, da {publisher}: una lunghezza di canna nominale non è sempre la distanza dalla faccia dell’otturatore alla volata che la simulazione richiede.',
   'firearm.sourceKind': 'Origine dei valori',
+  'firearm.archived': "pagina archiviata, {date}",
   'firearm.publisher': 'Pubblicato da',
   'firearm.url': 'Pagina',
   'firearm.nameNeeded': 'Un’arma ha bisogno di un nome.',

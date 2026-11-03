@@ -453,6 +453,7 @@ export const fr: Messages = {
   'firearm.publishedShort': '(nominale)',
   'firearm.publishedBy': 'Une valeur publiée, de {publisher} : une longueur de canon nominale n’est pas toujours la distance entre la face de culasse et la bouche dont la simulation a besoin.',
   'firearm.sourceKind': 'Origine des valeurs',
+  'firearm.archived': "page archivée, {date}",
   'firearm.publisher': 'Publié par',
   'firearm.url': 'Page',
   'firearm.nameNeeded': 'Une arme a besoin d’un nom.',

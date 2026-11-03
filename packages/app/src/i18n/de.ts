@@ -453,6 +453,7 @@ export const de: Messages = {
   'firearm.publishedShort': '(nominal)',
   'firearm.publishedBy': 'Eine veröffentlichte Angabe von {publisher}: Eine nominale Lauflänge ist nicht immer die Länge vom Stoßboden bis zur Mündung, die die Simulation braucht.',
   'firearm.sourceKind': 'Herkunft der Werte',
+  'firearm.archived': "archivierte Seite, {date}",
   'firearm.publisher': 'Veröffentlicht von',
   'firearm.url': 'Seite',
   'firearm.nameNeeded': 'Eine Waffe braucht einen Namen.',

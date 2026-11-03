@@ -453,6 +453,7 @@ export const es: Messages = {
   'firearm.publishedShort': '(nominal)',
   'firearm.publishedBy': 'Un valor publicado, de {publisher}: una longitud de cañón nominal no siempre es la distancia desde la cara del cierre hasta la boca que la simulación necesita.',
   'firearm.sourceKind': 'Origen de los valores',
+  'firearm.archived': "página archivada, {date}",
   'firearm.publisher': 'Publicado por',
   'firearm.url': 'Página',
   'firearm.nameNeeded': 'Un arma necesita un nombre.',
