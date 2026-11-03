@@ -192,8 +192,12 @@ export interface CrawlArguments {
  * The command line of an extractor, or `undefined` when it has no output folder — in which case the
  * usage line is printed and the exit code set, so a `main` only has to return.
  */
+/** Options followed by a value, which is no folder. */
+const VALUED_OPTIONS = new Set(['--limit', '--archived']);
+
 export function crawlArguments(maker: string, argv: readonly string[]): CrawlArguments | undefined {
-  const folder = argv.find((argument) => !argument.startsWith('--'));
+  // The folder is the first word that is neither an option nor an option's value.
+  const folder = argv.find((argument, index) => !argument.startsWith('--') && !(index > 0 && VALUED_OPTIONS.has(argv[index - 1]!)));
   if (folder === undefined) {
     console.error(`usage: deno run -A tools/data/firearms/${maker}.ts <output folder> [--limit 5]`);
     process.exitCode = 1;

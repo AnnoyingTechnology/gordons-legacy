@@ -38,3 +38,13 @@ describe('the archive of a page that is gone', () => {
     expect(query.searchParams.get('filter')).toBe('statuscode:200');
   });
 });
+
+describe('a crawl told to read families from the archive', () => {
+  it('takes each family named, and never a value for the output folder', async () => {
+    const { archivedFamilies } = await import('../../../tools/data/firearms/ruger.ts');
+    const { crawlArguments } = await import('../../../tools/data/firearms/maker-site.ts');
+    const argv = ['--archived', 'gp100', '/tmp/ruger', '--archived', 'sp101', '--limit', '5'];
+    expect(archivedFamilies(argv)).toEqual(['gp100', 'sp101']);
+    expect(crawlArguments('ruger', argv)).toEqual({ folder: '/tmp/ruger', limit: 5 });
+  });
+});

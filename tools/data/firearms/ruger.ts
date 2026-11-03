@@ -2,7 +2,11 @@
  * Reads Ruger's published firearm specifications into gun files (issue #30). Maintainer tool, built like
  * the Glock one (glock.ts).
  *
- *     deno run -A tools/data/firearms/ruger.ts <output folder> [--limit 5]
+ *     deno run -A tools/data/firearms/ruger.ts <output folder> [--limit 5] [--archived <family>]...
+ *
+ * `--archived gp100` reads that family's sheets from the Wayback Machine instead (archived-pages.ts),
+ * for a family whose pages Ruger no longer serves (the GP100 and SP101 stopped answering in October
+ * 2026). Each record then cites its snapshot and the day it was captured.
  *
  * Ruger publishes no sitemap (and no robots.txt), so the walk starts at the home page: it follows the
  * product family pages (`/products/<family>/models.html` and `overview.html`), collects the links to the
@@ -24,6 +28,7 @@ import { finest, type Reading } from './finest-reading.ts';
 import { loadableCartridge } from './loadable-cartridge.ts';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
 import { crawlArguments, decodeEntities, fetchPage, fetchText, plainText, plausibleGunMass } from './maker-site.ts';
+import { archivedPage, archivedPages, snapshotAddress, snapshotDate } from './archived-pages.ts';
 import { writeListing } from './printed-figures.ts';
 
 const SITE = 'https://ruger.com';
@@ -203,6 +208,11 @@ async function findSheets(limit: number): Promise<string[]> {
   return [...sheets].slice(0, limit);
 }
 
+/** The families named by `--archived`, read from the archive. */
+export function archivedFamilies(argv: readonly string[]): string[] {
+  return argv.flatMap((argument, index) => (argument === '--archived' && argv[index + 1] && /^[a-z0-9-]+$/i.test(argv[index + 1]!) ? [argv[index + 1]!] : []));
+}
+
 async function main(): Promise<void> {
   const args = crawlArguments('ruger', process.argv.slice(2));
   if (args === undefined) return;
@@ -229,6 +239,29 @@ async function main(): Promise<void> {
     const outcome = writeListing(folder, taken, firearm);
     if ('skipped' in outcome) skipped.push(`${url}: ${outcome.skipped}`);
     else if (outcome.note) skipped.push(`${url}: ${outcome.note}`);
+  }
+  for (const family of archivedFamilies(process.argv.slice(2))) {
+    const snapshots = (await archivedPages(`ruger.com/products/${family}/specSheets/`)).slice(0, limit);
+    console.log(`${family}: ${snapshots.length} archived sheets`);
+    for (const snapshot of snapshots) {
+      const address = snapshotAddress(snapshot);
+      let page: string;
+      try {
+        page = await archivedPage(snapshot);
+      } catch (error) {
+        skipped.push(`${address}: ${(error as Error).message}`);
+        continue;
+      }
+      const firearm = firearmFrom(page, address, retrieved);
+      if (!firearm) {
+        skipped.push(`${address}: no cartridge or no barrel length`);
+        continue;
+      }
+      const archived: Firearm = { ...firearm, source: { ...firearm.source!, archived: snapshotDate(snapshot) } };
+      const outcome = writeListing(folder, taken, archived);
+      if ('skipped' in outcome) skipped.push(`${address}: ${outcome.skipped}`);
+      else if (outcome.note) skipped.push(`${address}: ${outcome.note}`);
+    }
   }
   console.log(`\n${taken.size} guns written to ${folder}`);
   if (skipped.length > 0) {
