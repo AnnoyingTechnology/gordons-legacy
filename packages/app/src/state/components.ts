@@ -17,8 +17,8 @@ import type { RecordStore } from './indexed-db.ts';
 /** Where a component comes from, shown with it so that the user can judge it. */
 export interface ComponentSource {
   /**
-   * `community`: the CC0 files shared by GRT users, unverified; `grt`: GRT's own database, shipped with
-   * the permission of Gordon's family (issue #19), unverified too; `user`: imported by the user.
+   * `community`: the CC0 files shared by GRT users, unverified; `grt`: GRT's own database (issue #19),
+   * unverified too; `user`: imported by the user.
    */
   origin: 'community' | 'grt' | 'user';
   /** The file it was read from. */

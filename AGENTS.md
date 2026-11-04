@@ -53,8 +53,8 @@ in it. Copy files out before experimenting.
 
 - **Never commit GRT's files**: binary, database, manuals, plugins, locales or anything else from the
   install. Numeric reference outputs captured from GRT may be committed as test fixtures. The records of
-  GRT's database, converted by `tools/data/build-grt-catalogue.ts`, are the exception: Gordon's family
-  gave written permission to publish them (2026-11-04, issue #19). The encrypted `.db` itself stays out.
+  GRT's database, converted by `tools/data/build-grt-catalogue.ts`, are the exception: they are published
+  (maintainer's decision, 2026-11-04, issue #19). The encrypted `.db` itself stays out.
 - Commit the maintainer's own load files only with his explicit approval (given 2026-10-13 for a
   selection; see Decisions). Prefer the CC0 community corpus, and never commit `loads/not_mine/`.
 - **Safety**: this is a simulator. Never present a simulated charge as safe in code, UI text, docs,

@@ -72,7 +72,7 @@ function groupName(entry: CatalogueEntry): string {
 
 function provenance(table: GrtDatabaseTable, read: string): Provenance {
   return {
-    origin: "Gordon's Reloading Tool's own database, published with the written permission of Gordon's family (2026-11-04, issue #19)",
+    origin: "Gordon's Reloading Tool's own database (issue #19)",
     source: `GordonsReloadingTool.db of ${GRT_VERSION}, table ${table}, read from a running GRT on ${read}`,
     file: 'GordonsReloadingTool.db',
     author: 'GRT',

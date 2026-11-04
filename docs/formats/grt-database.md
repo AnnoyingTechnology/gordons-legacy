@@ -6,8 +6,7 @@ load format. The numbers below are those of GRT nightly 2030 as the maintainer's
 2026-11-04; [docs/data/grt-catalogue.md](../data/grt-catalogue.md) is the generated report of what was read
 and published.
 
-GRT's own data is published by Gordon's Legacy with the written permission of Gordon's family
-(Decisions, 2026-11-04). The encrypted file itself, GRT's binary, manuals and plugins are never committed.
+GRT's own data is published by Gordon's Legacy (maintainer's decision, 2026-11-04). The encrypted file itself, GRT's binary, manuals and plugins are never committed.
 
 ## Encryption and how the records were read
 

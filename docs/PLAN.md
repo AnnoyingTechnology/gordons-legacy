@@ -108,8 +108,7 @@ Separate repository, `gordons-legacy-data`, under CC0 1.0.
   twist, mass and cartridge as the maker publishes them, each record naming its page, the date it was
   read and what its mass includes. The makers read so far hold about 2,500 guns, so a file per gun would
   make a first search that many requests. Rules of the intake and of a refresh: `docs/firearm-data.md`.
-- GRT's own database (issue #19), published with the written permission of Gordon's family
-  (2026-11-04): one JSON file **per maker** (per standard for cartridges) under `grt/`, kinds
+- GRT's own database (issue #19, maintainer's decision of 2026-11-04): one JSON file **per maker** (per standard for cartridges) under `grt/`, kinds
   `grt-powders`, `grt-projectiles`, `grt-calibers`, holding GRT's own rows that GRT neither deleted nor
   hid. 6,450 entries as single files would be that many requests on a first visit. Built by
   `tools/data/build-grt-catalogue.ts`; what was left out and why: `docs/data/grt-catalogue.md`.
@@ -129,8 +128,8 @@ Intake:
 - Published data (makers' load tables, measured pressures, specifications) may be committed, each row
   cited to its document and date (maintainer, 2026-11-03: the project is open source throughout, and
   licensing is not asked again). The documents themselves (PDFs) are not committed.
-- GRT's database: its records, converted to SI with their GRT authorship, under the family's permission
-  (2026-11-04). Not its encrypted file, nor any record a user of the copy made, nor powder models GRT hid.
+- GRT's database: its records, converted to SI with their GRT authorship (maintainer's decision,
+  2026-11-04). Not its encrypted file, nor any record a user of the copy made, nor powder models GRT hid.
   Where a cartridge is defined both by GRT and by the community, the app prefers the user's own, then
   GRT's, then the community's.
 - Data changes are safety-critical: a wrong powder model predicts a wrong pressure. CI simulates

@@ -25,7 +25,7 @@ muzzle blast, and a review of the load in words — what is near a maximum, what
 variations would do to it, over what powder temperatures it stays within limits.
 
 Beside that it carries GRT's tools: the component databases (powders, projectiles, cartridges) — GRT's
-own catalogue, published with the permission of Gordon's family, and the community's CC0 files — the burning-rate table and powder search, the tolerance synthesis, the cartridge
+own catalogue and the community's CC0 files — the burning-rate table and powder search, the tolerance synthesis, the cartridge
 designer, the unit converter, the OBT tool, the bore-area, initial-pressure and temperature-coefficient
 assistants, chronograph and pressure-trace import, shot-group analysis on a photo of the target, a
 library of your loads and guns, and a printed report.
@@ -50,7 +50,7 @@ attempts to improve on it.
 - **Open data.** Powder, projectile and caliber data is downloaded from a public data repository,
   [gordons-legacy-data](https://github.com/AnnoyingTechnology/gordons-legacy-data), checked file by
   file and cached for offline use; a copy ships with the app for a first visit offline. It holds GRT's
-  own catalogue, published with the written permission of Gordon's family, and CC0 community files. Users can import their own GRT powder, projectile and caliber files,
+  own catalogue and CC0 community files. Users can import their own GRT powder, projectile and caliber files,
   which stay local.
 - **Verifiable.** A "GRT Traditional" engine reproduces GRT's results. A later engine built from the
   scientific literature must match or beat it against measured velocities and pressures.
@@ -65,9 +65,9 @@ authors accept no responsibility for loads developed with it.
 
 Gordon's Legacy is an independent reimplementation. It is not affiliated with or endorsed by the GRT team,
 and it does not distribute GRT's software. It does carry GRT's component catalogue — the powders,
-bullets and cartridges of GRT's database, converted — with the written permission of Gordon's family.
+bullets and cartridges of GRT's database, converted.
 
 ## Licence
 
 Code: [GPL-3.0](LICENSE). Data (in the separate data repository): CC0 1.0, except GRT's catalogue
-(`grt/`), which is published with the permission of Gordon's family.
+(`grt/`), which is GRT's own data and not released under CC0.
