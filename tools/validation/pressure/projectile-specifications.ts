@@ -205,6 +205,39 @@ PROJECTILE_SPECIFICATIONS.push(
   nosler('nosler-partition-220', 'Partition 30 cal 220 gr semi-spitzer, 16332', 220, 1.37, '30-caliber-220gr-partition-50ct.html'),
 );
 
+/** A length Blue Collar Reloading lists for a bullet of any diameter, read first-hand on 2026-11-04. */
+function blueCollar(key: string, maker: string, product: string, grains: number, diameterInches: number, inches: number): ProjectileSpecification {
+  return {
+    key,
+    maker,
+    product,
+    mass: grains * units.GRAIN,
+    diameter: diameterInches * units.INCH,
+    length: inches * units.INCH,
+    lengthStatus: 'assumed',
+    lengthSource: `${inches} in, Blue Collar Reloading's listing (bluecollarreloading.com, read 2026-11-04); not a figure from the maker`,
+    base: { shape: 'flat' },
+    construction: 'rifle-jacketed',
+  };
+}
+
+// The bullets of Hodgdon's 2025 Annual Manual that its StaBALL Match, H380 and Lil'Gun rows name (#22).
+PROJECTILE_SPECIFICATIONS.push(
+  blueCollar('nosler-ballistic-tip-40-224', 'Nosler', 'Ballistic Tip Varmint 22 cal 40 gr, 39510', 40, 0.224, 0.705),
+  blueCollar('hornady-v-max-53-224', 'Hornady', 'V-MAX 22 cal 53 gr, 22265', 53, 0.224, 0.83),
+  blueCollar('sierra-blitzking-55-224', 'Sierra', 'BlitzKing 22 cal 55 gr, 1455', 55, 0.224, 0.822),
+  blueCollar('speer-tnt-70-243', 'Speer', 'TNT HP 6mm 70 gr, 1206', 70, 0.243, 0.83),
+  blueCollar('sierra-tmk-95-243', 'Sierra', 'Tipped MatchKing 6mm 95 gr, 7295', 95, 0.243, 1.16),
+  blueCollar('nosler-partition-100-243', 'Nosler', 'Partition 6mm 100 gr, 35642', 100, 0.243, 1.065),
+  blueCollar('hornady-a-tip-110-243', 'Hornady', 'A-Tip Match 6mm 110 gr, 24531', 110, 0.243, 1.307),
+  blueCollar('nosler-ballistic-tip-55-243', 'Nosler', 'Ballistic Tip 6mm 55 gr, 24055', 55, 0.243, 0.78),
+  blueCollar('sierra-gameking-100-243-sbt', 'Sierra', 'GameKing SBT 6mm 100 gr, 1560', 100, 0.243, 1.078),
+  blueCollar('speer-varmint-hp-130', 'Speer', 'Varmint HP 30 cal 130 gr, 2005', 130, 0.308, 0.89),
+  blueCollar('hornady-sp-165', 'Hornady', 'InterLock SP 30 cal 165 gr, 3040', 165, 0.308, 1.152),
+  blueCollar('sierra-matchking-168', 'Sierra', 'MatchKing HPBT 30 cal 168 gr, 2200', 168, 0.308, 1.215),
+  blueCollar('nosler-partition-165', 'Nosler', 'Partition 30 cal 165 gr, 16330', 165, 0.308, 1.175),
+);
+
 export function projectileSpecification(key: string): ProjectileSpecification | undefined {
   return PROJECTILE_SPECIFICATIONS.find((specification) => specification.key === key);
 }

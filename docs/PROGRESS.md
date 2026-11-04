@@ -13,7 +13,7 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
   documents (`tools/validation/pressure/`, `docs/model/validation.md`). The default engine has read up to
   22 % under published pressures on one powder model and 8 % over on another; the app's safety wording
   says so. Bottleneck: powder models and bullet lengths, not documents.
-- **Tests:** 1,013 (Vitest), `tsc`, production build; CI deploys GitHub Pages from `main`.
+- **Tests:** 1,015 (Vitest), `tsc`, production build; CI deploys GitHub Pages from `main`.
 - **Docs:** `docs/PLAN.md` (plan), `docs/model/` (engines, validation, pressure sources), `docs/formats/`,
   `docs/firearm-data.md`, `docs/ui-audit.md`, `docs/code-audit.md`, each package's README.
 
@@ -217,6 +217,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 
 | Date | Entry |
 |---|---|
+| 2026-11-04 | **#22 Hodgdon's 2025 Annual Manual in the pressure study.** A static PDF of Hodgdon's Reloading Manuals Library (robots.txt allows it; not the interactive data centre the permission policy refused), method stated: PSI by a force transducer against the case (SAAMI conformal piezo), CUP by crusher. New reader `hodgdon-annual-manual.ts` cuts each page at its second `Powder` heading: 10,012 rows, 9 misprints reported. 13 more bullet lengths (Blue Collar Reloading). The study now pairs 84 conditions; piezo over two laboratories, 38 series: GRT Traditional +8.9 %, R1 −14.8 % and under in 92 %, paired L5 difference 0.604 (0.446–0.758). The committed rows are now gzipped (`published-conditions.json.gz`, 1.3 MB, 31,759 conditions). |
 | 2026-11-03 | **Data PRs #2 and #3 merged** (Julien: "merge"). The live repository serves 9,216 guns in 35 maker files (49 archived), read by the app's synchroniser in 1.6 s with no problem. #30, #31 (R1 does not beat GRT Traditional on the evidence) and #32 closed. |
 | 2026-11-03 | **#30 Ruger GP100/SP101 from the Wayback Machine: 49 guns**, each citing its snapshot and capture date (`source.archived`), added to data PR #3 (439 Ruger, 9,216 guns in all). The archive reader now treats one page's addresses over the years as one page and retries a refused request twice (30 s, 2 min) before reporting the family. |
 | 2026-11-03 | **#22/#31 the pressure study widened from 22 to 48 paired conditions.** Twelve bullet lengths found and read first-hand (Nosler's own pages for three, Blue Collar Reloading's listings for nine, Sierra and Hornady printing none), and the Western reader no longer takes a pressure note for a cartridge name (660 rows). On MAGPRO's 20 piezo series: GRT Traditional L5 0.212, bias +6.6 %; R1 L5 1.007, bias −18.2 %, under in every series; paired difference 0.795 (0.575–1.004), clear of zero under every sensitivity variant. `docs/model/validation.md` rewritten for it. What still blocks most rows: powder models (Accurate, Ramshot) and caliber definitions, which the community components do not have (#19 is another agent's). |

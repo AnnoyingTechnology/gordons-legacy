@@ -10,6 +10,7 @@ import { hodgdonConditions, readHodgdonRows } from '../../../tools/validation/pr
 import { readWesternRows } from '../../../tools/validation/pressure/sources/western-powders-8.ts';
 import { PERTURBATIONS, runConditions, summarizeStudy } from '../../../tools/validation/pressure/study.ts';
 import { PUBLISHED_CONDITIONS, readConditionsFile } from '../../../tools/validation/pressure.ts';
+import { hodgdonManualConditions, readManualRows } from '../../../tools/validation/pressure/sources/hodgdon-annual-manual.ts';
 
 /**
  * The pressure study's machinery (tools/validation/pressure/, issues #22 and #31). Every table below is
@@ -336,18 +337,62 @@ describe('the published rows, as committed (maintainer, 2026-11-03)', () => {
   const results = runConditions(conditions, communityPool(), [grtTraditional, researchEngine]);
   const piezoelectric = summarizeStudy(results, sources).find((summary) => summary.group === 'piezoelectric')!;
 
-  it('holds every row of the four documents, each citing its source', () => {
-    expect(sources.map((source) => source.id)).toEqual(['reload-swiss-rs14-2023', 'western-powders-8.0', 'hodgdon-m1-garand', 'hodgdon-subsonic']);
-    expect(conditions).toHaveLength(12316);
+  it('holds every row of the five documents, each citing its source', () => {
+    expect(sources.map((source) => source.id)).toEqual(['reload-swiss-rs14-2023', 'western-powders-8.0', 'hodgdon-m1-garand', 'hodgdon-subsonic', 'hodgdon-annual-manual-2025']);
+    expect(conditions).toHaveLength(31759);
     expect(conditions.every((condition) => sources.some((source) => source.id === condition.source))).toBe(true);
   });
 
   it('gives the study its results: GRT Traditional over the piezoelectric measurements, R1 under them', () => {
-    expect(results.filter((result) => result.status === 'paired')).toHaveLength(48);
+    expect(results.filter((result) => result.status === 'paired')).toHaveLength(84);
     const [grt, research] = piezoelectric.pressure;
-    expect(grt!.series).toBe(20);
-    expect(grt!.loss.factor5).toBeCloseTo(0.212, 3);
-    expect(research!.loss.factor5).toBeCloseTo(1.007, 3);
-    expect(research!.underPredicted).toBe(1);
+    expect(grt!.series).toBe(38);
+    expect(grt!.loss.factor5).toBeCloseTo(0.215, 3);
+    expect(research!.loss.factor5).toBeCloseTo(0.819, 3);
+    expect(research!.underPredicted).toBeGreaterThan(0.9);
+  });
+});
+
+describe("reading Hodgdon's annual manual", () => {
+  // Shaped like `pdftotext -layout` output of a page: two columns of tables side by side, the heading
+  // printed once for both; invented figures.
+  const column = (left: string, right = '') => `${left.padEnd(88)}${right}`;
+  const PAGE = [
+    column('                  Starting Loads             Maximum Loads', 'Starting Loads             Maximum Loads'),
+    column('Powder        Grs     Vel      Pressure      Grs    Vel    Pressure', 'Powder           Grs       Vel      Pressure            Grs      Vel    Pressure'),
+    column('308 WinCheSteR', 'H380          40.0       2500    40,000 PSI        44.0     2700     55,000 PSI'),
+    column('', 'Bullet: 175 GR. SIE HPBT                   Dia: .308”'),
+    column('Barrel: 24”     Twist: 1:12” Trim: 2.005”', 'Case: Winchester         Primer: Federal 210M, LR Match    Col: 2.800”'),
+    column('Bullet: 168 GR. SIE HPBT             Dia: .308”', 'StaBALL Match 41.0       2550    45,000 PSI        45.0C    2750     60,000 PSI'),
+    column('Case: Winchester     Primer: Winchester LR, Large Rifle     Col: 2.800”'),
+    column('StaBALL Match 42.0   2600    44,000 PSI       46.0C 2800      59,000 PSI', ''),
+    column('H4895        41.0   2650 41,000 CUP           45.0        2850    50,000 CUP'),
+    column('Varget       43.0   2700    45,000 PSI        47.0        2900     61.000 PSI'),
+  ].join('\n');
+
+  it('reads the left column, then the right, carrying the cartridge, bullet and case across them', () => {
+    const { rows, unread } = readManualRows(PAGE);
+    expect(rows.map((row) => `${row.cartridge} | ${row.bullet} | ${row.powder}`)).toEqual([
+      '308 WINCHESTER | 168 GR. SIE HPBT | StaBALL Match',
+      '308 WINCHESTER | 168 GR. SIE HPBT | H4895',
+      '308 WINCHESTER | 168 GR. SIE HPBT | H380',
+      '308 WINCHESTER | 175 GR. SIE HPBT | StaBALL Match',
+    ]);
+    expect(rows[0]).toMatchObject({ barrel: '24”', twist: '1:12”', caseMake: 'Winchester', overallLength: 2.8, diameter: 0.308 });
+    expect(rows[0]!.loads[1]).toEqual({ name: 'maximum', load: { charge: 46, compressed: true, velocity: 2800, pressure: 59000, unit: 'PSI' } });
+    // A misprinted pressure (`61.000`) is reported, never guessed at.
+    expect(unread).toEqual([expect.stringContaining('Varget')]);
+  });
+
+  it('keeps a CUP row for its velocity only, and builds the case-specific .308 definition', () => {
+    const { conditions } = hodgdonManualConditions(PAGE);
+    const crusher = conditions.filter((condition) => condition.note?.includes('CUP'));
+    expect(crusher).toHaveLength(2);
+    expect(crusher.every((condition) => condition.pressure === undefined && condition.velocity !== undefined)).toBe(true);
+    const staBall = conditions.find((condition) => condition.powder.product === 'StaBALL Match')!;
+    expect(staBall.caliber).toBe('.308 Win. Winchester');
+    expect(staBall.powder).toEqual({ maker: 'Winchester', product: 'StaBALL Match' });
+    expect(staBall.barrelLength).toMatchObject({ status: 'published', note: '24”' });
+    expect(staBall.projectile.key).toBe('sierra-matchking-168');
   });
 });

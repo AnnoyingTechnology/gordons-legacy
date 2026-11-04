@@ -4,18 +4,19 @@
  *
  *     node tools/validation/pressure.ts [--rs14 <RS14 datasheet.pdf>] [--western <Western guide 8.0.pdf>]
  *                                      [--hodgdon-m1 <Hodgdon M1 Garand sheet.pdf>] [--hodgdon-subsonic <Hodgdon subsonic sheet.pdf>]
+ *                                      [--hodgdon-manual <Hodgdon 2025 Annual Manual.pdf>]
  *                                      [--conditions <file.json>]... [--components <folder>]...
  *                                      [--details] [--json <results.json>] [--export <conditions.json>]
  *
- * With none of the source options, the study reads `pressure/published-conditions.json`: the rows the
- * readers took from the four documents, each condition citing its source (title, address, SHA-256,
+ * With none of the source options, the study reads `pressure/published-conditions.json.gz`: the rows the
+ * readers took from the five documents, each condition citing its source (title, address, SHA-256,
  * date read). Committing them was decided by the maintainer on 2026-11-03; the PDFs are not committed.
  *
  * - `--rs14`, `--western`, `--hodgdon-m1`, `--hodgdon-subsonic`: the makers' PDFs as downloaded from their sites (see `docs/model/pressure-sources.md`).
  *   Their SHA-256 is checked, so that another edition is noticed instead of read wrongly. Reading them
  *   needs `pdftotext` (Poppler) on the path.
  * - `--export`: writes the conditions read, with their sources, in the format `--conditions` reads; this
- *   is how `published-conditions.json` is made again after a reader changes.
+ *   is how `published-conditions.json.gz` is made again after a reader changes.
  * - `--conditions`: conditions of your own, a JSON array of `PressureCondition` with a `sources` list
  *   (`{ "sources": [...], "conditions": [...] }`).
  * - `--components`: a folder of GRT files (`.grtload`, `.caliber`, `.propellant`, `.projectile`) whose
@@ -30,11 +31,13 @@
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
+import { gunzipSync, gzipSync } from 'node:zlib';
 import { grtTraditional, researchEngine, type Engine } from '@gordons-legacy/engine';
 import { units } from '@gordons-legacy/formats';
 import { addLocalFiles, communityPool, type ComponentPool } from './pressure/component-pool.ts';
 import type { PressureCondition, PressureSource } from './pressure/conditions.ts';
 import { logRatio, type LogRatioSummary } from './pressure/scoring.ts';
+import { HODGDON_MANUAL_2025_SOURCE, hodgdonManualConditions } from './pressure/sources/hodgdon-annual-manual.ts';
 import { HODGDON_M1_SOURCE, hodgdonConditions } from './pressure/sources/hodgdon-m1-garand.ts';
 import { HODGDON_SUBSONIC_SOURCE, subsonicConditions } from './pressure/sources/hodgdon-subsonic.ts';
 import { RS14_SOURCE, rs14Conditions } from './pressure/sources/reload-swiss-rs14.ts';
@@ -48,6 +51,7 @@ interface Arguments {
   western?: string;
   hodgdonM1?: string;
   hodgdonSubsonic?: string;
+  hodgdonManual?: string;
   conditions: string[];
   components: string[];
   details: boolean;
@@ -56,7 +60,7 @@ interface Arguments {
 }
 
 /** The committed rows of the four documents, read when no document is given. */
-export const PUBLISHED_CONDITIONS = new URL('./pressure/published-conditions.json', import.meta.url);
+export const PUBLISHED_CONDITIONS = new URL('./pressure/published-conditions.json.gz', import.meta.url);
 
 function parseArguments(args: string[]): Arguments {
   const parsed: Arguments = { conditions: [], components: [], details: false };
@@ -77,6 +81,10 @@ function parseArguments(args: string[]): Arguments {
         break;
       case '--hodgdon-subsonic':
         if (value) parsed.hodgdonSubsonic = value;
+        index++;
+        break;
+      case '--hodgdon-manual':
+        if (value) parsed.hodgdonManual = value;
         index++;
         break;
       case '--conditions':
@@ -116,7 +124,9 @@ function documentText(path: string, source: PressureSource, mode: '-layout' | '-
 
 /** A conditions file: `{ sources, conditions }`, as `--export` writes it. */
 export function readConditionsFile(path: string | URL): { sources: PressureSource[]; conditions: PressureCondition[] } {
-  return JSON.parse(readFileSync(path, 'utf8')) as { sources: PressureSource[]; conditions: PressureCondition[] };
+  const bytes = readFileSync(path);
+  const packed = String(path).endsWith('.gz');
+  return JSON.parse((packed ? gunzipSync(bytes) : bytes).toString('utf8')) as { sources: PressureSource[]; conditions: PressureCondition[] };
 }
 
 function percent(summary: LogRatioSummary | undefined, field: 'geometricMeanBias' | 'lowest' | 'median' | 'highest'): string {
@@ -240,11 +250,14 @@ function main(): void {
   if (args.western) read(WESTERN_8_SOURCE, westernConditions(documentText(args.western, WESTERN_8_SOURCE, '-raw')));
   if (args.hodgdonM1) read(HODGDON_M1_SOURCE, hodgdonConditions(documentText(args.hodgdonM1, HODGDON_M1_SOURCE, '-layout')));
   if (args.hodgdonSubsonic) read(HODGDON_SUBSONIC_SOURCE, subsonicConditions(documentText(args.hodgdonSubsonic, HODGDON_SUBSONIC_SOURCE, '-layout')));
-  const fromDocuments = Boolean(args.rs14 || args.western || args.hodgdonM1 || args.hodgdonSubsonic);
+  if (args.hodgdonManual) read(HODGDON_MANUAL_2025_SOURCE, hodgdonManualConditions(documentText(args.hodgdonManual, HODGDON_MANUAL_2025_SOURCE, '-layout')));
+  const fromDocuments = Boolean(args.rs14 || args.western || args.hodgdonM1 || args.hodgdonSubsonic || args.hodgdonManual);
   if (args.export) {
-    // One condition a line: 12,000 rows indented would be 17 MB, and a re-export still diffs row by row.
+    // One condition a line, so that a file unpacked diffs row by row; packed when its name says `.gz`
+    // (30,000 rows are 30 MB of text, about 1 MB packed).
     const lines = conditions.map((condition) => JSON.stringify(condition));
-    writeFileSync(args.export, `{"sources":${JSON.stringify(sources, null, 2)},\n"conditions":[\n${lines.join(',\n')}\n]}\n`);
+    const text = `{"sources":${JSON.stringify(sources, null, 2)},\n"conditions":[\n${lines.join(',\n')}\n]}\n`;
+    writeFileSync(args.export, args.export.endsWith('.gz') ? gzipSync(text, { level: 9 }) : text);
     console.log(`${conditions.length} conditions from ${sources.length} documents written to ${args.export}`);
   }
   const files = !fromDocuments && args.conditions.length === 0 ? [PUBLISHED_CONDITIONS] : args.conditions;
@@ -252,7 +265,7 @@ function main(): void {
     const file = readConditionsFile(path);
     sources.push(...file.sources);
     conditions.push(...file.conditions);
-    if (path === PUBLISHED_CONDITIONS) console.log(`published-conditions.json: ${file.conditions.length} conditions from ${file.sources.map((source) => source.id).join(', ')}`);
+    if (path === PUBLISHED_CONDITIONS) console.log(`published-conditions.json.gz: ${file.conditions.length} conditions from ${file.sources.map((source) => source.id).join(', ')}`);
   }
   if (conditions.length === 0) {
     console.error('No conditions: give --rs14, --western, --hodgdon-m1, --hodgdon-subsonic or --conditions (see the comment at the top of this file).');
