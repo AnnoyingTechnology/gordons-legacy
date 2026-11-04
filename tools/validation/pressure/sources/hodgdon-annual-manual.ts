@@ -290,4 +290,10 @@ const PROJECTILES: Record<string, string> = {
   '0.308 200 GR. BAR LRX BT': 'barnes-lrx-200',
   '0.308 180 GR. NOS E-TIP': 'nosler-e-tip-180',
   '0.308 230 GR. BER TACT': 'berger-30112',
+  '0.284 162 GR. HDY ELD-X': 'hornady-eld-x-162-284',
+  '0.308 168 GR. HDY ELD-M': 'hornady-eld-match-168',
+  '0.308 220 GR. HDY ELD-X': 'hornady-eld-x-220',
+  '0.308 190 GR. NOS ABLR': 'nosler-ablr-190',
+  '0.284 175 GR. NOS ABLR': 'nosler-ablr-175-284',
+  '0.284 150 GR. NOS E-TIP': 'nosler-e-tip-150-284',
 };

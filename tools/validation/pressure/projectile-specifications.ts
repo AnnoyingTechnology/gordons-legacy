@@ -173,19 +173,27 @@ PROJECTILE_SPECIFICATIONS.push(
 );
 
 /** A length from Nosler's own product page, which prints "Overall Length (OAL) (in.)". */
-function nosler(key: string, product: string, grains: number, inches: number, page: string, note = ''): ProjectileSpecification {
+function nosler(
+  key: string,
+  product: string,
+  grains: number,
+  inches: number,
+  page: string,
+  options: { note?: string; diameterInches?: number; construction?: ProjectileConstruction; read?: string } = {},
+): ProjectileSpecification {
+  const { note = '', diameterInches = 0.308, construction = 'rifle-jacketed', read = '2026-11-03' } = options;
   return {
     key,
     maker: 'Nosler',
     product,
     mass: grains * units.GRAIN,
-    diameter: 0.308 * units.INCH,
+    diameter: diameterInches * units.INCH,
     length: inches * units.INCH,
     lengthStatus: 'specification',
-    lengthSource: `Nosler's product page, "Overall Length (OAL) (in.): ${inches.toFixed(3)}" (nosler.com/${page}, read 2026-11-03)${note}`,
+    lengthSource: `Nosler's product page, "Overall Length (OAL) (in.): ${inches.toFixed(3)}" (nosler.com/${page}, read ${read})${note}`,
     // Nosler names the base (boat tail or flat) but gives none of a boat-tail's dimensions: flat, as for the others.
     base: { shape: 'flat' },
-    construction: 'rifle-jacketed',
+    construction,
   };
 }
 
@@ -200,9 +208,12 @@ PROJECTILE_SPECIFICATIONS.push(
   listed('hornady-btsp-150', 'Hornady', 'InterLock BTSP 30 cal 150 gr, 3033', 150, 1.096, 'bluecollarreloading.com', 'rifle-jacketed', '2026-11-03'),
   listed('hornady-sst-165', 'Hornady', 'SST 30 cal 165 gr, 30452', 165, 1.274, 'bluecollarreloading.com', 'rifle-jacketed', '2026-11-03'),
   listed('barnes-lrx-200', 'Barnes', 'LRX BT 30 cal 200 gr, 30374', 200, 1.624, 'bluecollarreloading.com', 'rifle-solid-copper', '2026-11-03'),
-  nosler('nosler-accubond-150', 'AccuBond 30 cal 150 gr, 56719', 150, 1.2, '30-caliber-150gr-accubond-50ct.html', '; bluecollarreloading.com lists 1.230 in'),
+  nosler('nosler-accubond-150', 'AccuBond 30 cal 150 gr, 56719', 150, 1.2, '30-caliber-150gr-accubond-50ct.html', { note: '; bluecollarreloading.com lists 1.230 in' }),
   nosler('nosler-accubond-200', 'AccuBond 30 cal 200 gr, 54618', 200, 1.485, '30-caliber-200gr-accubond-50ct.html'),
   nosler('nosler-partition-220', 'Partition 30 cal 220 gr semi-spitzer, 16332', 220, 1.37, '30-caliber-220gr-partition-50ct.html'),
+  nosler('nosler-ablr-190', 'AccuBond Long Range 30 cal 190 gr, 58456', 190, 1.48, '30-caliber-190gr-accubond-long-range-100ct.html', { read: '2026-11-04' }),
+  nosler('nosler-ablr-175-284', 'AccuBond Long Range 7mm 175 gr, 58517', 175, 1.54, '7mm-175gr-accubond-long-range-100ct.html', { diameterInches: 0.284, read: '2026-11-04' }),
+  nosler('nosler-e-tip-150-284', 'E-Tip 7mm 150 gr, 59426', 150, 1.425, '7mm-150gr-expansion-tip-lead-free-50ct.html', { diameterInches: 0.284, construction: 'rifle-solid-copper', read: '2026-11-04' }),
 );
 
 /** A length Blue Collar Reloading lists for a bullet of any diameter, read first-hand on 2026-11-04. */
@@ -248,6 +259,9 @@ PROJECTILE_SPECIFICATIONS.push(
   blueCollar('sierra-matchking-155-palma', 'Sierra', 'MatchKing HPBT Palma 30 cal 155 gr, 2155', 155, 0.308, 1.133),
   blueCollar('barnes-lrx-95-243', 'Barnes', 'LRX BT 6mm 95 gr, 30862', 95, 0.243, 1.27, 'rifle-solid-copper'),
   blueCollar('hornady-v-max-65-243', 'Hornady', 'V-MAX 6mm 65 gr, 22415', 65, 0.243, 0.84),
+  blueCollar('hornady-eld-x-162-284', 'Hornady', 'ELD-X 7mm 162 gr, 2840', 162, 0.284, 1.478),
+  blueCollar('hornady-eld-match-168', 'Hornady', 'ELD Match 30 cal 168 gr, 30506', 168, 0.308, 1.272),
+  blueCollar('hornady-eld-x-220', 'Hornady', 'ELD-X 30 cal 220 gr, 3078', 220, 0.308, 1.63),
 );
 
 export function projectileSpecification(key: string): ProjectileSpecification | undefined {
