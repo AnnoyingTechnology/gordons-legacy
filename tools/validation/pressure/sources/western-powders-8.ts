@@ -54,10 +54,31 @@ const CONTINUED = / \(continued\)$/;
 /** A line that looks like a row of the tables. */
 const ROW_LIKE = /^\d{2,3}\D.*\d\.\d{3}C?$/;
 /**
- * A pressure note some cartridges print between their name and their `Barrel:` line (`55,000 PSI --
- * STANDARD SAAMI COMMERCIAL SPECIFICATIONS` under `223 REMINGTON`): the name is the line above it.
+ * A note printed between a cartridge's name and its `Barrel:` line: a pressure standard (`55,000 PSI --
+ * STANDARD SAAMI COMMERCIAL SPECIFICATIONS`, `CIP COMMERCIAL AND NATO/MIL SPECIFICATION (62,350 PSI)`,
+ * `APPROX. 28,000 PSI`) or a sentence (`These loads apply to both 6.8SPC and SPC II.`). Names are in
+ * capitals with no pressure in them; a long one wraps onto a second line (`7MM REMINGTON SHORT ACTION
+ * ULTRA` / `MAGNUM (SAUM)`).
  */
-const PRESSURE_NOTE = /^\d[\d,]*\s*(?:PSI|CUP)\b/;
+const PRESSURE_NOTE = /^[\d,]+\s*(?:PSI|CUP)\b|\bSPECIFICATIONS?\b|^APPROX\./;
+
+/**
+ * The cartridge printed above a `Barrel:` line: the nearest line above it that is no note, joined to the
+ * line above that only when it does not start as a cartridge name does (a digit or a point), being the
+ * second half of a wrapped one. A page heading above it (`HANDGUN DATA`) is not part of the name.
+ */
+function cartridgeAbove(lines: readonly string[], barrelIndex: number): string {
+  const above: string[] = [];
+  for (let index = barrelIndex - 1; index >= 0 && above.length < 4; index--) {
+    const line = lines[index]!;
+    if (line === '' || ROW_LIKE.test(line.replace(/\s/g, '')) || POWDER.test(line) || CONTINUED.test(line)) break;
+    if (line === line.toUpperCase() && !PRESSURE_NOTE.test(line)) above.unshift(line);
+    else if (above.length > 0) break;
+  }
+  let name = above.pop() ?? '';
+  while (!/^[\d.]/.test(name) && above.length > 0) name = `${above.pop()!} ${name}`;
+  return name.replace(CONTINUED, '');
+}
 
 /**
  * Reads every complete row, with the cartridge, powder, barrel and case it is printed under. A line that
@@ -74,7 +95,7 @@ export function readWesternRows(text: string): { rows: WesternRow[]; unread: str
   lines.forEach((line, index) => {
     const next = lines[index + 1] ?? '';
     if (next.startsWith('Barrel:')) {
-      cartridge = (PRESSURE_NOTE.test(line) ? (lines[index - 1] ?? '') : line).replace(CONTINUED, '');
+      cartridge = cartridgeAbove(lines, index + 1);
       barrels.set(cartridge, next.replace(/\s/g, ''));
       const caseLine = lines[index + 2] ?? '';
       if (caseLine.startsWith('Case:')) cases.set(cartridge, /^Case:([^¦]*)/.exec(caseLine)?.[1]?.replace(/\s/g, '') ?? '');
@@ -84,7 +105,6 @@ export function readWesternRows(text: string): { rows: WesternRow[]; unread: str
       cartridge = line.replace(CONTINUED, '');
       return;
     }
-    if (PRESSURE_NOTE.test(line)) return;
     const powderMatch = POWDER.exec(line);
     if (powderMatch) {
       powder = `${powderMatch[1]} ${powderMatch[2]}`;
@@ -180,7 +200,10 @@ export function westernConditions(text: string): { conditions: PressureCondition
   for (const row of rows) {
     const powder = powderOf(row.powder);
     const barrel = barrelOf(row.barrel);
-    const key = PROJECTILES[`${row.mass}${row.projectile}`] ?? `${row.projectile} ${row.mass} gr`;
+    // The table's bullets are all .308: a 200 gr AccuBond in .338 Win. Mag. is another bullet (#32 review).
+    const diameter = /BulletDiameter:([\d.]+)/.exec(row.barrel)?.[1];
+    const mapped = diameter === '0.308' ? PROJECTILES[`${row.mass}${row.projectile}`] : undefined;
+    const key = mapped ?? `${row.projectile} ${row.mass} gr (${diameter ?? 'diameter not read'})`;
     const series = `${WESTERN_8_SOURCE.id}/${row.cartridge}/${row.powder}/${row.mass} ${row.projectile}`;
     const common = {
       source: WESTERN_8_SOURCE.id,

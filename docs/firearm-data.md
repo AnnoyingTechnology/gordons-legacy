@@ -376,7 +376,9 @@ Every extractor settles a name read again through `settleListing` (`tools/data/f
   whole, with its own page as its source, since a maker's heavier weight is most likely the gun with a
   loaded magazine;
 - another barrel length or twist is another configuration, so another gun, named apart by what differs
-  as the maker printed it (`… 16.5"`, `… 1:8"`).
+  as the maker printed it (`… 16.5"`, `… 1:8"`);
+- a listing that leaves out the twist is the same gun as one that gives it, but never replaces it,
+  however heavy: the record would lose what tells this configuration from another of the same barrel.
 
 Nothing is averaged: a figure no page printed never enters a record. Guns whose pages are gone may be
 read from archived snapshots, cited as the archive and its date: the Ruger GP100 and SP101, 49 guns,

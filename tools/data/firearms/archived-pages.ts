@@ -30,8 +30,8 @@ export function indexQuery(prefix: string): string {
 /**
  * The latest capture of each page in an index answer. The archive records one page under several
  * addresses over the years (`http://www.ruger.com:80/…`, `https://ruger.com/…`): they are one page,
- * compared without scheme, `www.`, default port, query and fragment. A malformed answer gives no
- * snapshot rather than a guess.
+ * compared without scheme, `www.`, default port, query and fragment, and the capture keeps the address
+ * it was made of. A malformed answer gives no snapshot rather than a guess.
  */
 export function latestSnapshots(answer: string): Snapshot[] {
   let rows: unknown;
@@ -50,10 +50,10 @@ export function latestSnapshots(answer: string): Snapshot[] {
     const original = capture[originalColumn];
     const timestamp = capture[timestampColumn];
     if (typeof original !== 'string' || typeof timestamp !== 'string' || !/^\d{14}$/.test(timestamp)) continue;
-    const address = original.replace(/[?#].*$/, '');
-    const page = address.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/:(80|443)\//, '/');
+    // Compared by the page alone; fetched and cited by the address the archive captured, query included.
+    const page = original.replace(/[?#].*$/, '').replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/:(80|443)\//, '/');
     const known = latest.get(page);
-    if (known === undefined || known.timestamp < timestamp) latest.set(page, { original: address, timestamp });
+    if (known === undefined || known.timestamp < timestamp) latest.set(page, { original, timestamp });
   }
   return [...latest.values()];
 }

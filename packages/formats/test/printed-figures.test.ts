@@ -165,3 +165,50 @@ describe('a gun read again under a published name', () => {
     expect(mergedReading(published, other).map((gun) => gun.name)).toEqual(['Example Carbine', 'Example Carbine .300 BLK']);
   });
 });
+
+describe('a gun listed many times (#30 review, 2026-11-04)', () => {
+  const byName = (firearm: { name: string }) => firearm.name;
+  const settleAll = (guns: ReturnType<typeof firearmRecord>[]) => {
+    const written = new Map<string, ReturnType<typeof firearmRecord>>();
+    for (const gun of guns) {
+      const settled = settleListing(written, gun, byName);
+      if ('write' in settled) written.set(settled.write.name, settled.write);
+    }
+    return [...written.values()];
+  };
+
+  it('keeps a fourth configuration once its name is free', () => {
+    const guns = settleAll([
+      firearmRecord({ ...FACTS, cartridge: '.223 Rem', barrelLength: 0.4064, twistLength: 0.2032, published: { barrelLength: '16"', twist: '1:8' } }),
+      firearmRecord({ ...FACTS, cartridge: '.308 Win', barrelLength: 0.4064, twistLength: 0.2032, published: { barrelLength: '16"', twist: '1:8' } }),
+      firearmRecord({ ...FACTS, cartridge: '.308 Win', barrelLength: 0.508, twistLength: 0.2032, published: { barrelLength: '20"', twist: '1:8' } }),
+      firearmRecord({ ...FACTS, cartridge: '.308 Win', barrelLength: 0.508, twistLength: 0.254, published: { barrelLength: '20"', twist: '1:10' } }),
+    ]);
+    expect(guns).toHaveLength(4);
+  });
+
+  it('never lets a listing without a twist erase two known twists', () => {
+    const guns = settleAll([
+      firearmRecord({ ...FACTS, twistLength: 0.2032, gunMass: 2.9, published: { twist: '1:8' } }),
+      firearmRecord({ ...FACTS, twistLength: undefined, gunMass: 3.4, published: {} }),
+      firearmRecord({ ...FACTS, twistLength: 0.254, gunMass: 3.0, published: { twist: '1:10' } }),
+    ]);
+    expect(guns.map((gun) => gun.barrel.twistLength)).toEqual([0.2032, 0.254]);
+  });
+});
+
+describe('a new reading merged into a published catalogue (#30 review, 2026-11-04)', () => {
+  it('never overwrites a published configuration with a gun renamed apart', async () => {
+    const { mergedCatalogue } = await import('../../../tools/data/export-repository.ts');
+    const named = (name: string, cartridge: string, barrel: number, printed: string) =>
+      firearmRecord({ ...FACTS, name, cartridge, barrelLength: barrel, published: { barrelLength: printed } });
+    const published = [named('Example Rifle', '.223 Rem', 0.4064, '16"'), named('Example Rifle .308 Win', '.308 Win', 0.508, '20"')];
+    const fresh = new Map([['Example Rifle', named('Example Rifle', '.308 Win', 0.4064, '16"')]]);
+    const guns = [...mergedCatalogue(published, fresh).values()];
+    expect(guns.map((gun) => [gun.cartridge, gun.barrel.length])).toEqual([
+      ['.223 Rem', 0.4064],
+      ['.308 Win', 0.508],
+      ['.308 Win', 0.4064],
+    ]);
+  });
+});

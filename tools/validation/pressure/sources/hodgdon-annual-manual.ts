@@ -65,14 +65,15 @@ export interface ManualLoad {
   unit: 'PSI' | 'CUP';
 }
 
-const LOAD = String.raw`(\d+\.\d)(C?\*?)\s+(\d{3,5})\s+(\d{1,3}(?:,\d{3})?)\s+(PSI|CUP)`;
+// A pressure is printed `41,700` and, now and then, `9200` or `49,000PSI`.
+const LOAD = String.raw`(\d+\.\d)(C?\*?)\s+(\d{3,5})\s+(\d{1,3}(?:,\d{3})?|\d{4,6})\s*(PSI|CUP)`;
 const ROW = new RegExp(String.raw`^(\S.*?)\s+${LOAD}\s+${LOAD}$`);
 /** A subsonic table's row: one recommended load. */
 const SINGLE = new RegExp(String.raw`^(\S.*?)\s+${LOAD}$`);
 /** A line that looks like a row: a name, then a charge, a velocity and a pressure unit. */
 const ROW_LIKE = /\d+\.\d\S*\s+\d{3,5}\s+[\d,]+\s+(?:PSI|CUP)/;
 const BARREL = /^Barrel:\s*(\S+)\s+Twist:\s*(\S+)/;
-const BULLET = /^Bullet:\s*((\d+)\s+GR\..*?)\s+Dia:\s*([.\d]+)/;
+const BULLET = /^Bullet:\s*((\d+(?:\.\d+)?)\s+GR\..*?)\s+Dia:\s*([.\d]+)/;
 const CASE = /^Case:\s*(.*?)\s+Primer:.*?Col:\s*([.\d]+)/i;
 
 /** Each page's two columns, left then right, cut at the page's second `Powder` heading. */
@@ -113,6 +114,12 @@ export function readManualRows(text: string): { rows: ManualRow[]; unread: strin
         state.diameter = Number(bullet[3]);
         return;
       }
+      if (line.startsWith('Bullet:')) {
+        // A bullet heading that can't be read ends the last one: its rows would otherwise be put under it.
+        state.bullet = '';
+        unread.push(`page ${page} ${column}: ${line}`);
+        return;
+      }
       const caseLine = CASE.exec(line);
       if (caseLine) {
         state.caseMake = caseLine[1]!.trim();
@@ -120,7 +127,9 @@ export function readManualRows(text: string): { rows: ManualRow[]; unread: strin
         return;
       }
       const pair = ROW.exec(line);
-      const match = pair ?? SINGLE.exec(line);
+      // A single load whose "powder" holds a load of its own is a pair that failed to read, not a single.
+      const single = pair ? undefined : SINGLE.exec(line);
+      const match = pair ?? (single && !/\d+\.\d\S*\s+\d{3,5}\s/.test(single[1]!) ? single : undefined);
       if (!match || !state.cartridge || !state.bullet || !state.overallLength) {
         if (ROW_LIKE.test(line) && !/Grs\s+Vel/.test(line)) unread.push(`page ${page} ${column}: ${line}`);
         return;
@@ -144,17 +153,30 @@ export function readManualRows(text: string): { rows: ManualRow[]; unread: strin
 /**
  * The manual's powder names as the component pool names the models: the pool holds `H380 #3` and, for
  * Lil'Gun, a subsonic model and a general one (`Lil' Gun QL`); the manual's loads are full-power, so
- * the general one. Others keep their maker by the manual's own grouping.
+ * the general one.
  */
 const POWDERS: Record<string, { maker: string; product: string }> = {
-  'StaBALL Match': { maker: 'Winchester', product: 'StaBALL Match' },
   H380: { maker: 'Hodgdon', product: 'H380 #3' },
   'Lil’Gun': { maker: 'Hodgdon', product: "Lil' Gun QL" },
   H50BMG: { maker: 'Hodgdon', product: '50BMG' },
 };
 
+/**
+ * The manual prints its powders without their maker, Hodgdon's own beside IMR's, Winchester's and the
+ * Western brands it publishes (Accurate and Ramshot). These are theirs; the rest are Hodgdon's.
+ */
+const WINCHESTER = new Set(['231', '244', '296', '572', '748', '760', '780', 'AutoComp', 'Super Handicap', 'Super Target', 'Super-Target', 'WST', 'WSF', 'StaBALL Match', 'StaBALL 6.5', 'StaBALL HD', 'Super Field']);
+const ACCURATE = new Set(['No. 2', 'No. 5', 'No. 7', 'No. 9', 'No. 11FS', '4100', '1680', '2015', '2200', '2230', '2460', '2495', '2520', '2700', '4064', '4350', '5744', '7828', 'LT-30', 'LT-32', 'Magpro', 'MAGPRO', 'Solo 1000', 'Nitro 100 NF', 'XMR 2200', 'A1680']);
+const RAMSHOT = new Set(['Zip', 'ZIP', 'Competition', 'Silhouette', 'True Blue', 'Enforcer', 'TAC', 'X-Terminator', 'Hunter', 'Big Game', 'Magnum', 'LRT']);
+
 function powderOf(name: string): { maker: string; product: string } {
-  return POWDERS[name] ?? { maker: 'Hodgdon', product: name };
+  const known = POWDERS[name];
+  if (known) return known;
+  if (name.startsWith('IMR ')) return { maker: 'IMR', product: name.slice(4) };
+  if (WINCHESTER.has(name)) return { maker: 'Winchester', product: name };
+  if (ACCURATE.has(name)) return { maker: 'Accurate', product: name };
+  if (RAMSHOT.has(name)) return { maker: 'Ramshot', product: name };
+  return { maker: 'Hodgdon', product: name };
 }
 
 /**

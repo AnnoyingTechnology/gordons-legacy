@@ -14,9 +14,9 @@ describe('the archive of a page that is gone', () => {
     ['https://ruger.com/products/gp100/specSheets/1752.html', 'not-a-time'],
   ]);
 
-  it('takes the latest capture of each page, its address without the query', () => {
+  it('takes the latest capture of each page, compared without the query, kept with the address captured', () => {
     expect(latestSnapshots(answer)).toEqual([
-      { original: 'https://ruger.com/products/gp100/specSheets/1707.html', timestamp: '20250310120000' },
+      { original: 'https://ruger.com/products/gp100/specSheets/1707.html?buy=1', timestamp: '20250310120000' },
       { original: 'https://ruger.com/products/gp100/specSheets/1752.html', timestamp: '20231201080000' },
     ]);
   });
@@ -33,7 +33,7 @@ describe('the archive of a page that is gone', () => {
 
   it('cites the snapshot and the day it was captured', () => {
     const [snapshot] = latestSnapshots(answer);
-    expect(snapshotAddress(snapshot!)).toBe('https://web.archive.org/web/20250310120000/https://ruger.com/products/gp100/specSheets/1707.html');
+    expect(snapshotAddress(snapshot!)).toBe('https://web.archive.org/web/20250310120000/https://ruger.com/products/gp100/specSheets/1707.html?buy=1');
     expect(snapshotDate(snapshot!)).toBe('2025-03-10');
   });
 

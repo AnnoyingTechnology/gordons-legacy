@@ -166,6 +166,22 @@ describe("reading the Western Powders guide's rows", () => {
     expect(readWesternRows(guide).rows.map((row) => row.cartridge)).toEqual(['223 REMINGTON', '223 REMINGTON']);
   });
 
+  it('reads a cartridge name around the notes and page headings printed with it', () => {
+    const heading = (lines: string[]) => [
+      ...lines,
+      'Barrel: 2 4 ” ¦ Tw ist: 1 - 1 2 ” ¦ Primer: WIN WSR ¦ Bullet D iameter: 0 .2 2 4 ”',
+      'Case: WIN ¦ Max Case Length: 1 .7 6 0 ” ¦ Trim Length: 1 .7 5 0 ”',
+      'ACCURATE 5744',
+      '5 5 SIE R R A SBT 2 1 .5 2 , 6 4 1 2 3 .8 2 , 9 8 5 4 3 , 5 0 0 2 .1 2 0 C',
+    ];
+    const name = (lines: string[]) => readWesternRows(heading(lines).join('\n')).rows[0]?.cartridge;
+    expect(name(['HANDGUN DATA', '5.56 X 45MM NATO', 'CIP COMMERCIAL AND NATO/MIL SPECIFICATION (62,350 PSI)'])).toBe('5.56 X 45MM NATO');
+    expect(name(['6.8 REMINGTON SPC', 'These loads apply to both 6.8SPC and SPC II.'])).toBe('6.8 REMINGTON SPC');
+    expect(name(['7MM REMINGTON SHORT ACTION ULTRA', 'MAGNUM (SAUM)'])).toBe('7MM REMINGTON SHORT ACTION ULTRA MAGNUM (SAUM)');
+    expect(name(['45 COLT - 14000 PSI - STANDARD LOADS'])).toBe('45 COLT - 14000 PSI - STANDARD LOADS');
+    expect(name(['45-70 GOVERNMENT STANDARD PRESSURE', 'APPROX. 28,000 PSI'])).toBe('45-70 GOVERNMENT STANDARD PRESSURE');
+  });
+
   it('reports, rather than reads, a row whose mould number would be read as a charge', () => {
     const { rows, unread } = readWesternRows(GUIDE);
     expect(rows.map((row) => row.mass)).toEqual([240, 200]);
@@ -339,7 +355,7 @@ describe('the published rows, as committed (maintainer, 2026-11-03)', () => {
 
   it('holds every row of the five documents, each citing its source', () => {
     expect(sources.map((source) => source.id)).toEqual(['reload-swiss-rs14-2023', 'western-powders-8.0', 'hodgdon-m1-garand', 'hodgdon-subsonic', 'hodgdon-annual-manual-2025']);
-    expect(conditions).toHaveLength(31759);
+    expect(conditions).toHaveLength(31762);
     expect(conditions.every((condition) => sources.some((source) => source.id === condition.source))).toBe(true);
   });
 

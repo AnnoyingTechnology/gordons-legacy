@@ -18,6 +18,7 @@ import { join } from 'node:path';
 import { readDocument, sha256, type ComponentKind, type DataIndexEntry, type Provenance } from '@gordons-legacy/data';
 import { parseFirearm, type Firearm } from '@gordons-legacy/formats';
 import { plainText } from './firearms/maker-site.ts';
+import { settleListing } from './firearms/printed-figures.ts';
 
 const SNAPSHOT = join(import.meta.dirname, '../../packages/app/src/data/community-components.json');
 const GRAINS_PER_KILOGRAM = 15432.358;
@@ -234,6 +235,26 @@ export function mergedReading(published: Firearm | undefined, fresh: Firearm): F
 }
 
 /**
+ * A maker's published guns with a new reading merged in, by name (`mergedReading`). A gun renamed apart
+ * (another cartridge) meets the published guns by the listing rules, so that it never overwrites
+ * another configuration published under the name it takes (#30 review).
+ */
+export function mergedCatalogue(published: readonly Firearm[], fresh: ReadonlyMap<string, Firearm>): Map<string, Firearm> {
+  const guns = new Map(published.map((gun) => [gun.name, gun]));
+  for (const [name, gun] of fresh) {
+    for (const kept of mergedReading(guns.get(name), gun)) {
+      if (kept.name === name) {
+        guns.set(name, kept);
+        continue;
+      }
+      const settled = settleListing(guns, kept, (firearm) => firearm.name);
+      if ('write' in settled) guns.set(settled.write.name, settled.write);
+    }
+  }
+  return guns;
+}
+
+/**
  * Writes the gun database: one file per maker, holding that maker's guns by name, with the guns the
  * repository already holds kept where the new reading no longer has them — a gun that has left a
  * catalogue is still owned and loaded for. Returns the index entries.
@@ -249,8 +270,7 @@ async function writeFirearms(repository: string, folders: readonly string[]): Pr
     const fresh = read.get(maker) ?? new Map<string, Firearm>();
     const superseded = supersededNames(published, fresh);
     if (superseded.size > 0) console.log(`  firearms/${maker}.json: ${superseded.size} guns published under a name since read better`);
-    const guns = new Map(published.filter((gun) => !superseded.has(gun.name)).map((gun) => [gun.name, gun]));
-    for (const [name, gun] of fresh) for (const kept of mergedReading(guns.get(name), gun)) guns.set(kept.name, kept);
+    const guns = mergedCatalogue(published.filter((gun) => !superseded.has(gun.name)), fresh);
     const value = [...guns.values()].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
     if (value.length === 0) continue;
     const document = { format: 'gordons-legacy.component', version: 1, kind: 'firearm', provenance: firearmProvenance(value), value };

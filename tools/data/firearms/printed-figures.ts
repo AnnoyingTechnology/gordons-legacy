@@ -251,7 +251,8 @@ export type Settled =
 /**
  * Settles a gun listed again under a name already written (the maintainer's rules of 2026-11-03, #30).
  * Another cartridge is another gun, named apart by its cartridge. The same barrel and twist make the
- * same gun (a twist one page leaves out disagrees with nothing), and only one listing is kept: the heaviest, since a
+ * same gun (a twist one page leaves out disagrees with nothing, and that page's listing never replaces one
+ * that gives the twist), and only one listing is kept: the heaviest, since a
  * maker's heavier weight is most likely the gun with a loaded magazine; it is kept whole, with its own
  * page as its source, rather than merged. Another barrel length or twist is another configuration, so
  * another gun, named apart by what differs (`… 16.5"`, `… 1:8"`). Nothing is averaged: a figure no
@@ -262,9 +263,11 @@ export type Settled =
  */
 export function settleListing(written: ReadonlyMap<string, Firearm>, firearm: Firearm, key: (firearm: Firearm) => string): Settled {
   let candidate = firearm;
-  for (let attempt = 0; attempt < 3; attempt++) {
+  // Up to three renames, the name each one makes looked up too (another cartridge, barrel and twist).
+  for (let attempt = 0; attempt <= 3; attempt++) {
     const first = written.get(key(candidate));
     if (first === undefined) return { write: candidate };
+    if (attempt === 3) break;
     if (first.cartridge !== candidate.cartridge) {
       candidate = renamed(candidate, `${candidate.name} ${candidate.cartridge}`);
       continue;
@@ -273,7 +276,10 @@ export function settleListing(written: ReadonlyMap<string, Firearm>, firearm: Fi
     const sameTwist = first.barrel.twistLength === undefined || candidate.barrel.twistLength === undefined || first.barrel.twistLength === candidate.barrel.twistLength;
     if (first.barrel.length === candidate.barrel.length && sameTwist) {
       const mass = candidate.barrel.gunMass;
-      if (mass !== undefined && !(first.barrel.gunMass !== undefined && first.barrel.gunMass >= mass)) return { write: candidate, replacing: first };
+      // A listing that leaves out the twist never replaces one that gives it, however heavy: the record
+      // would lose what tells this configuration from another of the same barrel (#30 review).
+      const losesTwist = candidate.barrel.twistLength === undefined && first.barrel.twistLength !== undefined;
+      if (!losesTwist && mass !== undefined && !(first.barrel.gunMass !== undefined && first.barrel.gunMass >= mass)) return { write: candidate, replacing: first };
       return { skip: `${candidate.name} is already written${difference(first, candidate)}${mass === undefined ? '' : ', the heavier kept'}` };
     }
     const sameBarrel = first.barrel.length === candidate.barrel.length;
