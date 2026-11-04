@@ -164,23 +164,39 @@ export function readDocument(text: string, entry?: DataIndexEntry): ComponentDoc
     const result = checkCaliber(parsed.value);
     return result.ok ? { ...base, kind: 'caliber', value: result.value } : undefined;
   }
-  if (parsed.kind === 'firearm') return firearmList(base, parsed.value);
+  if (parsed.kind === 'firearm') {
+    const guns = checkedList(parsed.value, checkFirearm);
+    return guns && { ...base, kind: 'firearm', value: guns };
+  }
+  if (parsed.kind === 'grt-powders') {
+    const powders = checkedList(parsed.value, checkPropellant);
+    return powders && { ...base, kind: 'grt-powders', value: powders };
+  }
+  if (parsed.kind === 'grt-projectiles') {
+    const projectiles = checkedList(parsed.value, checkProjectile);
+    return projectiles && { ...base, kind: 'grt-projectiles', value: projectiles };
+  }
+  if (parsed.kind === 'grt-calibers') {
+    const calibers = checkedList(parsed.value, checkCaliber);
+    return calibers && { ...base, kind: 'grt-calibers', value: calibers };
+  }
   return undefined;
 }
 
 /**
- * One maker's guns. The file is taken whole or not at all, as every other file is: a gun the format
- * rejects is a bug in the export, and a catalogue that silently lost a few guns would hide it.
+ * One maker's guns or components. The file is taken whole or not at all, as every other file is: an
+ * entry the format rejects is a bug in the export, and a catalogue that silently lost a few entries
+ * would hide it.
  */
-function firearmList(base: { format: 'gordons-legacy.component'; version: 1; provenance: Provenance }, value: unknown): ComponentDocument | undefined {
+function checkedList<T>(value: unknown, check: (entry: unknown) => { ok: true; value: T } | { ok: false }): T[] | undefined {
   if (!Array.isArray(value)) return undefined;
-  const guns = [];
-  for (const gun of value) {
-    const result = checkFirearm(gun);
+  const entries: T[] = [];
+  for (const entry of value) {
+    const result = check(entry);
     if (!result.ok) return undefined;
-    guns.push(result.value);
+    entries.push(result.value);
   }
-  return { ...base, kind: 'firearm', value: guns };
+  return entries;
 }
 
 function readProvenance(value: unknown): Provenance | undefined {

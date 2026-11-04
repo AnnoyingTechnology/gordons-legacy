@@ -46,6 +46,16 @@ export class GrtFields {
     }
   }
 
+  /**
+   * The columns of a record of GRT's database (grt-database-import.ts): plain text, neither
+   * percent-encoded nor labelled with units, which are those of GRT's component files.
+   */
+  static fromColumns(columns: Iterable<readonly [string, string]>, section: string, log: IssueLog): GrtFields {
+    const fields = new GrtFields([], section, log);
+    for (const [name, value] of columns) fields.fields.set(name, { value, unit: '' });
+    return fields;
+  }
+
   has(name: string): boolean {
     return this.fields.has(name);
   }

@@ -21,7 +21,7 @@ A TypeScript monorepo with no backend.
 | Package | Role |
 |---|---|
 | `engine` | Interior-ballistics model. Pure TypeScript, no DOM, runs in browsers, Web Workers, Node and Deno. |
-| `formats` | Versioned JSON schema for loads and components; importers for GRT `.grtload`, `.propellant`, `.projectile`, `.caliber` and the user's own `GordonsReloadingTool.db`. |
+| `formats` | Versioned JSON schema for loads and components; importers for GRT `.grtload`, `.propellant`, `.projectile`, `.caliber` and the records of GRT's database (`docs/formats/grt-database.md`). |
 | `data` | Data-repository client: index fetch, SHA-256 verification, IndexedDB cache, bundled snapshot. |
 | `app` | The web UI, installable as an offline app (PWA). |
 | `cli` | Batch simulation and reference-comparison tests. |
@@ -108,6 +108,11 @@ Separate repository, `gordons-legacy-data`, under CC0 1.0.
   twist, mass and cartridge as the maker publishes them, each record naming its page, the date it was
   read and what its mass includes. The makers read so far hold about 2,500 guns, so a file per gun would
   make a first search that many requests. Rules of the intake and of a refresh: `docs/firearm-data.md`.
+- GRT's own database (issue #19), published with the written permission of Gordon's family
+  (2026-11-04): one JSON file **per maker** (per standard for cartridges) under `grt/`, kinds
+  `grt-powders`, `grt-projectiles`, `grt-calibers`, holding GRT's own rows that GRT neither deleted nor
+  hid. 6,450 entries as single files would be that many requests on a first visit. Built by
+  `tools/data/build-grt-catalogue.ts`; what was left out and why: `docs/data/grt-catalogue.md`.
 - A generated `index.json` lists every file with its version and SHA-256 hash.
 - The app downloads changes at startup, verifies hashes, caches everything for offline use, and ships a
   snapshot in each release so a first run without network still works. The guns are the exception: they
@@ -124,7 +129,10 @@ Intake:
 - Published data (makers' load tables, measured pressures, specifications) may be committed, each row
   cited to its document and date (maintainer, 2026-11-03: the project is open source throughout, and
   licensing is not asked again). The documents themselves (PDFs) are not committed.
-- Not accepted: GRT's database or anything derived from it (CLAUDE.md: GRT's files are never committed).
+- GRT's database: its records, converted to SI with their GRT authorship, under the family's permission
+  (2026-11-04). Not its encrypted file, nor any record a user of the copy made, nor powder models GRT hid.
+  Where a cartridge is defined both by GRT and by the community, the app prefers the user's own, then
+  GRT's, then the community's.
 - Data changes are safety-critical: a wrong powder model predicts a wrong pressure. CI simulates
   reference loads for every change and compares them with published data, and every change needs
   maintainer review. The app shows each model's provenance and verification status.

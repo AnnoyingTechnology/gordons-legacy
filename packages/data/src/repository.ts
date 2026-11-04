@@ -23,9 +23,16 @@ export interface DataIndexEntry {
 /**
  * What a file of the repository holds. `firearm` is the published gun database (issue #30): one file per
  * maker, holding that maker's guns, synchronised on its own because a load editor has no use for it
- * until a user looks for their gun.
+ * until a user looks for their gun. The `grt-` kinds are GRT's own database (issue #19), one file per
+ * maker (per standard for cartridges) holding that maker's components: some 6,500 single files would be
+ * that many requests on a first visit.
  */
-export type ComponentKind = 'powder' | 'projectile' | 'caliber' | 'firearm';
+export type ComponentKind = 'powder' | 'projectile' | 'caliber' | 'firearm' | GrtCatalogueKind;
+
+/** The kinds of GRT's catalogue (tools/data/build-grt-catalogue.ts). */
+export type GrtCatalogueKind = 'grt-powders' | 'grt-projectiles' | 'grt-calibers';
+
+export const COMPONENT_KINDS: readonly ComponentKind[] = ['powder', 'projectile', 'caliber', 'firearm', 'grt-powders', 'grt-projectiles', 'grt-calibers'];
 
 /** Where a component comes from and how far it has been checked. */
 export interface Provenance {
@@ -54,4 +61,9 @@ export type ComponentDocument =
   // would be that many requests on a first search. Each gun still carries its own `source` (the page,
   // the date it was read, what its published mass includes); the provenance here says how the file was
   // made, as it does for every other kind.
-  | { format: 'gordons-legacy.component'; version: 1; kind: 'firearm'; provenance: Provenance; value: Firearm[] };
+  | { format: 'gordons-legacy.component'; version: 1; kind: 'firearm'; provenance: Provenance; value: Firearm[] }
+  // One maker's components from GRT's database. Each component still carries its own `info` (who made
+  // it in GRT and when); the provenance says where the file comes from and how it was made.
+  | { format: 'gordons-legacy.component'; version: 1; kind: 'grt-powders'; provenance: Provenance; value: Propellant[] }
+  | { format: 'gordons-legacy.component'; version: 1; kind: 'grt-projectiles'; provenance: Provenance; value: Projectile[] }
+  | { format: 'gordons-legacy.component'; version: 1; kind: 'grt-calibers'; provenance: Provenance; value: CaliberDefinition[] };

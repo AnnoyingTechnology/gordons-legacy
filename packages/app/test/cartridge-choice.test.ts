@@ -11,6 +11,19 @@ const entry = (name: string, id = name, origin: 'user' | 'community' = 'communit
 });
 
 describe('gun cartridge preselection', () => {
+  it("prefers the user's definition, then GRT's, then the community's", () => {
+    const luger = (origin: 'user' | 'grt' | 'community', sebertFactor: number): ComponentEntry => ({
+      id: origin, kind: 'caliber', source: { origin, file: '', author: '', date: '' }, value: { ...definition, name: '9 mm Luger', sebertFactor },
+    });
+    const community = luger('community', 1.5);
+    const grt = luger('grt', 1);
+    expect(matchingCaliber('9x19 mm', [community, grt])).toBe(grt);
+    // An identical community copy listed first does not hide GRT's.
+    expect(matchingCaliber('9x19 mm', [luger('community', 1), grt, community])).toBe(grt);
+    const own = luger('user', 2);
+    expect(matchingCaliber('9x19 mm', [community, grt, own])).toBe(own);
+  });
+
   it('finds the existing .308 case variants by their declared alternative name', () => {
     const choices = caliberChoices('308 Win.', communityComponents());
     expect(choices).toHaveLength(7);

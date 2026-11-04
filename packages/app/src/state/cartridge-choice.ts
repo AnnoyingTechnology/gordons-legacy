@@ -25,6 +25,12 @@ function identity(name: string): string {
   return aliases[normalized] ?? aliases[normalize(name.split('(')[0]!)] ?? normalized;
 }
 
+/**
+ * The order in which definitions of one cartridge are preferred: the user's own, then GRT's (the CIP and
+ * SAAMI tables, which most of GRT's are drawn from), then the community's.
+ */
+const ORIGIN_PREFERENCE = ['user', 'grt', 'community'] as const;
+
 /** Catalogued alternative names connect a gun's cartridge to case-specific definitions. */
 export function caliberChoices(cartridge: string, entries: readonly ComponentEntry[]): CaliberEntry[] {
   if (!cartridge.trim()) return [];
@@ -39,16 +45,18 @@ export function caliberChoices(cartridge: string, entries: readonly ComponentEnt
   const distinct = new Map<string, CaliberEntry>();
   for (const entry of matches) {
     const key = JSON.stringify(entry.value);
-    if (!distinct.has(key) || entry.source.origin === 'user') distinct.set(key, entry);
+    // Of identical definitions, the one of the most trusted origin is the one offered.
+    const kept = distinct.get(key);
+    if (!kept || ORIGIN_PREFERENCE.indexOf(entry.source.origin) < ORIGIN_PREFERENCE.indexOf(kept.source.origin)) distinct.set(key, entry);
   }
   return [...distinct.values()];
 }
 
-/** Prefer a user's exact definition; conflicting matches leave the gun's named cartridge selected. */
+/** Prefer the most trusted origin's exact definition; conflicting matches leave the gun's named cartridge selected. */
 export function matchingCaliber(cartridge: string, entries: readonly ComponentEntry[]): CaliberEntry | undefined {
   const matches = caliberChoices(cartridge, entries);
-  const own = matches.filter((entry) => entry.source.origin === 'user');
-  const candidates = own.length ? own : matches;
+  const origin = ORIGIN_PREFERENCE.find((candidate) => matches.some((entry) => entry.source.origin === candidate));
+  const candidates = matches.filter((entry) => entry.source.origin === origin);
   const distinct = new Map(candidates.map((entry) => [JSON.stringify(entry.value), entry]));
   return distinct.size === 1 ? distinct.values().next().value : undefined;
 }
