@@ -31,8 +31,7 @@ Data PRs #2 and #3 merged 2026-11-03. Data PR #4 merged 2026-11-04 (Julien grant
 (modal converter); #21 a real-device try. Another agent: #19.
 
 Next for an agent: more #22 data (the bottleneck is powder models and bullet lengths, not documents);
-#32: every package and the shell have now had a pass; what is left is a fresh-eyes pass over the whole after these changes; native review of the
-translations needs people.
+#32: every package and the shell have now had a pass; what is left is a fresh-eyes pass over the whole after these changes; 
 
 Earlier pickup, 2026-10-16: #34 document workflow audit and #32 code audit. The requested guided
 review, compact name/review notice, consistent page spacing, full-width footer and edge-touching
@@ -60,7 +59,7 @@ Proof Research, Magnum Research).
 and `docs/code-audit.md` says what remains outside it.
 Earlier research checkout remains in `/tmp`.
 
-1. Native review of the five translations; M4 (data repository, once the maintainer agrees to create
+1. M4 (data repository, once the maintainer agrees to create
    it; GRT database import, approach to choose, see Open questions). Every GRT tool of M5 now exists
    (2026-10-14): burning-rate table and powder search, tolerance synthesis, cartridge designer, unit
    converter, OBT tool, assistants, measurements, reports.
@@ -99,6 +98,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 
 | Date | Decision | By |
 |---|---|---|
+| 2026-11-04 | The five translations need no native review: Julien judges the agent's translations good enough; the item is dropped from the to-do list. | Julien |
 | 2026-11-03 | Licensing is settled for good: everything the project publishes is open source, and agents do not ask about licensing again. Published rows (makers' load tables, measured pressures, specifications) may be committed, cited to their document and date; the PDFs are not. GRT's own files stay out (CLAUDE.md). `docs/PLAN.md` intake updated. | Julien |
 | 2026-11-03 | #31: the published pressure rows the study reads become committed test fixtures, cited, so CI runs the study. The safety wording of 2026-11-02 stays as is. | Julien |
 | 2026-11-03 | #30: when two pages give one gun different masses, keep one, the heaviest (likely with a full magazine). When they differ on barrel length or twist, they are two guns, named apart by their barrel. Guns whose pages are gone may be read from archived snapshots (Wayback Machine), cited as the archive and its date. | Julien |
