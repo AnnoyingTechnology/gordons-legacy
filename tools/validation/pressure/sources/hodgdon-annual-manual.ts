@@ -256,4 +256,5 @@ const PROJECTILES: Record<string, string> = {
   '0.308 208 GR. HDY ELD-M': 'hornady-eld-match-208',
   '0.308 155 GR. SIE HPBT': 'sierra-matchking-155-palma',
   '0.243 95 GR. BAR BT LRX': 'barnes-lrx-95-243',
+  '0.243 65 GR. HDY V-MAX': 'hornady-v-max-65-243',
 };

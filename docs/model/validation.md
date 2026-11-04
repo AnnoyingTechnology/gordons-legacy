@@ -109,8 +109,8 @@ the conditions paired in the baseline. Sources and their limits: [pressure-sourc
 Reviewed by Astra (`gpt-6-astra`, medium) before this was written; its corrections are in.
 
 Of the 31,759 conditions read from the five documents (committed, `tools/validation/pressure/
-published-conditions.json.gz`), 90 can be simulated with the community components alone (22 on
-2026-11-02; 48 once twelve more bullet lengths were found and a reader fault fixed; 90 with Hodgdon's
+published-conditions.json.gz`), 92 can be simulated with the community components alone (22 on
+2026-11-02; 48 once twelve more bullet lengths were found and a reader fault fixed; 92 with Hodgdon's
 2025 Annual Manual, 2026-11-04): the others need a powder model,
 a caliber definition or a bullet length we don't have. Every powder model's fitting provenance is
 unknown, and case capacity, several bullet lengths (retailer listings, forum measurements), boat-tail
@@ -128,15 +128,15 @@ series-bootstrap interval 0.575 to 1.004, and stays clear of zero under every se
 GRT's range; the narrowest, case capacity −2 %, gives 0.433 to 0.903). Within 90 % of the SAAMI
 maximum (10 series), GRT Traditional read +7.9 %, never more than 0.5 % under; R1 −17.9 %.
 
-**Hodgdon 2025 Annual Manual, SAAMI piezo (a force transducer against the case), 42 conditions in 21
+**Hodgdon 2025 Annual Manual, SAAMI piezo (a force transducer against the case), 44 conditions in 22
 series: Winchester StaBALL Match in .308 Win., 6 mm GT and 6 mm ARC, Hodgdon H380 in .22 GT and .300
 WSM, start and maximum charges.** A second laboratory and two more powder models. GRT Traditional
-+13.9 % (median +9.8 %), under-predicting 14 % of the series; R1 −9.5 % (median −11.7 %), under in
-81 %. Here R1's symmetric error is the smaller (mean absolute log error 0.128 against 0.161), and GRT
-Traditional's lower L5 (0.223 against 0.582; paired difference 0.359, 0.192 to 0.524) comes from the
-penalty for reading under. Over both piezo sources, 41 series: GRT Traditional +10.3 %, R1 −13.9 % and
-under in 90 % of the series, paired L5 difference 0.572 (0.417 to 0.724), clear of zero under every
-sensitivity variant (narrowest: case capacity −2 %, 0.286 to 0.609).
++13.7 % (median +9.7 %), under-predicting 14 % of the series; R1 −9.7 % (median −11.9 %), under in
+82 %. Here R1's symmetric error is the smaller (mean absolute log error 0.129 against 0.158), and GRT
+Traditional's lower L5 (0.217 against 0.590; paired difference 0.373, 0.211 to 0.534) comes from the
+penalty for reading under. Over both piezo sources, 42 series: GRT Traditional +10.2 %, R1 −13.9 % and
+under in 90 % of the series, paired L5 difference 0.574 (0.426 to 0.722), clear of zero under every
+sensitivity variant (narrowest: case capacity −2 %, 0.295 to 0.606).
 
 The largest discrepancy was GRT Traditional's +43.4 % on the .300 WSM, 240 gr Sierra MatchKing,
 compressed MAGPRO condition. Its reconstruction assumes the case capacity, a forum-sourced bullet length

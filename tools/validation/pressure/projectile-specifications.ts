@@ -247,6 +247,7 @@ PROJECTILE_SPECIFICATIONS.push(
   blueCollar('hornady-eld-match-208', 'Hornady', 'ELD Match 30 cal 208 gr, 30731', 208, 0.308, 1.535),
   blueCollar('sierra-matchking-155-palma', 'Sierra', 'MatchKing HPBT Palma 30 cal 155 gr, 2155', 155, 0.308, 1.133),
   blueCollar('barnes-lrx-95-243', 'Barnes', 'LRX BT 6mm 95 gr, 30862', 95, 0.243, 1.27, 'rifle-solid-copper'),
+  blueCollar('hornady-v-max-65-243', 'Hornady', 'V-MAX 6mm 65 gr, 22415', 65, 0.243, 0.84),
 );
 
 export function projectileSpecification(key: string): ProjectileSpecification | undefined {
