@@ -7,6 +7,9 @@
  *     node tools/data/export-repository.ts <clone of gordons-legacy-data>
  *     deno run -A tools/data/export-repository.ts <clone> --firearms /tmp/guns-glock --firearms /tmp/guns-ruger
  *
+ * GRT's catalogue (issue #19) is written as build-grt-catalogue.ts made it, from the copy bundled with the
+ * app: one document per maker under `grt/`, rewritten every run like the community's components.
+ *
  * `--firearms` adds the gun files an extractor wrote (tools/data/firearms/, docs/firearm-data.md) to the
  * repository, as one file per maker (`firearms/glock.json`) holding that maker's guns: the application
  * downloads a whole catalogue to search it, and 2,500 single files would be 2,500 requests. The
@@ -19,8 +22,10 @@ import { readDocument, sha256, type ComponentKind, type DataIndexEntry, type Pro
 import { parseFirearm, type Firearm } from '@gordons-legacy/formats';
 import { plainText } from './firearms/maker-site.ts';
 import { settleListing } from './firearms/printed-figures.ts';
+import { tidyNumbers } from './tidy-numbers.ts';
 
 const SNAPSHOT = join(import.meta.dirname, '../../packages/app/src/data/community-components.json');
+const GRT_CATALOGUE = join(import.meta.dirname, '../../packages/app/src/data/grt-catalogue.json');
 const GRAINS_PER_KILOGRAM = 15432.358;
 
 interface Source {
@@ -116,19 +121,6 @@ function firearmFiles(folder: string): Array<{ name: string; text: string }> {
   return readdirSync(folder, { recursive: true, encoding: 'utf8' })
     .filter((name) => name.endsWith('.firearm.json'))
     .map((name) => ({ name, text: readFileSync(join(folder, name), 'utf8') }));
-}
-
-/**
- * The same figure without the noise a unit conversion leaves behind: a 1:14" twist comes out of
- * `14 * 0.0254` as 0.35559999999999997 metres, which is the same length written unreadably. Ten
- * significant digits keep every figure a maker publishes — a barrel measured to the micrometre needs
- * seven — and drop the binary remainder, so the published files read as the numbers they are.
- */
-function tidyNumbers(value: unknown): unknown {
-  if (typeof value === 'number') return Number.isFinite(value) ? Number(value.toPrecision(10)) : value;
-  if (Array.isArray(value)) return value.map(tidyNumbers);
-  if (value !== null && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key, inner]) => [key, tidyNumbers(inner)]));
-  return value;
 }
 
 /**
@@ -282,6 +274,24 @@ async function writeFirearms(repository: string, folders: readonly string[]): Pr
   return entries;
 }
 
+/**
+ * Writes GRT's catalogue: the documents build-grt-catalogue.ts made, each checked as the application
+ * will read it. A document the format rejects stops the export: the catalogue is published whole.
+ */
+async function writeGrtCatalogue(repository: string): Promise<DataIndexEntry[]> {
+  const documents = JSON.parse(readFileSync(GRT_CATALOGUE, 'utf8')) as Array<{ path: string; name: string; document: { kind: ComponentKind } }>;
+  rmSync(join(repository, 'grt'), { recursive: true, force: true });
+  const entries: DataIndexEntry[] = [];
+  for (const { path, name, document } of documents) {
+    const text = `${JSON.stringify(document, null, 1)}\n`;
+    if (readDocument(text) === undefined) throw new Error(`${path}: not a document this version reads`);
+    mkdirSync(join(repository, path, '..'), { recursive: true });
+    writeFileSync(join(repository, path), text);
+    entries.push({ path, kind: document.kind, name, sha256: await sha256(text) });
+  }
+  return entries;
+}
+
 /** A path for each component, unique even when two share a name, author and date. */
 function uniquePath(component: Component, used: Set<string>): string {
   const base = slug(component.name, component.source.author, component.source.date) || component.kind;
@@ -321,11 +331,13 @@ async function main(): Promise<void> {
     writeFileSync(join(repository, path), text);
     files.push({ path, kind: component.kind, name: component.name, sha256: await sha256(text) });
   }
+  const grtFiles = await writeGrtCatalogue(repository);
+  files.push(...grtFiles);
   const makerFiles = await writeFirearms(repository, firearmFolders);
   files.push(...makerFiles);
   files.sort((a, b) => a.path.localeCompare(b.path));
   writeFileSync(join(repository, 'index.json'), `${JSON.stringify({ format: 'gordons-legacy.data-index', version: 1, files }, null, 1)}\n`);
-  console.log(`${files.length} files → ${repository}${makerFiles.length === 0 ? '' : ` (${makerFiles.length} makers' guns)`}`);
+  console.log(`${files.length} files → ${repository} (${grtFiles.length} of GRT's catalogue${makerFiles.length === 0 ? '' : `, ${makerFiles.length} makers' guns`})`);
 }
 
 /**

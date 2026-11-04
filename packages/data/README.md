@@ -1,8 +1,8 @@
 # @gordons-legacy/data
 
 Client of the data repository [gordons-legacy-data](https://github.com/AnnoyingTechnology/gordons-legacy-data):
-powders, projectiles and calibers one JSON file each, the published guns one file per maker, all under
-CC0, with an `index.json` of SHA-256 hashes. No DOM: the cache and the fetch function are passed in, so it runs in browsers and in Node.
+the community's powders, projectiles and calibers one JSON file each (CC0), GRT's own catalogue and the
+published guns one file per maker, with an `index.json` of SHA-256 hashes. No DOM: the cache and the fetch function are passed in, so it runs in browsers and in Node.
 
 ## Public API
 
@@ -15,6 +15,7 @@ CC0, with an `index.json` of SHA-256 hashes. No DOM: the cache and the fetch fun
 | `sha256(text)` | Web Crypto SHA-256, hexadecimal. |
 | `DATA_REPOSITORY_URL` | Where the files are served (raw GitHub, which allows cross-origin reads). |
 | `ComponentDocument`, `Provenance`, `DataIndex` | The repository's file formats. |
+| `ComponentKind`, `COMPONENT_KINDS`, `GrtCatalogueKind` | What a file holds: `powder`, `projectile`, `caliber` (one component), `firearm` (one maker's guns), `grt-powders`, `grt-projectiles`, `grt-calibers` (one maker's components from GRT's database, issue #19). |
 
 A downloaded component is checked before replacing a cached copy. Failed content/hash/download checks
 leave the last valid offline copy intact; malformed cached records are skipped without breaking the
@@ -23,6 +24,10 @@ rest of the offline catalogue. The validator and synchroniser share the manifest
 A first synchronisation of the 453 component files takes about 3 s; later ones read only the index (about
 50 ms) and download what changed. The published guns (`kind: 'firearm'`, issue #30) are left out of that
 first pass and fetched when a user looks for their gun.
+
+GRT's catalogue (issue #19) follows the same rule: a `grt-` file holds one maker's powders or bullets,
+or one standard's cartridges (`grt/powders/hodgdon.json`), 147 files for 6,450 entries, each still
+carrying its GRT authorship in `info`. A list is taken whole or not at all.
 
 A gun file holds **one maker's catalogue** as a list of `Firearm` documents — the makers read so far hold
 about 2,500 guns, and that many single files would be that many requests on a first search. Each gun

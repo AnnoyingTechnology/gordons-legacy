@@ -1,4 +1,4 @@
-import type { DataIndex } from './repository.ts';
+import { COMPONENT_KINDS, type ComponentKind, type DataIndex } from './repository.ts';
 
 /** Validate the whole manifest before a synchronisation can download or remove cached files. */
 export function isDataIndex(value: unknown): value is DataIndex {
@@ -11,7 +11,7 @@ export function isDataIndex(value: unknown): value is DataIndex {
     return typeof entry['path'] === 'string' && !entry['path'].includes('\\')
       && entry['path'].split('/').every((part) => part !== '' && part !== '.' && part !== '..')
       && typeof entry['name'] === 'string'
-      && typeof entry['kind'] === 'string' && ['powder', 'projectile', 'caliber', 'firearm'].includes(entry['kind'])
+      && typeof entry['kind'] === 'string' && COMPONENT_KINDS.includes(entry['kind'] as ComponentKind)
       && typeof entry['sha256'] === 'string' && /^[a-f0-9]{64}$/.test(entry['sha256']);
   });
 }

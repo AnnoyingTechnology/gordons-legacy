@@ -9,20 +9,30 @@ import {
   type Projectile,
   type Propellant,
 } from '@gordons-legacy/formats';
-import { cachedDocuments, DATA_REPOSITORY_URL, synchronise, type ComponentDocument, type ComponentKind, type DataCache } from '@gordons-legacy/data';
+import { cachedDocuments, DATA_REPOSITORY_URL, readDocument, synchronise, type ComponentDocument, type ComponentKind, type DataCache } from '@gordons-legacy/data';
 import community from '../data/community-components.json' with { type: 'json' };
+import grtCatalogue from '../data/grt-catalogue.json' with { type: 'json' };
 import type { RecordStore } from './indexed-db.ts';
 
 /** Where a component comes from, shown with it so that the user can judge it. */
 export interface ComponentSource {
-  /** `community`: the CC0 files shared by GRT users, unverified; `user`: imported by the user. */
-  origin: 'community' | 'user';
+  /**
+   * `community`: the CC0 files shared by GRT users, unverified; `grt`: GRT's own database (issue #19),
+   * unverified too; `user`: imported by the user.
+   */
+  origin: 'community' | 'grt' | 'user';
   /** The file it was read from. */
   file: string;
-  /** Who made it, when the file says (community files carry `_by_<author>_<date>`). */
+  /** Who made it, when the file says (community files carry `_by_<author>_<date>`, GRT's entries their author). */
   author: string;
   /** When it was made or imported, YYYY-MM-DD. */
   date: string;
+  /**
+   * The data repository's file it was published in (`grt/powders/hodgdon.json`), for the repository's
+   * and its bundled copy's entries: a newer copy of that file replaces them, a file the repository
+   * withdraws takes them away.
+   */
+  document?: string;
 }
 
 export type ComponentEntry =
@@ -30,9 +40,10 @@ export type ComponentEntry =
   | { id: string; kind: 'projectile'; source: ComponentSource; value: Projectile }
   | { id: string; kind: 'caliber'; source: ComponentSource; value: CaliberDefinition };
 
-/** "community" or "yours": the label of a component's origin, as lists show it. */
-export function originLabel(source: ComponentSource): 'components.community' | 'components.yours' {
-  return source.origin === 'community' ? 'components.community' : 'components.yours';
+/** "community", "GRT" or "yours": the label of a component's origin, as lists show it. */
+export function originLabel(source: ComponentSource): 'components.community' | 'components.grt' | 'components.yours' {
+  if (source.origin === 'community') return 'components.community';
+  return source.origin === 'grt' ? 'components.grt' : 'components.yours';
 }
 
 /** The bundled snapshot of the community corpus (tools/data/build-community.ts). */
@@ -60,28 +71,64 @@ export function communityComponents(snapshot: CommunitySnapshot = community as C
   return entries;
 }
 
-/** The data repository's documents as component entries, identified by their path in the repository. */
+/**
+ * The data repository's documents as component entries, identified by their path in the repository
+ * and, in one of GRT's catalogue documents, their place in it. The bundled copy of GRT's catalogue
+ * is the same documents (tools/data/build-grt-catalogue.ts), so an entry keeps its id once the
+ * repository has been reached.
+ */
 export function repositoryComponents(documents: ReadonlyArray<{ path: string; document: ComponentDocument }>): ComponentEntry[] {
   return documents.flatMap(({ path, document }): ComponentEntry[] => {
-    const source: ComponentSource = { origin: 'community', file: document.provenance.file, author: document.provenance.author, date: document.provenance.date };
+    const { provenance } = document;
+    const source: ComponentSource = { origin: 'community', file: provenance.file, author: provenance.author, date: provenance.date, document: path };
     const id = `repository:${path}`;
     if (document.kind === 'powder') return [{ id, kind: 'propellant', source, value: document.value }];
     if (document.kind === 'projectile') return [{ id, kind: 'projectile', source, value: document.value }];
     if (document.kind === 'caliber') return [{ id, kind: 'caliber', source, value: document.value }];
+    // No author: the catalogue holds GRT's own entries only (tools/data/grt-catalogue/), which the
+    // origin's label already says. The date is the entry's own, from GRT.
+    const grtSource = (value: Propellant | Projectile | CaliberDefinition): ComponentSource => ({
+      origin: 'grt',
+      file: provenance.file,
+      author: '',
+      date: value.info?.modifiedOn || value.info?.createdOn || provenance.date,
+      document: path,
+    });
+    const grtId = (index: number) => `${id}#${index}`;
+    if (document.kind === 'grt-powders') return document.value.map((value, index) => ({ id: grtId(index), kind: 'propellant', source: grtSource(value), value }));
+    if (document.kind === 'grt-projectiles') return document.value.map((value, index) => ({ id: grtId(index), kind: 'projectile', source: grtSource(value), value }));
+    if (document.kind === 'grt-calibers') return document.value.map((value, index) => ({ id: grtId(index), kind: 'caliber', source: grtSource(value), value }));
     // A gun is not part of a load's recipe: the published ones go to the gun library (state/firearms.ts).
     return [];
   });
 }
 
+/** The bundled copy of GRT's catalogue, as the repository serves it: one document per maker. */
+interface BundledDocument {
+  path: string;
+  document: unknown;
+}
+
+/** GRT's powders, bullets and cartridges bundled with the app, each document checked as a download is. */
+export function grtComponents(documents: readonly BundledDocument[] = grtCatalogue as BundledDocument[]): ComponentEntry[] {
+  return repositoryComponents(
+    documents.flatMap(({ path, document }) => {
+      const checked = readDocument(JSON.stringify(document));
+      return checked === undefined ? [] : [{ path, document: checked }];
+    }),
+  );
+}
+
 /** What a load is made of. The repository's guns are fetched on their own (state/published-firearms.ts). */
-const COMPONENT_KINDS: readonly ComponentKind[] = ['powder', 'projectile', 'caliber'];
+const LOAD_PART_KINDS: readonly ComponentKind[] = ['powder', 'projectile', 'caliber', 'grt-powders', 'grt-projectiles', 'grt-calibers'];
 
 /** Where the community's components came from this time: the repository, its cache, or the bundled copy. */
 export type CommunitySource = 'repository' | 'cache' | 'bundled';
 
 /**
- * Powders, projectiles and calibers to choose from: the community's, bundled with the app, and the user's own,
- * imported from GRT files and kept in the browser. Listeners are told after every change.
+ * Powders, projectiles and calibers to choose from: the community's and GRT's, bundled with the app and
+ * then taken from the data repository, and the user's own, imported from GRT files and kept in the
+ * browser. Listeners are told after every change.
  */
 export class ComponentLibrary {
   entries: ComponentEntry[];
@@ -91,9 +138,9 @@ export class ComponentLibrary {
   private readonly store: RecordStore<ComponentEntry>;
   private readonly listeners = new Set<() => void>();
 
-  constructor(store: RecordStore<ComponentEntry>, community: ComponentEntry[] = communityComponents()) {
+  constructor(store: RecordStore<ComponentEntry>, published: ComponentEntry[] = [...communityComponents(), ...grtComponents()]) {
     this.store = store;
-    this.entries = community;
+    this.entries = published;
     this.ready = store.list().then((stored) => {
       this.entries = [...this.entries, ...stored.flatMap(checked)];
       this.changed();
@@ -101,24 +148,42 @@ export class ComponentLibrary {
   }
 
   /**
-   * Takes the community's components from the data repository (docs/PLAN.md, Data): first from the
-   * cache of an earlier visit, then, when online, from the repository itself, each file checked against
-   * its SHA-256 and the load format. Until either succeeds, the bundled copy stays.
+   * Takes the published components from the data repository (docs/PLAN.md, Data): first from the cache
+   * of an earlier visit, then, when online, from the repository itself, each file checked against its
+   * SHA-256 and the load format. Until either succeeds, the bundled copy stays.
    */
   async useRepository(cache: DataCache, fetch: (url: string) => Promise<{ ok: boolean; text(): Promise<string> }>): Promise<void> {
     await this.ready;
     const cached = await cachedDocuments(cache);
-    if (cached.length > 0) this.replaceCommunity(repositoryComponents(cached), 'cache');
+    // Offline, the cache may simply not hold a file yet: every other document stays.
+    if (cached.length > 0) this.replacePublished(repositoryComponents(cached), 'cache', () => true);
+    let report;
     try {
-      const report = await synchronise(DATA_REPOSITORY_URL, cache, fetch, COMPONENT_KINDS);
-      if (report.documents.length > 0) this.replaceCommunity(repositoryComponents(report.documents), 'repository');
+      report = await synchronise(DATA_REPOSITORY_URL, cache, fetch, LOAD_PART_KINDS);
     } catch {
       // Offline or the repository unreachable: keep what we have.
+      return;
     }
+    // The index is the repository's word: a document it no longer lists is withdrawn, one whose
+    // download or check failed keeps the copy we have.
+    const failed = new Set(report.failed.map((file) => file.path));
+    this.replacePublished(repositoryComponents(report.documents), 'repository', (document) => failed.has(document));
   }
 
-  private replaceCommunity(community: ComponentEntry[], source: CommunitySource): void {
-    this.entries = [...community, ...this.entries.filter((entry) => entry.source.origin === 'user')];
+  /**
+   * Puts published entries in place of those they supersede: a document's entries replace those of the
+   * same document, and any community document replaces the bundled community snapshot, which has no
+   * documents. The entries of other documents stay where `keep` says so. The user's own always stay.
+   */
+  private replacePublished(published: ComponentEntry[], source: CommunitySource, keep: (document: string) => boolean): void {
+    const documents = new Set(published.map((entry) => entry.source.document));
+    const communityDelivered = published.some((entry) => entry.source.origin === 'community');
+    const stays = ({ source: { origin, document } }: ComponentEntry) => {
+      if (origin === 'user') return true;
+      if (document === undefined) return !(origin === 'community' && communityDelivered);
+      return !documents.has(document) && keep(document);
+    };
+    this.entries = [...published, ...this.entries.filter(stays)];
     this.communitySource = source;
     this.changed();
   }
@@ -180,7 +245,7 @@ export class ComponentLibrary {
     this.changed();
   }
 
-  /** Removes one of the user's components (the community's stay). */
+  /** Removes one of the user's components (the published ones stay). */
   async remove(id: string): Promise<void> {
     const entry = this.entries.find((candidate) => candidate.id === id);
     if (!entry || entry.source.origin !== 'user') return;
