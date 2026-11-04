@@ -44,7 +44,7 @@ Reading traps found while writing the readers:
 |---|---|---|
 | Old SNPE/Vectan tables, e.g. [9 mm Luger](https://www.balleurope.com/media/images/snpe/armes%20de%20poing/9%20mm%20Parabellum%20(9%20Luger)%20(9%20x%2019).pdf) (balleurope.com, 2016 PDF) | One pressure per charge, bar and psi, for Vectan powders including A1 | Crusher readings (the table's limit column is "Pression Crusher Maxi"): never converted, listed only. The current Vectan guide (2020) prints no measured pressures |
 | [Kagankiewicz & Magier 2023](https://link.springer.com/article/10.1007/s00161-023-01263-3), CC BY 4.0 | Kistler piezo traces (figs. 5, 7, 9), three series of five shots | Military propellant without a model of ours; no raw time series offered |
-| Hodgdon's Reloading Data Center | psi per load for Hodgdon, IMR and Winchester powders (H380, Lil'Gun, StaBALL Match, IMR 4166 — powders we hold models of) | An interactive application, not a document; automated reading was refused by this agent's permission policy (2026-11-02). Some of our models are described as derived from Hodgdon's data, which would make it circular for them |
+| Hodgdon's Reloading Data Center | psi per load for Hodgdon, IMR and Winchester powders (H380, Lil'Gun, StaBALL Match, IMR 4166 — powders we hold models of) | Not read. Its page states (read 2026-11-04): "All Reloading Data Center information is proprietary to Hodgdon Powder Co. ... Any automated scraping, redistribution, or incorporation into third-party platforms, software, or apps without written consent is prohibited and may result in legal action." Automated reading also needs that written consent; much of its data is printed in the annual manual anyway |
 | Alliant Reloader's Guide 2022 | psi for shotshell loads only | Rifle and handgun tables have no pressure |
 | [Vectan US catalogue 2025](https://shootersworldpowder.com/wp-content/uploads/2025/05/Vectan-Reloading-catalogue_vUS_compressed.pdf) (Shooters World) | psi beside charge and velocity, including Vectan A1, a powder the maintainer's files model | 12-gauge shotshell rows only: a hull's capacity, a wad and a shot column are inputs no source gives, and the engines are not yet checked on shotshells |
 | Vihtavuori guides, Hornady, Sierra | Charges and velocities | No pressure. Vihtavuori's 2026 guide says its loads are "pressure tested according to the C.I.P. method" and its maximum loads set against the CIP and SAAMI maxima, which makes a maximum load an upper bound at best, not a measurement |
@@ -61,3 +61,14 @@ Reading traps found while writing the readers:
    sensitivity check moves it by ±2 %.
 4. **Provenance of the models.** None of the community models used names its derivation, so whether a
    model was fitted to the very source scoring it is `unknown` for every condition so far.
+
+## Notices the documents print
+
+Committing the rows read from these documents was decided by the maintainer on 2026-11-03 (open source
+throughout; `docs/PROGRESS.md`, Decisions). For the record, what they print about reproduction:
+
+- Hodgdon 2025 Annual Manual (front matter): "Copyright 2025 by Outdoor Sportsman Group. All rights
+  reserved under international and Pan American Copyright Conventions. Reproduction in whole or in part
+  without written permission of the publisher is strictly prohibited."
+- Hodgdon's Reloading Data Center (web page): automated scraping, redistribution or incorporation into
+  apps without written consent prohibited. It is not read (see above).

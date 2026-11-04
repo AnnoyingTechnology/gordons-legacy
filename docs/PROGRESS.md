@@ -26,13 +26,12 @@ revisions for loads, guns and stock (`entry-revision.ts`), one recovery-keeping 
 (`recovery-lock.ts`), retried startup reads (`stored-reading.ts`), and the selected engine everywhere.
 See `docs/code-audit.md` and the Log. #32 is left open for Julien to close or extend.
 
-Data PRs #2 and #3 merged 2026-11-03. Waiting on Julien: data PR #4 (22 archived citations, three S&W twists; merging was refused to this agent); #30's two questions (conflicting listings, archived snapshots);
+Data PRs #2 and #3 merged 2026-11-03. Data PR #4 merged 2026-11-04 (Julien granted the permission). Waiting on Julien: #30's two questions (conflicting listings, archived snapshots);
 #31's licensing question (may makers' rows be committed as fixtures) and the new safety wording; #28
 (modal converter); #21 a real-device try. Another agent: #19.
 
 Next for an agent: more #22 data (the bottleneck is powder models and bullet lengths, not documents);
-#32: every package and the shell have now had a pass; what is left is a fresh-eyes pass over the whole after these changes; native review of the
-translations needs people.
+#32: every package and the shell have now had a pass; what is left is a fresh-eyes pass over the whole after these changes; 
 
 Earlier pickup, 2026-10-16: #34 document workflow audit and #32 code audit. The requested guided
 review, compact name/review notice, consistent page spacing, full-width footer and edge-touching
@@ -60,7 +59,7 @@ Proof Research, Magnum Research).
 and `docs/code-audit.md` says what remains outside it.
 Earlier research checkout remains in `/tmp`.
 
-1. Native review of the five translations; M4 (data repository, once the maintainer agrees to create
+1. M4 (data repository, once the maintainer agrees to create
    it; GRT database import, approach to choose, see Open questions). Every GRT tool of M5 now exists
    (2026-10-14): burning-rate table and powder search, tolerance synthesis, cartridge designer, unit
    converter, OBT tool, assistants, measurements, reports.
@@ -99,6 +98,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 
 | Date | Decision | By |
 |---|---|---|
+| 2026-11-04 | The five translations need no native review: Julien judges the agent's translations good enough; the item is dropped from the to-do list. | Julien |
 | 2026-11-03 | Licensing is settled for good: everything the project publishes is open source, and agents do not ask about licensing again. Published rows (makers' load tables, measured pressures, specifications) may be committed, cited to their document and date; the PDFs are not. GRT's own files stay out (CLAUDE.md). `docs/PLAN.md` intake updated. | Julien |
 | 2026-11-03 | #31: the published pressure rows the study reads become committed test fixtures, cited, so CI runs the study. The safety wording of 2026-11-02 stays as is. | Julien |
 | 2026-11-03 | #30: when two pages give one gun different masses, keep one, the heaviest (likely with a full magazine). When they differ on barrel length or twist, they are two guns, named apart by their barrel. Guns whose pages are gone may be read from archived snapshots (Wayback Machine), cited as the archive and its date. | Julien |
@@ -187,8 +187,8 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 
 - Unit and reference pressure of GRT's `Ba` (needed for M2).
 - The five UI languages. Proposed and built in: English, German, French, Spanish, Italian (Russian the
-  main alternative). Translations of `packages/app/src/i18n/*.ts` need review by native reloaders.
-  Interim review by Codex on 2026-10-15 (49 corrections applied, see Log); the maintainer reviews French.
+  main alternative). Settled 2026-11-04: no native review needed (Julien); Codex's review of
+  2026-10-15 applied 49 corrections (see Log).
 - Format and encryption of `GordonsReloadingTool.db` (M4): found 2026-10-14, an SQLite database encrypted
   with SQLite's commercial encryption extension (SEE, used by Xojo): bytes 16–23 are SQLite's plain
   header (page size 1024, 12 reserved bytes per page), the rest is ciphertext. GRT's plugin IPC has no
@@ -218,6 +218,8 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 
 | Date | Entry |
 |---|---|
+| 2026-11-04 | **Hodgdon's Reloading Data Center probed (Julien granted the permission) and not read.** Its page prohibits "any automated scraping, redistribution, or incorporation into third-party ... apps without written consent", with legal action; reading it needs Hodgdon's written consent, which a local permission is not. Found while checking: the 2025 Annual Manual, whose rows are committed under Julien's open-source decision, prints "Reproduction in whole or in part without written permission of the publisher is strictly prohibited" (Outdoor Sportsman Group). Both quoted in `docs/model/pressure-sources.md`; Julien told. |
+| 2026-11-04 | **Data PR #4 merged** once Julien granted the permission. The first sync check after the merge refused `ruger.json` and `smith-wesson.json` on their hashes (raw.githubusercontent.com served the new index before the new files); five minutes later 9,216 guns, 49 archived, no problem. The synchroniser keeps the last valid copy meanwhile, as designed. |
 | 2026-11-04 | **PR #40 (review fixes) brought up to `main`.** Merged `main` into `review-fixes` and resolved the conflicts file by file, keeping #32's revision, conflict and target-tab handling from `main` and the PR's fixes `main` lacks. `state/file-opening.ts` now takes the tab active when the files were chosen, reads each file on its own (`documents.readFailed`), reports a refused component or gun write by file name, and reports `library.importFiles`' unreadable and unsaved loads apart; the shell delegates to it and keeps `main`'s save, gun and stock handling (`reportWrite` dropped). Gone from the PR in favour of `main`: `shotGroups.photoUnreadable` (`main`'s `photoFailed`), the PR's library-view removal (`main`'s `entry-removed`). The ten extractors `main` moved to `writeListing` take `main`'s version; `claimFileName` stays in the other twelve. 1,063 tests, `tsc`, build. |
 | 2026-11-04 | **Codex reviewed the verification-status wording; four fixes.** One record per document (pooled, MAGPRO's +6.6 % at Western and −2.3 % at Hodgdon read as +0.9 %); each charge series counted once in the mean, as the study counts it; the message now states range first, says inputs were partly assumed and fitting independence unknown, that it does not bound this load's error, and to use the maker's data; the no-evidence message says the table has no piezo comparison (RS14's unstated-method rows are not "no comparison"); temperature coefficients 0/0 and their explicit defaults are one model. |
 | 2026-11-04 | **The app shows each powder model's verification status (docs/PLAN.md).** Every review now says, for the selected engine, either how far it has been from published measured pressures with this very powder model (count, charge series, documents, mean, range) or that no published pressure has been compared with it. The record comes from the pressure study: `tools/validation/pressure-evidence.ts` writes `packages/app/src/data/pressure-evidence.json` (MAGPRO, H380 #3, StaBALL Match today) and a test fails while it is out of date. A model is matched by its numbers, not its name, so a refit or calibrated copy is not lent the record. Five languages; checked in Chromium. |
