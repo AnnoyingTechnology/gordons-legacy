@@ -21,13 +21,11 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 ## Next steps
 
 Pickup 2026-11-04, #19 (GRT's database): the importer, the catalogue, the app's bundled copy and the
-data repository's files are done; see the Log. Pushed and deployed (CI green); the data change is
-[gordons-legacy-data#5](https://github.com/AnnoyingTechnology/gordons-legacy-data/pull/5), CI green, waiting
-for Julien's merge; #19 commented, to close once it is merged. Waiting on Julien: the data PR (`grt/`, 147 files), whose CI validates against the app's `main` — merge it soon after
-the push, because until then a synchronised app withdraws GRT's entries (the repository's index is the
-word on its documents); whether hidden powder models should ever be offered. Next for an agent:
-cartridge aliases for the guns still unmatched (`30-06 SPRG`, `5.56x45mm`, `.380 Auto`: 22 % of the
-published guns).
+data repository's files are done; see the Log. Pushed and deployed (CI green). Waiting on Julien: the
+merge of [gordons-legacy-data#5](https://github.com/AnnoyingTechnology/gordons-legacy-data/pull/5) (`grt/`,
+147 files, CI green); until then a synchronised app withdraws GRT's entries (the repository's index is
+the word on its documents). Close #19 once it is merged. Next for an agent: cartridge aliases for the
+guns still unmatched (`30-06 SPRG`, `5.56x45mm`, `.380 Auto`: 22 % of the published guns).
 
 Pickup 2026-11-03 (checkout `/home/julien/Documents/Dev/gordons-legacy`). Done since the last pickup:
 #32's fourth to sixth audit passes (engines and review worker; searches, assistants, data and CLI;
@@ -108,6 +106,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 
 | Date | Decision | By |
 |---|---|---|
+| 2026-11-04 | #19 powder models GRT hid stay hidden: the catalogue never offers them. | Julien |
 | 2026-11-04 | #19 GRT's catalogue is published one file per maker (per standard for cartridges) under `grt/`, new kinds `grt-powders`, `grt-projectiles`, `grt-calibers` holding lists, as the gun files do: 6,450 single files would be 6,450 requests on a first visit. Apps older than this change reject the new index and keep their cache until reloaded. | Agent, for review |
 | 2026-11-04 | #19 the catalogue holds GRT's own rows only (`cby` = GRT), not deleted, and no powder model GRT hid (`mode` = hidden: 456 of 683, earlier fits, `DEV` iterations, 21 powders withdrawn whole); a record the importer warns about is left out. Every record left out is listed in `docs/data/grt-catalogue.md`. | Agent, for review |
 | 2026-11-04 | #19 the catalogue is bundled with the app (4.5 MB of JS instead of 1.1 MB, 555 kB gzipped, about 50 ms to check at startup), so a first visit offline has it. Entries merge by document: a cached or downloaded file replaces its bundled copy; after a synchronisation, a file the index no longer lists is withdrawn (also GRT's whole catalogue until the data PR is merged), one that failed to download keeps the copy. For one cartridge, the user's own definition wins, then GRT's, then the community's. | Agent, for review |
