@@ -176,7 +176,8 @@ made after seeing its results — and the study shows the comparison with and wi
 
 What it shows, conditional on the assumed inputs: **the default engine has read 13–22 % under published
 measured pressures** on one powder model and one publication, and 10 % under on another, while it read
-above on Western's MAGPRO and Reload Swiss's RS14. The error's sign changes with the powder model; its
+above on Western's MAGPRO, Reload Swiss's RS14 and, in Hodgdon's 2025 manual, StaBALL Match and H380
+(+10 % over the 42 piezo series). The error's sign changes with the powder model; its
 size reaches a fifth of the pressure. No correction factor follows from this, and no threshold covers it.
 
 What changed in the application (Astra's recommendations, 2026-11-02): the results notice says pressure
