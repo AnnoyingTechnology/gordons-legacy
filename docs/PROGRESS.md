@@ -26,7 +26,7 @@ revisions for loads, guns and stock (`entry-revision.ts`), one recovery-keeping 
 (`recovery-lock.ts`), retried startup reads (`stored-reading.ts`), and the selected engine everywhere.
 See `docs/code-audit.md` and the Log. #32 is left open for Julien to close or extend.
 
-Data PRs #2 and #3 merged 2026-11-03. Waiting on Julien: data PR #4 (22 archived citations; merging was refused to this agent); #30's two questions (conflicting listings, archived snapshots);
+Data PRs #2 and #3 merged 2026-11-03. Waiting on Julien: data PR #4 (22 archived citations, three S&W twists; merging was refused to this agent); #30's two questions (conflicting listings, archived snapshots);
 #31's licensing question (may makers' rows be committed as fixtures) and the new safety wording; #28
 (modal converter); #21 a real-device try. Another agent: #19.
 
