@@ -21,10 +21,9 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 ## Next steps
 
 Pickup 2026-11-04, #19 (GRT's database): the importer, the catalogue, the app's bundled copy and the
-data repository's files are done; see the Log. Nothing is pushed: the app commit is on local `main`,
-the data change on branch `grt-catalogue` of a clone in `/tmp/gordons-legacy-data` (volatile; rebuild it
-with `export-repository.ts` on a fresh clone). Waiting on Julien: review and push of the app commit,
-then the data PR (`grt/`, 147 files), whose CI validates against the app's `main` — merge it soon after
+data repository's files are done; see the Log. Pushed and deployed (CI green); the data change is
+[gordons-legacy-data#5](https://github.com/AnnoyingTechnology/gordons-legacy-data/pull/5), CI green, waiting
+for Julien's merge; #19 commented, to close once it is merged. Waiting on Julien: the data PR (`grt/`, 147 files), whose CI validates against the app's `main` — merge it soon after
 the push, because until then a synchronised app withdraws GRT's entries (the repository's index is the
 word on its documents); whether hidden powder models should ever be offered. Next for an agent:
 cartridge aliases for the guns still unmatched (`30-06 SPRG`, `5.56x45mm`, `.380 Auto`: 22 % of the
@@ -84,7 +83,7 @@ Open issues (GitHub, `AnnoyingTechnology/gordons-legacy`), 2026-10-16:
 |---|---|---|
 | #37 / #38 | Speed legend at the upper right; short blast note beside the value. Details stay in the tooltip. | Done; deployed and closed |
 | #39 | Overflow tab fade/hover. | Done 2026-11-02 |
-| #19 | Full GRT database import and default/offline distribution are required (updated issue, 2026-10-16). 2026-11-04: imported from the maintainer's export, bundled, data repository files written and validated (Log). | Waiting on Julien: push, data PR |
+| #19 | Full GRT database import and default/offline distribution are required (updated issue, 2026-10-16). 2026-11-04: imported from the maintainer's export, bundled, data repository files written and validated (Log). | Pushed; waiting on Julien: merge of data PR #5 |
 | #22 | Pressure validation: published loads with measured pressures, or pressure traces. Blocks M7 and any claim about pressure accuracy. | Needs data |
 | #24 | User library of guns: done 2026-10-15. Crawled database split into #30. | Done |
 | #30 | Gun database: published specifications (barrel length, twist, mass, cartridge) in the data repository. Licensing decided (publish); Wikidata has nothing. Glock and Ruger read, more makers in progress; the repository kind and a searchable picker are left. | In progress |
