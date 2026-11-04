@@ -19,6 +19,19 @@ function identity(name: string): string {
     '9x19mm': '9x19', '9mmluger': '9x19', '9luger': '9x19',
     '9mmparabellum': '9x19', '9parabellum': '9x19', '9mmpara': '9x19',
     '308winchester': '308win',
+    // Makers' spellings of the cartridges GRT's catalogue defines (#19), each to a name or an
+    // alternative name GRT gives. 5.56 NATO is an alternative name of GRT's (CIP's) .223 Rem.
+    // Left out on purpose: `.300 WIN` (Magnum or Short Magnum?) and a bare `9mm`.
+    '3006sprg': '3006springfield',
+    '380auto': '380acp',
+    '556nato': '556x45nato', '556mmnato': '556x45nato', '556x45mm': '556x45nato', '556x45mmnato': '556x45nato',
+    '556nato223rem': '556x45nato',
+    '4570gov': '4570govt',
+    '240wbymag': '240weathmag', '257wbymag': '257weathmag', '300wbymag': '300weathmag',
+    '350lgnd': '350legend',
+    '6creedmoor': '6mmcreedmoor',
+    '65crdmr': '65creedmoor',
+    '44magnum': '44remmag',
   };
   // Parenthesized synonyms appear in imported GRT names; an explicit +P suffix stays distinct.
   if (normalized.includes('+p')) return normalized;
