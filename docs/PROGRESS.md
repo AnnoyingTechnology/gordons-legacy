@@ -186,8 +186,8 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 
 - Unit and reference pressure of GRT's `Ba` (needed for M2).
 - The five UI languages. Proposed and built in: English, German, French, Spanish, Italian (Russian the
-  main alternative). Translations of `packages/app/src/i18n/*.ts` need review by native reloaders.
-  Interim review by Codex on 2026-10-15 (49 corrections applied, see Log); the maintainer reviews French.
+  main alternative). Settled 2026-11-04: no native review needed (Julien); Codex's review of
+  2026-10-15 applied 49 corrections (see Log).
 - Format and encryption of `GordonsReloadingTool.db` (M4): found 2026-10-14, an SQLite database encrypted
   with SQLite's commercial encryption extension (SEE, used by Xojo): bytes 16–23 are SQLite's plain
   header (page size 1024, 12 reserved bytes per page), the rest is ciphertext. GRT's plugin IPC has no
