@@ -99,7 +99,8 @@ src/
                         code from the camera (qr-decoder.ts)
   icons/icons.ts        original SVG icons
   measurements/         statistics of measured shots; reading chronograph CSV exports
-  analysis/             review.ts, review-worker.ts, review-client.ts: the heavy analyses (review,
+  analysis/             pressure-evidence.ts: what the pressure study has seen of a powder model, shown in the
+                        review (its table in data/pressure-evidence.json); review.ts, review-worker.ts, review-client.ts: the heavy analyses (review,
                         bench variations, temperature table) in a Web Worker;
                         GRT's powder factors (powder-factors.ts); tolerance synthesis
                         (charge-synthesis.ts); a load's summary for the library (load-summary.ts); muzzle blast level

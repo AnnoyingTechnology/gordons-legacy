@@ -76,5 +76,17 @@ export function findingMessage(finding: Finding, context: UiContext): string {
     });
   }
   if (finding.code === 'doubleChargeFits' && finding.pressure === undefined) return t('finding.doubleChargeFitsNotSimulated', values);
+  if (finding.code === 'pressureEvidence' && finding.evidence) {
+    const { evidence } = finding;
+    const signed = (share: number) => `${share > 0 ? '+' : share < 0 ? '−' : ''}${number(Math.abs(share) * 100, 1)}`;
+    return t('finding.pressureEvidence', {
+      count: String(evidence.conditions),
+      series: String(evidence.series),
+      sources: evidence.sources.join('; '),
+      bias: signed(evidence.bias),
+      lowest: signed(evidence.lowest),
+      highest: signed(evidence.highest),
+    });
+  }
   return t(`finding.${finding.code}`, values);
 }

@@ -1,5 +1,6 @@
 import type { Engine, Simulation } from '@gordons-legacy/engine';
 import { standardMaxPressures, type Load } from '@gordons-legacy/formats';
+import { pressureEvidence, type PressureEvidence } from './pressure-evidence.ts';
 import { vary } from './sensitivity.ts';
 import { speedRegime } from './speed-of-sound.ts';
 import { INCOMPLETE_BURN, temperatureRange, withinSpan, type TemperatureSpan, type TemperatureState } from './temperature-range.ts';
@@ -63,7 +64,11 @@ export type FindingCode =
    * Past a powder temperature, colder or hotter than the load's, the load leaves its limits in the
    * simulation (analysis/temperature-range.ts): `side`, `temperature` and `temperatureState` say how.
    */
-  | 'temperatureLimit';
+  | 'temperatureLimit'
+  /** How far this engine has been from published measured pressures with this very powder model. */
+  | 'pressureEvidence'
+  /** No published measured pressure has been compared with this powder model. */
+  | 'noPressureEvidence';
 
 /** A maximum pressure the load is checked against. */
 export interface PressureLimit {
@@ -94,6 +99,8 @@ export interface Finding {
   velocity?: number;
   /** A relative difference, or a share of the barrel's travel. */
   share?: number;
+  /** For `pressureEvidence`, the study's record of the engine against the powder model. */
+  evidence?: PressureEvidence;
 }
 
 export interface Assessment {
@@ -194,6 +201,10 @@ export function assessLoad(load: Load, shot: Simulation, engine: Engine): Assess
   if (MONOLITHIC_NAMES.test(`${load.projectile.name} ${load.projectile.product} ${load.projectile.material ?? ''}`)) {
     findings.push({ code: 'monolithicBullet', level: 'note' });
   }
+  // The model's verification status (docs/PLAN.md): said for every load, measured or not, so that its
+  // absence is never read as a clean record.
+  const evidence = pressureEvidence(load.propellant, engine.id);
+  findings.push(evidence ? { code: 'pressureEvidence', level: 'note', evidence } : { code: 'noPressureEvidence', level: 'note' });
   const travel = shot.curve.travel[shot.curve.travel.length - 1]! - shot.curve.travel[0]!;
   const expansion = (load.cartridge.effectiveBoreArea * travel) / load.cartridge.caseCapacity;
   if (shot.burnout && travel > 0 && (shot.burnout.travel - shot.curve.travel[0]!) / travel <= EARLY_BURNOUT_SHARE && expansion >= LONG_EXPANSION) {

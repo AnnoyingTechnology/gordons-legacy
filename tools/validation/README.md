@@ -6,6 +6,7 @@ absence. Results and their limits are written up in `docs/model/validation.md`.
 | Command | What it does |
 |---|---|
 | `node tools/validation/chronograph.ts [--engine research-1] <loads…>` | Simulated against measured muzzle velocities stored in `.grtload` or JSON loads |
+| `node tools/validation/pressure-evidence.ts` | Writes the table of what the study has seen of each powder model, which the application shows beside a load (`packages/app/src/data/pressure-evidence.json`); run it after the study's inputs change |
 | `node tools/validation/pressure.ts [--rs14 <pdf> --western <pdf> --hodgdon-m1 <pdf> --hodgdon-subsonic <pdf> --hodgdon-manual <pdf> [--export <file>]] [--components <folder>] [--details]` | The pressure study of issue #31: both engines against published pressure measurements |
 
 ## `pressure/`, the pressure study

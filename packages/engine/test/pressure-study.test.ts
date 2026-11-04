@@ -11,6 +11,8 @@ import { readWesternRows } from '../../../tools/validation/pressure/sources/west
 import { PERTURBATIONS, runConditions, summarizeStudy } from '../../../tools/validation/pressure/study.ts';
 import { PUBLISHED_CONDITIONS, readConditionsFile } from '../../../tools/validation/pressure.ts';
 import { hodgdonManualConditions, readManualRows } from '../../../tools/validation/pressure/sources/hodgdon-annual-manual.ts';
+import { EVIDENCE_TABLE, evidenceTable, evidenceText } from '../../../tools/validation/pressure-evidence.ts';
+import { readFileSync } from 'node:fs';
 
 /**
  * The pressure study's machinery (tools/validation/pressure/, issues #22 and #31). Every table below is
@@ -411,4 +413,13 @@ describe("reading Hodgdon's annual manual", () => {
     expect(staBall.barrelLength).toMatchObject({ status: 'published', note: '24”' });
     expect(staBall.projectile.key).toBe('sierra-matchking-168');
   });
+});
+
+describe('the pressure evidence the application shows (packages/app/src/data/pressure-evidence.json)', () => {
+  it('is what the study gives today: run `node tools/validation/pressure-evidence.ts` after its inputs change', () => {
+    const { sources, conditions } = readConditionsFile(PUBLISHED_CONDITIONS);
+    const fresh = evidenceText(evidenceTable(conditions, sources, communityPool()));
+    expect(readFileSync(EVIDENCE_TABLE, 'utf8')).toBe(fresh);
+    // The whole study runs again here: some seconds.
+  }, 30_000);
 });

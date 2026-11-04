@@ -13,7 +13,7 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
   documents (`tools/validation/pressure/`, `docs/model/validation.md`). The default engine has read up to
   22 % under published pressures on one powder model and 8 % over on another; the app's safety wording
   says so. Bottleneck: powder models and bullet lengths, not documents.
-- **Tests:** 1,019 (Vitest), `tsc`, production build; CI deploys GitHub Pages from `main`.
+- **Tests:** 1,022 (Vitest), `tsc`, production build; CI deploys GitHub Pages from `main`.
 - **Docs:** `docs/PLAN.md` (plan), `docs/model/` (engines, validation, pressure sources), `docs/formats/`,
   `docs/firearm-data.md`, `docs/ui-audit.md`, `docs/code-audit.md`, each package's README.
 
@@ -217,6 +217,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 
 | Date | Entry |
 |---|---|
+| 2026-11-04 | **The app shows each powder model's verification status (docs/PLAN.md).** Every review now says, for the selected engine, either how far it has been from published measured pressures with this very powder model (count, charge series, documents, mean, range) or that no published pressure has been compared with it. The record comes from the pressure study: `tools/validation/pressure-evidence.ts` writes `packages/app/src/data/pressure-evidence.json` (MAGPRO, H380 #3, StaBALL Match today) and a test fails while it is out of date. A model is matched by its numbers, not its name, so a refit or calibrated copy is not lent the record. Five languages; checked in Chromium. |
 | 2026-11-04 | #22 two more 7 PRC bullet lengths (Berger's 195 gr EOL from its sheet, Hornady's 180 gr ELD Match): 126 paired conditions, 59 piezo series; GRT Traditional +6.5 %, R1 −14.8 %, paired L5 difference 0.562 (0.445–0.681). |
 | 2026-11-04 | **#22 six more bullet lengths** (three from Nosler's own pages, three from Blue Collar): 122 paired conditions, 57 piezo series; GRT Traditional +6.9 %, R1 −14.7 %. Hodgdon's MAGPRO, now 30 conditions, still reads −2.0 % with GRT Traditional against Western's +6.6 %. |
 | 2026-11-04 | **#22 Hodgdon's MAGPRO rows pair too** (its powders now carry their makers): 110 paired conditions, 51 piezo series. The same MAGPRO model reads +6.6 % against Western's laboratory and −2.4 % against Hodgdon's; StaBALL Match +16 %, H380 +6 % (GRT Traditional); R1 under on every model. Table in `docs/model/validation.md`. |
