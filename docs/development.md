@@ -15,7 +15,10 @@ Pushing a version tag (`git tag v2026.10.14 && git push --tags`) publishes a Git
 single-file copy and a zip of the site (`.github/workflows/release.yml`).
 
 The data repository's files are written by `node tools/data/export-repository.ts <clone of
-gordons-legacy-data>` from the community snapshot, which `node tools/data/build-community.ts` builds.
+gordons-legacy-data>` from the community snapshot, which `node tools/data/build-community.ts` builds, and
+from GRT's catalogue, which `deno run -A tools/data/build-grt-catalogue.ts <export of GRT's database>
+[--loads <folder of .grtload>]` builds from the maintainer's export (docs/formats/grt-database.md),
+together with its report, docs/data/grt-catalogue.md.
 `node tools/data/validate-repository.ts <clone>` checks a clone; the data repository's CI runs it on
 every change.
 

@@ -1,9 +1,11 @@
 // Public API of @gordons-legacy/data.
 
 export {
+  COMPONENT_KINDS,
   DATA_REPOSITORY_URL,
   type ComponentDocument,
   type ComponentKind,
+  type GrtCatalogueKind,
   type DataIndex,
   type DataIndexEntry,
   type Provenance,

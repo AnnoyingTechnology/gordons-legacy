@@ -161,7 +161,7 @@ export class ChargeSynthesisView extends LitElement {
     const { value, source } = entry;
     return html`${`${value.maker} ${value.product}`.trim()}
       <div class="note">
-        <span class="level-badge ${source.origin === 'community' ? 'note' : ''}">${t(originLabel(source))}</span>
+        <span class="level-badge ${source.origin === 'user' ? '' : 'note'}">${t(originLabel(source))}</span>
         ${source.author} ${source.date}${value.lot ? ` · ${value.lot}` : ''}
         ${value.calibration
           ? html`<div class="warning-text">${t(value.calibration.reached ? 'synthesis.fitted' : 'synthesis.fitNotReached')} ${t('synthesis.fitCaveat')}</div>`

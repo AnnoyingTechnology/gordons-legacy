@@ -2,7 +2,7 @@ import type { CaliberDefinition, Load, Projectile, Propellant } from '@gordons-l
 import { html, LitElement, nothing } from 'lit';
 import { byCombinedFactor, powderFactors } from '../analysis/powder-factors.ts';
 import { icon } from '../icons/icons.ts';
-import type { ComponentEntry, ComponentLibrary, ComponentSource } from '../state/components.ts';
+import { originLabel, type ComponentEntry, type ComponentLibrary, type ComponentSource } from '../state/components.ts';
 import { displayUnit } from '../units/units.ts';
 import type { UiContext } from './context.ts';
 
@@ -275,9 +275,9 @@ export class ComponentPicker extends LitElement {
 
   private sourceText(source: ComponentSource) {
     const { t } = this.context;
-    return source.origin === 'community'
-      ? html`<span class="level-badge note" title=${source.file}>${t('components.community')}</span> ${source.author} ${source.date}`
-      : html`<span class="level-badge" title=${source.file}>${t('components.yours')}</span> ${source.date}`;
+    return source.origin === 'user'
+      ? html`<span class="level-badge" title=${source.file}>${t('components.yours')}</span> ${source.date}`
+      : html`<span class="level-badge note" title=${source.file}>${t(originLabel(source))}</span> ${source.author} ${source.date}`;
   }
 
   private choose(event: 'choose-propellant' | 'choose-projectile' | 'choose-caliber', value: Propellant | Projectile | CaliberDefinition): void {

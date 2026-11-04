@@ -95,8 +95,11 @@ src/
                         before its next write (stored-reading.ts), entry revisions that keep one tab
                         from overwriting another's saves (entry-revision.ts)
   data/                 community-components.json: the CC0 community components bundled for a first
-                        offline visit (tools/data/build-community.ts); online, the app takes them from
-                        the data repository through @gordons-legacy/data
+                        offline visit (tools/data/build-community.ts); grt-catalogue.json: GRT's own
+                        catalogue, the data repository's grt/ documents as they are
+                        (tools/data/build-grt-catalogue.ts); online, the app takes both from the data
+                        repository through @gordons-legacy/data, keeping a bundled copy the
+                        repository delivered nothing of
   sync/                 the bench ↔ phone exchange (issue #21): what is exchanged and how it merges
                         (sync-payload.ts), cutting it into QR frames and back (qr-frames.ts), reading a QR
                         code from the camera (qr-decoder.ts)

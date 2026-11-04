@@ -33,6 +33,14 @@ export type { GrtBurnModel, Propellant, PropellantCalibration } from './load/pro
 export { errorMessages, type ImportIssue, type ImportResult, type IssueSeverity } from './import-issues.ts';
 export { checkCaliber, checkFirearm, checkProjectile, checkPropellant, parseFirearm, parseLoad, serializeFirearm, serializeLoad } from './json/load-json.ts';
 export { importGrtCaliber, importGrtProjectiles, importGrtPropellant } from './grt/component-import.ts';
+export { importGrtDatabaseCaliber, importGrtDatabaseProjectile, importGrtDatabasePropellant } from './grt/grt-database-import.ts';
+export {
+  GRT_DATABASE_COLUMNS,
+  grtDatabaseRecord,
+  type GrtDatabaseRecord,
+  type GrtDatabaseTable,
+  type GrtDatabaseValue,
+} from './grt/grt-database-tables.ts';
 export { importGrtrace } from './grt/grtrace-import.ts';
 export { importGrtLoad, type GrtLoadImportOptions } from './grt/grtload-import.ts';
 export { isGrtLoadFile, readLoadFile } from './load-file.ts';

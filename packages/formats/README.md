@@ -16,6 +16,7 @@ Everything is exported from [`src/index.ts`](src/index.ts).
 | `importGrtLoad(text)` | Imports a `.grtload` file. |
 | `readLoadFile(fileName, text)`, `isGrtLoadFile(fileName)` | Reads a load file, `.grtload` or saved JSON, told apart by its name. |
 | `importGrtCaliber`, `importGrtProjectiles`, `importGrtPropellant` | Import GRT component files. A `.projectile` file may hold several projectiles. |
+| `grtDatabaseRecord`, `importGrtDatabaseCaliber`, `importGrtDatabaseProjectile`, `importGrtDatabasePropellant` | Read a row of GRT's database (as exported, [docs/formats/grt-database.md](../../docs/formats/grt-database.md)) by its column names, and import it through the component files' mappings. `GRT_DATABASE_COLUMNS` lists each table's columns. |
 | `ImportResult`, `ImportIssue`, `errorMessages(issues)` | What importers return: the value, or a failure, with the issues found; the messages of the errors among them. |
 | `seatingDepth(load)` | Derived value: the load format stores the overall length, not the seating depth. |
 | `standardMaxPressures(cartridge)` | The CIP and SAAMI maximum pressures known for a cartridge: the user's entries, else the caliber definition's. |
@@ -56,12 +57,14 @@ src/
     percent-decoding.ts  GRT's URL-encoded strings (UTF-8 or Latin-1)
     grt-units.ts         GRT unit labels and their SI conversion
     grt-number.ts        GRT's number syntax
-    grt-fields.ts        reads a section's named values (<input>, <var>, <svar>)
+    grt-fields.ts        reads a section's named values (<input>, <var>, <svar>, or a database record's columns)
     grt-attributes.ts    reads an element's attributes
     grt-document.ts      root element checks, section reading
     *-mapping.ts         GRT names → load format, one file per section
     grtload-import.ts    .grtload importer
     component-import.ts  .caliber, .projectile and .propellant importers
+    grt-database-tables.ts  the database's tables and their columns; a row as a record
+    grt-database-import.ts  database records → components, through the files' mappings
 test/
   fixtures/            real GRT files (see fixtures/README.md)
   *-specifications.test.ts  maker-page parsers in tools/data/firearms; invented figures in real page shapes
@@ -71,3 +74,4 @@ test/
 
 - [docs/formats/json-v1.md](../../docs/formats/json-v1.md): the load format.
 - [docs/formats/grtload.md](../../docs/formats/grtload.md): GRT's files, as observed.
+- [docs/formats/grt-database.md](../../docs/formats/grt-database.md): GRT's database, and how it was read.
