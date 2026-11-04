@@ -344,12 +344,12 @@ describe('the published rows, as committed (maintainer, 2026-11-03)', () => {
   });
 
   it('gives the study its results: GRT Traditional over the piezoelectric measurements, R1 under them', () => {
-    expect(results.filter((result) => result.status === 'paired')).toHaveLength(84);
+    expect(results.filter((result) => result.status === 'paired')).toHaveLength(90);
     const [grt, research] = piezoelectric.pressure;
-    expect(grt!.series).toBe(38);
-    expect(grt!.loss.factor5).toBeCloseTo(0.215, 3);
-    expect(research!.loss.factor5).toBeCloseTo(0.819, 3);
-    expect(research!.underPredicted).toBeGreaterThan(0.9);
+    expect(grt!.series).toBe(41);
+    expect(grt!.loss.factor5).toBeCloseTo(0.218, 3);
+    expect(research!.loss.factor5).toBeCloseTo(0.789, 3);
+    expect(research!.underPredicted).toBeGreaterThan(0.85);
   });
 });
 

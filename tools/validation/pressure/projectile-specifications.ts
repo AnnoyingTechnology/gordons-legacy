@@ -206,7 +206,15 @@ PROJECTILE_SPECIFICATIONS.push(
 );
 
 /** A length Blue Collar Reloading lists for a bullet of any diameter, read first-hand on 2026-11-04. */
-function blueCollar(key: string, maker: string, product: string, grains: number, diameterInches: number, inches: number): ProjectileSpecification {
+function blueCollar(
+  key: string,
+  maker: string,
+  product: string,
+  grains: number,
+  diameterInches: number,
+  inches: number,
+  construction: ProjectileConstruction = 'rifle-jacketed',
+): ProjectileSpecification {
   return {
     key,
     maker,
@@ -217,7 +225,7 @@ function blueCollar(key: string, maker: string, product: string, grains: number,
     lengthStatus: 'assumed',
     lengthSource: `${inches} in, Blue Collar Reloading's listing (bluecollarreloading.com, read 2026-11-04); not a figure from the maker`,
     base: { shape: 'flat' },
-    construction: 'rifle-jacketed',
+    construction,
   };
 }
 
@@ -236,6 +244,9 @@ PROJECTILE_SPECIFICATIONS.push(
   blueCollar('hornady-sp-165', 'Hornady', 'InterLock SP 30 cal 165 gr, 3040', 165, 0.308, 1.152),
   blueCollar('sierra-matchking-168', 'Sierra', 'MatchKing HPBT 30 cal 168 gr, 2200', 168, 0.308, 1.215),
   blueCollar('nosler-partition-165', 'Nosler', 'Partition 30 cal 165 gr, 16330', 165, 0.308, 1.175),
+  blueCollar('hornady-eld-match-208', 'Hornady', 'ELD Match 30 cal 208 gr, 30731', 208, 0.308, 1.535),
+  blueCollar('sierra-matchking-155-palma', 'Sierra', 'MatchKing HPBT Palma 30 cal 155 gr, 2155', 155, 0.308, 1.133),
+  blueCollar('barnes-lrx-95-243', 'Barnes', 'LRX BT 6mm 95 gr, 30862', 95, 0.243, 1.27, 'rifle-solid-copper'),
 );
 
 export function projectileSpecification(key: string): ProjectileSpecification | undefined {

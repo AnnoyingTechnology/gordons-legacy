@@ -253,4 +253,7 @@ const PROJECTILES: Record<string, string> = {
   '0.308 168 GR. SIE HPBT': 'sierra-matchking-168',
   '0.308 175 GR. SIE HPBT': 'sierra-matchking-175',
   '0.308 165 GR. NOS PART': 'nosler-partition-165',
+  '0.308 208 GR. HDY ELD-M': 'hornady-eld-match-208',
+  '0.308 155 GR. SIE HPBT': 'sierra-matchking-155-palma',
+  '0.243 95 GR. BAR BT LRX': 'barnes-lrx-95-243',
 };
