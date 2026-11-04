@@ -21,7 +21,9 @@ Handoff record. Update after each meaningful step (see [AGENTS.md](../AGENTS.md)
 ## Next steps
 
 Pickup 2026-11-04, #19 (GRT's database): the importer, the catalogue, the app's bundled copy and the
-data repository's files are done; see the Log. Waiting on Julien: review and push of the app commit,
+data repository's files are done; see the Log. Nothing is pushed: the app commit is on local `main`,
+the data change on branch `grt-catalogue` of a clone in `/tmp/gordons-legacy-data` (volatile; rebuild it
+with `export-repository.ts` on a fresh clone). Waiting on Julien: review and push of the app commit,
 then the data PR (`grt/`, 147 files), whose CI validates against the app's `main` — merge it soon after
 the push, because until then a synchronised app withdraws GRT's entries (the repository's index is the
 word on its documents); whether hidden powder models should ever be offered. Next for an agent:
