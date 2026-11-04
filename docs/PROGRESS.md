@@ -26,7 +26,7 @@ revisions for loads, guns and stock (`entry-revision.ts`), one recovery-keeping 
 (`recovery-lock.ts`), retried startup reads (`stored-reading.ts`), and the selected engine everywhere.
 See `docs/code-audit.md` and the Log. #32 is left open for Julien to close or extend.
 
-Data PRs #2 and #3 merged 2026-11-03. Waiting on Julien: data PR #4 (22 archived citations, three S&W twists; merging was refused to this agent); #30's two questions (conflicting listings, archived snapshots);
+Data PRs #2 and #3 merged 2026-11-03. Data PR #4 merged 2026-11-04 (Julien granted the permission). Waiting on Julien: #30's two questions (conflicting listings, archived snapshots);
 #31's licensing question (may makers' rows be committed as fixtures) and the new safety wording; #28
 (modal converter); #21 a real-device try. Another agent: #19.
 
@@ -217,6 +217,7 @@ Reverse-engineering workspace (local, never committed; procedure in `docs/model/
 
 | Date | Entry |
 |---|---|
+| 2026-11-04 | **Data PR #4 merged** once Julien granted the permission. The first sync check after the merge refused `ruger.json` and `smith-wesson.json` on their hashes (raw.githubusercontent.com served the new index before the new files); five minutes later 9,216 guns, 49 archived, no problem. The synchroniser keeps the last valid copy meanwhile, as designed. |
 | 2026-11-04 | **Codex reviewed the verification-status wording; four fixes.** One record per document (pooled, MAGPRO's +6.6 % at Western and −2.3 % at Hodgdon read as +0.9 %); each charge series counted once in the mean, as the study counts it; the message now states range first, says inputs were partly assumed and fitting independence unknown, that it does not bound this load's error, and to use the maker's data; the no-evidence message says the table has no piezo comparison (RS14's unstated-method rows are not "no comparison"); temperature coefficients 0/0 and their explicit defaults are one model. |
 | 2026-11-04 | **The app shows each powder model's verification status (docs/PLAN.md).** Every review now says, for the selected engine, either how far it has been from published measured pressures with this very powder model (count, charge series, documents, mean, range) or that no published pressure has been compared with it. The record comes from the pressure study: `tools/validation/pressure-evidence.ts` writes `packages/app/src/data/pressure-evidence.json` (MAGPRO, H380 #3, StaBALL Match today) and a test fails while it is out of date. A model is matched by its numbers, not its name, so a refit or calibrated copy is not lent the record. Five languages; checked in Chromium. |
 | 2026-11-04 | #22 two more 7 PRC bullet lengths (Berger's 195 gr EOL from its sheet, Hornady's 180 gr ELD Match): 126 paired conditions, 59 piezo series; GRT Traditional +6.5 %, R1 −14.8 %, paired L5 difference 0.562 (0.445–0.681). |
