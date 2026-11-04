@@ -109,8 +109,8 @@ the conditions paired in the baseline. Sources and their limits: [pressure-sourc
 Reviewed by Astra (`gpt-6-astra`, medium) before this was written; its corrections are in.
 
 Of the 31,759 conditions read from the five documents (committed, `tools/validation/pressure/
-published-conditions.json.gz`), 92 can be simulated with the community components alone (22 on
-2026-11-02; 48 once twelve more bullet lengths were found and a reader fault fixed; 92 with Hodgdon's
+published-conditions.json.gz`), 110 can be simulated with the community components alone (22 on
+2026-11-02; 48 once twelve more bullet lengths were found and a reader fault fixed; 110 with Hodgdon's
 2025 Annual Manual, 2026-11-04): the others need a powder model,
 a caliber definition or a bullet length we don't have. Every powder model's fitting provenance is
 unknown, and case capacity, several bullet lengths (retailer listings, forum measurements), boat-tail
@@ -128,15 +128,29 @@ series-bootstrap interval 0.575 to 1.004, and stays clear of zero under every se
 GRT's range; the narrowest, case capacity −2 %, gives 0.433 to 0.903). Within 90 % of the SAAMI
 maximum (10 series), GRT Traditional read +7.9 %, never more than 0.5 % under; R1 −17.9 %.
 
-**Hodgdon 2025 Annual Manual, SAAMI piezo (a force transducer against the case), 44 conditions in 22
-series: Winchester StaBALL Match in .308 Win., 6 mm GT and 6 mm ARC, Hodgdon H380 in .22 GT and .300
-WSM, start and maximum charges.** A second laboratory and two more powder models. GRT Traditional
-+13.7 % (median +9.7 %), under-predicting 14 % of the series; R1 −9.7 % (median −11.9 %), under in
-82 %. Here R1's symmetric error is the smaller (mean absolute log error 0.129 against 0.158), and GRT
-Traditional's lower L5 (0.217 against 0.590; paired difference 0.373, 0.211 to 0.534) comes from the
-penalty for reading under. Over both piezo sources, 42 series: GRT Traditional +10.2 %, R1 −13.9 % and
-under in 90 % of the series, paired L5 difference 0.574 (0.426 to 0.722), clear of zero under every
-sensitivity variant (narrowest: case capacity −2 %, 0.295 to 0.606).
+**Hodgdon 2025 Annual Manual, SAAMI piezo (a force transducer against the case), 62 conditions in 31
+series: Winchester StaBALL Match in .308 Win., 6 mm GT and 6 mm ARC; Hodgdon H380 in .22 GT and .300
+WSM; Accurate MAGPRO in .300 WSM, .300 PRC and .30 Nosler; start and maximum charges.** A second
+laboratory, and two more powder models. GRT Traditional +8.8 % (median +7.8 %), under-predicting 23 %
+of the series; R1 −11.9 % (median −12.0 %), under in 87 %. R1's symmetric error is the smaller here
+(mean absolute log error 0.146 against 0.157); GRT Traditional's lower L5 (0.302 against 0.692; paired
+difference 0.390, 0.252 to 0.525) comes from the penalty for reading under.
+
+By powder model (geometric mean of the pressure ratios, piezo conditions only):
+
+| Source | Powder model | Conditions | GRT Traditional | R1 |
+|---|---|---|---|---|
+| Western guide 8.0 | Accurate MAGPRO | 20 | +6.6 % | −18.2 % |
+| Hodgdon 2025 manual | Accurate MAGPRO | 18 | −2.4 % | −17.2 % |
+| Hodgdon 2025 manual | Hodgdon H380 #3 | 10 | +6.1 % | −14.5 % |
+| Hodgdon 2025 manual | Winchester StaBALL Match | 34 | +16.0 % | −8.2 % |
+
+The same MAGPRO model reads 9 % apart against the two laboratories, in different cartridges and
+bullets: roughly consistent. GRT Traditional's error changes sign and size with the powder model (−2 %
+to +16 % here, −18 % on IMR 4166 above); R1 reads under on every model. Over both piezo sources, 51
+series: GRT Traditional +7.9 %, R1 −14.5 % and under in 92 % of the series, paired L5 difference 0.549
+(0.418 to 0.679), clear of zero under every sensitivity variant (narrowest: case capacity −2 %, 0.305
+to 0.575).
 
 The largest discrepancy was GRT Traditional's +43.4 % on the .300 WSM, 240 gr Sierra MatchKing,
 compressed MAGPRO condition. Its reconstruction assumes the case capacity, a forum-sourced bullet length
@@ -176,8 +190,8 @@ made after seeing its results — and the study shows the comparison with and wi
 
 What it shows, conditional on the assumed inputs: **the default engine has read 13–22 % under published
 measured pressures** on one powder model and one publication, and 10 % under on another, while it read
-above on Western's MAGPRO, Reload Swiss's RS14 and, in Hodgdon's 2025 manual, StaBALL Match and H380
-(+10 % over the 42 piezo series). The error's sign changes with the powder model; its
+above on Western's MAGPRO, Reload Swiss's RS14 and, in Hodgdon's 2025 manual, StaBALL Match and H380,
+and 2 % under on Hodgdon's MAGPRO (+7.9 % over the 51 piezo series). The error's sign changes with the powder model; its
 size reaches a fifth of the pressure. No correction factor follows from this, and no threshold covers it.
 
 What changed in the application (Astra's recommendations, 2026-11-02): the results notice says pressure

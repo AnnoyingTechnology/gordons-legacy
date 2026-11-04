@@ -279,4 +279,15 @@ const PROJECTILES: Record<string, string> = {
   '0.308 155 GR. SIE HPBT': 'sierra-matchking-155-palma',
   '0.243 95 GR. BAR BT LRX': 'barnes-lrx-95-243',
   '0.243 65 GR. HDY V-MAX': 'hornady-v-max-65-243',
+  // Its MAGPRO rows' bullets, already in the table for Western's guide. Not mapped: `190 GR. BER VLD`,
+  // which Berger makes as a hunting and as a target bullet.
+  '0.308 180 GR. SIE SBT': 'sierra-gameking-180-sbt',
+  '0.308 220 GR. NOS PART': 'nosler-partition-220',
+  '0.308 150 GR. NOS AB': 'nosler-accubond-150',
+  '0.308 165 GR. HDY SST': 'hornady-sst-165',
+  '0.308 168 GR. BAR TTSX-BT': 'barnes-ttsx-168',
+  '0.308 180 GR. BAR TTSX-BT': 'barnes-ttsx-180',
+  '0.308 200 GR. BAR LRX BT': 'barnes-lrx-200',
+  '0.308 180 GR. NOS E-TIP': 'nosler-e-tip-180',
+  '0.308 230 GR. BER TACT': 'berger-30112',
 };
