@@ -21,31 +21,44 @@ export const EVIDENCE_TABLE = new URL('../../packages/app/src/data/pressure-evid
 
 const ENGINES: [Engine, Engine] = [grtTraditional, researchEngine];
 
-/** The study's record of each engine against each powder model it could simulate. */
+/**
+ * The study's records of each engine against each powder model it could simulate, one per document.
+ * The mean counts each charge series once (the mean of the series' mean log ratios), as the study does;
+ * the range is over single conditions.
+ */
 export function evidenceTable(conditions: PressureCondition[], sources: PressureSource[], pool: ComponentPool): PressureEvidenceTable {
   const piezo = new Set(sources.filter((source) => source.method.startsWith('piezo')).map((source) => source.id));
   const titles = new Map(sources.map((source) => [source.id, source.title]));
-  const models = new Map<string, { maker: string; product: string; ratios: number[][]; series: Set<string>; sources: Set<string> }>();
+  // Model → document → series → the conditions' ratios, one per engine.
+  const models = new Map<string, { maker: string; product: string; documents: Map<string, Map<string, number[][]>> }>();
   for (const result of runConditions(conditions, pool, ENGINES)) {
     if (result.status !== 'paired' || !piezo.has(result.condition.source) || !result.condition.pressure) continue;
     const powder = findPowder(pool, result.condition.powder.maker, result.condition.powder.product);
     if (!('found' in powder)) continue;
     const key = powderModelKey(powder.found.value);
-    const model = models.get(key) ?? { maker: powder.found.value.maker, product: powder.found.value.product, ratios: [], series: new Set(), sources: new Set() };
+    const model = models.get(key) ?? { maker: powder.found.value.maker, product: powder.found.value.product, documents: new Map() };
+    const title = titles.get(result.condition.source) ?? result.condition.source;
+    const document = model.documents.get(title) ?? new Map<string, number[][]>();
     const measured = result.condition.pressure.value;
-    model.ratios.push(result.outcomes.map((outcome) => ('pressure' in outcome ? outcome.pressure / measured : Number.NaN)));
-    model.series.add(result.condition.series);
-    model.sources.add(titles.get(result.condition.source) ?? result.condition.source);
+    const ratios = result.outcomes.map((outcome) => ('pressure' in outcome ? outcome.pressure / measured : Number.NaN));
+    document.set(result.condition.series, [...(document.get(result.condition.series) ?? []), ratios]);
+    model.documents.set(title, document);
     models.set(key, model);
   }
-  const statistics = (ratios: number[]): Pick<PressureEvidence, 'conditions' | 'bias' | 'lowest' | 'highest'> => ({
-    conditions: ratios.length,
-    bias: round(Math.exp(ratios.reduce((sum, ratio) => sum + Math.log(ratio), 0) / ratios.length) - 1),
-    lowest: round(Math.min(...ratios) - 1),
-    highest: round(Math.max(...ratios) - 1),
-  });
+  const record = (source: string, series: number[][][], engine: number): PressureEvidence => {
+    const ratios = series.flat().map((ratios) => ratios[engine]!);
+    const seriesMeans = series.map((conditions) => conditions.reduce((sum, ratios) => sum + Math.log(ratios[engine]!), 0) / conditions.length);
+    return {
+      source,
+      conditions: ratios.length,
+      series: series.length,
+      bias: round(Math.exp(seriesMeans.reduce((sum, mean) => sum + mean, 0) / seriesMeans.length) - 1),
+      lowest: round(Math.min(...ratios) - 1),
+      highest: round(Math.max(...ratios) - 1),
+    };
+  };
   return {
-    note: 'Made by tools/validation/pressure-evidence.ts from tools/validation/pressure/published-conditions.json.gz; piezoelectric conditions both engines simulate, community components alone.',
+    note: 'Made by tools/validation/pressure-evidence.ts from tools/validation/pressure/published-conditions.json.gz; piezoelectric conditions both engines simulate, community components alone; one record per document, each charge series counted once in the mean.',
     models: [...models.entries()]
       .sort(([, a], [, b]) => `${a.maker} ${a.product}`.localeCompare(`${b.maker} ${b.product}`))
       .map(([key, model]) => ({
@@ -55,7 +68,7 @@ export function evidenceTable(conditions: PressureCondition[], sources: Pressure
         engines: Object.fromEntries(
           ENGINES.map((engine, index) => [
             engine.id,
-            { ...statistics(model.ratios.map((ratios) => ratios[index]!)), series: model.series.size, sources: [...model.sources].sort() },
+            [...model.documents.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([source, series]) => record(source, [...series.values()], index)),
           ]),
         ),
       })),
@@ -77,8 +90,9 @@ function main(): void {
   const table = evidenceTable(conditions, sources, communityPool());
   writeFileSync(EVIDENCE_TABLE, evidenceText(table));
   for (const model of table.models) {
-    const grt = model.engines[grtTraditional.id]!;
-    console.log(`${model.maker} ${model.product}: ${grt.conditions} conditions in ${grt.series} series, GRT Traditional ${(grt.bias * 100).toFixed(1)} %`);
+    for (const record of model.engines[grtTraditional.id]!) {
+      console.log(`${model.maker} ${model.product}, ${record.source}: ${record.conditions} conditions in ${record.series} series, GRT Traditional ${(record.bias * 100).toFixed(1)} %`);
+    }
   }
 }
 

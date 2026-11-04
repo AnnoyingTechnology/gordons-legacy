@@ -77,16 +77,19 @@ export function findingMessage(finding: Finding, context: UiContext): string {
   }
   if (finding.code === 'doubleChargeFits' && finding.pressure === undefined) return t('finding.doubleChargeFitsNotSimulated', values);
   if (finding.code === 'pressureEvidence' && finding.evidence) {
-    const { evidence } = finding;
     const signed = (share: number) => `${share > 0 ? '+' : share < 0 ? '−' : ''}${number(Math.abs(share) * 100, 1)}`;
-    return t('finding.pressureEvidence', {
-      count: String(evidence.conditions),
-      series: String(evidence.series),
-      sources: evidence.sources.join('; '),
-      bias: signed(evidence.bias),
-      lowest: signed(evidence.lowest),
-      highest: signed(evidence.highest),
-    });
+    // One record per document: two laboratories pooled would hide how far apart they are.
+    const records = finding.evidence.map((record) =>
+      t('finding.pressureEvidence.record', {
+        source: record.source,
+        count: String(record.conditions),
+        series: String(record.series),
+        bias: signed(record.bias),
+        lowest: signed(record.lowest),
+        highest: signed(record.highest),
+      }),
+    );
+    return t('finding.pressureEvidence', { records: records.join('; ') });
   }
   return t(`finding.${finding.code}`, values);
 }
