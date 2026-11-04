@@ -34,13 +34,13 @@ const BERGER_SHEET =
   "Berger Bullets, 2020 Quick Reference Sheet (bergerbullets.com/pdf/Quick-Reference-Sheets.pdf, " +
   'SHA-256 e55be4c4…, read 2026-11-02), column OAL';
 
-function berger(part: string, product: string, grains: number, inches: number): ProjectileSpecification {
+function berger(part: string, product: string, grains: number, inches: number, diameterInches = 0.308): ProjectileSpecification {
   return {
     key: `berger-${part}`,
     maker: 'Berger',
     product: `${product}, ${part}`,
     mass: grains * units.GRAIN,
-    diameter: 0.308 * units.INCH,
+    diameter: diameterInches * units.INCH,
     length: inches * units.INCH,
     lengthStatus: 'specification',
     lengthSource: BERGER_SHEET,
@@ -55,6 +55,7 @@ export const PROJECTILE_SPECIFICATIONS: ProjectileSpecification[] = [
   berger('30430', '30 Cal 230 gr Hybrid Target', 230, 1.668),
   berger('30514', '30 Cal 190 gr VLD Hunting', 190, 1.371),
   berger('30112', '30 Cal 230 gr Hybrid OTM Tactical', 230, 1.608),
+  berger('28550', '7 MM 195 gr EOL Elite Hunter', 195, 1.648, 0.284),
   {
     key: 'lapua-b416-200',
     maker: 'Lapua',
@@ -262,6 +263,7 @@ PROJECTILE_SPECIFICATIONS.push(
   blueCollar('hornady-eld-x-162-284', 'Hornady', 'ELD-X 7mm 162 gr, 2840', 162, 0.284, 1.478),
   blueCollar('hornady-eld-match-168', 'Hornady', 'ELD Match 30 cal 168 gr, 30506', 168, 0.308, 1.272),
   blueCollar('hornady-eld-x-220', 'Hornady', 'ELD-X 30 cal 220 gr, 3078', 220, 0.308, 1.63),
+  blueCollar('hornady-eld-match-180-284', 'Hornady', 'ELD Match 7mm 180 gr, 28503', 180, 0.284, 1.538),
 );
 
 export function projectileSpecification(key: string): ProjectileSpecification | undefined {
