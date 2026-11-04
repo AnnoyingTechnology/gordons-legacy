@@ -46,3 +46,16 @@ test('a stored component of an unknown kind is left out, and the rest still arri
   await library.ready;
   expect(library.entries.map((entry) => entry.id)).toEqual(['kept']);
 });
+
+test('a file the storage refuses leaves the library as it was (#32)', async () => {
+  const storage = memoryStore<ComponentEntry>();
+  const library = new ComponentLibrary(storage, []);
+  await library.ready;
+  storage.putAll = async () => {
+    throw new DOMException('full', 'QuotaExceededError');
+  };
+  const text = readFileSync(new URL('../../formats/test/fixtures/cc0/powders/Alliant_Red_Dot_-_2023_06_21_by_Tom24_2023.06.21.propellant', import.meta.url), 'utf8');
+  await expect(library.importFile('Red Dot.propellant', text)).rejects.toThrow('full');
+  expect(library.powders()).toHaveLength(0);
+  expect(await storage.list()).toHaveLength(0);
+});

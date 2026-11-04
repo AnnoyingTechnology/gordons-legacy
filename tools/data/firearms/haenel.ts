@@ -48,6 +48,7 @@ import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, type Firearm } from '@gordons-l
 import { printedLength, printedMass, printedTwist } from './metric-figures.ts';
 import { claimFileName, crawlArguments, fetchPage, fetchText, firearmJson, plainText, plausibleGunMass, sitemapLocations, summaryLine } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
+import { settleListing } from './printed-figures.ts';
 
 const SITEMAP = 'https://www.cg-haenel.de/page-sitemap.xml';
 
@@ -251,11 +252,6 @@ export function firearmsFrom(variant: Variant, url: string, retrieved: string): 
 }
 
 /** The figures that tell two guns of one name apart. */
-function figures(gun: Firearm): string {
-  const { length, twistLength, gunMass } = gun.barrel;
-  return [length, twistLength, gunMass].join('/');
-}
-
 async function main(): Promise<void> {
   const args = crawlArguments('haenel', process.argv.slice(2));
   if (args === undefined) return;
@@ -280,9 +276,14 @@ async function main(): Promise<void> {
       const result = firearmsFrom(variant, url, retrieved);
       skipped.push(...result.skipped.map((reason) => `${url}: ${reason}`));
       for (const gun of result.guns) {
-        const earlier = kept.get(gun.name);
-        if (earlier === undefined) kept.set(gun.name, gun);
-        else if (figures(earlier) !== figures(gun)) skipped.push(`${url}: ${gun.name} disagrees with ${earlier.source?.url} (${figures(earlier)} against ${figures(gun)}); the first is kept`);
+        // A name listed again: one gun if the barrel and twist agree (the heavier kept), else another.
+        const settled = settleListing(kept, gun, (firearm) => firearm.name);
+        if ('skip' in settled) {
+          if (settled.skip.includes('disagree')) skipped.push(`${url}: ${settled.skip}`);
+          continue;
+        }
+        if ('replacing' in settled) skipped.push(`${url}: ${gun.name} replaces a lighter listing (${settled.replacing.source?.url})`);
+        kept.set(settled.write.name, settled.write);
       }
     }
   }

@@ -18,6 +18,7 @@ import { join } from 'node:path';
 import { readDocument, sha256, type ComponentKind, type DataIndexEntry, type Provenance } from '@gordons-legacy/data';
 import { parseFirearm, type Firearm } from '@gordons-legacy/formats';
 import { plainText } from './firearms/maker-site.ts';
+import { settleListing } from './firearms/printed-figures.ts';
 
 const SNAPSHOT = join(import.meta.dirname, '../../packages/app/src/data/community-components.json');
 const GRAINS_PER_KILOGRAM = 15432.358;
@@ -230,6 +231,50 @@ interface MakerFile {
 }
 
 /**
+ * A gun read again under a name already published. The new reading replaces the published gun — a
+ * catalogue corrects its figures, and of two listings of one gun the heaviest is kept (settleListing,
+ * the maintainer's rule of 2026-11-03) — except where it is no correction:
+ *  - another cartridge under the name is another gun (a maker reused the name): the published gun stays
+ *    and the new one is added, its cartridge in its name;
+ *  - a reading that only lost figures the page no longer prints, every other figure the same, keeps the
+ *    published gun: a page going quiet contradicts nothing.
+ */
+export function mergedReading(published: Firearm | undefined, fresh: Firearm): Firearm[] {
+  if (published === undefined) return [fresh];
+  if (published.cartridge !== fresh.cartridge) {
+    const name = `${fresh.name} ${fresh.cartridge}`;
+    return [published, { ...fresh, name, barrel: { ...fresh.barrel, name } }];
+  }
+  const pairs = [
+    [published.barrel.length, fresh.barrel.length],
+    [published.barrel.twistLength, fresh.barrel.twistLength],
+    [published.barrel.gunMass, fresh.barrel.gunMass],
+  ] as const;
+  const onlyLost = pairs.every(([before, after]) => after === undefined || after === before) && pairs.some(([before, after]) => before !== undefined && after === undefined);
+  return [onlyLost ? published : fresh];
+}
+
+/**
+ * A maker's published guns with a new reading merged in, by name (`mergedReading`). A gun renamed apart
+ * (another cartridge) meets the published guns by the listing rules, so that it never overwrites
+ * another configuration published under the name it takes (#30 review).
+ */
+export function mergedCatalogue(published: readonly Firearm[], fresh: ReadonlyMap<string, Firearm>): Map<string, Firearm> {
+  const guns = new Map(published.map((gun) => [gun.name, gun]));
+  for (const [name, gun] of fresh) {
+    for (const kept of mergedReading(guns.get(name), gun)) {
+      if (kept.name === name) {
+        guns.set(name, kept);
+        continue;
+      }
+      const settled = settleListing(guns, kept, (firearm) => firearm.name);
+      if ('write' in settled) guns.set(settled.write.name, settled.write);
+    }
+  }
+  return guns;
+}
+
+/**
  * The gun database: one file per maker, holding that maker's guns by name, with the guns the repository
  * already holds kept where the new reading no longer has them — a gun that has left a catalogue is
  * still owned and loaded for. Nothing is written here, so that a published file which does not read
@@ -244,8 +289,7 @@ function makerFiles(repository: string, folders: readonly string[]): MakerFile[]
     const fresh = read.get(maker) ?? new Map<string, Firearm>();
     const superseded = supersededNames(published, fresh);
     if (superseded.size > 0) console.log(`  firearms/${maker}.json: ${superseded.size} guns published under a name since read better`);
-    const guns = new Map(published.filter((gun) => !superseded.has(gun.name)).map((gun) => [gun.name, gun]));
-    for (const [name, gun] of fresh) guns.set(name, gun);
+    const guns = mergedCatalogue(published.filter((gun) => !superseded.has(gun.name)), fresh);
     const value = [...guns.values()].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
     if (value.length === 0) continue;
     const document = { format: 'gordons-legacy.component', version: 1, kind: 'firearm', provenance: firearmProvenance(value), value };

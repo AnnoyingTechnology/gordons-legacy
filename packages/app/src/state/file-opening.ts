@@ -3,7 +3,7 @@ import { withProjectile, withPropellant } from '../editor/components.ts';
 import type { MessageKey } from '../i18n/i18n.ts';
 import { readChronographCsv, type ChronographCsv } from '../measurements/chronograph-csv.ts';
 import type { ComponentLibrary } from './components.ts';
-import type { DocumentStore } from './documents.ts';
+import type { DocumentStore, OpenDocument } from './documents.ts';
 import type { FirearmLibrary } from './firearms.ts';
 import type { Library } from './library.ts';
 
@@ -35,17 +35,29 @@ export interface OpenedFiles {
   errors: string[];
   /** A load was opened in a new tab, so the editor should show it. */
   loadOpened: boolean;
-  /** The projectiles of a `.projectile` file holding several, for the user to choose the active load's. */
-  projectileChoice?: Projectile[];
-  /** A chronograph export waiting for the user to confirm its column and unit. */
-  chronograph?: { csv: ChronographCsv; fileName: string };
+  /** The projectiles of a `.projectile` file holding several, for the user to choose the load of tab `documentId`'s. */
+  projectileChoice?: { projectiles: Projectile[]; documentId: number };
+  /** A chronograph export waiting for the user to confirm its column and unit, for tab `documentId`. */
+  chronograph?: { csv: ChronographCsv; fileName: string; documentId: number };
 }
 
 type Translate = (key: MessageKey, parameters?: Record<string, string>) => string;
 
-/** Reads the text of files the user chose or dropped. */
-export function readFiles(files: Iterable<File>): Promise<FileText[]> {
-  return Promise.all([...files].map(async (file) => ({ name: file.name, text: await file.text() })));
+/**
+ * Reads the text of files the user chose or dropped, each on its own: one the browser can't read is
+ * reported, and the others are read (#32).
+ */
+export async function readFiles(files: Iterable<File>, t: Translate): Promise<{ read: FileText[]; errors: string[] }> {
+  const read: FileText[] = [];
+  const errors: string[] = [];
+  for (const file of files) {
+    try {
+      read.push({ name: file.name, text: await file.text() });
+    } catch {
+      errors.push(t('documents.readFailed', { name: file.name }));
+    }
+  }
+  return { read, errors };
 }
 
 /**
@@ -64,25 +76,33 @@ export function fileKind({ name, text }: FileText): FileKind {
 }
 
 /**
- * Opens files in the editor. A load opens in a new tab. A powder or projectile replaces the active load's
- * and is kept in the component library; a caliber is only kept there. A pressure trace or chronograph
- * export is added to the active load's measurements. A gun is kept in the gun library.
+ * Opens files in the editor. A load opens in a new tab. A powder or projectile replaces the load's of tab
+ * `target` and is kept in the component library; a caliber is only kept there. A pressure trace or
+ * chronograph export is added to tab `target`'s measurements. A gun is kept in the gun library.
+ *
+ * `target` is the tab active when the files were chosen: one that changes while they are read keeps
+ * them from landing in another load (#32).
  */
-export async function openInEditor(files: readonly FileText[], destinations: FileDestinations, t: Translate): Promise<OpenedFiles> {
-  const { documents, components, firearms } = destinations;
+export async function openInEditor(files: readonly FileText[], target: number | undefined, destinations: FileDestinations, t: Translate): Promise<OpenedFiles> {
+  const { documents, firearms } = destinations;
   const opened: OpenedFiles = { errors: [], loadOpened: false };
+  const destination = () => documents.documents.find((document) => document.id === target);
   for (const file of files) {
     const kind = fileKind(file);
     if (kind === 'propellant' || kind === 'projectile') {
-      opened.errors.push(...putComponent(kind, file.text, documents, opened, t));
-      // Kept for later too. A file that can't be read was reported just above.
-      await components.importFile(file.name, file.text);
+      opened.errors.push(...putComponent(kind, file.text, destination(), documents, opened, t));
+      // Kept for later too. A file that can't be read was reported just above; a refused write is not.
+      try {
+        await destinations.components.importFile(file.name, file.text);
+      } catch {
+        opened.errors.push(t('components.importFailed', { name: file.name }));
+      }
     } else if (kind === 'caliber') {
-      opened.errors.push(...(await components.importFile(file.name, file.text)));
+      opened.errors.push(...(await keepComponent(file, destinations.components, t)));
     } else if (kind === 'trace') {
-      opened.errors.push(...addTrace(file.text, documents, t));
+      opened.errors.push(...addTrace(file.text, destination(), documents, t));
     } else if (kind === 'chronograph') {
-      opened.errors.push(...readChronograph(file.name, file.text, documents, opened, t));
+      opened.errors.push(...readChronograph(file.name, file.text, destination(), opened, t));
     } else if (kind === 'firearm') {
       opened.errors.push(...(await keepFirearm(file, firearms, t)));
     } else {
@@ -105,7 +125,7 @@ export async function importIntoLibrary(files: readonly FileText[], destinations
   for (const file of files) {
     const kind = fileKind(file);
     if (kind === 'propellant' || kind === 'projectile' || kind === 'caliber') {
-      errors.push(...(await components.importFile(file.name, file.text)));
+      errors.push(...(await keepComponent(file, components, t)));
     } else if (kind === 'firearm') {
       errors.push(...(await keepFirearm(file, firearms, t)));
     } else if (kind === 'trace' || kind === 'chronograph') {
@@ -115,44 +135,62 @@ export async function importIntoLibrary(files: readonly FileText[], destinations
       loads.push(file);
     }
   }
-  const failed = await library.importFiles(loads);
-  return [...failed.map((name) => t('library.importFailed', { name })), ...errors];
+  const { unreadable, unsaved } = await library.importFiles(loads);
+  return [
+    ...unreadable.map((name) => t('library.importFailed', { name })),
+    ...unsaved.map((name) => t('library.importUnsaved', { name })),
+    ...errors,
+  ];
 }
 
-/** Puts a powder or projectile into the active load; returns error messages. */
-function putComponent(kind: 'propellant' | 'projectile', text: string, documents: DocumentStore, opened: OpenedFiles, t: Translate): string[] {
-  const active = documents.active;
-  if (!active) return [t('components.noLoad')];
+/** Puts a powder or projectile into the load of `destination`; returns error messages. */
+function putComponent(
+  kind: 'propellant' | 'projectile',
+  text: string,
+  destination: OpenDocument | undefined,
+  documents: DocumentStore,
+  opened: OpenedFiles,
+  t: Translate,
+): string[] {
+  if (!destination) return [t('components.noLoad')];
   if (kind === 'propellant') {
     const result = importGrtPropellant(text);
     if (!result.ok) return errorMessages(result.issues);
-    documents.update(active.id, withPropellant(active.load, result.value));
+    documents.update(destination.id, withPropellant(destination.load, result.value));
     return [];
   }
   const result = importGrtProjectiles(text);
   if (!result.ok) return errorMessages(result.issues);
-  if (result.value.length === 1) documents.update(active.id, withProjectile(active.load, result.value[0]!));
-  else opened.projectileChoice = result.value;
+  if (result.value.length === 1) documents.update(destination.id, withProjectile(destination.load, result.value[0]!));
+  else opened.projectileChoice = { projectiles: result.value, documentId: destination.id };
   return [];
 }
 
-/** Adds a PressureTrace recording to the active load's measurements; returns error messages. */
-function addTrace(text: string, documents: DocumentStore, t: Translate): string[] {
-  const active = documents.active;
-  if (!active) return [t('components.noLoad')];
+/** Adds a PressureTrace recording to the measurements of `destination`'s load; returns error messages. */
+function addTrace(text: string, destination: OpenDocument | undefined, documents: DocumentStore, t: Translate): string[] {
+  if (!destination) return [t('components.noLoad')];
   const result = importGrtrace(text);
   if (!result.ok) return errorMessages(result.issues);
-  documents.update(active.id, { ...active.load, measurements: [...active.load.measurements, result.value] });
+  documents.update(destination.id, { ...destination.load, measurements: [...destination.load.measurements, result.value] });
   return [];
 }
 
-/** Reads a chronograph export for the user to confirm; returns error messages. */
-function readChronograph(fileName: string, text: string, documents: DocumentStore, opened: OpenedFiles, t: Translate): string[] {
-  if (!documents.active) return [t('components.noLoad')];
+/** Reads a chronograph export for the user to confirm, for `destination`; returns error messages. */
+function readChronograph(fileName: string, text: string, destination: OpenDocument | undefined, opened: OpenedFiles, t: Translate): string[] {
+  if (!destination) return [t('components.noLoad')];
   const csv = readChronographCsv(text);
   if (!csv) return [t('chronograph.nothing', { file: fileName })];
-  opened.chronograph = { csv, fileName };
+  opened.chronograph = { csv, fileName, documentId: destination.id };
   return [];
+}
+
+/** A component file, into the component library; returns why it wasn't kept, a refused write included. */
+async function keepComponent({ name, text }: FileText, components: ComponentLibrary, t: Translate): Promise<string[]> {
+  try {
+    return await components.importFile(name, text);
+  } catch {
+    return [t('components.importFailed', { name })];
+  }
 }
 
 /** A gun file, into the gun library: the same place "Save as a gun" puts one. Returns error messages. */
@@ -163,6 +201,7 @@ async function keepFirearm({ name, text }: FileText, firearms: FirearmLibrary, t
     await firearms.save(result.value);
     return [];
   } catch {
-    return [t('library.saveFailed')];
+    // This file's error, not a message the batch's own list would then replace (#32).
+    return [t('firearm.importFailed', { name })];
   }
 }

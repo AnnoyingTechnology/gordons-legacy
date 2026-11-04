@@ -1,4 +1,4 @@
-import { grtTraditional, type Simulation } from '@gordons-legacy/engine';
+import type { Simulation } from '@gordons-legacy/engine';
 import type { Load } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
 import { lowestPressureLimit } from '../analysis/load-assessment.ts';
@@ -68,7 +68,7 @@ export class CompareView extends LitElement {
     const compared: Compared[] = [];
     const refused: string[] = [];
     chosen.forEach((document) => {
-      const result = grtTraditional.simulate(document.load);
+      const result = this.context.engine.simulate(document.load);
       if (result.ok) {
         compared.push({ name: displayName(document), load: document.load, simulation: result.simulation, color: `var(--compare-${compared.length + 1})` });
       } else {

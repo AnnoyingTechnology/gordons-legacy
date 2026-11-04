@@ -136,11 +136,13 @@ describe('the guns of a product page', () => {
     expect(reasonsOf(PAGE).filter((reason) => reason.includes('.257'))).toEqual([]);
   });
 
-  it('says what two listings of one gun disagree on instead of choosing between them', () => {
+  it('keeps the heavier of two listings of one gun, and says so', () => {
     const listedTwice = `<html><head><title>Example Model &#8211; Weatherby, Inc.</title></head><body>
       ${table(['Caliber', 'Weight', 'Barrel OAL', 'Twist Rate'], [['.308 Win', '6.8lbs.', '22"', '1:10"'], ['.308 Win', '7.2lbs.', '22"', '1:10"']])}</body></html>`;
-    expect(reasonsOf(listedTwice)).toEqual(['.308 Win 22": listed twice with different figures; only the first is kept']);
-    expect(gunsOf(listedTwice).size).toBe(1);
+    expect(reasonsOf(listedTwice)).toEqual(['.308 Win 22": listed twice with different weights; the heavier is kept']);
+    const guns = [...gunsOf(listedTwice).values()];
+    expect(guns).toHaveLength(1);
+    expect(guns[0]!.barrel.gunMass).toBeCloseTo(7.2 * 0.45359237, 6);
   });
 
   it('says a page gave nothing, so that a parser which has stopped working is not read as an empty catalogue', () => {

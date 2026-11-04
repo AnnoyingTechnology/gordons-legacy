@@ -366,3 +366,30 @@ exists.
   `unstated` and the figure is a starting point, not an answer.
 - A user's own gun always wins over a published record. The published figures are a convenience, never
   a measurement of the gun in front of them.
+
+## A gun listed twice (maintainer, 2026-11-03)
+
+Every extractor settles a name read again through `settleListing` (`tools/data/firearms/printed-figures.ts`):
+
+- another cartridge is another gun, named apart by its cartridge;
+- the same barrel length and twist make the same gun, and only one listing is kept: the **heaviest**,
+  whole, with its own page as its source, since a maker's heavier weight is most likely the gun with a
+  loaded magazine;
+- another barrel length or twist is another configuration, so another gun, named apart by what differs
+  as the maker printed it (`… 16.5"`, `… 1:8"`);
+- a listing that leaves out the twist is the same gun as one that gives it, but never replaces it,
+  however heavy: the record would lose what tells this configuration from another of the same barrel.
+
+Nothing is averaged: a figure no page printed never enters a record. Guns whose pages are gone may be
+read from archived snapshots, cited as the archive and its date: the Ruger GP100 and SP101, 49 guns,
+were read so on 2026-11-03 (`ruger.ts --archived gp100 --archived sp101`, `archived-pages.ts`).
+
+## Refresh of 2026-11-03
+
+All 35 makers read again under the listing rules above (data PR #3): 9,167 guns. Two sites had changed:
+
+- **Girsan** left WordPress: the pages are now `product-detail.php?weapon=…`, each declaring its gun to
+  its script (`girsan.ts`). The new weight label, `Weight (Empty)`, does not say whether the magazine
+  is in, so its masses are `unstated` where they were `without-magazine`.
+- **Kel-Tec** answers every request, its `robots.txt` included, with a Cloudflare bot challenge. A
+  challenge is a refusal: it is not circumvented, and the 42 published Kel-Tec guns are kept as read.

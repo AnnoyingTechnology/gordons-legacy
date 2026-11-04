@@ -12,9 +12,8 @@ import './stock-view.ts';
  * The user's library: every saved load, by cartridge and firearm, with what tells loads apart at a
  * glance (velocity, energy, share of the maximum, the review's level, the best group, the measured
  * velocity), the user's guns and the stock. Fires `open-entry` with an entry's id to open it in a tab,
- * `remove-entry` with the id of an entry to delete, `record-batch` with an entry's id, `import-files` with
- * files to add, `backup` to download the library, `restore` with a backup file, `sync` to exchange with
- * another device.
+ * `record-batch` with an entry's id, `import-files` with files to add, `backup` to download the library,
+ * `restore` with a backup file, `sync` to exchange with another device.
  */
 export class LibraryView extends LitElement {
   static override properties = {
@@ -24,6 +23,7 @@ export class LibraryView extends LitElement {
     stock: { attribute: false },
     context: { attribute: false },
     filter: { state: true },
+    removeFailed: { state: true },
   };
 
   declare library: Library;
@@ -36,10 +36,13 @@ export class LibraryView extends LitElement {
   declare context: UiContext;
   /** Words that every shown load must contain, in any of its names. */
   declare filter: string;
+  /** The name of a load the storage refused to remove, until a removal succeeds. */
+  declare removeFailed: string | undefined;
 
   constructor() {
     super();
     this.filter = '';
+    this.removeFailed = undefined;
     this.firearms = [];
     this.stock = [];
   }
@@ -81,6 +84,7 @@ export class LibraryView extends LitElement {
           </label>
         </header>
         <p class="note">${t('library.help')}</p>
+        ${this.removeFailed === undefined ? nothing : html`<p class="error" role="alert">${t('library.removeFailed', { name: this.removeFailed })}</p>`}
         ${this.entries.length === 0
           ? html`<p class="empty-message">${t('library.empty')}</p>`
           : html`<div class="table-scroll"><table class="library-table">
@@ -145,11 +149,11 @@ export class LibraryView extends LitElement {
               <tbody>
                 ${[...shown]
                   .sort((a, b) => a.firearm.name.localeCompare(b.firearm.name, undefined, { numeric: true }))
-                  .map(({ id, firearm }) => {
+                  .map(({ id, firearm, revision }) => {
                     const name = firearmLabel(firearm);
                     return html`<tr>
                       <td>
-                        <button class="link" title=${t('firearm.edit', { name })} @click=${() => this.fire('edit-firearm', { firearm, id })}>${name}</button>
+                        <button class="link" title=${t('firearm.edit', { name })} @click=${() => this.fire('edit-firearm', { firearm, id, ...(revision === undefined ? {} : { revision }) })}>${name}</button>
                       </td>
                       <td>${firearm.maker ?? ''}</td>
                       <td>${firearm.cartridge ?? ''}</td>
@@ -205,7 +209,7 @@ export class LibraryView extends LitElement {
         <button class="icon-button" aria-label=${t('stock.recordBatchOf', { name: entry.name })} title=${t('stock.recordBatchOf', { name: entry.name })}
           @click=${() => this.fire('record-batch', entry.id)}>${icon('charge')}</button>
         <button class="remove" aria-label=${t('library.remove', { name: entry.name })} title=${t('library.remove', { name: entry.name })}
-          @click=${() => this.removeEntry(entry)}>${icon('close')}</button>
+          @click=${() => void this.removeEntry(entry)}>${icon('close')}</button>
       </td>
     </tr>`;
   }
@@ -229,9 +233,16 @@ export class LibraryView extends LitElement {
     setTimeout(step, 0);
   }
 
-  /** The shell deletes it, so that a failed write is reported with the other storage errors. */
-  private removeEntry(entry: LibraryEntry): void {
-    if (window.confirm(this.context.t('library.confirmRemove', { name: entry.name }))) this.fire('remove-entry', entry.id);
+  /** A removal the storage refuses keeps the entry and says so, instead of failing unseen (#32). */
+  private async removeEntry(entry: LibraryEntry): Promise<void> {
+    if (!window.confirm(this.context.t('library.confirmRemove', { name: entry.name }))) return;
+    try {
+      await this.library.remove(entry.id);
+      this.removeFailed = undefined;
+      this.fire('entry-removed', entry.id);
+    } catch {
+      this.removeFailed = entry.name;
+    }
   }
 
   private importFiles = (event: Event) => {

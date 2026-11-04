@@ -42,6 +42,11 @@ export interface FirearmSource {
   /** When they were read, YYYY-MM-DD. */
   retrieved?: string;
   /**
+   * When the page was read from an archive rather than from the publisher's site: the snapshot's date,
+   * YYYY-MM-DD, `url` then being the archive's address of it. Used for guns whose pages are gone.
+   */
+  archived?: string;
+  /**
    * Which mass the publisher gave, when they say which: `without-magazine`, `empty-magazine`, `loaded`,
    * or `unstated` when the page gives one figure and does not say what it includes. The simulation wants
    * the gun as it recoils, so an unstated figure is a starting point, not that number.

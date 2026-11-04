@@ -170,7 +170,9 @@ export class FirearmPicker extends LitElement {
     const { t } = this.context;
     const source = firearm.source;
     if (source?.kind !== 'published') return html`<span class="level-badge">${t('components.yours')}</span>`;
-    return html`<span class="level-badge note" title=${source.url ?? ''}>${t('firearm.published')}</span> ${source.publisher ?? ''}`;
+    // A page the maker no longer serves, read from an archive, says so and when it was archived.
+    const archived = source.archived ? ` · ${t('firearm.archived', { date: source.archived })}` : '';
+    return html`<span class="level-badge note" title=${source.url ?? ''}>${t('firearm.published')}</span> ${source.publisher ?? ''}${archived}`;
   }
 
   private choose(firearm: Firearm): void {

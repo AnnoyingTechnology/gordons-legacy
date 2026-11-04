@@ -1,7 +1,7 @@
 import type { Load } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
 import { effectiveBoreArea, isPossibleRifling, type BoreProfile } from '../editor/bore-area.ts';
-import { displayUnit, formatNumber, parseNumber } from '../units/units.ts';
+import { displayUnit, formatEditable, parseNumber } from '../units/units.ts';
 import type { UiContext } from './context.ts';
 import { loadChangeEvent } from '../state/load-change.ts';
 
@@ -42,7 +42,7 @@ export class BoreAreaDialog extends LitElement {
     // Each opening starts from the cartridge's groove diameter.
     if (changed.has('open') && this.open) {
       const unit = displayUnit('length', this.context.units);
-      this.values = { ...this.values, groove: formatNumber(unit.fromSi(this.load.cartridge.grooveDiameter), unit.decimals, 'en') };
+      this.values = { ...this.values, groove: formatEditable(unit.fromSi(this.load.cartridge.grooveDiameter), unit.decimals) };
     }
   }
 

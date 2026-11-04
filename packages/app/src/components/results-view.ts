@@ -58,7 +58,7 @@ export function renderResults(
       )),
     );
   }
-  const ladder = simulateLadder(load);
+  const ladder = simulateLadder(load, context.engine);
   container.append(renderAxisSwitch(axis, onAxis, context), ...renderCharts(shot, ladder, axis, context, load));
   if (ladder.length > 1) container.append(renderLegend(ladder, context));
   container.append(renderTable(shot, context));

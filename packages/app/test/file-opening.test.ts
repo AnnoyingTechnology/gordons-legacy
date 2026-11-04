@@ -4,7 +4,7 @@ import { describe, expect, test } from 'vitest';
 import { ComponentLibrary, type ComponentEntry } from '../src/state/components.ts';
 import { DocumentStore } from '../src/state/documents.ts';
 import { exampleLoad } from '../src/state/example-load.ts';
-import { fileKind, importIntoLibrary, openInEditor, type FileDestinations } from '../src/state/file-opening.ts';
+import { fileKind, importIntoLibrary, openInEditor, readFiles, type FileDestinations } from '../src/state/file-opening.ts';
 import { FirearmLibrary, newFirearm, type FirearmEntry } from '../src/state/firearms.ts';
 import { memoryStore } from '../src/state/indexed-db.ts';
 import { Library } from '../src/state/library.ts';
@@ -16,7 +16,7 @@ function fixtureText(path: string): string {
 
 const caliber = { name: '308 Win.caliber', text: fixtureText('cc0/calibers/308_Win._Winchester_308_Winchester_762_x_51_by_Charlie_2023.06.28.caliber') };
 const powder = { name: 'Red Dot.propellant', text: fixtureText('cc0/powders/Alliant_Red_Dot_-_2023_06_21_by_Tom24_2023.06.21.propellant') };
-const translate = (key: string) => key;
+const translate = (key: string, parameters?: Record<string, string>) => (parameters?.name ? `${key}: ${parameters.name}` : key);
 
 function destinations(): FileDestinations {
   return {
@@ -41,7 +41,7 @@ describe('fileKind', () => {
 /** A dropped `.caliber` file used to be read as a load and fail, while the library's import kept it. */
 test('a .caliber file goes to the component library whether opened in the editor or imported into the library', async () => {
   const editor = destinations();
-  const opened = await openInEditor([caliber], editor, translate);
+  const opened = await openInEditor([caliber], undefined, editor, translate);
   expect(opened).toEqual({ errors: [], loadOpened: false });
   expect(editor.documents.documents).toHaveLength(0);
 
@@ -59,7 +59,7 @@ test('a .caliber file goes to the component library whether opened in the editor
 test("a powder opened in the editor replaces the active load's and is kept in the component library", async () => {
   const editor = destinations();
   editor.documents.openNew('Example.json', exampleLoad({ title: 'Example', note: '' })!);
-  const opened = await openInEditor([powder], editor, translate);
+  const opened = await openInEditor([powder], editor.documents.activeId, editor, translate);
   expect(opened.errors).toEqual([]);
   expect(editor.documents.active!.load.propellant.product).toContain('Red Dot');
   expect(editor.components.powders()).toHaveLength(1);
@@ -67,7 +67,35 @@ test("a powder opened in the editor replaces the active load's and is kept in th
 
 test('without an open load, a powder is still kept, and the editor says why the load did not change', async () => {
   const editor = destinations();
-  const opened = await openInEditor([powder], editor, translate);
+  const opened = await openInEditor([powder], undefined, editor, translate);
   expect(opened.errors).toEqual(['components.noLoad']);
   expect(editor.components.powders()).toHaveLength(1);
+});
+
+/** The tab is the one active when the files were chosen, not the one active once they are read (#32). */
+test('a powder goes to the tab it was opened for, even when another tab became active meanwhile', async () => {
+  const editor = destinations();
+  const load = exampleLoad({ title: 'Example', note: '' })!;
+  editor.documents.openNew('First.json', load);
+  const first = editor.documents.activeId!;
+  editor.documents.openNew('Second.json', load);
+  const opened = await openInEditor([powder], first, editor, translate);
+  expect(opened.errors).toEqual([]);
+  const [chosen, other] = editor.documents.documents;
+  expect(chosen!.load.propellant.product).toContain('Red Dot');
+  expect(other!.load.propellant.product).toBe(load.propellant.product);
+});
+
+test('a file the browser cannot read is reported, and the others are still read', async () => {
+  const unreadable = { name: 'gone.grtload', text: () => Promise.reject(new DOMException('Not readable', 'NotReadableError')) } as unknown as File;
+  const readable = { name: powder.name, text: async () => powder.text } as unknown as File;
+  const { read, errors } = await readFiles([unreadable, readable], translate);
+  expect(errors).toEqual(['documents.readFailed: gone.grtload']);
+  expect(read).toEqual([powder]);
+});
+
+test('a refused write to the component library is reported by file name', async () => {
+  const editor = destinations();
+  editor.components = new ComponentLibrary({ ...memoryStore<ComponentEntry>(), putAll: async () => { throw new DOMException('Storage full', 'QuotaExceededError'); } }, []);
+  expect(await importIntoLibrary([caliber], editor, translate)).toEqual([`components.importFailed: ${caliber.name}`]);
 });

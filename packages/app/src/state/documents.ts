@@ -13,6 +13,8 @@ export interface OpenDocument {
   issues: ImportIssue[];
   /** The library entry the load is saved in, once saved there. */
   libraryId?: string;
+  /** That entry's revision as this document last read or wrote it: a save replaces only that one. */
+  libraryRevision?: string;
 }
 
 const STORAGE_KEY = 'gordons-legacy.documents';
@@ -30,6 +32,10 @@ interface ClosedDocument {
 /**
  * The loads open in the application, and which one is shown. Listeners are told after every change;
  * the open loads are kept in the browser's storage so that a reload loses nothing.
+ *
+ * That record is one for the whole site, so one tab of the app at a time keeps it (recovery-lock.ts):
+ * a second tab that read and rewrote it would wipe the first tab's unsaved loads (#32). A store made
+ * with `recovery: 'deferred'` neither reads nor writes it until `takeRecovery()`.
  */
 export class DocumentStore {
   documents: OpenDocument[] = [];
@@ -38,6 +44,10 @@ export class DocumentStore {
   storageFull = false;
   /** Some saved tabs were unreadable; keep this visible while the recovered session is open. */
   recoveryFailed = false;
+  /** True while another tab of the app keeps the recovery record: the loads open here are not kept. */
+  recoveryElsewhere = false;
+  /** Whether this store reads and writes the recovery record. */
+  private recovering: boolean;
   private nextId = 1;
   private readonly listeners = new Set<() => void>();
   private readonly storage: Storage | undefined;
@@ -46,10 +56,43 @@ export class DocumentStore {
   private readonly now: () => number;
 
   /** `now` is the clock that merges quick edits into one Undo step; tests pass their own. */
-  constructor(storage?: Storage, now: () => number = Date.now) {
+  constructor(storage?: Storage, now: () => number = Date.now, recovery: 'immediate' | 'deferred' = 'immediate') {
     this.storage = storage;
     this.now = now;
+    this.recovering = recovery === 'immediate';
+    if (this.recovering) this.restore();
+  }
+
+  /**
+   * Takes the recovery record over: the loads it holds open beside those already open, and from now on
+   * this store keeps it. A tab that waited for another to close so adopts the loads that tab left.
+   */
+  takeRecovery(): void {
+    if (this.recovering) return;
+    const open = this.documents;
+    const active = this.activeId;
+    this.documents = [];
+    this.activeId = undefined;
     this.restore();
+    // A load the other tab had open from an entry this tab has open too comes in as an unsaved copy:
+    // two tabs linked to one entry would each save over the other's work.
+    const linked = new Set(open.map((document) => document.libraryId).filter((id) => id !== undefined));
+    const adopted = this.documents.map((document) => {
+      if (document.libraryId === undefined || !linked.has(document.libraryId)) return document;
+      const { libraryId: _libraryId, libraryRevision: _libraryRevision, ...copy } = document;
+      return { ...copy, savedText: '' };
+    });
+    this.documents = [...open, ...adopted];
+    this.activeId = active ?? this.activeId;
+    this.recovering = true;
+    this.recoveryElsewhere = false;
+    this.changed();
+  }
+
+  /** Another tab keeps the recovery record; this one says so until it can take it over. */
+  waitForRecovery(): void {
+    this.recoveryElsewhere = true;
+    for (const listener of this.listeners) listener();
   }
 
   get active(): OpenDocument | undefined {
@@ -85,13 +128,16 @@ export class DocumentStore {
   }
 
   /** Opens a load from the library, or shows its tab when it is already open. */
-  openSaved(name: string, load: Load, libraryId: string): void {
+  openSaved(name: string, load: Load, libraryId: string, libraryRevision?: string): void {
     const open = this.documents.find((document) => document.libraryId === libraryId);
     if (open) {
       this.activate(open.id);
       return;
     }
-    const document: OpenDocument = { id: this.nextId++, name, load, savedText: serializeLoad(load), issues: [], libraryId };
+    const document: OpenDocument = {
+      id: this.nextId++, name, load, savedText: serializeLoad(load), issues: [], libraryId,
+      ...(libraryRevision === undefined ? {} : { libraryRevision }),
+    };
     this.documents = [...this.documents, document];
     this.activeId = document.id;
     this.changed();
@@ -160,10 +206,30 @@ export class DocumentStore {
    * Records the exact snapshot written, so an edit made while saving remains unsaved. A save that
    * finishes after its tab was closed is recorded on the closed load too, for Reopen.
    */
-  markSaved(id: number, savedText: string, libraryId?: string): void {
-    const saved = (document: OpenDocument) => (document.id === id ? { ...document, savedText, ...(libraryId === undefined ? {} : { libraryId }) } : document);
+  markSaved(id: number, savedText: string, entry?: { id: string; revision?: string | undefined }): void {
+    // A save that finishes after its load was detached, because another tab now holds its entry (a
+    // closed load reopened beside it, a recovered one), leaves it detached and unsaved: two tabs linked
+    // to one entry would each save over the other (#32).
+    if (entry !== undefined && this.documents.some((document) => document.id !== id && document.libraryId === entry.id)) return;
+    const linked = entry === undefined ? {} : { libraryId: entry.id, ...(entry.revision === undefined ? {} : { libraryRevision: entry.revision }) };
+    const saved = (document: OpenDocument) => (document.id === id ? { ...document, savedText, ...linked } : document);
     this.documents = this.documents.map(saved);
     this.closed = this.closed.map((entry) => ({ ...entry, document: saved(entry.document) }));
+    this.changed();
+  }
+
+  /**
+   * The library entry `libraryId` was removed: the loads opened from it stay open, unsaved, and a save
+   * makes them a new entry instead of failing over the one that is gone.
+   */
+  unlink(libraryId: string): void {
+    const detach = (document: OpenDocument): OpenDocument => {
+      if (document.libraryId !== libraryId) return document;
+      const { libraryId: _libraryId, libraryRevision: _libraryRevision, ...rest } = document;
+      return { ...rest, savedText: '' };
+    };
+    this.documents = this.documents.map(detach);
+    this.closed = this.closed.map((entry) => ({ ...entry, document: detach(entry.document) }));
     this.changed();
   }
 
@@ -201,10 +267,12 @@ export class DocumentStore {
     const last = this.closed[this.closed.length - 1];
     if (!last) return;
     this.closed = this.closed.slice(0, -1);
-    const { libraryId, ...rest } = last.document;
+    const { libraryId, libraryRevision, ...rest } = last.document;
     const linked = libraryId !== undefined && !this.documents.some((document) => document.libraryId === libraryId);
     // The same id: the ordered save queue (document-saving.ts) and a save completing late both find it.
-    const document: OpenDocument = linked ? { ...rest, libraryId } : { ...rest, savedText: libraryId ? '' : rest.savedText };
+    const document: OpenDocument = linked
+      ? { ...rest, libraryId, ...(libraryRevision === undefined ? {} : { libraryRevision }) }
+      : { ...rest, savedText: libraryId ? '' : rest.savedText };
     this.histories.set(document.id, last.history);
     this.documents = [...this.documents, document];
     this.activeId = document.id;
@@ -217,7 +285,8 @@ export class DocumentStore {
   }
 
   private persist(): void {
-    const saved = this.documents.map(({ name, load, savedText, libraryId }) => ({ name, load, savedText, libraryId }));
+    if (!this.recovering) return;
+    const saved = this.documents.map(({ name, load, savedText, libraryId, libraryRevision }) => ({ name, load, savedText, libraryId, libraryRevision }));
     try {
       this.storage?.setItem(STORAGE_KEY, JSON.stringify({ documents: saved, active: this.documents.findIndex((d) => d.id === this.activeId) }));
       this.storageFull = false;
@@ -241,6 +310,7 @@ export class DocumentStore {
           id: this.nextId++, name: entry.name, load: checked.value, issues: [],
           savedText: typeof entry.savedText === 'string' ? entry.savedText : '',
           ...(typeof entry.libraryId === 'string' && entry.libraryId ? { libraryId: entry.libraryId } : {}),
+          ...(typeof entry.libraryId === 'string' && entry.libraryId && typeof entry.libraryRevision === 'string' ? { libraryRevision: entry.libraryRevision } : {}),
         };
         this.documents.push(document);
         if (index === saved.active) this.activeId = document.id;

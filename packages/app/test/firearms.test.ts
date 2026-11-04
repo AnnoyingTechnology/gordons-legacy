@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { importGrtLoad, parseFirearm, serializeFirearm, type Firearm, type Load } from '@gordons-legacy/formats';
 import { describe, expect, test } from 'vitest';
 import { chamberedFor, choosableFirearms, FirearmLibrary, firearmFromLoad, newFirearm, withFirearm, type FirearmEntry } from '../src/state/firearms.ts';
+import { EntryConflict } from '../src/state/entry-revision.ts';
 import { memoryStore } from '../src/state/indexed-db.ts';
 
 const fixture = new URL('../../formats/test/fixtures/maintainer/glock17_eng5_n340_115grain_xtp_PLUS-P.grtload', import.meta.url).pathname;
@@ -12,7 +13,7 @@ describe('the gun library', () => {
   test('keeps a gun and gives it back', async () => {
     const library = new FirearmLibrary(memoryStore<FirearmEntry>());
     await library.ready;
-    const id = await library.save({ ...newFirearm(), name: 'Rhino 40DS', maker: 'Chiappa' });
+    const { id } = await library.save({ ...newFirearm(), name: 'Rhino 40DS', maker: 'Chiappa' });
     expect(library.entries.map((entry) => entry.firearm.name)).toEqual(['Rhino 40DS']);
     await library.remove(id);
     expect(library.entries).toEqual([]);
@@ -137,5 +138,22 @@ describe('a stored gun with fields missing', () => {
     const library = new FirearmLibrary(storage);
     await library.ready;
     expect(library.entries.map((entry) => entry.id)).toEqual(['kept']);
+  });
+});
+
+describe('a gun edited in two tabs (#32)', () => {
+  test('is not overwritten, nor brought back once removed, by the tab that read it first', async () => {
+    const storage = memoryStore<FirearmEntry>();
+    const thisTab = new FirearmLibrary(storage);
+    const read = await thisTab.save({ ...newFirearm(), name: 'Rhino 40DS' });
+    const otherTab = new FirearmLibrary(storage);
+    await otherTab.ready;
+    await otherTab.save({ ...newFirearm(), name: 'Rhino 40DS, new grips' }, otherTab.entries[0]!);
+    await expect(thisTab.save({ ...newFirearm(), name: 'Rhino 40DS, stale' }, read)).rejects.toBeInstanceOf(EntryConflict);
+    // Read again: opening the gun anew edits the stored version.
+    expect(thisTab.entries.map((entry) => entry.firearm.name)).toEqual(['Rhino 40DS, new grips']);
+    await otherTab.remove(read.id);
+    await expect(thisTab.save({ ...newFirearm(), name: 'Rhino 40DS, stale' }, read)).rejects.toBeInstanceOf(EntryConflict);
+    expect(await storage.list()).toEqual([]);
   });
 });

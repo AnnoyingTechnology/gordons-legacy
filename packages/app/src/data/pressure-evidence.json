@@ -1,0 +1,102 @@
+{
+  "note": "Made by tools/validation/pressure-evidence.ts from tools/validation/pressure/published-conditions.json.gz; piezoelectric conditions both engines simulate, community components alone; one record per document, each charge series counted once in the mean.",
+  "models": [
+    {
+      "key": "[3880000,1.214,0.001,1620,978,\"grt\",0.32,9.3381,0,0.2476,0.2724,-0.0214,0.0381]",
+      "maker": "Accurate",
+      "product": "MAGPRO",
+      "engines": {
+        "grt-traditional": [
+          {
+            "source": "Hodgdon 2025 Annual Manual",
+            "conditions": 34,
+            "series": 17,
+            "bias": -0.0233,
+            "lowest": -0.3055,
+            "highest": 0.3494
+          },
+          {
+            "source": "Western Powders Handloading Guide, Edition 8.0",
+            "conditions": 20,
+            "series": 20,
+            "bias": 0.06569,
+            "lowest": -0.1306,
+            "highest": 0.4341
+          }
+        ],
+        "research-1": [
+          {
+            "source": "Hodgdon 2025 Annual Manual",
+            "conditions": 34,
+            "series": 17,
+            "bias": -0.1712,
+            "lowest": -0.3197,
+            "highest": -0.00006004
+          },
+          {
+            "source": "Western Powders Handloading Guide, Edition 8.0",
+            "conditions": 20,
+            "series": 20,
+            "bias": -0.1825,
+            "lowest": -0.2728,
+            "highest": -0.04205
+          }
+        ]
+      }
+    },
+    {
+      "key": "[3970000,1.20425,0.001,1570,940,\"grt\",0.496,4.0837,0,0.3391,0.4215,-0.0214,0.0381]",
+      "maker": "Hodgdon",
+      "product": "H380 #3",
+      "engines": {
+        "grt-traditional": [
+          {
+            "source": "Hodgdon 2025 Annual Manual",
+            "conditions": 10,
+            "series": 5,
+            "bias": 0.06079,
+            "lowest": -0.1187,
+            "highest": 0.3572
+          }
+        ],
+        "research-1": [
+          {
+            "source": "Hodgdon 2025 Annual Manual",
+            "conditions": 10,
+            "series": 5,
+            "bias": -0.1446,
+            "lowest": -0.2459,
+            "highest": -0.03802
+          }
+        ]
+      }
+    },
+    {
+      "key": "[3700000,1.2,0.001,1600,890,\"grt\",0.56,5.2232,0,0.4296,0.8867,-0.0214,0.0381]",
+      "maker": "Winchester",
+      "product": "StaBALL Match",
+      "engines": {
+        "grt-traditional": [
+          {
+            "source": "Hodgdon 2025 Annual Manual",
+            "conditions": 34,
+            "series": 17,
+            "bias": 0.1603,
+            "lowest": -0.1543,
+            "highest": 0.5232
+          }
+        ],
+        "research-1": [
+          {
+            "source": "Hodgdon 2025 Annual Manual",
+            "conditions": 34,
+            "series": 17,
+            "bias": -0.08244,
+            "lowest": -0.2089,
+            "highest": 0.2544
+          }
+        ]
+      }
+    }
+  ]
+}

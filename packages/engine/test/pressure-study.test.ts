@@ -1,4 +1,4 @@
-import type { Engine } from '@gordons-legacy/engine';
+import { grtTraditional, researchEngine, type Engine } from '@gordons-legacy/engine';
 import { units } from '@gordons-legacy/formats';
 import { describe, expect, it } from 'vitest';
 import { conditionLoad } from '../../../tools/validation/pressure/condition-load.ts';
@@ -9,6 +9,10 @@ import { readRs14Table, readRs14Temperatures } from '../../../tools/validation/p
 import { hodgdonConditions, readHodgdonRows } from '../../../tools/validation/pressure/sources/hodgdon-m1-garand.ts';
 import { readWesternRows } from '../../../tools/validation/pressure/sources/western-powders-8.ts';
 import { PERTURBATIONS, runConditions, summarizeStudy } from '../../../tools/validation/pressure/study.ts';
+import { PUBLISHED_CONDITIONS, readConditionsFile } from '../../../tools/validation/pressure.ts';
+import { hodgdonManualConditions, readManualRows } from '../../../tools/validation/pressure/sources/hodgdon-annual-manual.ts';
+import { EVIDENCE_TABLE, evidenceTable, evidenceText } from '../../../tools/validation/pressure-evidence.ts';
+import { readFileSync } from 'node:fs';
 
 /**
  * The pressure study's machinery (tools/validation/pressure/, issues #22 and #31). Every table below is
@@ -146,6 +150,38 @@ describe("reading the Western Powders guide's rows", () => {
   it('keeps the cartridge across a page break and reads velocities under 1,000 ft/s', () => {
     const { rows } = readWesternRows(GUIDE);
     expect(rows[1]).toMatchObject({ cartridge: '300 WINCHESTER SHORT MAGNUM (WSM)', powder: 'RAMSHOT BIG GAME', start: { velocity: 950 } });
+  });
+
+  it('names a cartridge whose pressure note stands between its name and its barrel, and keeps it across pages', () => {
+    const guide = [
+      '223 REMINGTON',
+      '55,000 PSI -- STANDARD SAAMI COMMERCIAL SPECIFICATIONS',
+      'Barrel: 2 4 ” ¦ Tw ist: 1 - 1 2 ” ¦ Primer: WIN WSR ¦ Bullet D iameter: 0 .2 2 4 ”',
+      'Case: WIN ¦ Max Case Length: 1 .7 6 0 ” ¦ Trim Length: 1 .7 5 0 ”',
+      'ACCURATE 5744',
+      '5 5 SIE R R A SBT 2 1 .5 2 , 6 4 1 2 3 .8 2 , 9 8 5 4 3 , 5 0 0 2 .1 2 0 C',
+      '223 REMINGTON (continued)',
+      '55,000 PSI -- STANDARD SAAMI COMMERCIAL SPECIFICATIONS',
+      'ACCURATE LT-30',
+      '4 0 BE R GE R FBV 2 1 .0 3 , 3 5 6 2 3 .4 3 , 6 7 6 5 4 , 9 3 6 2 .2 0 0',
+    ].join('\n');
+    expect(readWesternRows(guide).rows.map((row) => row.cartridge)).toEqual(['223 REMINGTON', '223 REMINGTON']);
+  });
+
+  it('reads a cartridge name around the notes and page headings printed with it', () => {
+    const heading = (lines: string[]) => [
+      ...lines,
+      'Barrel: 2 4 ” ¦ Tw ist: 1 - 1 2 ” ¦ Primer: WIN WSR ¦ Bullet D iameter: 0 .2 2 4 ”',
+      'Case: WIN ¦ Max Case Length: 1 .7 6 0 ” ¦ Trim Length: 1 .7 5 0 ”',
+      'ACCURATE 5744',
+      '5 5 SIE R R A SBT 2 1 .5 2 , 6 4 1 2 3 .8 2 , 9 8 5 4 3 , 5 0 0 2 .1 2 0 C',
+    ];
+    const name = (lines: string[]) => readWesternRows(heading(lines).join('\n')).rows[0]?.cartridge;
+    expect(name(['HANDGUN DATA', '5.56 X 45MM NATO', 'CIP COMMERCIAL AND NATO/MIL SPECIFICATION (62,350 PSI)'])).toBe('5.56 X 45MM NATO');
+    expect(name(['6.8 REMINGTON SPC', 'These loads apply to both 6.8SPC and SPC II.'])).toBe('6.8 REMINGTON SPC');
+    expect(name(['7MM REMINGTON SHORT ACTION ULTRA', 'MAGNUM (SAUM)'])).toBe('7MM REMINGTON SHORT ACTION ULTRA MAGNUM (SAUM)');
+    expect(name(['45 COLT - 14000 PSI - STANDARD LOADS'])).toBe('45 COLT - 14000 PSI - STANDARD LOADS');
+    expect(name(['45-70 GOVERNMENT STANDARD PRESSURE', 'APPROX. 28,000 PSI'])).toBe('45-70 GOVERNMENT STANDARD PRESSURE');
   });
 
   it('reports, rather than reads, a row whose mould number would be read as a charge', () => {
@@ -310,4 +346,80 @@ describe('paired eligibility', () => {
     });
     expect(new Set(capacities)).toEqual(new Set([3.5e-6]));
   });
+});
+
+describe('the published rows, as committed (maintainer, 2026-11-03)', () => {
+  // The rows the readers took from the four documents; the results below are those of the PDFs
+  // themselves, with the community components alone. A change to an engine or to the study shows here.
+  const { sources, conditions } = readConditionsFile(PUBLISHED_CONDITIONS);
+  const results = runConditions(conditions, communityPool(), [grtTraditional, researchEngine]);
+  const piezoelectric = summarizeStudy(results, sources).find((summary) => summary.group === 'piezoelectric')!;
+
+  it('holds every row of the five documents, each citing its source', () => {
+    expect(sources.map((source) => source.id)).toEqual(['reload-swiss-rs14-2023', 'western-powders-8.0', 'hodgdon-m1-garand', 'hodgdon-subsonic', 'hodgdon-annual-manual-2025']);
+    expect(conditions).toHaveLength(31762);
+    expect(conditions.every((condition) => sources.some((source) => source.id === condition.source))).toBe(true);
+  });
+
+  it('gives the study its results: GRT Traditional over the piezoelectric measurements, R1 under them', () => {
+    expect(results.filter((result) => result.status === 'paired')).toHaveLength(126);
+    const [grt, research] = piezoelectric.pressure;
+    expect(grt!.series).toBe(59);
+    expect(grt!.loss.factor5).toBeCloseTo(0.269, 3);
+    expect(research!.loss.factor5).toBeCloseTo(0.832, 3);
+    expect(research!.underPredicted).toBeGreaterThan(0.85);
+  });
+});
+
+describe("reading Hodgdon's annual manual", () => {
+  // Shaped like `pdftotext -layout` output of a page: two columns of tables side by side, the heading
+  // printed once for both; invented figures.
+  const column = (left: string, right = '') => `${left.padEnd(88)}${right}`;
+  const PAGE = [
+    column('                  Starting Loads             Maximum Loads', 'Starting Loads             Maximum Loads'),
+    column('Powder        Grs     Vel      Pressure      Grs    Vel    Pressure', 'Powder           Grs       Vel      Pressure            Grs      Vel    Pressure'),
+    column('308 WinCheSteR', 'H380          40.0       2500    40,000 PSI        44.0     2700     55,000 PSI'),
+    column('', 'Bullet: 175 GR. SIE HPBT                   Dia: .308”'),
+    column('Barrel: 24”     Twist: 1:12” Trim: 2.005”', 'Case: Winchester         Primer: Federal 210M, LR Match    Col: 2.800”'),
+    column('Bullet: 168 GR. SIE HPBT             Dia: .308”', 'StaBALL Match 41.0       2550    45,000 PSI        45.0C    2750     60,000 PSI'),
+    column('Case: Winchester     Primer: Winchester LR, Large Rifle     Col: 2.800”'),
+    column('StaBALL Match 42.0   2600    44,000 PSI       46.0C 2800      59,000 PSI', ''),
+    column('H4895        41.0   2650 41,000 CUP           45.0        2850    50,000 CUP'),
+    column('Varget       43.0   2700    45,000 PSI        47.0        2900     61.000 PSI'),
+  ].join('\n');
+
+  it('reads the left column, then the right, carrying the cartridge, bullet and case across them', () => {
+    const { rows, unread } = readManualRows(PAGE);
+    expect(rows.map((row) => `${row.cartridge} | ${row.bullet} | ${row.powder}`)).toEqual([
+      '308 WINCHESTER | 168 GR. SIE HPBT | StaBALL Match',
+      '308 WINCHESTER | 168 GR. SIE HPBT | H4895',
+      '308 WINCHESTER | 168 GR. SIE HPBT | H380',
+      '308 WINCHESTER | 175 GR. SIE HPBT | StaBALL Match',
+    ]);
+    expect(rows[0]).toMatchObject({ barrel: '24”', twist: '1:12”', caseMake: 'Winchester', overallLength: 2.8, diameter: 0.308 });
+    expect(rows[0]!.loads[1]).toEqual({ name: 'maximum', load: { charge: 46, compressed: true, velocity: 2800, pressure: 59000, unit: 'PSI' } });
+    // A misprinted pressure (`61.000`) is reported, never guessed at.
+    expect(unread).toEqual([expect.stringContaining('Varget')]);
+  });
+
+  it('keeps a CUP row for its velocity only, and builds the case-specific .308 definition', () => {
+    const { conditions } = hodgdonManualConditions(PAGE);
+    const crusher = conditions.filter((condition) => condition.note?.includes('CUP'));
+    expect(crusher).toHaveLength(2);
+    expect(crusher.every((condition) => condition.pressure === undefined && condition.velocity !== undefined)).toBe(true);
+    const staBall = conditions.find((condition) => condition.powder.product === 'StaBALL Match')!;
+    expect(staBall.caliber).toBe('.308 Win. Winchester');
+    expect(staBall.powder).toEqual({ maker: 'Winchester', product: 'StaBALL Match' });
+    expect(staBall.barrelLength).toMatchObject({ status: 'published', note: '24”' });
+    expect(staBall.projectile.key).toBe('sierra-matchking-168');
+  });
+});
+
+describe('the pressure evidence the application shows (packages/app/src/data/pressure-evidence.json)', () => {
+  it('is what the study gives today: run `node tools/validation/pressure-evidence.ts` after its inputs change', () => {
+    const { sources, conditions } = readConditionsFile(PUBLISHED_CONDITIONS);
+    const fresh = evidenceText(evidenceTable(conditions, sources, communityPool()));
+    expect(readFileSync(EVIDENCE_TABLE, 'utf8')).toBe(fresh);
+    // The whole study runs again here: some seconds.
+  }, 30_000);
 });

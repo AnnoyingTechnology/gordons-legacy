@@ -6,7 +6,7 @@ import {
 } from '@gordons-legacy/engine';
 import type { Load } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
-import { displayUnit, formatNumber, parseNumber } from '../units/units.ts';
+import { displayUnit, formatEditable, parseNumber } from '../units/units.ts';
 import type { UiContext } from './context.ts';
 import { loadChangeEvent } from '../state/load-change.ts';
 
@@ -55,7 +55,7 @@ export class TemperatureFit extends LitElement {
         this.result = undefined;
       }}
     />`;
-    const normal = formatNumber(temperature.fromSi(REFERENCE_CELSIUS + 273.15), 0, 'en');
+    const normal = formatEditable(temperature.fromSi(REFERENCE_CELSIUS + 273.15), 0);
     return html`
       <div class="temperature-fit">
         <h4>${t('temperatureFit.title')}</h4>
@@ -113,6 +113,7 @@ export class TemperatureFit extends LitElement {
         { temperature: REFERENCE_CELSIUS + 273.15, velocity: normalVelocity },
         measurement('coldTemperature', 'coldVelocity'),
         measurement('hotTemperature', 'hotVelocity'),
+        this.context.engine,
       ) ?? {};
   };
 

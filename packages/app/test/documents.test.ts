@@ -12,7 +12,7 @@ describe('document save snapshots', () => {
     const saving = store.active!;
     const savedText = serializeLoad(saving.load);
     store.update(saving.id, { ...saving.load, title: 'Edited while saving' });
-    store.markSaved(saving.id, savedText, 'library-entry');
+    store.markSaved(saving.id, savedText, { id: 'library-entry' });
     expect(store.active!.load.title).toBe('Edited while saving');
     expect(store.active!.savedText).toBe(savedText);
     expect(store.active!.libraryId).toBe('library-entry');
@@ -31,7 +31,7 @@ describe('document save snapshots', () => {
     };
     const store = new DocumentStore(storage);
     store.openNew('document.json', load());
-    store.markSaved(store.active!.id, serializeLoad(store.active!.load), 'entry');
+    store.markSaved(store.active!.id, serializeLoad(store.active!.load), { id: 'entry' });
     const restored = new DocumentStore(storage);
     expect(restored.isDirty(restored.active!)).toBe(false);
     expect(restored.active!.libraryId).toBe('entry');
@@ -42,7 +42,7 @@ describe('document save snapshots', () => {
     store.openNew('document.json', load());
     const saving = store.active!;
     store.close(saving.id);
-    store.markSaved(saving.id, serializeLoad(saving.load), 'entry');
+    store.markSaved(saving.id, serializeLoad(saving.load), { id: 'entry' });
     expect(store.documents).toEqual([]);
     expect(store.active).toBeUndefined();
   });

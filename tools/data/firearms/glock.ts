@@ -13,11 +13,11 @@
  * wants (Glock's 114 mm for a G17 matches the maintainer's own measured load), but the files say
  * `published` all the same, and the application shows that.
  */
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import { loadableCartridge } from './loadable-cartridge.ts';
-import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { claimFileName, crawlArguments, fetchPage, fetchText, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
+import { crawlArguments, fetchPage, fetchText, plainText, plausibleGunMass } from './maker-site.ts';
+import { writeListing } from './printed-figures.ts';
 
 const SITEMAP = 'https://us.glock.com/sitemap.xml';
 
@@ -116,11 +116,9 @@ async function main(): Promise<void> {
   console.log(`${pistols.length} pistol pages`);
   mkdirSync(folder, { recursive: true });
   const retrieved = new Date().toISOString().slice(0, 10);
-  let written = 0;
-  const fileNames = new Map<string, string>(); // what claimFileName has given out, so two names never share a file
   const skipped: string[] = [];
   // Two pages sometimes describe the same gun (a commercial and a law-enforcement listing).
-  const names = new Set<string>();
+  const taken = new Map<string, Firearm>();
   for (const url of pistols) {
     let page: string;
     try {
@@ -134,22 +132,11 @@ async function main(): Promise<void> {
       skipped.push(`${url}: no cartridge or no barrel length`);
       continue;
     }
-    const json = firearmJson(firearm);
-    if ('problem' in json) {
-      skipped.push(`${url}: ${json.problem}`);
-      continue;
-    }
-    const file = claimFileName(fileNames, firearm);
-    if (names.has(file)) {
-      skipped.push(`${url}: ${firearm.name} is already written`);
-      continue;
-    }
-    names.add(file);
-    writeFileSync(join(folder, file), json.text);
-    written++;
-    console.log(summaryLine(firearm));
+    const outcome = writeListing(folder, taken, firearm);
+    if ('skipped' in outcome) skipped.push(`${url}: ${outcome.skipped}`);
+    else if (outcome.note) skipped.push(`${url}: ${outcome.note}`);
   }
-  console.log(`\n${written} guns written to ${folder}`);
+  console.log(`\n${taken.size} guns written to ${folder}`);
   if (skipped.length > 0) {
     console.log(`${skipped.length} pages skipped:`);
     for (const reason of skipped) console.log(' -', reason);

@@ -1,9 +1,10 @@
 import { grtTraditional } from '@gordons-legacy/engine';
 import { readFileSync } from 'node:fs';
 import { importGrtLoad, serializeLoad, type Load } from '@gordons-legacy/formats';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { summarizeLoad } from '../src/analysis/load-summary.ts';
 import { memoryStorage, type LibraryEntry } from '../src/state/library-storage.ts';
+import { EntryConflict } from '../src/state/entry-revision.ts';
 import { Library, shelves } from '../src/state/library.ts';
 import { readBackup, writeBackup } from '../src/state/backup.ts';
 import { choosableFirearms, FirearmLibrary, newFirearm, type FirearmEntry } from '../src/state/firearms.ts';
@@ -28,7 +29,7 @@ describe('Library', () => {
     const storage = memoryStorage();
     const library = new Library(storage);
     await library.ready;
-    const id = await library.save('Full patate', blackout);
+    const { id } = await library.save('Full patate', blackout);
     const reopened = new Library(storage);
     await reopened.ready;
     expect(reopened.get(id)).toMatchObject({ name: 'Full patate', load: blackout });
@@ -36,19 +37,19 @@ describe('Library', () => {
 
   test('saving under an existing id replaces the entry', async () => {
     const library = new Library(memoryStorage());
-    const id = await library.save('Load', blackout);
-    await library.save('Load, renamed', glock, id);
+    const saved = await library.save('Load', blackout);
+    await library.save('Load, renamed', glock, saved);
     expect(library.entries).toHaveLength(1);
-    expect(library.get(id)?.name).toBe('Load, renamed');
+    expect(library.get(saved.id)?.name).toBe('Load, renamed');
   });
 
   test('imports a folder of GRT files, naming entries after the files, and reports unreadable ones', async () => {
     const library = new Library(memoryStorage());
-    const failed = await library.importFiles([
+    const outcome = await library.importFiles([
       { name: 'glock17_eng5_n340_115grain_xtp_PLUS-P.grtload', text: fixtureText('maintainer/glock17_eng5_n340_115grain_xtp_PLUS-P.grtload') },
       { name: 'broken.json', text: '{' },
     ]);
-    expect(failed).toEqual(['broken.json']);
+    expect(outcome).toEqual({ unreadable: ['broken.json'], unsaved: [] });
     expect(library.entries.map((entry) => entry.name)).toEqual(['glock17_eng5_n340_115grain_xtp_PLUS-P']);
   });
 
@@ -128,8 +129,8 @@ describe('Library', () => {
     const refused = async () => { throw new DOMException('Transaction aborted', 'AbortError'); };
     const library = new Library({ ...memoryStorage(), remove: refused });
     const guns = new FirearmLibrary({ ...memoryStore<FirearmEntry>(), remove: refused });
-    const loadId = await library.save('Load', glock);
-    const gunId = await guns.save({ ...newFirearm(), name: 'Rhino 40DS' });
+    const { id: loadId } = await library.save('Load', glock);
+    const { id: gunId } = await guns.save({ ...newFirearm(), name: 'Rhino 40DS' });
     await expect(library.remove(loadId)).rejects.toThrow('Transaction aborted');
     await expect(guns.remove(gunId)).rejects.toThrow('Transaction aborted');
     expect(library.get(loadId)?.name).toBe('Load');
@@ -228,4 +229,101 @@ describe('summarizeLoad', () => {
     const grouped: Load = { ...blackout, shotGroups: [{ title: '', distance: 100, hits: [{ x: 0, y: 0 }, { x: 0.02909, y: 0 }], note: '' }] };
     expect(summarizeLoad(grouped, grtTraditional).bestGroup!.angle * (180 / Math.PI) * 60).toBeCloseTo(1, 2);
   });
+});
+
+test('a load the storage refuses is reported apart from unreadable files, and the others still come in (#32)', async () => {
+  const storage = memoryStorage();
+  const library = new Library(storage);
+  const put = storage.put.bind(storage);
+  let writes = 0;
+  storage.put = async (entry) => {
+    writes++;
+    if (writes === 2) throw new DOMException('full', 'QuotaExceededError');
+    await put(entry);
+  };
+  const text = fixtureText('maintainer/glock17_eng5_n340_115grain_xtp_PLUS-P.grtload');
+  const outcome = await library.importFiles([
+    { name: 'a.grtload', text },
+    { name: 'b.grtload', text },
+    { name: 'c.grtload', text },
+  ]);
+  expect(outcome).toEqual({ unreadable: [], unsaved: ['b.grtload'] });
+  expect(library.entries.map((entry) => entry.name).sort()).toEqual(['a', 'c']);
+});
+
+test("a save never overwrites what another tab of the app saved since this one read the entry (#32)", async () => {
+  // Both saves in one millisecond: a date is no revision.
+  vi.useFakeTimers({ now: new Date('2026-11-03T12:00:00Z'), toFake: ['Date'] });
+  try {
+    const storage = memoryStorage();
+    const thisTab = new Library(storage);
+    const read = await thisTab.save('Load', glock);
+    const otherTab = new Library(storage);
+    await otherTab.ready;
+    const elsewhere = await otherTab.save('Load, edited elsewhere', glock, otherTab.get(read.id)!);
+    await expect(thisTab.save('Load, edited here', glock, read)).rejects.toBeInstanceOf(EntryConflict);
+    expect((await storage.list()).map((entry) => entry.name)).toEqual(['Load, edited elsewhere']);
+    // The other tab, which holds the revision it wrote, saves again as usual.
+    await otherTab.save('Load, edited again', glock, elsewhere);
+    expect((await storage.list()).map((entry) => entry.name)).toEqual(['Load, edited again']);
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test('an entry from another device replaces only an older stored one, even one this tab has not read (#32)', async () => {
+  const storage = memoryStorage();
+  const thisTab = new Library(storage);
+  const saved = await thisTab.save('Load', glock);
+  const otherTab = new Library(storage);
+  await otherTab.ready;
+  const newer = await otherTab.save('Saved later in another tab', glock, otherTab.get(saved.id)!);
+  const fromPhone = { ...saved, name: 'From the phone', updatedAt: new Date(Date.parse(newer.updatedAt) - 1).toISOString() };
+  expect(await thisTab.receive(fromPhone)).toBe(false);
+  expect((await storage.list()).map((entry) => entry.name)).toEqual(['Saved later in another tab']);
+});
+
+test('an entry written before revisions existed is saved over as usual (#32)', async () => {
+  const storage = memoryStorage();
+  await storage.put({ id: 'old', name: 'Old', load: glock } as LibraryEntry);
+  const library = new Library(storage);
+  await library.ready;
+  await library.save('Old, edited', glock, library.get('old')!);
+  expect(library.get('old')?.name).toBe('Old, edited');
+});
+
+test('a library whose first reading failed reads again before the next save (#32)', async () => {
+  const storage = memoryStorage();
+  const list = storage.list.bind(storage);
+  let refusals = 1;
+  storage.list = async () => {
+    if (refusals-- > 0) throw new DOMException('busy', 'InvalidStateError');
+    return list();
+  };
+  const library = new Library(storage);
+  await expect(library.ready).rejects.toThrow('busy');
+  await library.save('Load', glock);
+  expect(library.entries.map((entry) => entry.name)).toEqual(['Load']);
+});
+
+test('a save over an entry removed meanwhile does not bring it back unseen (#32)', async () => {
+  const storage = memoryStorage();
+  await storage.put({ id: 'old', name: 'Old', load: glock, updatedAt: '2026-01-01T00:00:00.000Z' });
+  const library = new Library(storage);
+  await library.ready;
+  const opened = library.get('old')!;
+  await storage.remove('old');
+  await expect(library.save('Old, edited', glock, opened)).rejects.toBeInstanceOf(EntryConflict);
+  expect(await storage.list()).toEqual([]);
+});
+
+test("a refreshed library holds what another tab saved, for a backup to carry it (#32)", async () => {
+  const storage = memoryStorage();
+  const thisTab = new Library(storage);
+  await thisTab.save('Load', glock);
+  const otherTab = new Library(storage);
+  await otherTab.ready;
+  await otherTab.save('Saved in another tab', blackout);
+  await thisTab.refresh();
+  expect(thisTab.entries.map((entry) => entry.name).sort()).toEqual(['Load', 'Saved in another tab']);
 });

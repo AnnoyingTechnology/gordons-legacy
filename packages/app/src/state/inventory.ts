@@ -1,5 +1,7 @@
 import type { Load } from '@gordons-legacy/formats';
 import type { RecordStore } from './indexed-db.ts';
+import { EntryConflict, isRevision, newRevision } from './entry-revision.ts';
+import { storedReading } from './stored-reading.ts';
 
 /**
  * The reloader's stock (issues #10 and #21): powders, primers, projectiles and cases, each with the
@@ -24,6 +26,8 @@ export interface StockItem {
   lowStock?: number;
   /** When the entry was last saved, ISO 8601. */
   updatedAt: string;
+  /** Made anew at every write; an edit or a batch changes the item only at the revision it read (entry-revision.ts). */
+  revision?: string;
 }
 
 export type InventoryStorage = RecordStore<StockItem>;
@@ -36,8 +40,14 @@ export interface Use {
 
 export class Inventory {
   entries: StockItem[] = [];
-  /** Settles once the stored items are read. */
+  /** Settles once the stored items are first read. */
   readonly ready: Promise<void>;
+  /**
+   * Resolves once the items are read, reading them again if the first reading failed. Every write waits
+   * for it: a write made before the first reading returned (a backup restored at startup) was then
+   * replaced in `entries` by that reading's older list, and vanished from the view and the next backup (#32).
+   */
+  readonly whenRead: () => Promise<void>;
   private readonly storage: InventoryStorage;
   private readonly listeners = new Set<() => void>();
   private readonly now: () => Date;
@@ -45,10 +55,12 @@ export class Inventory {
   constructor(storage: InventoryStorage, now: () => Date = () => new Date()) {
     this.storage = storage;
     this.now = now;
-    this.ready = storage.list().then((entries) => {
+    const reading = storedReading(() => storage.list().then((entries) => {
       this.entries = entries.flatMap(checked);
       this.changed();
-    });
+    }));
+    this.ready = reading.first;
+    this.whenRead = reading.settled;
   }
 
   subscribe(listener: () => void): () => void {
@@ -56,33 +68,45 @@ export class Inventory {
     return () => this.listeners.delete(listener);
   }
 
-  /** Saves an item, new when it has no id yet; returns its id. */
+  /**
+   * Saves an item, new when it has no id yet; returns its id. An item with an id is an edit of the
+   * revision it carries: another tab's newer count is not overwritten, and the shelf is read again so
+   * that the next try starts from it (`EntryConflict`, #32).
+   */
   async save(item: Omit<StockItem, 'id' | 'updatedAt'> & { id?: string }): Promise<string> {
-    const entry: StockItem = { ...item, id: item.id ?? crypto.randomUUID(), updatedAt: this.now().toISOString() };
-    await this.storage.put(entry);
+    await this.whenRead();
+    const entry: StockItem = { ...item, id: item.id ?? crypto.randomUUID(), updatedAt: this.now().toISOString(), revision: newRevision() };
+    if (item.id === undefined) await this.storage.put(entry);
+    else if (!(await this.storage.putIf(entry, (stored) => isRevision(stored, item.revision)))) await this.conflict(item.name);
     this.entries = [...this.entries.filter((candidate) => candidate.id !== entry.id), entry];
     this.changed();
     return entry.id;
   }
 
   /**
-   * Takes an item from another device (sync/), keeping its id and date: it replaces the local item of the
-   * same id only when it is newer. Returns whether it was taken.
+   * Takes an item from another device (sync/), keeping its id and date: it replaces the stored item of
+   * the same id only when it is newer than that one, compared in the write's own transaction (as
+   * `Library.receive`). Returns whether it was taken.
    */
   async receive(item: StockItem): Promise<boolean> {
+    await this.whenRead();
     const [checkedItem] = checked(item);
     // Dates are compared as instants, and one that isn't a date is refused (library.ts, `receive`).
     const time = checkedItem ? Date.parse(checkedItem.updatedAt) : Number.NaN;
     if (!checkedItem || !Number.isFinite(time) || !(typeof item.updatedAt === 'string' && Number.isFinite(Date.parse(item.updatedAt)))) return false;
-    const local = this.entries.find((entry) => entry.id === checkedItem.id);
-    if (local && Date.parse(local.updatedAt) >= time) return false;
-    await this.storage.put(checkedItem);
-    this.entries = [...this.entries.filter((entry) => entry.id !== checkedItem.id), checkedItem];
+    const received: StockItem = { ...checkedItem, revision: newRevision() };
+    const older = (stored: unknown) => {
+      const date = (stored as { updatedAt?: unknown } | undefined)?.updatedAt;
+      return !(typeof date === 'string' && Date.parse(date) >= time);
+    };
+    if (!(await this.storage.putIf(received, older))) return false;
+    this.entries = [...this.entries.filter((entry) => entry.id !== received.id), received];
     this.changed();
     return true;
   }
 
   async remove(id: string): Promise<void> {
+    await this.whenRead();
     await this.storage.remove(id);
     this.entries = this.entries.filter((entry) => entry.id !== id);
     this.changed();
@@ -90,18 +114,41 @@ export class Inventory {
 
   /**
    * Takes a batch's uses off the shelf. A quantity never goes below zero: a shelf that held less than the
-   * batch used was miscounted, and zero is the truth that remains.
+   * batch used was miscounted, and zero is the truth that remains. Each count is taken from the revision
+   * this tab read: a batch recorded meanwhile in another tab is not counted away (`EntryConflict`, #32).
    */
   async use(uses: readonly Use[]): Promise<void> {
+    await this.whenRead();
     const updatedAt = this.now().toISOString();
-    const changed = uses.flatMap(({ id, amount }) => {
+    // Two uses of one item are one use of their sum: each written alone would undo the other.
+    const totals = new Map<string, number>();
+    for (const { id, amount } of uses) if (amount > 0) totals.set(id, (totals.get(id) ?? 0) + amount);
+    const read = new Map<string, StockItem>();
+    const changed = [...totals].flatMap(([id, amount]) => {
       const item = this.entries.find((entry) => entry.id === id);
-      return item && amount > 0 ? [{ ...item, quantity: Math.max(0, item.quantity - amount), updatedAt }] : [];
+      if (!item) return [];
+      read.set(id, item);
+      return [{ ...item, quantity: Math.max(0, item.quantity - amount), updatedAt, revision: newRevision() }];
     });
+    if (changed.length === 0) return;
     // All at once or not at all: a batch half taken off the shelf would be taken off again on a retry.
-    await this.storage.putAll(changed);
+    const unchanged = (stored: unknown, item: StockItem) => isRevision(stored, read.get(item.id)?.revision);
+    if (!(await this.storage.putAllIf(changed, unchanged))) await this.conflict(changed.map((item) => item.name).join(', '));
     this.entries = this.entries.map((entry) => changed.find((item) => item.id === entry.id) ?? entry);
     this.changed();
+  }
+
+  /** Reads the stored items again, as `Library.refresh` does. */
+  async refresh(): Promise<void> {
+    await this.whenRead();
+    this.entries = (await this.storage.list()).flatMap(checked);
+    this.changed();
+  }
+
+  /** Reads the shelf again, so that the next try starts from what is stored, and refuses the write. */
+  private async conflict(name: string): Promise<never> {
+    await this.refresh();
+    throw new EntryConflict(name);
   }
 
   private changed(): void {
@@ -142,7 +189,8 @@ function checked(entry: StockItem): StockItem[] {
   if (kind === undefined || typeof entry.name !== 'string' || !Number.isFinite(entry.quantity)) return [];
   const lowStock = typeof entry.lowStock === 'number' && Number.isFinite(entry.lowStock) ? entry.lowStock : undefined;
   const updatedAt = typeof entry.updatedAt === 'string' && entry.updatedAt !== '' ? entry.updatedAt : new Date(0).toISOString();
-  return [{ id: entry.id, kind, name: entry.name, quantity: Math.max(0, entry.quantity), ...(lowStock === undefined ? {} : { lowStock }), updatedAt }];
+  const revision = typeof entry.revision === 'string' ? { revision: entry.revision } : {};
+  return [{ id: entry.id, kind, name: entry.name, quantity: Math.max(0, entry.quantity), ...(lowStock === undefined ? {} : { lowStock }), updatedAt, ...revision }];
 }
 
 /** A stored item as the backup carries it: everything but the store's own id. */
@@ -150,6 +198,6 @@ export function checkStockItem(value: unknown): Omit<StockItem, 'id' | 'updatedA
   if (typeof value !== 'object' || value === null) return undefined;
   const [item] = checked({ ...(value as StockItem), id: 'backup' });
   if (!item) return undefined;
-  const { id: _id, updatedAt: _updatedAt, ...rest } = item;
+  const { id: _id, updatedAt: _updatedAt, revision: _revision, ...rest } = item;
   return rest;
 }

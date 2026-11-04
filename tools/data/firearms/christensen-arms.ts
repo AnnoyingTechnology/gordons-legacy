@@ -24,6 +24,7 @@ import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
 import { claimFileName, crawlArguments, fetchPage, fetchText, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
+import { settleListing } from './printed-figures.ts';
 
 const SITE = 'https://christensenarms.com';
 
@@ -165,29 +166,24 @@ export function firearmsFrom(page: string, url: string, retrieved: string): { fi
 }
 
 /**
- * Of guns that share a name, the one they all agree on. Pages list one cartridge and barrel length
- * more than once when they stand for several production runs (a discontinued page can hold three
- * `223 Rem` at 24 inches with three different weights), and a record built from any one of them would
- * be a pick, while an average would be a figure no one printed. Where the figures agree the first is
- * kept; where they differ, none is, and the disagreement is reported.
+ * Of guns that share a name, those to keep, by the maintainer's rules (`settleListing`): pages list one
+ * cartridge and barrel length more than once when they stand for several production runs (a
+ * discontinued page can hold three `223 Rem` at 24 inches with three different weights), and only the
+ * heaviest listing is kept; another barrel or twist is another gun, named apart.
  */
 export function settleNames(firearms: Firearm[]): { kept: Firearm[]; skipped: string[] } {
-  const byName = new Map<string, Firearm[]>();
-  for (const firearm of firearms) byName.set(firearm.name, [...(byName.get(firearm.name) ?? []), firearm]);
-  const kept: Firearm[] = [];
+  const kept = new Map<string, Firearm>();
   const skipped: string[] = [];
-  for (const [name, candidates] of byName) {
-    const first = candidates[0]!;
-    const figures = (firearm: Firearm) => JSON.stringify([firearm.barrel.length, firearm.barrel.twistLength, firearm.barrel.gunMass]);
-    if (candidates.every((candidate) => figures(candidate) === figures(first))) {
-      kept.push(first);
-      skipped.push(...candidates.slice(1).map((candidate) => `${candidate.source?.url}: ${name} is listed again with the same figures`));
-    } else {
-      const printed = candidates.map((candidate) => Object.values(candidate.source?.published ?? {}).join(' / ')).join(' | ');
-      skipped.push(`${first.source?.url}: ${name} is listed ${candidates.length} times with different figures, none kept (${printed})`);
+  for (const firearm of firearms) {
+    const settled = settleListing(kept, firearm, (gun) => gun.name);
+    if ('skip' in settled) {
+      skipped.push(`${firearm.source?.url}: ${settled.skip}`);
+      continue;
     }
+    if ('replacing' in settled) skipped.push(`${firearm.source?.url}: ${firearm.name} replaces a lighter listing`);
+    kept.set(settled.write.name, settled.write);
   }
-  return { kept, skipped };
+  return { kept: [...kept.values()], skipped };
 }
 
 /** The product pages of the sitemap, as full addresses; the shop page and the images are left out. */

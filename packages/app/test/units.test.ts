@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { CHOOSABLE_KINDS, displayUnit, formatQuantity, isAmbiguousNumber, parseNumber, presetPreferences, unitsFor } from '../src/units/units.ts';
+import { CHOOSABLE_KINDS, displayUnit, formatEditable, formatQuantity, isAmbiguousNumber, parseNumber, presetPreferences, unitsFor } from '../src/units/units.ts';
 
 test('every unit converts back to the SI value it came from', () => {
   for (const kind of CHOOSABLE_KINDS) {
@@ -52,4 +52,16 @@ test('refuses a comma that may be a thousands separator, rather than misreading 
   }
   for (const text of ['2,85', '0,325', '2,8505', '3445', '3.445']) expect(isAmbiguousNumber(text)).toBe(false);
   expect(parseNumber('1,234,567')).toBeUndefined();
+});
+
+test('a figure that is no number is shown as unavailable, never as ∞ or NaN (#32)', () => {
+  const metric = presetPreferences('metric');
+  expect(formatQuantity(Number.POSITIVE_INFINITY, 'pressure', metric)).toBe('—');
+  expect(formatQuantity(Number.NaN, 'velocity', metric)).toBe('—');
+  expect(formatQuantity(1e-320, 'pressure', metric)).toBe('0 bar');
+});
+
+test('a value prefilled for editing reads back as itself: no thousands comma (#32)', () => {
+  expect(formatEditable(1000, 0)).toBe('1000');
+  expect(parseNumber(formatEditable(1234.5, 1))).toBe(1234.5);
 });

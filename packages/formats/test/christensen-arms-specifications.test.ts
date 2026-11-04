@@ -103,12 +103,13 @@ describe('reading a published specification', () => {
     expect(firearmsFrom(twice, 'u', '2026-10-16').firearms.map((gun) => gun.name)).toEqual(['Christensen Arms Example 7MM BACKCOUNTRY 16 in.', 'Christensen Arms Example 7MM BACKCOUNTRY 20 in.']);
   });
 
-  it('keeps one of several listings with the same figures, and none of listings that differ', () => {
-    const listing = (twist: string, url: string) => firearmsFrom(page('Example', '6 LBS', [['.308 WIN', '22 in.', twist]]), url, '2026-10-16').firearms[0]!;
-    expect(settleNames([listing('1:10', 'a'), listing('1:10', 'b')]).kept.map((gun) => gun.source?.url)).toEqual(['a']);
-    const different = settleNames([listing('1:10', 'a'), listing('1:12', 'b')]);
-    expect(different.kept).toEqual([]);
-    expect(different.skipped[0]).toContain('listed 2 times with different figures, none kept');
+  it('keeps one of several listings of a gun, the heaviest, and makes another twist another gun', () => {
+    const listing = (weight: string, twist: string, url: string) => firearmsFrom(page('Example', weight, [['.308 WIN', '22 in.', twist]]), url, '2026-10-16').firearms[0]!;
+    expect(settleNames([listing('6 LBS', '1:10', 'a'), listing('6 LBS', '1:10', 'b')]).kept.map((gun) => gun.source?.url)).toEqual(['a']);
+    expect(settleNames([listing('6 LBS', '1:10', 'a'), listing('7 LBS', '1:10', 'b')]).kept.map((gun) => gun.source?.url)).toEqual(['b']);
+    const twists = settleNames([listing('6 LBS', '1:10', 'a'), listing('6 LBS', '1:12', 'b')]).kept;
+    expect(twists).toHaveLength(2);
+    expect(twists[1]!.name).toMatch(/1:12/);
   });
 
   it('skips a page with no chambering table, such as a gift card', () => {

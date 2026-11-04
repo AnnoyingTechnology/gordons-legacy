@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { importGrtLoad, type Load } from '@gordons-legacy/formats';
 import { describe, expect, it } from 'vitest';
-import { calibrateToVelocity, chargeForLeadTime, fitTemperatureCoefficients, grtTraditional } from '../src/index.ts';
+import { calibrateToVelocity, chargeForLeadTime, fitTemperatureCoefficients, grtTraditional, researchEngine } from '../src/index.ts';
 
 const FIXTURE = join(import.meta.dirname, '../../formats/test/fixtures/cc0/loads/327_Federal_Magnum_by_dpeppe01_2022.12.12.grtload');
 
@@ -76,5 +76,33 @@ describe('fitTemperatureCoefficients', () => {
   it('ignores a "cold" measurement that is not below 21 °C', () => {
     const at = (celsius: number, velocity: number) => ({ temperature: celsius + 273.15, velocity });
     expect(fitTemperatureCoefficients(load(), at(21, 410), at(25, 400), undefined)).toEqual({});
+  });
+
+  it('gives no coefficient when the one it closes on cannot be simulated (#32)', () => {
+    // 100 m/s at 50 °C is far below anything the powder gives: the bisection runs into coefficients so
+    // low that the load no longer starts, and used to return one of them.
+    const at = (celsius: number, velocity: number) => ({ temperature: celsius + 273.15, velocity });
+    expect(fitTemperatureCoefficients(load(), at(21, 410), undefined, at(50, 100))).toEqual({});
+  });
+});
+
+describe('a search target that is no number (#32)', () => {
+  it('is refused, never reported reached', () => {
+    expect(calibrateToVelocity(load(), Number.NaN)).toBeUndefined();
+    expect(chargeForLeadTime(load(), Number.NaN)).toBeUndefined();
+    expect(chargeForLeadTime(load(), -1e-3)).toBeUndefined();
+  });
+});
+
+describe('a search with another engine (#32)', () => {
+  it('fits with that engine, so that its result is the one the app shows', () => {
+    const before = researchEngine.simulate(load());
+    if (!before.ok) throw new Error('simulation');
+    const target = Math.round(before.simulation.muzzleVelocity) + 5;
+    const calibration = calibrateToVelocity(load(), target, researchEngine)!;
+    const shown = researchEngine.simulate(calibration.load);
+    expect(calibration.reached).toBe(true);
+    expect(shown.ok && shown.simulation.muzzleVelocity).toBe(calibration.simulation.muzzleVelocity);
+    expect(Math.abs(calibration.simulation.muzzleVelocity - target)).toBeLessThan(0.1);
   });
 });

@@ -1,7 +1,7 @@
-import type { Load, Picture, ShotGroup } from '@gordons-legacy/formats';
+import { MAXIMUM_SHOT_GROUP_HITS, type Load, type Picture, type ShotGroup } from '@gordons-legacy/formats';
 import { html, LitElement, nothing, svg } from 'lit';
 import { groupStatistics, milliradians, minutesOfAngle, type Hit } from '../analysis/shot-group.ts';
-import { displayUnit, formatNumber, parseNumber } from '../units/units.ts';
+import { displayUnit, formatEditable, parseNumber } from '../units/units.ts';
 import type { UiContext } from './context.ts';
 import { loadChangeEvent } from '../state/load-change.ts';
 
@@ -29,7 +29,7 @@ export class ShotGroupDialog extends LitElement {
     scaleLength: { state: true },
     distanceText: { state: true },
     cursor: { state: true },
-    unreadablePhoto: { state: true },
+    photoFailed: { state: true },
   };
 
   declare load: Load;
@@ -46,8 +46,13 @@ export class ShotGroupDialog extends LitElement {
   declare distanceText: string;
   /** Where the keyboard's crosshair sits, in the photo's pixels; undefined until a key moves it. */
   declare cursor: Hit | undefined;
-  /** The name of the last chosen file that could not be decoded as an image; undefined otherwise. */
-  declare unreadablePhoto: string | undefined;
+  /** Whether the last photo chosen could not be read as an image. */
+  declare photoFailed: boolean;
+  /**
+   * Counts photo choices, and the dialog's openings and closings: a photo decoded after a newer choice,
+   * or after the dialog moved on to another group, is dropped instead of replacing it (#32).
+   */
+  private photoRequest = 0;
 
   constructor() {
     super();
@@ -59,7 +64,7 @@ export class ShotGroupDialog extends LitElement {
     this.scaleLength = '';
     this.distanceText = '';
     this.cursor = undefined;
-    this.unreadablePhoto = undefined;
+    this.photoFailed = false;
   }
 
   protected override createRenderRoot(): HTMLElement {
@@ -67,16 +72,19 @@ export class ShotGroupDialog extends LitElement {
   }
 
   protected override willUpdate(changed: Map<string, unknown>): void {
+    if (changed.has('groupIndex')) {
+      this.photoRequest++;
+      this.photoFailed = false;
+    }
     if (changed.has('groupIndex') && this.groupIndex !== undefined) {
       const existing = this.load.shotGroups?.[this.groupIndex];
       this.group = existing ?? { title: this.context.t('shotGroups.newTitle'), distance: DEFAULT_DISTANCE, hits: [], note: '' };
       this.picture = existing?.picture ? this.load.pictures[existing.picture.index] : undefined;
       this.mode = existing?.picture ? 'hits' : 'scale';
-      this.unreadablePhoto = undefined;
       this.scalePoints = [];
       this.scaleLength = '';
       const unit = displayUnit('distance', this.context.units);
-      this.distanceText = formatNumber(unit.fromSi(this.group.distance), unit.decimals, 'en');
+      this.distanceText = formatEditable(unit.fromSi(this.group.distance), unit.decimals);
     }
   }
 
@@ -118,9 +126,7 @@ export class ShotGroupDialog extends LitElement {
             <input type="file" accept="image/*" capture="environment" class="file-input" @change=${this.choosePhoto} />
           </label>`
         : nothing}
-      ${this.unreadablePhoto === undefined
-        ? nothing
-        : html`<p class="error" role="alert">${this.context.t('shotGroups.photoUnreadable', { name: this.unreadablePhoto })}</p>`}`;
+      ${this.photoFailed ? html`<p class="note" role="alert">${this.context.t('shotGroups.photoFailed')}</p>` : nothing}`;
   }
 
   private renderTarget(picture: Picture) {
@@ -266,6 +272,7 @@ export class ShotGroupDialog extends LitElement {
     const radius = this.load.projectile.diameter / 2;
     const hit = { x: pixel.x * scale, y: pixel.y * scale };
     const near = this.group.hits.findIndex((existing) => Math.hypot(existing.x - hit.x, existing.y - hit.y) < radius);
+    if (near < 0 && this.group.hits.length >= MAXIMUM_SHOT_GROUP_HITS) return;
     this.group = { ...this.group, hits: near >= 0 ? this.group.hits.filter((_, index) => index !== near) : [...this.group.hits, hit] };
   }
 
@@ -291,14 +298,18 @@ export class ShotGroupDialog extends LitElement {
   private choosePhoto = async (event: Event) => {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
-    // Cleared so that choosing the same file again, once converted, fires `change` again.
-    input.value = '';
     if (!file) return;
+    const request = ++this.photoRequest;
     try {
-      this.picture = await downscale(file);
-      this.unreadablePhoto = undefined;
+      const picture = await downscale(file);
+      if (request !== this.photoRequest) return;
+      this.picture = picture;
+      this.photoFailed = false;
     } catch {
-      this.unreadablePhoto = file.name;
+      // Not an image the browser can decode: the dialog stays as it was and says so.
+      if (request === this.photoRequest) this.photoFailed = true;
+    } finally {
+      input.value = '';
     }
   };
 

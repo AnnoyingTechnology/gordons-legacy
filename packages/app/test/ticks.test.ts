@@ -15,4 +15,10 @@ describe('niceTicks', () => {
   it('returns the minimum alone for an empty range', () => {
     expect(niceTicks(3, 3)).toEqual([3]);
   });
+
+  it('ends on ranges where adding a step changes nothing, or the last tick overflows (#32)', () => {
+    expect(niceTicks(1e20, 1e20 + 16384, 8).length).toBeLessThan(20);
+    expect(niceTicks(0, 1.7e308)).toEqual([0, 1.7e308]);
+    expect(niceTicks(0, Number.POSITIVE_INFINITY)).toEqual([0]);
+  });
 });

@@ -14,6 +14,18 @@ export interface RecordStore<T extends { id: string }> {
   put(record: T): Promise<void>;
   /** Puts several records in one transaction: all of them are written, or none. */
   putAll(records: readonly T[]): Promise<void>;
+  /**
+   * Puts the record only if `unchanged` accepts the one stored under its id (undefined when none), read
+   * in the same transaction, so that no other tab writes in between. Resolves whether it was written.
+   */
+  putIf(record: T, unchanged: (stored: unknown) => boolean): Promise<boolean>;
+  /** The same for several records in one transaction: all are written if `unchanged` accepts each one's stored record, or none. */
+  putAllIf(records: readonly T[], unchanged: (stored: unknown, record: T) => boolean): Promise<boolean>;
+  /**
+   * Reads the record stored under `id` (undefined when none), and writes what `change` makes of it, in
+   * one transaction; `change` returns undefined to write nothing. Resolves the record written, if any.
+   */
+  update(id: string, change: (stored: unknown) => T | undefined): Promise<T | undefined>;
   remove(id: string): Promise<void>;
 }
 
@@ -61,6 +73,32 @@ function open(factory: IDBFactory): Promise<IDBDatabase> {
 }
 
 export function indexedDbStore<T extends { id: string }>(name: StoreName, factory: IDBFactory = indexedDB): RecordStore<T> {
+  // Every record is read, then all are written or none, in one transaction: no other tab writes between.
+  const putAllIf = async (records: readonly T[], unchanged: (stored: unknown, record: T) => boolean): Promise<boolean> => {
+    // Nothing to write is written, as in memory: no read would ever decide it.
+    if (records.length === 0) return true;
+    const database = await open(factory);
+    return new Promise<boolean>((resolve, reject) => {
+      const transaction = database.transaction(name, 'readwrite');
+      const store = transaction.objectStore(name);
+      const stored: unknown[] = [];
+      let written = false;
+      records.forEach((record, index) => {
+        const read = store.get(record.id);
+        read.onerror = () => reject(read.error);
+        read.onsuccess = () => {
+          stored[index] = read.result;
+          // Requests of a transaction complete in order: the last read sees them all.
+          if (index !== records.length - 1) return;
+          if (!records.every((candidate, position) => unchanged(stored[position], candidate))) return;
+          for (const candidate of records) store.put(candidate);
+          written = true;
+        };
+      });
+      transaction.oncomplete = () => resolve(written);
+      transaction.onabort = () => reject(transaction.error ?? new DOMException('Transaction aborted', 'AbortError'));
+    });
+  };
   const run = async <R>(mode: IDBTransactionMode, action: (store: IDBObjectStore) => IDBRequest<R>): Promise<R> => {
     const database = await open(factory);
     return new Promise((resolve, reject) => {
@@ -80,6 +118,25 @@ export function indexedDbStore<T extends { id: string }>(name: StoreName, factor
       // One transaction: the requests share it, and an abort undoes all of them.
       await run('readwrite', (store) => records.map((record) => store.put(record)).at(-1)!);
     },
+    putIf: (record, unchanged) => putAllIf([record], (stored) => unchanged(stored)),
+    putAllIf: (records, unchanged) => putAllIf(records, unchanged),
+    update: async (id, change) => {
+      const database = await open(factory);
+      return new Promise<T | undefined>((resolve, reject) => {
+        const transaction = database.transaction(name, 'readwrite');
+        const store = transaction.objectStore(name);
+        let written: T | undefined;
+        const read = store.get(id);
+        read.onerror = () => reject(read.error);
+        // A `change` that throws aborts the transaction, which rejects below: nothing is written.
+        read.onsuccess = () => {
+          written = change(read.result);
+          if (written !== undefined) store.put(written);
+        };
+        transaction.oncomplete = () => resolve(written);
+        transaction.onabort = () => reject(transaction.error ?? new DOMException('Transaction aborted', 'AbortError'));
+      });
+    },
     remove: async (id) => void (await run('readwrite', (store) => store.delete(id))),
   };
 }
@@ -91,6 +148,21 @@ export function memoryStore<T extends { id: string }>(): RecordStore<T> {
     list: async () => [...records.values()].map((record) => structuredClone(record)),
     put: async (record) => void records.set(record.id, structuredClone(record)),
     putAll: async (list) => void list.forEach((record) => records.set(record.id, structuredClone(record))),
+    putIf: async (record, unchanged) => {
+      if (!unchanged(records.get(record.id))) return false;
+      records.set(record.id, structuredClone(record));
+      return true;
+    },
+    putAllIf: async (list, unchanged) => {
+      if (!list.every((record) => unchanged(records.get(record.id), record))) return false;
+      for (const record of list) records.set(record.id, structuredClone(record));
+      return true;
+    },
+    update: async (id, change) => {
+      const written = change(structuredClone(records.get(id)));
+      if (written !== undefined) records.set(id, structuredClone(written));
+      return written;
+    },
     remove: async (id) => void records.delete(id),
   };
 }

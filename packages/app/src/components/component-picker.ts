@@ -1,6 +1,6 @@
 import type { CaliberDefinition, Load, Projectile, Propellant } from '@gordons-legacy/formats';
 import { html, LitElement, nothing } from 'lit';
-import { powderFactors } from '../analysis/powder-factors.ts';
+import { byCombinedFactor, powderFactors } from '../analysis/powder-factors.ts';
 import { icon } from '../icons/icons.ts';
 import type { ComponentEntry, ComponentLibrary, ComponentSource } from '../state/components.ts';
 import { displayUnit } from '../units/units.ts';
@@ -109,7 +109,7 @@ export class ComponentPicker extends LitElement {
       .map((entry) => ({ entry, factors: powderFactors(entry.value) }))
       .filter(({ entry }) => matches(this.filter, `${entry.value.maker} ${entry.value.product} ${entry.value.lot} ${entry.source.author}`))
       .filter(({ factors }) => !this.similarOnly || Math.abs(factors.combined / own - 1) <= this.tolerance)
-      .sort((a, b) => a.factors.combined - b.factors.combined);
+      .sort((a, b) => byCombinedFactor(a.factors, b.factors));
     return html`
       <div class="picker-options">
         <label>
@@ -288,7 +288,14 @@ export class ComponentPicker extends LitElement {
   private importFiles = async (event: Event) => {
     const input = event.target as HTMLInputElement;
     const errors: string[] = [];
-    for (const file of input.files ?? []) errors.push(...(await this.library.importFile(file.name, await file.text())));
+    // Each file on its own: one that can't be read or stored is reported, and the others still come in (#32).
+    for (const file of input.files ?? []) {
+      try {
+        errors.push(...(await this.library.importFile(file.name, await file.text())));
+      } catch {
+        errors.push(this.context.t('components.importFailed', { name: file.name }));
+      }
+    }
     this.importErrors = errors;
     input.value = '';
   };

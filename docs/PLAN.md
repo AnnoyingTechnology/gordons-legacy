@@ -121,8 +121,10 @@ Intake:
   charge, velocity and pressure data, and factual specifications (bullet weight, length and BC;
   cartridge dimensions; a gun's barrel length, twist and mass from its maker's own page — facts, not
   authorship, and a maker specifying its own guns creates data rather than obtaining it).
-- Not accepted: GRT's database or anything derived from it, and whole tables copied from manufacturers'
-  manuals (use them for validation and cite them).
+- Published data (makers' load tables, measured pressures, specifications) may be committed, each row
+  cited to its document and date (maintainer, 2026-11-03: the project is open source throughout, and
+  licensing is not asked again). The documents themselves (PDFs) are not committed.
+- Not accepted: GRT's database or anything derived from it (CLAUDE.md: GRT's files are never committed).
 - Data changes are safety-critical: a wrong powder model predicts a wrong pressure. CI simulates
   reference loads for every change and compares them with published data, and every change needs
   maintainer review. The app shows each model's provenance and verification status.

@@ -108,19 +108,49 @@ marked published, specification or assumed, and a sensitivity check that moves e
 the conditions paired in the baseline. Sources and their limits: [pressure-sources.md](pressure-sources.md).
 Reviewed by Astra (`gpt-6-astra`, medium) before this was written; its corrections are in.
 
-Of 12,182 conditions read from the two documents, 22 can be simulated: the others need a powder model,
+Of the 31,759 conditions read from the five documents (committed, `tools/validation/pressure/
+published-conditions.json.gz`), 126 can be simulated with the community components alone (22 on
+2026-11-02; 48 once twelve more bullet lengths were found and a reader fault fixed; 126 with Hodgdon's
+2025 Annual Manual, 2026-11-04): the others need a powder model,
 a caliber definition or a bullet length we don't have. Every powder model's fitting provenance is
 unknown, and case capacity, several bullet lengths (retailer listings, forum measurements), boat-tail
-geometry (a flat base is assumed) and powder temperature are assumed.
+geometry (a flat base is assumed) and powder temperature are assumed. A test pins these results, so
+every change to an engine is measured against them.
 
-**Western Powders guide 8.0, SAAMI piezo, Accurate MAGPRO, 7 maximum-charge conditions (7 series,
-.300 WSM, .300 PRC, .30 Nosler).** GRT Traditional had lower asymmetric pressure loss than R1: L5 0.318
-against 0.805. Geometric mean biases were +8.4 % and −14.9 %; GRT Traditional under-predicted two
-conditions, R1 all seven. The symmetric mean absolute log errors were almost identical, 0.160 and
-0.161: the preference reflects mainly the explicit penalty for under-prediction. The paired difference
-L5(R1) − L5(GRT) was +0.487, with an exploratory series-bootstrap interval of 0.139 to 0.847; with case
-capacity 2 % smaller, or GRT's high shot-start pressure for monolithic copper bullets, that interval
-includes zero, though the point estimate still favours GRT Traditional.
+**Western Powders guide 8.0, SAAMI piezo, Accurate MAGPRO, 20 maximum-charge conditions (20 series,
+.300 WSM, .300 PRC, .30 Nosler).** GRT Traditional had much lower asymmetric pressure loss than R1: L5
+0.212 against 1.007. Geometric mean biases were +6.6 % and −18.2 % (medians +4.9 % and −21.2 %); GRT
+Traditional under-predicted 30 % of the series, R1 all of them. The symmetric mean absolute log errors
+were 0.113 and 0.201, so the preference no longer rests mainly on the under-prediction penalty, as it
+did on the first seven series. The paired difference L5(R1) − L5(GRT) was +0.795, exploratory
+series-bootstrap interval 0.575 to 1.004, and stays clear of zero under every sensitivity variant
+(case capacity ±2 %, bullet length ±0.5 mm, powder temperature ±5 °C, shot start at either end of
+GRT's range; the narrowest, case capacity −2 %, gives 0.433 to 0.903). Within 90 % of the SAAMI
+maximum (10 series), GRT Traditional read +7.9 %, never more than 0.5 % under; R1 −17.9 %.
+
+**Hodgdon 2025 Annual Manual, SAAMI piezo (a force transducer against the case), 78 conditions in 39
+series: Winchester StaBALL Match in .308 Win., 6 mm GT and 6 mm ARC; Hodgdon H380 in .22 GT and .300
+WSM; Accurate MAGPRO in 7 PRC, .300 WSM, .300 PRC and .30 Nosler; start and maximum charges.** A
+second laboratory, and two more powder models. GRT Traditional +6.4 % (median +5.6 %), under-predicting
+33 % of the series; R1 −13.0 % (median −14.1 %), under in 90 %. The symmetric errors are close here
+(mean absolute log error 0.141 and 0.154); GRT Traditional's lower L5 (0.299 against 0.742; paired
+difference 0.443, 0.322 to 0.559) comes mainly from the penalty for reading under.
+
+By powder model (geometric mean of the pressure ratios, piezo conditions only):
+
+| Source | Powder model | Conditions | GRT Traditional | R1 |
+|---|---|---|---|---|
+| Western guide 8.0 | Accurate MAGPRO | 20 | +6.6 % | −18.2 % |
+| Hodgdon 2025 manual | Accurate MAGPRO | 34 | −2.3 % | −17.1 % |
+| Hodgdon 2025 manual | Hodgdon H380 #3 | 10 | +6.1 % | −14.5 % |
+| Hodgdon 2025 manual | Winchester StaBALL Match | 34 | +16.0 % | −8.2 % |
+
+The same MAGPRO model reads 9 % apart against the two laboratories, in different cartridges and
+bullets: roughly consistent. GRT Traditional's error changes sign and size with the powder model (−2 %
+to +16 % here, −18 % on IMR 4166 above); R1 reads under on every model. Over both piezo sources, 59
+series: GRT Traditional +6.5 %, R1 −14.8 % and under in 93 % of the series, paired L5 difference 0.562
+(0.445 to 0.681), clear of zero under every sensitivity variant (narrowest: case capacity −2 %, 0.343
+to 0.586).
 
 The largest discrepancy was GRT Traditional's +43.4 % on the .300 WSM, 240 gr Sierra MatchKing,
 compressed MAGPRO condition. Its reconstruction assumes the case capacity, a forum-sourced bullet length
@@ -160,7 +190,8 @@ made after seeing its results — and the study shows the comparison with and wi
 
 What it shows, conditional on the assumed inputs: **the default engine has read 13–22 % under published
 measured pressures** on one powder model and one publication, and 10 % under on another, while it read
-above on Western's MAGPRO and Reload Swiss's RS14. The error's sign changes with the powder model; its
+above on Western's MAGPRO, Reload Swiss's RS14 and, in Hodgdon's 2025 manual, StaBALL Match and H380,
+and 2 % under on Hodgdon's MAGPRO (+6.5 % over the 59 piezo series). The error's sign changes with the powder model; its
 size reaches a fifth of the pressure. No correction factor follows from this, and no threshold covers it.
 
 What changed in the application (Astra's recommendations, 2026-11-02): the results notice says pressure

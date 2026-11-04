@@ -23,12 +23,12 @@
  * `12` or `17,5 mm`, never a cartridge), kits, shotgun and combination guns (a `410` in the
  * caliber), rimfire. The weight does not say what it includes, so the mass basis is `unstated`.
  */
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import { loadableCartridge, namedCartridge } from './loadable-cartridge.ts';
-import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
-import { claimFileName, crawlArguments, fetchPage, fetchText, firearmJson, plainText, plausibleGunMass, summaryLine } from './maker-site.ts';
+import { crawlArguments, fetchPage, fetchText, plainText, plausibleGunMass } from './maker-site.ts';
 import { publishedFigures } from './published-figures.ts';
+import { writeListing } from './printed-figures.ts';
 
 const SITEMAP = 'https://www.davidepedersoli.com/sitemap.xml';
 
@@ -182,8 +182,6 @@ async function main(): Promise<void> {
   console.log(`${pages.length} product pages`);
   mkdirSync(folder, { recursive: true });
   const retrieved = new Date().toISOString().slice(0, 10);
-  let written = 0;
-  const fileNames = new Map<string, string>(); // what claimFileName has given out, so two names never share a file
   let muzzleLoaders = 0;
   const skipped: string[] = [];
   const taken = new Map<string, Firearm>();
@@ -199,24 +197,12 @@ async function main(): Promise<void> {
     if (guns.length === 0 && rejected.length === 0) muzzleLoaders++;
     for (const { cartridge, reason } of rejected) skipped.push(`${url}: ${cartridge} left out, ${reason}`);
     for (const firearm of guns) {
-      const file = claimFileName(fileNames, firearm);
-      const earlier = taken.get(file);
-      if (earlier !== undefined) {
-        skipped.push(`${url}: ${firearm.name} is already written (${earlier.source?.url}); barrel ${earlier.barrel.length} m against ${firearm.barrel.length} m, mass ${earlier.barrel.gunMass} kg against ${firearm.barrel.gunMass} kg`);
-        continue;
-      }
-      const json = firearmJson(firearm);
-      if ('problem' in json) {
-        skipped.push(`${url}: ${json.problem}`);
-        continue;
-      }
-      taken.set(file, firearm);
-      writeFileSync(join(folder, file), json.text);
-      written++;
-      console.log(summaryLine(firearm));
+      const outcome = writeListing(folder, taken, firearm);
+      if ('skipped' in outcome) skipped.push(`${url}: ${outcome.skipped}`);
+      else if (outcome.note) skipped.push(`${url}: ${outcome.note}`);
     }
   }
-  console.log(`\n${written} guns written to ${folder}; ${muzzleLoaders} pages with no cartridge (muzzle-loaders, shotguns, kits)`);
+  console.log(`\n${taken.size} guns written to ${folder}; ${muzzleLoaders} pages with no cartridge (muzzle-loaders, shotguns, kits)`);
   if (skipped.length > 0) {
     console.log(`${skipped.length} skipped:`);
     for (const reason of skipped) console.log(' -', reason);

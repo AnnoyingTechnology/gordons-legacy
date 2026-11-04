@@ -90,7 +90,10 @@ src/
                         (new-load.ts), cartridge preselection (cartridge-choice.ts), independent input copies
                         (load-copy.ts), shortcut matching
                         (keyboard-shortcuts.ts), ordered snapshot saves (document-saving.ts), each load's
-                        Undo/Redo steps (document-history.ts)
+                        Undo/Redo steps (document-history.ts), the one tab of the app that keeps open
+                        loads for recovery (recovery-lock.ts), a store's first reading tried again
+                        before its next write (stored-reading.ts), entry revisions that keep one tab
+                        from overwriting another's saves (entry-revision.ts)
   data/                 community-components.json: the CC0 community components bundled for a first
                         offline visit (tools/data/build-community.ts); online, the app takes them from
                         the data repository through @gordons-legacy/data
@@ -99,7 +102,8 @@ src/
                         code from the camera (qr-decoder.ts)
   icons/icons.ts        original SVG icons
   measurements/         statistics of measured shots; reading chronograph CSV exports
-  analysis/             review.ts, review-worker.ts, review-client.ts: the heavy analyses (review,
+  analysis/             pressure-evidence.ts: what the pressure study has seen of a powder model, shown in the
+                        review (its table in data/pressure-evidence.json); review.ts, review-worker.ts, review-client.ts: the heavy analyses (review,
                         bench variations, temperature table) in a Web Worker;
                         GRT's powder factors (powder-factors.ts); tolerance synthesis
                         (charge-synthesis.ts); a load's summary for the library (load-summary.ts); muzzle blast level

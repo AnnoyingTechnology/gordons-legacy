@@ -76,5 +76,20 @@ export function findingMessage(finding: Finding, context: UiContext): string {
     });
   }
   if (finding.code === 'doubleChargeFits' && finding.pressure === undefined) return t('finding.doubleChargeFitsNotSimulated', values);
+  if (finding.code === 'pressureEvidence' && finding.evidence) {
+    const signed = (share: number) => `${share > 0 ? '+' : share < 0 ? '−' : ''}${number(Math.abs(share) * 100, 1)}`;
+    // One record per document: two laboratories pooled would hide how far apart they are.
+    const records = finding.evidence.map((record) =>
+      t('finding.pressureEvidence.record', {
+        source: record.source,
+        count: String(record.conditions),
+        series: String(record.series),
+        bias: signed(record.bias),
+        lowest: signed(record.lowest),
+        highest: signed(record.highest),
+      }),
+    );
+    return t('finding.pressureEvidence', { records: records.join('; ') });
+  }
   return t(`finding.${finding.code}`, values);
 }

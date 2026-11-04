@@ -149,8 +149,15 @@ export function displayUnit(kind: QuantityKind, preferences: UnitPreferences): D
 /** Formats an SI value in the chosen unit, with its symbol: `formatQuantity(0.0007128, 'projectileMass', p)`. */
 export function formatQuantity(value: number, kind: QuantityKind, preferences: UnitPreferences, locale = 'en'): string {
   const unit = displayUnit(kind, preferences);
-  return `${formatNumber(unit.fromSi(value), unit.decimals, locale)} ${unit.symbol}`;
+  const shown = unit.fromSi(value);
+  return Number.isFinite(shown) ? `${formatNumber(shown, unit.decimals, locale)} ${unit.symbol}` : UNAVAILABLE;
 }
+
+/**
+ * What is shown for a figure that is no number: an overflow or an undefined ratio from extreme input
+ * (#32) is never displayed as `∞` or `NaN`, which a reader could take for a result.
+ */
+export const UNAVAILABLE = '—';
 
 /**
  * Whether a typed number has a comma that could be a thousands separator: `2,850` is 2850 to an
@@ -164,7 +171,16 @@ export function isAmbiguousNumber(text: string): boolean {
 }
 
 export function formatNumber(value: number, decimals: number, locale = 'en'): string {
+  if (!Number.isFinite(value)) return UNAVAILABLE;
   return value.toLocaleString(locale, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+
+/**
+ * A value as an input shows it for editing: a dot as decimal separator and no thousands commas, which
+ * `parseNumber` would refuse as ambiguous (a distance of 1,000 yards read back as nothing).
+ */
+export function formatEditable(value: number, decimals: number): string {
+  return formatNumber(value, decimals, 'en').replace(/,/g, '');
 }
 
 /**

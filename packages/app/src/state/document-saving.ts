@@ -19,8 +19,9 @@ export function documentSaver(store: DocumentStore, library: Pick<Library, 'save
     const saving = previous.catch(() => false).then(async () => {
       const current = store.documents.find((candidate) => candidate.id === id);
       if (!current) return false;
-      const libraryId = await library.save(name, load, current.libraryId);
-      store.markSaved(id, savedText, libraryId);
+      const target = current.libraryId === undefined ? undefined : { id: current.libraryId, revision: current.libraryRevision };
+      const entry = await library.save(name, load, target);
+      store.markSaved(id, savedText, entry);
       return true;
     });
     pending.set(id, saving);

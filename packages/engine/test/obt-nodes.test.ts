@@ -49,3 +49,9 @@ describe('the optimal-barrel-time nodes', () => {
     expect(speedAt(20) / speedAt(10)).toBeGreaterThan(1.2);
   });
 });
+
+it('a length that is no barrel has no nodes, and no node time overflows (#32)', () => {
+  expect(obtNodeTimes(Number.NaN)).toEqual([]);
+  expect(obtNodeTimes(Number.POSITIVE_INFINITY)).toEqual([]);
+  expect(obtNodeTimes(1e308).every(({ time }) => Number.isFinite(time))).toBe(true);
+});

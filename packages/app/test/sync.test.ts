@@ -7,7 +7,7 @@ import { Library } from '../src/state/library.ts';
 import { memoryStorage } from '../src/state/library-storage.ts';
 import { decodeQr } from '../src/sync/qr-decoder.ts';
 import { FRAME_TEXT, FrameCollector, framesOf } from '../src/sync/qr-frames.ts';
-import { encodeSync, receiveSync } from '../src/sync/sync-payload.ts';
+import { encodeSync, receiveSync, withoutPhotos } from '../src/sync/sync-payload.ts';
 
 /** Bench ↔ phone through the camera (issue #21): what is sent, how it is cut, how it comes back. */
 
@@ -24,7 +24,7 @@ describe('an exchange', () => {
   it('carries the library and the stock, and merges by date: the newer edit wins on both sides', async () => {
     const bench = await side();
     const phone = await side();
-    await bench.library.save('Load', load, 'load-1');
+    await bench.library.receive({ id: 'load-1', name: 'Load', load, updatedAt: '2026-11-01T10:00:00.000Z' });
     await bench.inventory.receive({ id: 'primers', kind: 'primer', name: 'CCI 200', quantity: 900, updatedAt: '2026-11-01T10:00:00.000Z' });
     await phone.inventory.receive({ id: 'primers', kind: 'primer', name: 'CCI 200', quantity: 850, updatedAt: '2026-11-02T10:00:00.000Z' });
 
@@ -148,5 +148,21 @@ describe('what the camera may read', () => {
     await library.receive({ id: 'l', name: 'Old', load, updatedAt: '2026-11-02T10:00:00Z' });
     expect(await library.receive({ id: 'l', name: 'New', load, updatedAt: '2026-11-02T10:00:00.001Z' })).toBe(true);
     expect(library.get('l')!.name).toBe('New');
+  });
+});
+
+describe('a sync and another tab (#32)', () => {
+  it('keeps a photo another tab saved, which this tab had not read', async () => {
+    const storage = memoryStorage();
+    const thisTab = new Library(storage);
+    const saved = await thisTab.save('Load', load);
+    const otherTab = new Library(storage);
+    await otherTab.ready;
+    const picture = { name: 'target.jpg', mediaType: 'image/jpeg', width: 1, height: 1, data: 'AA==' };
+    await otherTab.save('Load', { ...load, pictures: [picture] }, otherTab.get(saved.id)!);
+    const fromPhone = { ...saved, load: withoutPhotos(load), updatedAt: new Date(Date.now() + 60_000).toISOString() };
+    const document = await encodeSync([fromPhone], []);
+    expect((await receiveSync(document, thisTab, new Inventory(memoryStore())))?.taken).toBe(1);
+    expect((await storage.list())[0]!.load.pictures).toEqual([picture]);
   });
 });

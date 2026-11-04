@@ -3,8 +3,12 @@ import { nodeTimes } from './results.ts';
 
 /**
  * The optimal barrel time of every barrel-harmonics node of a barrel (`barrelLength`, m), in seconds,
- * by GRT's model (grt-traditional.md, Optimal barrel time).
+ * by GRT's model (grt-traditional.md, Optimal barrel time). None for a length that is no barrel's, and
+ * no node whose time overflows (#32).
  */
 export function obtNodeTimes(barrelLength: number): Array<{ node: number; time: number }> {
-  return nodeTimes(barrelLength, CONFIG.obtHalfNodes).map(({ node, time }) => ({ node, time: time / 1000 }));
+  if (!(Number.isFinite(barrelLength) && barrelLength > 0)) return [];
+  return nodeTimes(barrelLength, CONFIG.obtHalfNodes)
+    .map(({ node, time }) => ({ node, time: time / 1000 }))
+    .filter(({ time }) => Number.isFinite(time));
 }

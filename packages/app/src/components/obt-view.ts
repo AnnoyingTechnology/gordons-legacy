@@ -38,7 +38,7 @@ function renderNode(load: Load, entry: { node: number; time: number }, isNearest
   const { t, quantity, number } = context;
   const whole = Math.trunc(entry.node);
   const name = `#${whole}${entry.node !== whole ? ' ½' : ''}`;
-  const found = chargeForLeadTime(load, entry.time);
+  const found = chargeForLeadTime(load, entry.time, context.engine);
   if (!found) {
     return element('tr', {}, [name, quantity(entry.time, 'time', 4), t('results.notSimulated'), '', '', '', ''].map((cell) => element('td', {}, [cell])));
   }

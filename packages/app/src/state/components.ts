@@ -161,7 +161,8 @@ export class ComponentLibrary {
     } else {
       return [`${name}: not a .propellant, .projectile or .caliber file`];
     }
-    for (const entry of added) await this.store.put(entry);
+    // One transaction: a projectile file of many bullets is kept whole or not at all.
+    await this.store.putAll(added);
     this.entries = [...this.entries, ...added];
     this.changed();
     return [];

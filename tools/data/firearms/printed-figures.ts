@@ -15,7 +15,7 @@ import { join } from 'node:path';
 import { FIREARM_FORMAT, FIREARM_SCHEMA_VERSION, units, type Firearm } from '@gordons-legacy/formats';
 import { finest, type Reading } from './finest-reading.ts';
 import { publishedFigures, type MassBasis } from './published-figures.ts';
-import { claimFileName, crawlArguments, DELAY, fetchPage, fileName, firearmJson, plausibleGunMass, summaryLine } from './maker-site.ts';
+import { crawlArguments, DELAY, fetchPage, fileName, firearmJson, plausibleGunMass, summaryLine } from './maker-site.ts';
 
 /** A line that names a figure instead of giving one: `Overall Length: 39.63"`, `Twist Rate`. */
 function isLabel(line: string | undefined): boolean {
@@ -224,9 +224,7 @@ export function firearmRecord(facts: GunFacts): Firearm {
 export type PageReading = { firearm: Firearm } | { skipped: string };
 
 /**
- * What two listings of the same gun disagree on, for the skip list. Empty when they agree. The second
- * listing is skipped rather than merged: nothing on either page says which figure supersedes the other,
- * and averaging them would put a figure in a record that no maker printed.
+ * What two listings of the same gun disagree on, for the skip list. Empty when they agree.
  */
 export function difference(written: Firearm, skipped: Firearm): string {
   const figures: Array<[string, string, number | undefined, number | undefined]> = [
@@ -241,14 +239,99 @@ export function difference(written: Firearm, skipped: Firearm): string {
   return differing.length === 0 ? '' : `, where the two pages disagree: ${differing.join('; ')}`;
 }
 
+/** What to do with a gun read from a page, given the guns already written. */
+export type Settled =
+  /** Write it: a gun not written yet, possibly renamed apart from one that is. */
+  | { write: Firearm }
+  /** Write it in place of `replacing`, a listing of the same gun that is lighter or gives no mass. */
+  | { write: Firearm; replacing: Firearm }
+  /** Write nothing: the gun is written already, and this listing adds nothing to it. */
+  | { skip: string };
+
+/**
+ * Settles a gun listed again under a name already written (the maintainer's rules of 2026-11-03, #30).
+ * Another cartridge is another gun, named apart by its cartridge. The same barrel and twist make the
+ * same gun (a twist one page leaves out disagrees with nothing, and that page's listing never replaces one
+ * that gives the twist), and only one listing is kept: the heaviest, since a
+ * maker's heavier weight is most likely the gun with a loaded magazine; it is kept whole, with its own
+ * page as its source, rather than merged. Another barrel length or twist is another configuration, so
+ * another gun, named apart by what differs (`… 16.5"`, `… 1:8"`). Nothing is averaged: a figure no
+ * page printed never enters a record.
+ *
+ * `key` gives the name under which a gun is written (its file name); `written` holds the guns written,
+ * by that key.
+ */
+export function settleListing(written: ReadonlyMap<string, Firearm>, firearm: Firearm, key: (firearm: Firearm) => string): Settled {
+  let candidate = firearm;
+  // Up to three renames, the name each one makes looked up too (another cartridge, barrel and twist).
+  for (let attempt = 0; attempt <= 3; attempt++) {
+    const first = written.get(key(candidate));
+    if (first === undefined) return { write: candidate };
+    if (attempt === 3) break;
+    if (first.cartridge !== candidate.cartridge) {
+      candidate = renamed(candidate, `${candidate.name} ${candidate.cartridge}`);
+      continue;
+    }
+    // A figure one page leaves out is no disagreement: unknown is not another value.
+    const sameTwist = first.barrel.twistLength === undefined || candidate.barrel.twistLength === undefined || first.barrel.twistLength === candidate.barrel.twistLength;
+    if (first.barrel.length === candidate.barrel.length && sameTwist) {
+      const mass = candidate.barrel.gunMass;
+      // A listing that leaves out the twist never replaces one that gives it, however heavy: the record
+      // would lose what tells this configuration from another of the same barrel (#30 review).
+      const losesTwist = candidate.barrel.twistLength === undefined && first.barrel.twistLength !== undefined;
+      if (!losesTwist && mass !== undefined && !(first.barrel.gunMass !== undefined && first.barrel.gunMass >= mass)) return { write: candidate, replacing: first };
+      return { skip: `${candidate.name} is already written${difference(first, candidate)}${mass === undefined ? '' : ', the heavier kept'}` };
+    }
+    const sameBarrel = first.barrel.length === candidate.barrel.length;
+    candidate = renamed(candidate, `${candidate.name} ${sameBarrel ? twistLabel(candidate) : barrelLabel(candidate)}`);
+  }
+  return { skip: `${firearm.name} is listed more than three times with other barrels; left for a reading by hand` };
+}
+
+/**
+ * Writes a gun read from a page into `folder`, settling a name already written by the rules of
+ * `settleListing`. `written` holds the guns written, by file name, and is kept up to date. Says why
+ * when nothing is written, and when a lighter listing was replaced.
+ */
+export function writeListing(folder: string, written: Map<string, Firearm>, firearm: Firearm): { note?: string } | { skipped: string } {
+  const settled = settleListing(written, firearm, fileName);
+  if ('skip' in settled) return { skipped: settled.skip };
+  const json = firearmJson(settled.write);
+  if ('problem' in json) return { skipped: json.problem };
+  const file = fileName(settled.write);
+  written.set(file, settled.write);
+  writeFileSync(join(folder, file), json.text);
+  console.log(summaryLine(settled.write));
+  if (!('replacing' in settled)) return {};
+  return { note: `${settled.write.name} replaces a lighter listing (${settled.replacing.source?.url ?? 'unknown page'})${difference(settled.replacing, settled.write)}` };
+}
+
+/** The gun under another name; its barrel carries the name too, so a load made with it says which gun. */
+function renamed(firearm: Firearm, name: string): Firearm {
+  return { ...firearm, name, barrel: { ...firearm.barrel, name } };
+}
+
+/** A barrel length as the maker printed it, its first form (`20.00" | 50.8 cm` and `20" (508 mm)` give `20.00"`, `20"`), or in mm. */
+function barrelLabel(firearm: Firearm): string {
+  const printed = firearm.source?.published?.['barrelLength']?.split(/\s*[|(]/)[0]?.trim();
+  if (printed) return printed;
+  return firearm.barrel.length === undefined ? 'barrel unstated' : `${Math.round(firearm.barrel.length * 1000)} mm`;
+}
+
+/** A twist as the maker printed it, or in inches. */
+function twistLabel(firearm: Firearm): string {
+  const printed = firearm.source?.published?.['twist']?.split(/\s*[|(]/)[0]?.trim();
+  if (printed) return printed.startsWith('1:') ? printed : `1:${printed}`;
+  const twist = firearm.barrel.twistLength;
+  return twist === undefined ? 'twist unstated' : `1:${Number((twist / 0.0254).toFixed(2))}"`;
+}
+
 /**
  * Walks `urls`, a second apart (or `delay`), asks `read` what each page holds, settles a name taken
  * twice before anything is serialised, and writes one file per gun. Prints the log and the skip list
  * grouped by reason.
  *
- * A name clash is settled here: the same name with another cartridge is another gun and takes its
- * cartridge in its name; the same name with the same cartridge is a second listing and is skipped with
- * the disagreement printed.
+ * A name taken twice is settled by `settleListing`.
  */
 export async function crawl(
   maker: string,
@@ -265,7 +348,6 @@ export async function crawl(
   const retrieved = new Date().toISOString().slice(0, 10);
   const skipped: Array<{ url: string; reason: string }> = [];
   const writtenFiles = new Map<string, Firearm>();
-  const fileNames = new Map<string, string>(); // what claimFileName has given out, so two names never share a file
   for (const url of pages) {
     let page: string;
     try {
@@ -279,26 +361,9 @@ export async function crawl(
         skipped.push({ url, reason: result.skipped });
         continue;
       }
-      const { firearm } = result;
-      const taken = writtenFiles.get(fileName(firearm));
-      if (taken !== undefined && taken.cartridge !== firearm.cartridge) {
-        firearm.name = `${firearm.name} ${firearm.cartridge}`;
-        firearm.barrel.name = firearm.name;
-      }
-      const file = claimFileName(fileNames, firearm);
-      const same = writtenFiles.get(file);
-      if (same !== undefined) {
-        skipped.push({ url, reason: `${firearm.name} is already written${difference(same, firearm)}` });
-        continue;
-      }
-      const json = firearmJson(firearm);
-      if ('problem' in json) {
-        skipped.push({ url, reason: json.problem });
-        continue;
-      }
-      writtenFiles.set(file, firearm);
-      writeFileSync(join(folder, file), json.text);
-      console.log(summaryLine(firearm));
+      const outcome = writeListing(folder, writtenFiles, result.firearm);
+      if ('skipped' in outcome) skipped.push({ url, reason: outcome.skipped });
+      else if (outcome.note) skipped.push({ url, reason: outcome.note });
     }
   }
   console.log(`\n${writtenFiles.size} guns written to ${folder}`);

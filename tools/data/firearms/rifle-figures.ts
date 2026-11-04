@@ -151,8 +151,17 @@ export function distinguished(guns: readonly GunFacts[]): { kept: GunFacts[]; dr
         const labelled = barrels.size > 1 && printedBarrel ? { ...gun, name: `${gun.name} ${printedBarrel}` } : gun;
         first.set(barrel, labelled);
         kept.push(labelled);
-      } else if (earlier.twistLength !== gun.twistLength || earlier.gunMass !== gun.gunMass) {
-        dropped.push(`${gun.cartridge} ${printedBarrel}: listed twice with different figures; only the first is kept`);
+      } else if (earlier.twistLength !== gun.twistLength) {
+        // Another twist is another gun (the maintainer's rules of 2026-11-03, printed-figures.ts).
+        const printedTwist = gun.published['twist'];
+        const apart = { ...gun, name: `${earlier.name} ${printedTwist ?? `1:${Number(((gun.twistLength ?? 0) / 0.0254).toFixed(2))}"`}` };
+        kept.push(apart);
+      } else if (gun.gunMass !== undefined && !(earlier.gunMass !== undefined && earlier.gunMass >= gun.gunMass)) {
+        // The same gun weighed twice: the heavier listing is kept, whole.
+        const heavier = { ...gun, name: earlier.name };
+        kept[kept.indexOf(earlier)] = heavier;
+        first.set(barrel, heavier);
+        dropped.push(`${gun.cartridge} ${printedBarrel}: listed twice with different weights; the heavier is kept`);
       }
     }
   }
